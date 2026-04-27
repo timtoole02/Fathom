@@ -35,6 +35,10 @@ const checks = [
       'Embedding-only',
       'PyTorch .bin blocked',
       'Chat template unsupported',
+      'Installed provenance',
+      'License audit trail',
+      'acknowledgement required and recorded',
+      'acknowledgement not required; none recorded',
     ],
   },
   {
@@ -137,6 +141,7 @@ const ggufCopyFiles = [
   join(root, '../crates/fathom-server/src/main.rs'),
 ]
 const ggufCopy = ggufCopyFiles.map((path) => readFileSync(path, 'utf8')).join('\n')
+const modelsCopy = readFileSync(join(root, 'src/views/ModelsView.jsx'), 'utf8')
 
 if (structuredRefusal.message !== 'stream:true is not supported for local chat completions.') failures.push(`structured API errors should parse error.message, got: ${structuredRefusal.message}`)
 if (structuredRefusal.type !== 'invalid_request_error' || structuredRefusal.code !== 'streaming_not_implemented' || structuredRefusal.param !== 'stream') failures.push(`structured API errors should preserve type/code/param, got: ${JSON.stringify(structuredRefusal)}`)
@@ -168,6 +173,10 @@ if (!ggufCopy.includes('narrow synthetic GPT-2/BPE and Llama/SentencePiece')) fa
 if (!ggufCopy.includes('excluded from `/v1/models`')) failures.push('GGUF copy must keep metadata-only fixtures excluded from /v1/models')
 if (!ggufCopy.includes('private fixture-scoped Llama/SentencePiece encode/decode parity helpers')) failures.push('GGUF copy must mention private fixture-scoped Llama/SentencePiece encode/decode parity helpers as readiness groundwork')
 if (!ggufCopy.includes('public/runtime tokenizer execution') && !ggufCopy.includes('public/runtime GGUF tokenizer execution')) failures.push('GGUF copy must explicitly scope missing tokenizer execution to public/runtime surfaces')
+if (!modelsCopy.includes('License audit trail: status')) failures.push('Models copy must surface installed license audit status factually')
+if (!modelsCopy.includes('acknowledgement required and recorded')) failures.push('Models copy must distinguish recorded acknowledgement for acknowledgement-required installs')
+if (!modelsCopy.includes('acknowledgement not required; none recorded')) failures.push('Models copy must avoid implying permissive installs had a user acknowledgement')
+if (/license safe|license-safe|approved|compliant|legal review completed/i.test(modelsCopy)) failures.push('Models license audit copy must not imply legal approval, compliance, or review completion')
 for (const text of [warmSummary, coldSummary, title, analyticsCopy]) {
   if (/session memory|instant|client ttft|streaming ttft|production throughput|batching|\bgpu\b|gguf chat|onnx chat/i.test(text)) {
     failures.push(`runtime metric copy overclaims: ${text.match(/session memory|instant|client ttft|streaming ttft|production throughput|batching|\bgpu\b|gguf chat|onnx chat/i)?.[0]}`)

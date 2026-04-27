@@ -116,6 +116,7 @@ CHECKS = {
     "03c-catalog-license-install-refusal.json": ("catalog_license_ack_refusal", "A non-permissive catalog entry is refused without explicit license acknowledgement."),
     "03d-catalog-license-refusal-model-dir.json": ("catalog_license_refusal_before_staging", "License-acknowledgement refusal happens before any download/staging files appear in the isolated model directory."),
     "04-install-tinystories.json": ("install_tinystories", "Pinned TinyStories SafeTensors/HF fixture installs as runnable."),
+    "04b-tinystories-license-manifest-audit.json": ("tinystories_license_manifest_audit", "Installed TinyStories manifest preserves share-safe catalog license audit fields next to pinned provenance."),
     "05-v1-models-after-tinystories.json": ("models_include_chat_fixture", "Runnable /v1/models includes the TinyStories chat fixture."),
     "06-chat-non-stream.json": ("chat_non_stream", "TinyStories fixture returns a real non-streaming chat completion with usage and timing metrics."),
     "07-chat-stream-refusal.json": ("chat_stream_refusal", "Streaming chat is truthfully refused with not_implemented."),
@@ -295,6 +296,40 @@ save(
 )
 assert model_dir_after_license_refusal == model_dir_before_license_refusal, model_dir_after_license_refusal
 
+
+def compact_manifest_audit(model, label):
+    manifest = model.get("download_manifest") or {}
+    assert manifest.get("repo_id"), model
+    assert manifest.get("revision"), model
+    assert manifest.get("source_url"), model
+    assert manifest.get("license"), model
+    assert manifest.get("license_status") == "permissive", manifest
+    assert manifest.get("license_acknowledgement_required") is False, manifest
+    assert manifest.get("license_acknowledged") is False, manifest
+    note = manifest.get("license_policy_note")
+    assert isinstance(note, str) and "review the upstream model card and license before use" in note, manifest
+    assert manifest.get("verification_status") == "verified", manifest
+    files = manifest.get("files") or []
+    assert files and all(file.get("sha256") and file.get("size_bytes", 0) > 0 for file in files), manifest
+    return {
+        "model_id": model.get("id"),
+        "label": label,
+        "repo_id": manifest.get("repo_id"),
+        "revision": manifest.get("revision"),
+        "source_url": manifest.get("source_url"),
+        "license": manifest.get("license"),
+        "license_status": manifest.get("license_status"),
+        "license_acknowledgement_required": manifest.get("license_acknowledgement_required"),
+        "license_acknowledged": manifest.get("license_acknowledged"),
+        "license_policy_note": note,
+        "verification_status": manifest.get("verification_status"),
+        "files": [
+            {"filename": file.get("filename"), "size_bytes": file.get("size_bytes"), "sha256": file.get("sha256")}
+            for file in files
+        ],
+    }
+
+
 # Pinned TinyStories SafeTensors/HF catalog install and chat.
 _, tiny = request(
     "POST",
@@ -307,6 +342,7 @@ assert tiny.get("id") == TINYSTORIES_ID, tiny
 assert tiny.get("status") == "ready", tiny
 assert tiny.get("capability_status") == "runnable", tiny
 assert "safetensors-hf" in tiny.get("backend_lanes", []), tiny
+save("04b-tinystories-license-manifest-audit.json", compact_manifest_audit(tiny, "TinyStories SafeTensors/HF"), 200, 200)
 
 _, models = request("GET", "/v1/models", artifact="05-v1-models-after-tinystories.json", expected=200)
 model_ids = [item.get("id") for item in models.get("data", [])]
@@ -506,7 +542,7 @@ with (artifacts / "summary.md").open("w", encoding="utf-8") as f:
     f.write("- No arbitrary SafeTensors support claim; only the pinned fixtures above are exercised.\n")
     f.write("- No GGUF runtime, tokenizer execution, or generation claim; GGUF is metadata-only/refusal evidence.\n")
     f.write("- No ONNX chat or general ONNX support claim.\n")
-    f.write("- Catalog license checks prove metadata visibility and acknowledgement gating, not legal review, legal advice, or compatibility for any use case.\n")
+    f.write("- Catalog license checks prove metadata visibility, acknowledgement gating, and installed manifest audit persistence, not legal review, legal advice, or compatibility for any use case.\n")
     f.write("- No performance claim or benchmark evidence.\n")
 print(f"✓ backend acceptance smoke passed; artifacts written under {artifacts}")
 PY

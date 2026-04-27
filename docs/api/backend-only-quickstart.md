@@ -49,6 +49,7 @@ Useful evidence files:
 
 - `00-corrupt-state-runtime.json`, `00-corrupt-state-files.json`, and `02b-api-dashboard-after-corrupt-recovery.json` show corrupt model-state recovery.
 - `03b-api-models-catalog-license-metadata.json`, `03c-catalog-license-install-refusal.json`, and `03d-catalog-license-refusal-model-dir.json` show catalog license metadata visibility, acknowledgement-required refusal for a non-permissive entry, and refusal before download/staging in the isolated model directory. This is gating evidence only, not legal review or license-compatibility advice.
+- `04b-tinystories-license-manifest-audit.json` shows the installed TinyStories manifest preserving share-safe catalog license audit fields next to pinned repo/revision/SHA256 provenance.
 - `06-chat-non-stream.json` shows the pinned TinyStories SafeTensors/HF fixture returning a real non-streaming chat completion; `07-chat-stream-refusal.json` shows streaming refusal.
 - `10-v1-embeddings-minilm.json` shows `POST /v1/embeddings` returning an OpenAI-style list with one finite 384-dimensional float vector from the pinned MiniLM SafeTensors runtime.
 - `10b-v1-embeddings-base64-refusal.json` shows `encoding_format: "base64"` refused with `invalid_request`; only float embeddings are supported.
