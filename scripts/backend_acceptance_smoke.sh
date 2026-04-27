@@ -119,6 +119,8 @@ CHECKS = {
     "08-install-minilm-safetensors.json": ("install_minilm_safetensors", "Pinned MiniLM SafeTensors fixture installs as a text embedding model."),
     "09-api-embedding-models.json": ("embedding_models_include_minilm", "Embedding model listing includes the MiniLM fixture."),
     "09b-v1-models-after-minilm.json": ("embedding_model_excluded_from_v1_models", "MiniLM embedding-only fixture stays out of chat-runnable /v1/models."),
+    "10-v1-embeddings-minilm.json": ("v1_embeddings_minilm", "OpenAI-style /v1/embeddings returns one finite 384-dimensional float vector from the verified MiniLM runtime."),
+    "10b-v1-embeddings-base64-refusal.json": ("v1_embeddings_base64_refusal", "/v1/embeddings truthfully refuses encoding_format=base64 with invalid_request."),
     "10-minilm-embed.json": ("minilm_embedding", "MiniLM SafeTensors embedding endpoint returns a finite normalized 384-dimensional vector."),
     "11-retrieval-create-index.json": ("retrieval_create_index", "Explicit-vector retrieval index can be created."),
     "12-retrieval-add-chunk.json": ("retrieval_add_chunk", "Explicit-vector retrieval chunk can be stored."),
@@ -285,6 +287,36 @@ _, embedding_models = request("GET", "/api/embedding-models", artifact="09-api-e
 assert MINILM_ID in [item.get("id") for item in embedding_models.get("items", [])], embedding_models
 _, models_after_minilm = request("GET", "/v1/models", artifact="09b-v1-models-after-minilm.json", expected=200)
 assert MINILM_ID not in [item.get("id") for item in models_after_minilm.get("data", [])], models_after_minilm
+
+v1_embeddings_body = {"model": MINILM_ID, "input": "Rust ownership keeps memory safety explicit.", "encoding_format": "float"}
+_, v1_embeddings = request(
+    "POST",
+    "/v1/embeddings",
+    v1_embeddings_body,
+    artifact="10-v1-embeddings-minilm.json",
+    expected=200,
+)
+assert v1_embeddings.get("object") == "list", v1_embeddings
+assert v1_embeddings.get("model") == MINILM_ID, v1_embeddings
+v1_data = v1_embeddings.get("data")
+assert isinstance(v1_data, list) and len(v1_data) == 1, v1_embeddings
+assert v1_data[0].get("object") == "embedding" and v1_data[0].get("index") == 0, v1_embeddings
+v1_vector = v1_data[0].get("embedding")
+assert isinstance(v1_vector, list) and len(v1_vector) == 384, v1_embeddings
+assert all(isinstance(v, float) and math.isfinite(v) for v in v1_vector), v1_embeddings
+v1_fathom = v1_embeddings.get("fathom") or {}
+assert v1_fathom.get("runtime") == "candle-bert-embeddings", v1_embeddings
+assert v1_fathom.get("embedding_dimension") == 384, v1_embeddings
+assert v1_fathom.get("scope") == "verified local embedding runtime only", v1_embeddings
+
+_, v1_embeddings_base64 = request(
+    "POST",
+    "/v1/embeddings",
+    {"model": MINILM_ID, "input": "Rust ownership keeps memory safety explicit.", "encoding_format": "base64"},
+    artifact="10b-v1-embeddings-base64-refusal.json",
+    expected=400,
+)
+assert (v1_embeddings_base64.get("error") or {}).get("type") == "invalid_request", v1_embeddings_base64
 
 _, embed = request(
     "POST",

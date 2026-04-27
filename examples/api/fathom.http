@@ -1,7 +1,9 @@
 # Fathom local API examples for editors with .http / REST Client support.
 # Override the base URL if your backend runs on another port.
+# The MiniLM embedding requests are optional and download an extra local model.
 @base = http://127.0.0.1:8180
 @model = echarlaix-tiny-random-phiforcausallm-model-safetensors
+@embedding_model = sentence-transformers-all-minilm-l6-v2-model-safetensors
 
 ### Health
 GET {{base}}/v1/health
@@ -31,4 +33,23 @@ Content-Type: application/json
     }
   ],
   "max_tokens": 24
+}
+
+### Optional: install pinned MiniLM SafeTensors embedding fixture
+POST {{base}}/api/models/catalog/install
+Content-Type: application/json
+
+{
+  "repo_id": "sentence-transformers/all-MiniLM-L6-v2",
+  "filename": "model.safetensors"
+}
+
+### Optional: OpenAI-style float embeddings from verified local MiniLM runtime
+POST {{base}}/v1/embeddings
+Content-Type: application/json
+
+{
+  "model": "{{embedding_model}}",
+  "input": "Rust ownership keeps memory safety explicit.",
+  "encoding_format": "float"
 }

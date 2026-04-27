@@ -29,13 +29,25 @@ export FATHOM_MAX_TOKENS=24
 
 The install examples also accept `FATHOM_REPO_ID` and `FATHOM_FILENAME`.
 
+Optional embeddings smoke examples are disabled by default so the quickstarts do not download an extra model. To opt in:
+
+```bash
+export FATHOM_RUN_EMBEDDINGS=1
+export FATHOM_EMBEDDING_MODEL_ID=sentence-transformers-all-minilm-l6-v2-model-safetensors
+export FATHOM_EMBEDDING_REPO_ID=sentence-transformers/all-MiniLM-L6-v2
+export FATHOM_EMBEDDING_FILENAME=model.safetensors
+export FATHOM_EMBEDDING_INPUT='Rust ownership keeps memory safety explicit.'
+```
+
+That path installs the pinned MiniLM SafeTensors fixture if needed and calls `POST /v1/embeddings` with `encoding_format: "float"`. It verifies the narrow local embedding lane only: OpenAI-style response shape, float vectors, the `candle-bert-embeddings` runtime, and 384-dimensional MiniLM output. It does not make embedding models chat-runnable or list them in `/v1/models`.
+
 ## cURL quickstart
 
 ```bash
 bash examples/api/curl-quickstart.sh
 ```
 
-This dependency-light script checks health, installs the pinned tiny Phi fixture if needed, lists runnable chat models, then sends one non-streaming chat request.
+This dependency-light script checks health, installs the pinned tiny Phi fixture if needed, lists runnable chat models, then sends one non-streaming chat request. With `FATHOM_RUN_EMBEDDINGS=1`, it also installs the pinned MiniLM embedding fixture and sends one float `/v1/embeddings` request.
 
 ## Python, no third-party dependencies
 
@@ -43,7 +55,7 @@ This dependency-light script checks health, installs the pinned tiny Phi fixture
 python3 examples/api/python-no-deps.py
 ```
 
-This version uses only the Python standard library.
+This version uses only the Python standard library. With `FATHOM_RUN_EMBEDDINGS=1`, it also exercises the optional MiniLM `/v1/embeddings` path.
 
 ## OpenAI Python SDK
 
@@ -52,15 +64,18 @@ python3 -m pip install openai
 python3 examples/api/openai-sdk.py
 ```
 
-The SDK example points the OpenAI client at `FATHOM_BASE_URL + /v1`. It still uses Fathom's local backend and only demonstrates a non-streaming chat completion.
+The SDK example points the OpenAI client at `FATHOM_BASE_URL + /v1`. It still uses Fathom's local backend and only demonstrates a non-streaming chat completion by default. With `FATHOM_RUN_EMBEDDINGS=1`, it installs the pinned MiniLM fixture through Fathom's local catalog endpoint and calls `client.embeddings.create(..., encoding_format="float")` against `/v1/embeddings`.
 
 ## `.http` file
 
-Open [`examples/api/fathom.http`](../../examples/api/fathom.http) in an editor that supports REST Client-style `.http` requests and run the requests top to bottom.
+Open [`examples/api/fathom.http`](../../examples/api/fathom.http) in an editor that supports REST Client-style `.http` requests and run the requests top to bottom. The MiniLM install and embeddings requests are optional; skip them if you do not want the extra model download.
 
 ## Current boundaries
 
 - `stream: true` is not supported by Fathom's chat completions today; use non-streaming requests.
-- GGUF packages are metadata/provenance-only right now and are not chat inference models.
-- ONNX chat is not supported.
-- Fathom does not claim arbitrary Hugging Face or OpenAI API parity; `/v1/models` only lists models the local backend has validated as runnable.
+- `/v1/embeddings` currently supports the verified local MiniLM embedding runtime with float vectors only; `encoding_format: "base64"` is refused with `invalid_request`.
+- Embedding models are not chat/generation models and remain excluded from `/v1/models`.
+- GGUF packages are metadata/provenance-only right now and are not chat inference or embedding models.
+- ONNX chat and general ONNX model execution are not supported.
+- PyTorch `.bin` and arbitrary SafeTensors execution are not supported.
+- Fathom does not claim arbitrary Hugging Face or full OpenAI API parity; `/v1/models` only lists models the local backend has validated as chat-runnable.

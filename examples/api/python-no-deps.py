@@ -4,6 +4,11 @@
 Requires a running Fathom backend. By default this installs and calls the tiny
 random Phi SafeTensors fixture; output may be gibberish because the model is a
 small random test fixture.
+
+Set FATHOM_RUN_EMBEDDINGS=1 to additionally install the pinned MiniLM
+SafeTensors embedding fixture and call /v1/embeddings. That opt-in path downloads
+an extra local model and only demonstrates float embeddings from Fathom's
+verified local embedding runtime.
 """
 
 from __future__ import annotations
@@ -22,6 +27,17 @@ REPO_ID = os.environ.get("FATHOM_REPO_ID", "echarlaix/tiny-random-PhiForCausalLM
 FILENAME = os.environ.get("FATHOM_FILENAME", "model.safetensors")
 PROMPT = os.environ.get("FATHOM_PROMPT", "Say hello from a local Fathom API smoke test.")
 MAX_TOKENS = int(os.environ.get("FATHOM_MAX_TOKENS", "24"))
+RUN_EMBEDDINGS = os.environ.get("FATHOM_RUN_EMBEDDINGS") == "1"
+EMBEDDING_MODEL_ID = os.environ.get(
+    "FATHOM_EMBEDDING_MODEL_ID", "sentence-transformers-all-minilm-l6-v2-model-safetensors"
+)
+EMBEDDING_REPO_ID = os.environ.get(
+    "FATHOM_EMBEDDING_REPO_ID", "sentence-transformers/all-MiniLM-L6-v2"
+)
+EMBEDDING_FILENAME = os.environ.get("FATHOM_EMBEDDING_FILENAME", "model.safetensors")
+EMBEDDING_INPUT = os.environ.get(
+    "FATHOM_EMBEDDING_INPUT", "Rust ownership keeps memory safety explicit."
+)
 
 
 def request(method: str, path: str, payload: dict | None = None) -> dict:
@@ -67,6 +83,27 @@ def main() -> int:
             },
         ),
     )
+    if RUN_EMBEDDINGS:
+        show(
+            "Install pinned MiniLM SafeTensors embedding fixture, if not already present",
+            request(
+                "POST",
+                "/api/models/catalog/install",
+                {"repo_id": EMBEDDING_REPO_ID, "filename": EMBEDDING_FILENAME},
+            ),
+        )
+        show(
+            "Float embeddings from verified local MiniLM runtime",
+            request(
+                "POST",
+                "/v1/embeddings",
+                {
+                    "model": EMBEDDING_MODEL_ID,
+                    "input": EMBEDDING_INPUT,
+                    "encoding_format": "float",
+                },
+            ),
+        )
     return 0
 
 

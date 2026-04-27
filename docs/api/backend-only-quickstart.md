@@ -49,7 +49,9 @@ Useful evidence files:
 
 - `00-corrupt-state-runtime.json`, `00-corrupt-state-files.json`, and `02b-api-dashboard-after-corrupt-recovery.json` show corrupt model-state recovery.
 - `06-chat-non-stream.json` shows the pinned TinyStories SafeTensors/HF fixture returning a real non-streaming chat completion; `07-chat-stream-refusal.json` shows streaming refusal.
-- `10-minilm-embed.json` shows the pinned MiniLM SafeTensors embedding fixture returning a finite 384-dimensional vector.
+- `10-v1-embeddings-minilm.json` shows `POST /v1/embeddings` returning an OpenAI-style list with one finite 384-dimensional float vector from the pinned MiniLM SafeTensors runtime.
+- `10b-v1-embeddings-base64-refusal.json` shows `encoding_format: "base64"` refused with `invalid_request`; only float embeddings are supported.
+- `10-minilm-embed.json` shows the older `/api/embedding-models/:id/embed` endpoint returning a finite normalized 384-dimensional vector.
 - `13-retrieval-search.json` and `14-chat-with-retrieval.json` show explicit-vector retrieval and retrieval-context chat metadata.
 - `15-install-gguf-metadata-only.json`, `16-v1-models-after-gguf.json`, and `17-chat-gguf-refusal.json` show pinned GGUF metadata-only registration, `/v1/models` exclusion, and chat refusal.
 
