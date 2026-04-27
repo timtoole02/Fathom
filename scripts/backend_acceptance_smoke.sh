@@ -84,6 +84,7 @@ wait_for_backend
 python3 - "$BASE" "$ARTIFACT_DIR" "$REQUEST_TIMEOUT" "$STATE_DIR" "$PORT" "$MODELS_DIR" "$LOG_DIR" "$REPO_COMMIT" "$STARTED_AT" <<'PY'
 import json
 import math
+import os
 import pathlib
 import sys
 import time
@@ -160,8 +161,118 @@ summary_local = {
     "server_log": str(log_dir / "server.log"),
 }
 
+current_stage = "initializing acceptance smoke"
+last_artifact = None
+summary_written = False
+
+
+def scrub_local_paths(text):
+    value = str(text)
+    for raw, label in {
+        str(artifacts): "[artifact-dir]",
+        str(state_dir): "[state-dir]",
+        str(models_dir): "[model-dir]",
+        str(log_dir): "[log-dir]",
+    }.items():
+        value = value.replace(raw, label)
+    return value
+
+
+def summarize_failed_check():
+    if not summary.get("checks"):
+        return None
+    for check in reversed(summary["checks"]):
+        if check.get("status") != "passed":
+            return check.get("name")
+    return summary["checks"][-1].get("name")
+
+
+def write_summary(passed, failure=None):
+    global summary_written
+    summary["passed"] = passed
+    summary["finished_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    if failure:
+        summary.update(failure)
+    with (artifacts / "summary.json").open("w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, sort_keys=True)
+        f.write("\n")
+    with (artifacts / "summary.local.json").open("w", encoding="utf-8") as f:
+        json.dump(summary_local, f, indent=2, sort_keys=True)
+        f.write("\n")
+    with (artifacts / "summary.md").open("w", encoding="utf-8") as f:
+        title = "Fathom backend acceptance artifacts" if passed else "Fathom backend acceptance artifacts — failed run"
+        f.write(f"# {title}\n\n")
+        f.write(f"- Result: `{'passed' if passed else 'failed'}`\n")
+        f.write(f"- Repo commit: `{repo_commit}`\n")
+        f.write(f"- Base URL: `{base}`\n")
+        f.write(f"- Port: `{port}`\n")
+        f.write(f"- Started: `{started_at}`\n")
+        f.write(f"- Finished: `{summary['finished_at']}`\n")
+        f.write("- Artifact directory: `.`\n")
+        f.write("- State directory: `state/`\n")
+        f.write("- Model directory: `models/`\n")
+        f.write("- Server log: `logs/server.log`\n")
+        f.write("- Local-only paths: `summary.local.json`\n")
+        if failure:
+            f.write("\n## Failure diagnostics\n\n")
+            f.write(f"- Failure stage: `{failure.get('failure_stage', 'unknown')}`\n")
+            if failure.get("failed_check"):
+                f.write(f"- Failed/last check: `{failure['failed_check']}`\n")
+            if failure.get("last_artifact"):
+                f.write(f"- Last artifact: `{failure['last_artifact']}`\n")
+            f.write(f"- Message: {failure.get('failure_message', 'unknown')}\n")
+            if failure.get("model_dir_snapshot_artifact"):
+                f.write(f"- Model directory snapshot: `{failure['model_dir_snapshot_artifact']}`\n")
+            f.write("\nThis failed-run summary is diagnostic evidence only; it must not be treated as a passed acceptance smoke.\n")
+        f.write("\n## Fixture model ids\n\n")
+        for label, model_id in summary["fixture_model_ids"].items():
+            f.write(f"- {label}: `{model_id}`\n")
+        f.write("\n## Artifact index\n\n")
+        f.write("| Check | Artifact | HTTP | Status | What it verifies |\n")
+        f.write("| --- | --- | ---: | --- | --- |\n")
+        for check in summary["checks"]:
+            f.write(f"| `{check['name']}` | `{check['artifact']}` | {check['http_status']} | `{check['status']}` | {check['description']} |\n")
+        f.write("\n## What this smoke does not prove\n\n")
+        f.write("- No arbitrary SafeTensors support claim; only the pinned fixtures above are exercised.\n")
+        f.write("- No GGUF runtime, tokenizer execution, or generation claim; GGUF is metadata-only/refusal evidence.\n")
+        f.write("- No ONNX chat or general ONNX support claim.\n")
+        f.write("- Catalog license checks prove metadata visibility, acknowledgement gating, and installed manifest audit persistence, not legal review, legal advice, or compatibility for any use case.\n")
+        f.write("- No performance claim or benchmark evidence.\n")
+    summary_written = True
+
+
+def write_failure_summary(exc_type, exc):
+    if summary_written:
+        return
+    snapshot_artifact = None
+    previous_last_artifact = last_artifact
+    snapshot_fn = globals().get("model_dir_snapshot")
+    if callable(snapshot_fn):
+        snapshot_artifact = "failure-model-dir-snapshot.json"
+        save(snapshot_artifact, {"model_dir_snapshot": snapshot_fn()}, 200, 200)
+    failure = {
+        "failure_stage": scrub_local_paths(current_stage),
+        "failed_check": summarize_failed_check(),
+        "last_artifact": previous_last_artifact,
+        "failure_type": getattr(exc_type, "__name__", str(exc_type)),
+        "failure_message": scrub_local_paths(exc),
+    }
+    if snapshot_artifact:
+        failure["model_dir_snapshot_artifact"] = snapshot_artifact
+    write_summary(False, failure)
+
+
+def acceptance_excepthook(exc_type, exc, tb):
+    write_failure_summary(exc_type, exc)
+    sys.__excepthook__(exc_type, exc, tb)
+
+
+sys.excepthook = acceptance_excepthook
+
 
 def save(name, payload, http_status, expected_http=None):
+    global last_artifact
+    last_artifact = name
     path = artifacts / name
     with path.open("w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, sort_keys=True)
@@ -181,6 +292,8 @@ def save(name, payload, http_status, expected_http=None):
 
 
 def request(method, path, body=None, artifact=None, expected=None):
+    global current_stage
+    current_stage = f"{method} {path}"
     data = None
     headers = {}
     if body is not None:
@@ -244,6 +357,9 @@ _, dashboard = request("GET", "/api/dashboard", artifact="02b-api-dashboard-afte
 assert any(warning.get("type") == "model_state_recovered" for warning in (dashboard.get("runtime", {}).get("warnings") or [])), dashboard
 _, capabilities = request("GET", "/api/capabilities", artifact="03-api-capabilities.json", expected=200)
 assert any(lane.get("id") == "safetensors-hf" for lane in capabilities.get("backend_lanes", [])), capabilities
+if os.environ.get("FATHOM_ACCEPTANCE_FORCE_FAILURE_STAGE") == "after_capabilities":
+    current_stage = "forced failure after capabilities"
+    raise AssertionError("forced acceptance smoke failure after capabilities")
 
 # Catalog license metadata and acknowledgement gate before any catalog install/download.
 _, catalog = request("GET", "/api/models/catalog", artifact="03b-api-models-catalog-license-metadata.json", expected=200)
@@ -507,43 +623,7 @@ _, gguf_chat = request(
 err = gguf_chat.get("error") or {}
 assert err.get("type") == "not_implemented" and "metadata-only" in err.get("message", ""), gguf_chat
 
-summary["passed"] = True
-summary["finished_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-with (artifacts / "summary.json").open("w", encoding="utf-8") as f:
-    json.dump(summary, f, indent=2, sort_keys=True)
-    f.write("\n")
-with (artifacts / "summary.local.json").open("w", encoding="utf-8") as f:
-    json.dump(summary_local, f, indent=2, sort_keys=True)
-    f.write("\n")
-
-with (artifacts / "summary.md").open("w", encoding="utf-8") as f:
-    f.write("# Fathom backend acceptance artifacts\n\n")
-    f.write(f"- Repo commit: `{repo_commit}`\n")
-    f.write(f"- Base URL: `{base}`\n")
-    f.write(f"- Port: `{port}`\n")
-    f.write(f"- Started: `{started_at}`\n")
-    f.write(f"- Finished: `{summary['finished_at']}`\n")
-    f.write("- Artifact directory: `.`\n")
-    f.write("- State directory: `state/`\n")
-    f.write("- Model directory: `models/`\n")
-    f.write("- Server log: `logs/server.log`\n")
-    f.write("- Local-only paths: `summary.local.json`\n\n")
-    f.write("## Fixture model ids\n\n")
-    for label, model_id in summary["fixture_model_ids"].items():
-        f.write(f"- {label}: `{model_id}`\n")
-    f.write("\n## Artifact index\n\n")
-    f.write("| Check | Artifact | HTTP | What it verifies |\n")
-    f.write("| --- | --- | ---: | --- |\n")
-    for check in summary["checks"]:
-        f.write(
-            f"| `{check['name']}` | `{check['artifact']}` | {check['http_status']} | {check['description']} |\n"
-        )
-    f.write("\n## What this smoke does not prove\n\n")
-    f.write("- No arbitrary SafeTensors support claim; only the pinned fixtures above are exercised.\n")
-    f.write("- No GGUF runtime, tokenizer execution, or generation claim; GGUF is metadata-only/refusal evidence.\n")
-    f.write("- No ONNX chat or general ONNX support claim.\n")
-    f.write("- Catalog license checks prove metadata visibility, acknowledgement gating, and installed manifest audit persistence, not legal review, legal advice, or compatibility for any use case.\n")
-    f.write("- No performance claim or benchmark evidence.\n")
+write_summary(True)
 print(f"✓ backend acceptance smoke passed; artifacts written under {artifacts}")
 PY
 

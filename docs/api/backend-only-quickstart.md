@@ -43,7 +43,7 @@ This optional script starts only `fathom-server` on an alternate port with isola
 
 ### Reading acceptance artifacts
 
-Set `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1` to keep the temporary artifact directory printed at the end of the run. Start with `summary.md` for the human-readable index and `summary.json` for machine-readable metadata such as repo commit, base URL, port, fixture model ids, relative state/model/log directories, timestamps, and named checks. Full local paths are isolated in `summary.local.json` for the runner; review that file, server logs, and full JSON payloads before sharing artifacts publicly because they may contain local paths or request text.
+Set `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1` to keep the temporary artifact directory printed at the end of the run. Start with `summary.md` for the human-readable index and `summary.json` for machine-readable metadata such as repo commit, base URL, port, fixture model ids, relative state/model/log directories, timestamps, and named checks. If a networked fixture download or later check fails mid-run, the script still writes a failed-run summary with `passed: false`, the checks/artifacts completed so far, a concise failure stage/message, and a model-directory snapshot artifact when available. Full local paths are isolated in `summary.local.json` for the runner; review that file, server logs, and full JSON payloads before sharing artifacts publicly because they may contain local paths or request text.
 
 Useful evidence files:
 
