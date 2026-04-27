@@ -103,6 +103,14 @@ struct DownloadManifest {
     revision: String,
     source_url: String,
     license: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    license_status: Option<String>,
+    #[serde(default)]
+    license_acknowledgement_required: bool,
+    #[serde(default)]
+    license_acknowledged: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    license_policy_note: Option<String>,
     installed_at: String,
     verification_status: String,
     files: Vec<DownloadManifestFile>,
@@ -1455,7 +1463,9 @@ async fn install_catalog_model(
             )
         })?;
 
-    validate_catalog_license_ack(&spec, catalog_install_license_acknowledged(&req))?;
+    let license_acknowledged = catalog_install_license_acknowledged(&req);
+
+    validate_catalog_license_ack(&spec, license_acknowledged)?;
 
     let final_model_dir = fathom_model_dir(&spec.repo_id);
     let staging_dir = create_catalog_install_staging_dir(&spec)
@@ -1474,7 +1484,8 @@ async fn install_catalog_model(
         }
 
         verify_catalog_download_total(&spec, downloaded_bytes).map_err(catalog_error_json)?;
-        let manifest = build_download_manifest(&spec).map_err(catalog_error_json)?;
+        let manifest =
+            build_download_manifest(&spec, license_acknowledged).map_err(catalog_error_json)?;
         write_download_manifest(&staging_dir, &manifest)
             .await
             .map_err(|error| raw_api_error(error, "catalog_manifest_write_failed"))?;
@@ -2063,6 +2074,10 @@ fn catalog_license_warning(spec: &CatalogModelSpec) -> Option<&'static str> {
     }
 }
 
+fn catalog_license_policy_note() -> &'static str {
+    "Recorded from Fathom catalog metadata at install time; review the upstream model card and license before use."
+}
+
 fn validate_catalog_license_ack(
     spec: &CatalogModelSpec,
     acknowledged: bool,
@@ -2603,6 +2618,7 @@ fn build_catalog_model_record(
 
 fn build_download_manifest(
     spec: &CatalogModelSpec,
+    license_acknowledged: bool,
 ) -> Result<DownloadManifest, (StatusCode, String)> {
     let Some(revision) = spec.revision else {
         return Err((
@@ -2641,12 +2657,18 @@ fn build_download_manifest(
         });
     }
 
+    let license_acknowledgement_required = catalog_license_acknowledgement_required(spec);
+
     Ok(DownloadManifest {
         schema_version: 1,
         repo_id: spec.repo_id.into(),
         revision: revision.into(),
         source_url: format!("https://huggingface.co/{}", spec.repo_id),
         license: spec.license.into(),
+        license_status: Some(catalog_license_status(spec.license).as_str().into()),
+        license_acknowledgement_required,
+        license_acknowledged: license_acknowledgement_required && license_acknowledged,
+        license_policy_note: Some(catalog_license_policy_note().into()),
         installed_at: now(),
         verification_status: "verified".into(),
         files,
@@ -3336,7 +3358,7 @@ mod catalog_tests {
             .find(|spec| spec.catalog_id == "hf-intel-tiny-random-gpt2")
             .unwrap();
 
-        let manifest = build_download_manifest(&spec).unwrap();
+        let manifest = build_download_manifest(&spec, false).unwrap();
 
         assert_eq!(manifest.schema_version, 1);
         assert_eq!(manifest.repo_id, spec.repo_id);
@@ -3346,10 +3368,66 @@ mod catalog_tests {
             "https://huggingface.co/Intel/tiny-random-gpt2"
         );
         assert_eq!(manifest.license, spec.license);
+        assert_eq!(manifest.license_status.as_deref(), Some("permissive"));
+        assert!(!manifest.license_acknowledgement_required);
+        assert!(!manifest.license_acknowledged);
+        assert_eq!(
+            manifest.license_policy_note.as_deref(),
+            Some(catalog_license_policy_note())
+        );
         assert_eq!(manifest.verification_status, "verified");
         assert_eq!(manifest.files.len(), spec.files.len());
         assert!(manifest.files.iter().all(|file| file.size_bytes > 0));
         assert!(manifest.files.iter().all(|file| file.sha256.len() == 64));
+    }
+
+    #[test]
+    fn download_manifest_captures_license_acknowledgement_policy_state() {
+        let spec = CatalogModelSpec {
+            catalog_id: "test-unknown-license",
+            title: "Unknown License Test",
+            repo_id: "example/unknown-license",
+            revision: Some("0123456789012345678901234567890123456789"),
+            primary_filename: "config.json",
+            files: vec![catalog_file(
+                "config.json",
+                32,
+                "476771b86370aebb00db5d51d24d1427e319bef3aef67b0275f38ea0bcd69778",
+            )],
+            size_bytes: Some(32),
+            license: "unknown",
+            description: "No-network fixture.",
+        };
+
+        let manifest = build_download_manifest(&spec, true).unwrap();
+
+        assert_eq!(manifest.license_status.as_deref(), Some("unknown"));
+        assert!(manifest.license_acknowledgement_required);
+        assert!(manifest.license_acknowledged);
+        assert_eq!(
+            manifest.license_policy_note.as_deref(),
+            Some(catalog_license_policy_note())
+        );
+    }
+
+    #[test]
+    fn old_download_manifests_deserialize_without_license_audit_fields() {
+        let manifest: DownloadManifest = serde_json::from_value(serde_json::json!({
+            "schema_version": 1,
+            "repo_id": "example/old",
+            "revision": "0123456789012345678901234567890123456789",
+            "source_url": "https://huggingface.co/example/old",
+            "license": "mit",
+            "installed_at": "2026-04-27T00:00:00Z",
+            "verification_status": "verified",
+            "files": []
+        }))
+        .unwrap();
+
+        assert_eq!(manifest.license_status, None);
+        assert!(!manifest.license_acknowledgement_required);
+        assert!(!manifest.license_acknowledged);
+        assert_eq!(manifest.license_policy_note, None);
     }
 
     #[test]
@@ -3394,10 +3472,13 @@ mod catalog_tests {
             Some("81f226c62d28ed4a1a9b9fa080fcd9f0cc40e0f9d5680036583ff98fbcd035cb")
         );
 
-        let manifest = build_download_manifest(&spec).unwrap();
+        let manifest = build_download_manifest(&spec, false).unwrap();
         assert_eq!(manifest.repo_id, spec.repo_id);
         assert_eq!(manifest.revision, spec.revision.unwrap());
         assert_eq!(manifest.license, "mit");
+        assert_eq!(manifest.license_status.as_deref(), Some("permissive"));
+        assert!(!manifest.license_acknowledgement_required);
+        assert!(!manifest.license_acknowledged);
         assert_eq!(manifest.verification_status, "verified");
         assert_eq!(manifest.files[0].filename, "llama-2-tiny-random.gguf");
         assert_eq!(manifest.files[0].size_bytes, 1_750_560);
@@ -3425,7 +3506,7 @@ mod catalog_tests {
             description: "Intentionally incomplete fixture.",
         };
 
-        let error = build_download_manifest(&spec).unwrap_err();
+        let error = build_download_manifest(&spec, false).unwrap_err();
         assert_eq!(error.0, StatusCode::BAD_REQUEST);
         assert!(error.1.contains("pinned Hugging Face revision"));
     }
@@ -3666,7 +3747,7 @@ mod catalog_tests {
         .await
         .unwrap();
         verify_catalog_download_total(&spec, transactional_config_bytes().len() as i64).unwrap();
-        let manifest = build_download_manifest(&spec).unwrap();
+        let manifest = build_download_manifest(&spec, false).unwrap();
         write_download_manifest(&staging, &manifest).await.unwrap();
 
         assert!(staging.join(DOWNLOAD_MANIFEST_FILENAME).exists());
@@ -3780,7 +3861,7 @@ mod catalog_tests {
         .await
         .unwrap();
         let package = inspect_model_package(&staging).unwrap();
-        let manifest = build_download_manifest(&spec).unwrap();
+        let manifest = build_download_manifest(&spec, false).unwrap();
 
         let model = build_catalog_model_record(
             &spec,
@@ -3811,7 +3892,7 @@ mod catalog_tests {
             .into_iter()
             .find(|spec| spec.catalog_id == "hf-stas-tiny-random-llama-2")
             .unwrap();
-        let manifest = build_download_manifest(&spec).unwrap();
+        let manifest = build_download_manifest(&spec, false).unwrap();
 
         write_download_manifest(&root, &manifest).await.unwrap();
         let bytes = tokio::fs::read(root.join(DOWNLOAD_MANIFEST_FILENAME))
@@ -3821,6 +3902,9 @@ mod catalog_tests {
 
         assert_eq!(loaded.repo_id, spec.repo_id);
         assert_eq!(loaded.revision, spec.revision.unwrap());
+        assert_eq!(loaded.license_status.as_deref(), Some("permissive"));
+        assert!(!loaded.license_acknowledgement_required);
+        assert!(!loaded.license_acknowledged);
         assert_eq!(loaded.verification_status, "verified");
         let _ = tokio::fs::remove_dir_all(root).await;
     }

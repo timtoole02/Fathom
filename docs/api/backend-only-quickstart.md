@@ -77,7 +77,7 @@ List downloadable catalog entries. Each item includes `license`, `license_status
 curl -fsS "$BASE/api/models/catalog" | python3 -m json.tool
 ```
 
-Permissive catalog entries install with the existing `{repo_id, filename}` body. Entries marked unknown or restrictive/non-commercial are refused with `catalog_license_ack_required` unless the client includes `"accept_license": true` after the user explicitly acknowledges the listed status. This acknowledgement gate is a visibility/safety guardrail; it is not legal advice or a compatibility determination for your intended use.
+Permissive catalog entries install with the existing `{repo_id, filename}` body. Entries marked unknown or restrictive/non-commercial are refused with `catalog_license_ack_required` unless the client includes `"accept_license": true` after the user explicitly acknowledges the listed status. This acknowledgement gate is a visibility/safety guardrail; it is not legal advice or a compatibility determination for your intended use. Installed manifests persist the catalog license status, whether acknowledgement was required, whether it was recorded, and a neutral policy note for later API/UI visibility.
 
 Install the small trained TinyStories GPT-2 demo through the same verified catalog path used by the UI:
 
@@ -105,7 +105,7 @@ curl -fsS "$BASE/api/models/catalog/install" \
   | python3 -m json.tool
 ```
 
-That install records repo/revision/license/size/SHA256 in `fathom-download-manifest.json` and registers as `metadata_only`. Fathom may derive bounded tensor metadata, privately retain bounded tokenizer metadata for narrow synthetic GPT-2/BPE and Llama/SentencePiece GGUF shapes, and keep private fixture-scoped Llama/SentencePiece encode/decode parity helpers and internal payload-readiness facts, but public/runtime GGUF tokenizer execution, runtime weight loading, general dequantization, quantized kernels, architecture runtime, and generation are still not supported. The fixture remains excluded from `/v1/models`; `/v1/chat/completions` refuses it rather than running tokenizer-only or fake generation.
+That install records repo/revision/license/license-status/acknowledgement/size/SHA256 in `fathom-download-manifest.json` and registers as `metadata_only`. Fathom may derive bounded tensor metadata, privately retain bounded tokenizer metadata for narrow synthetic GPT-2/BPE and Llama/SentencePiece GGUF shapes, and keep private fixture-scoped Llama/SentencePiece encode/decode parity helpers and internal payload-readiness facts, but public/runtime GGUF tokenizer execution, runtime weight loading, general dequantization, quantized kernels, architecture runtime, and generation are still not supported. The fixture remains excluded from `/v1/models`; `/v1/chat/completions` refuses it rather than running tokenizer-only or fake generation.
 
 Optional live parser smoke for the same 1.75 MB file:
 

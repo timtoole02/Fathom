@@ -174,6 +174,25 @@ function CapabilityChecklist({ model, runnable, canLoad }) {
   )
 }
 
+function formatManifestAckState(manifest) {
+  if (!manifest?.license_acknowledgement_required) return 'acknowledgement not required; none recorded'
+  return manifest.license_acknowledged ? 'acknowledgement required and recorded' : 'acknowledgement required; not recorded in this manifest'
+}
+
+function DownloadManifestProvenance({ model }) {
+  const manifest = model?.download_manifest
+  if (!manifest) return null
+
+  const licenseStatus = manifest.license_status || 'not recorded'
+  return (
+    <div className="models-card-copy-stack" aria-label="Installed catalog provenance">
+      <p className="model-summary">Installed provenance: {manifest.repo_id || model.hf_repo} at pinned revision {manifest.revision || 'not recorded'}; verification {manifest.verification_status || 'not recorded'}.</p>
+      <p className="model-summary">License audit trail: status {licenseStatus}; {formatManifestAckState(manifest)}.</p>
+      {manifest.license_policy_note && <p className="model-summary">{manifest.license_policy_note}</p>}
+    </div>
+  )
+}
+
 function statusTone(model) {
   if (model.status === 'ready') return 'ready'
   if (model.status === 'downloading' || model.status === 'canceling' || model.status === 'registered') return 'warm'
@@ -449,6 +468,7 @@ export default function ModelsView({
                     {model.capability_summary && <p className="model-summary">Capability: {model.capability_summary}</p>}
                   </div>
 
+                  <DownloadManifestProvenance model={model} />
                   <CapabilityChecklist model={model} runnable={runnable} canLoad={canLoad} />
                   <NonRunnableCallouts model={model} />
 
@@ -569,6 +589,7 @@ export default function ModelsView({
                       </label>
                     )}
                     {localMatch?.capability_summary && <p className="model-summary">Capability: {localMatch.capability_summary}</p>}
+                    {localMatch && <DownloadManifestProvenance model={localMatch} />}
                     {localMatch && <CapabilityChecklist model={localMatch} runnable={runnable} canLoad={canLoad} />}
                     {localMatch && <NonRunnableCallouts model={localMatch} />}
                     {localMatch?.backend_lanes?.length > 0 && (
@@ -698,6 +719,7 @@ export default function ModelsView({
                     {model.capability_summary && <p className="model-summary">Capability: {model.capability_summary}</p>}
                   </div>
 
+                  <DownloadManifestProvenance model={model} />
                   <CapabilityChecklist model={model} runnable={runnable} canLoad={canLoad} />
                   <NonRunnableCallouts model={model} />
 

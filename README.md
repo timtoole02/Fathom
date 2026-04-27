@@ -97,7 +97,7 @@ List catalog entries:
 curl -fsS http://127.0.0.1:8180/api/models/catalog | python3 -m json.tool
 ```
 
-Catalog entries expose `license_status`, `license_acknowledgement_required`, and `license_warning`. Unknown or restrictive/non-commercial entries require explicit acknowledgement before install; that gate is visibility/refusal evidence, not legal review or license-compatibility advice.
+Catalog entries expose `license_status`, `license_acknowledgement_required`, and `license_warning`. Unknown or restrictive/non-commercial entries require explicit acknowledgement before install; that gate is visibility/refusal evidence, not legal review or license-compatibility advice. Installed catalog manifests also persist the status, whether acknowledgement was required, whether it was recorded, and a neutral policy note next to the pinned repo/revision/SHA256 facts.
 
 Install TinyStories GPT-2 10M through the same catalog path used by the UI:
 
@@ -121,7 +121,7 @@ curl -fsS http://127.0.0.1:8180/api/models/catalog/install \
   -d '{"repo_id":"aladar/llama-2-tiny-random-GGUF","filename":"llama-2-tiny-random.gguf"}' | python3 -m json.tool
 ```
 
-Its `fathom-download-manifest.json` records the exact Hugging Face repo, revision, MIT license, 1,750,560-byte size, and SHA256 verification.
+Its `fathom-download-manifest.json` records the exact Hugging Face repo, revision, MIT license, license status/acknowledgement fields, 1,750,560-byte size, and SHA256 verification.
 
 Use the model id returned by `/v1/models`. For TinyStories GPT-2 10M today that id is usually `vijaymohan-gpt2-tinystories-from-scratch-10m-model-safetensors`:
 
@@ -281,7 +281,7 @@ By default, Fathom stores model packages and state under `~/.fathom`:
 - logs: `~/.fathom/logs`
 - retrieval indexes: `~/.fathom/state/retrieval-indexes/*.json`
 
-Catalog installs record provenance next to the installed package in `fathom-download-manifest.json`: repo id, pinned revision, source URL, license, install time, file sizes, SHA256 digests, and verification status. The same manifest is exposed in model metadata.
+Catalog installs record provenance next to the installed package in `fathom-download-manifest.json`: repo id, pinned revision, source URL, license, catalog license status, whether acknowledgement was required/recorded, a neutral policy note, install time, file sizes, SHA256 digests, and verification status. The same manifest is exposed in model metadata and lightly surfaced in the Models view when present.
 
 For isolated tests, set `FATHOM_MODELS_DIR` and `FATHOM_STATE_DIR` before starting the server.
 
