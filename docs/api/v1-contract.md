@@ -24,7 +24,8 @@ All `/v1` application errors use this JSON shape:
 Common status/code pairs include:
 
 - `400 invalid_request` for malformed or unsupported request values.
-- `400 model_not_found` when a required model id is missing or not known for that endpoint.
+- `400 model_not_found` when a required model id is missing, or when chat completion cannot resolve a requested/local active model.
+- `404 embedding_model_not_found` when `/v1/embeddings` names a model Fathom does not know.
 - `400 invalid_model` when a runnable model record is inconsistent.
 - `501 not_implemented` when the requested feature or model family is intentionally not runnable.
 - `501 chat_template_not_supported` for unsupported Hugging Face chat-template patterns.

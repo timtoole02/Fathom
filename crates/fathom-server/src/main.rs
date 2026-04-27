@@ -4199,6 +4199,8 @@ mod catalog_tests {
         .await;
         assert_eq!(single_status, StatusCode::OK, "{single_body}");
         assert_eq!(single_body["object"], "list");
+        assert!(single_body.get("error").is_none());
+        assert!(single_body.get("choices").is_none());
         assert_eq!(single_body["data"].as_array().unwrap().len(), 1);
         assert_eq!(single_body["data"][0]["object"], "embedding");
         assert_eq!(
@@ -4243,7 +4245,8 @@ mod catalog_tests {
         .await;
 
         assert_eq!(status, StatusCode::BAD_REQUEST);
-        assert_eq!(body["error"]["type"], "invalid_request");
+        assert_v1_error_envelope(&body, "invalid_request");
+        assert_no_fake_embedding_success(&body);
         assert!(body["error"]["message"]
             .as_str()
             .unwrap()
@@ -4265,7 +4268,8 @@ mod catalog_tests {
         .await;
 
         assert_eq!(status, StatusCode::BAD_REQUEST);
-        assert_eq!(body["error"]["type"], "not_embedding_model");
+        assert_v1_error_envelope(&body, "not_embedding_model");
+        assert_no_fake_embedding_success(&body);
         assert!(body["error"]["message"]
             .as_str()
             .unwrap()
@@ -4273,10 +4277,23 @@ mod catalog_tests {
     }
 
     #[tokio::test]
-    async fn v1_embeddings_missing_model_returns_json_error() {
+    async fn v1_embeddings_missing_or_unknown_model_returns_json_error() {
         let state = test_state(vec![], None);
 
-        let (status, Json(body)) = v1_embeddings(
+        let (missing_status, Json(missing_body)) = v1_embeddings(
+            State(state.clone()),
+            Json(V1EmbeddingsRequest {
+                model: None,
+                input: V1EmbeddingInput::Batch(vec!["hello".into()]),
+                encoding_format: Some("float".into()),
+            }),
+        )
+        .await;
+        assert_eq!(missing_status, StatusCode::BAD_REQUEST);
+        assert_v1_error_envelope(&missing_body, "model_not_found");
+        assert_no_fake_embedding_success(&missing_body);
+
+        let (unknown_status, Json(unknown_body)) = v1_embeddings(
             State(state),
             Json(V1EmbeddingsRequest {
                 model: Some("missing".into()),
@@ -4286,9 +4303,9 @@ mod catalog_tests {
         )
         .await;
 
-        assert_eq!(status, StatusCode::NOT_FOUND);
-        assert_eq!(body["error"]["type"], "embedding_model_not_found");
-        assert!(body["error"].get("param").is_some());
+        assert_eq!(unknown_status, StatusCode::NOT_FOUND);
+        assert_v1_error_envelope(&unknown_body, "embedding_model_not_found");
+        assert_no_fake_embedding_success(&unknown_body);
     }
 
     #[tokio::test]
@@ -4318,7 +4335,8 @@ mod catalog_tests {
             .await;
 
             assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
-            assert_eq!(body["error"]["type"], "embedding_runtime_unavailable");
+            assert_v1_error_envelope(&body, "embedding_runtime_unavailable");
+            assert_no_fake_embedding_success(&body);
             assert!(body["error"]["message"]
                 .as_str()
                 .unwrap()
@@ -4677,6 +4695,20 @@ mod catalog_tests {
     }
 
     #[tokio::test]
+    async fn v1_health_returns_small_success_shape() {
+        let state = test_state(vec![test_model("local-gpt2")], None);
+
+        let Json(body) = v1_health(State(state)).await;
+
+        assert_eq!(body["ok"], true);
+        assert_eq!(body["engine"], "fathom");
+        assert_eq!(body["generation_ready"], true);
+        assert!(body.get("data").is_none());
+        assert!(body.get("choices").is_none());
+        assert!(body.get("error").is_none());
+    }
+
+    #[tokio::test]
     async fn v1_models_returns_openai_list_shape_with_fathom_metadata_nested() {
         let mut unsupported = test_model("known-unsupported");
         unsupported.status = "registered".into();
@@ -4694,6 +4726,8 @@ mod catalog_tests {
         );
         assert!(data.iter().any(|model| model["id"] == "local-gpt2"));
         assert!(data.iter().any(|model| model["id"] == "external-gpt"));
+        assert!(body.get("choices").is_none());
+        assert!(body.get("error").is_none());
 
         let local = data
             .iter()
@@ -4707,15 +4741,17 @@ mod catalog_tests {
     }
 
     #[tokio::test]
-    async fn v1_chat_missing_or_invalid_model_returns_openai_error_shape() {
+    async fn v1_chat_missing_or_unknown_model_returns_openai_error_shape() {
         let state = test_state(vec![], None);
-        let (status, Json(body)) =
-            v1_chat_completions(State(state), Json(test_chat_request(Some("missing")))).await;
 
-        assert_eq!(status, StatusCode::BAD_REQUEST);
-        assert_eq!(body["error"]["type"], "model_not_found");
-        assert_eq!(body["error"]["code"], "model_not_found");
-        assert!(body["error"].get("param").is_some());
+        for model in [None, Some("missing")] {
+            let (status, Json(body)) =
+                v1_chat_completions(State(state.clone()), Json(test_chat_request(model))).await;
+
+            assert_eq!(status, StatusCode::BAD_REQUEST);
+            assert_v1_error_envelope(&body, "model_not_found");
+            assert_no_fake_chat_success(&body);
+        }
     }
 
     #[tokio::test]
@@ -4770,9 +4806,8 @@ mod catalog_tests {
         )
         .await;
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
-        assert_eq!(body["error"]["type"], "not_implemented");
-        assert_eq!(body["error"]["code"], "not_implemented");
-        assert!(body.get("choices").is_none());
+        assert_v1_error_envelope(&body, "not_implemented");
+        assert_no_fake_chat_success(&body);
         let message = body["error"]["message"].as_str().unwrap();
         assert!(message.contains("PyTorch"));
         assert!(message.contains("pickle"));
@@ -4806,7 +4841,8 @@ mod catalog_tests {
         )
         .await;
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
-        assert_eq!(body["error"]["type"], "not_implemented");
+        assert_v1_error_envelope(&body, "not_implemented");
+        assert_no_fake_chat_success(&body);
         let message = body["error"]["message"].as_str().unwrap();
         assert!(message.contains("metadata-only"));
         assert!(message.contains("not runnable"));
@@ -4832,7 +4868,8 @@ mod catalog_tests {
         .await;
 
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
-        assert_eq!(body["error"]["type"], "not_implemented");
+        assert_v1_error_envelope(&body, "not_implemented");
+        assert_no_fake_chat_success(&body);
         assert!(body["error"]["message"]
             .as_str()
             .unwrap()
@@ -4847,7 +4884,8 @@ mod catalog_tests {
             v1_chat_completions(State(state), Json(test_chat_request(Some("external-gpt")))).await;
 
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
-        assert_eq!(body["error"]["type"], "not_implemented");
+        assert_v1_error_envelope(&body, "not_implemented");
+        assert_no_fake_chat_success(&body);
         assert!(body["error"]["message"]
             .as_str()
             .unwrap()
@@ -4863,7 +4901,8 @@ mod catalog_tests {
         let (status, Json(body)) = v1_chat_completions(State(state), Json(req)).await;
 
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
-        assert_eq!(body["error"]["type"], "not_implemented");
+        assert_v1_error_envelope(&body, "not_implemented");
+        assert_no_fake_chat_success(&body);
         assert!(body["error"]["message"]
             .as_str()
             .unwrap()
@@ -5060,13 +5099,45 @@ mod catalog_tests {
         expected_code: &str,
     ) {
         assert_eq!(status, expected_status);
+        assert_v1_error_envelope(&body, expected_code);
+    }
+
+    fn assert_v1_error_envelope(body: &serde_json::Value, expected_code: &str) {
+        assert!(
+            body.get("error").is_some(),
+            "missing top-level error: {body}"
+        );
         assert_eq!(body["error"]["code"], expected_code);
         assert_eq!(body["error"]["type"], expected_code);
         assert!(body["error"]["message"]
             .as_str()
-            .is_some_and(|message| !message.is_empty()));
+            .is_some_and(|message| !message.trim().is_empty()));
         assert!(body["error"].get("param").is_some());
         assert!(body["error"]["param"].is_null());
+    }
+
+    fn assert_no_fake_chat_success(body: &serde_json::Value) {
+        assert!(
+            body.get("choices").is_none(),
+            "refusal must not include choices: {body}"
+        );
+        assert!(
+            body.get("data").is_none(),
+            "chat refusal must not include data: {body}"
+        );
+        assert_ne!(body["object"], "chat.completion");
+    }
+
+    fn assert_no_fake_embedding_success(body: &serde_json::Value) {
+        assert!(
+            body.get("data").is_none(),
+            "refusal must not include embedding data: {body}"
+        );
+        assert!(
+            body.get("choices").is_none(),
+            "embedding refusal must not include choices: {body}"
+        );
+        assert_ne!(body["object"], "list");
     }
 
     async fn insert_test_conversation(state: &AppState, id: &str, model_id: Option<String>) {
