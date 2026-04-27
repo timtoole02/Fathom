@@ -1,0 +1,44 @@
+name: Security or privacy concern
+description: Ask for a private channel or report a public-safe security/privacy concern.
+title: "security/privacy: "
+labels: [security, privacy]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include exploit details, private prompts, credentials, sensitive local paths, hostnames, private documents, or model-store details in a public issue. Read `SECURITY.md` first. If no private contact is available, open a minimal issue asking for a private channel and include only enough public context to route it.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Security concern
+        - Privacy/logging concern
+        - Unsafe model artifact handling
+        - Network exposure concern
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: area
+    attributes:
+      label: Affected area
+      placeholder: "local API, model loading, logs/artifacts, docs, UI"
+    validations:
+      required: true
+  - type: textarea
+    id: public_summary
+    attributes:
+      label: Public-safe summary
+      description: High-level impact only. Do not include reproduction steps or sensitive details.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Public disclosure check
+      options:
+        - label: I did not include exploit steps, private prompts, credentials, local paths, hostnames, or sensitive artifact details.
+          required: true
+        - label: I read SECURITY.md and understand sensitive details should wait for a private channel.
+          required: true

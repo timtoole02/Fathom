@@ -1,0 +1,45 @@
+name: API contract issue
+description: Report or request a narrow `/v1` API contract change.
+title: "api: "
+labels: [api]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fathom's `/v1` surface is intentionally small and not full OpenAI API parity. Check `docs/api/v1-contract.md` before filing.
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint
+      placeholder: "GET /v1/models, POST /v1/chat/completions"
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: Request shape
+      description: Minimal request, query, or headers. Use synthetic prompts only.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: response
+    attributes:
+      label: Expected or actual response shape
+      render: json
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Client or integration
+      placeholder: "curl, OpenAI SDK version, local app integration"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Contract notes
+      description: Explain the mismatch with docs/api/v1-contract.md or the narrow behavior you need.
+    validations:
+      required: true

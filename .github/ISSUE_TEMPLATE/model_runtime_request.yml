@@ -1,0 +1,52 @@
+name: Model/runtime request
+description: Request support for a specific model format, family, task, or artifact layout.
+title: "model/runtime: "
+labels: [model-runtime]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please request the narrow support you need. A request does not imply broad GGUF runtime/tokenizer/generation support, ONNX chat or general ONNX support, PyTorch `.bin` loading, arbitrary SafeTensors execution, streaming or full OpenAI API parity, GPU support, batching, or performance claims.
+  - type: input
+    id: format
+    attributes:
+      label: Exact artifact format
+      placeholder: "SafeTensors, GGUF metadata, ONNX embedding fixture, tokenizer.json"
+    validations:
+      required: true
+  - type: input
+    id: family
+    attributes:
+      label: Model family or architecture
+      placeholder: "GPT-2, BERT/MiniLM, Llama-family metadata"
+    validations:
+      required: true
+  - type: input
+    id: task
+    attributes:
+      label: Requested task
+      placeholder: "chat/generation, embeddings, metadata inspection"
+    validations:
+      required: true
+  - type: textarea
+    id: layout
+    attributes:
+      label: Artifact layout
+      description: List expected files and directory shape. Do not include private absolute paths or model-store details.
+      placeholder: "config.json, tokenizer.json, model.safetensors, generation_config.json"
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: License
+      placeholder: "MIT, Apache-2.0, model-specific license, unknown"
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Provenance and safety notes
+      description: Source, trust level, remote-code requirements, known unsafe formats, or reproducibility notes.
+    validations:
+      required: true
