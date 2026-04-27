@@ -178,9 +178,14 @@ curl -fsS "$BASE/api/embedding-models/$EMBED_MODEL_ID/embed" \
   -H "Content-Type: application/json" \
   -d '{"input":["Rust ownership keeps memory safety explicit."],"normalize":true}' \
   | python3 -m json.tool
+
+curl -fsS "$BASE/v1/embeddings" \
+  -H "Content-Type: application/json" \
+  -d "{\"model\":\"$EMBED_MODEL_ID\",\"input\":[\"Rust ownership keeps memory safety explicit.\"],\"encoding_format\":\"float\"}" \
+  | python3 -m json.tool
 ```
 
-The SafeTensors lane returns finite 384-dimensional vectors and stays out of `/v1/models` because it is not a chat/generation model.
+The SafeTensors lane returns finite 384-dimensional vectors and stays out of `/v1/models` because it is not a chat/generation model. The `/v1/embeddings` adapter is intentionally narrow: string or array input, float embeddings only, and no fake vectors for chat, GGUF, PyTorch `.bin`, or unsupported packages.
 
 Fathom also has a pinned ONNX MiniLM embedding fixture. ONNX inference is real but non-default because it brings ONNX Runtime binaries; build/start with the feature when you want that lane:
 

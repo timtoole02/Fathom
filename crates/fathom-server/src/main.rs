@@ -9,10 +9,10 @@ use fathom_core::{
     embedding_model_status_for_package, external_context_strategy_advice,
     generate_candle_bert_embeddings, generate_onnx_embeddings, generate_with_candle_hf_options,
     inspect_model_package, recommend_context_strategy_for_package, render_hf_chat_template_prompt,
-    CapabilityStatus, ChatMessage, ChatPromptRenderer, ContextStrategyAdvice, EmbeddingRequest,
-    EmbeddingVector, GenerationMetrics, GenerationOptions, PlainRolePromptRenderer,
-    PromptRenderOptions, RetrievalIndexSummary, VectorIndex, VectorIndexChunk, VectorSearchHit,
-    VectorSearchMetric,
+    CapabilityStatus, ChatMessage, ChatPromptRenderer, ContextStrategyAdvice, EmbeddingOutput,
+    EmbeddingRequest, EmbeddingVector, GenerationMetrics, GenerationOptions,
+    PlainRolePromptRenderer, PromptRenderOptions, RetrievalIndexSummary, VectorIndex,
+    VectorIndexChunk, VectorSearchHit, VectorSearchMetric,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -266,6 +266,29 @@ struct ChatRequest {
 }
 
 #[derive(Debug, Deserialize)]
+struct V1EmbeddingsRequest {
+    model: Option<String>,
+    input: V1EmbeddingInput,
+    encoding_format: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum V1EmbeddingInput {
+    Single(String),
+    Batch(Vec<String>),
+}
+
+impl V1EmbeddingInput {
+    fn into_vec(self) -> Vec<String> {
+        match self {
+            Self::Single(input) => vec![input],
+            Self::Batch(inputs) => inputs,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
 struct V1ChatCompletionRequest {
     model: Option<String>,
     messages: Vec<ChatMessage>,
@@ -457,6 +480,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/models", get(v1_models))
         .route("/v1/health", get(v1_health))
         .route("/v1/chat/completions", post(v1_chat_completions))
+        .route("/v1/embeddings", post(v1_embeddings))
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
@@ -539,7 +563,40 @@ async fn embed_with_embedding_model(
     State(state): State<AppState>,
     Path(id): Path<String>,
     Json(request): Json<EmbedRequest>,
-) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let EmbeddingRun {
+        model,
+        runtime_label,
+        output,
+        normalize,
+    } = run_embedding_model(&state, &id, request.input, request.normalize).await?;
+
+    Ok(Json(serde_json::json!({
+        "model": model.id,
+        "runtime": runtime_label,
+        "embedding_dimension": output.dimension,
+        "data": embedding_data_json(&output, false),
+        "fathom": {
+            "runtime": runtime_label,
+            "metrics": output.metrics,
+            "normalize": normalize
+        }
+    })))
+}
+
+struct EmbeddingRun {
+    model: ModelRecord,
+    runtime_label: &'static str,
+    output: EmbeddingOutput,
+    normalize: bool,
+}
+
+async fn run_embedding_model(
+    state: &AppState,
+    id: &str,
+    input: Vec<String>,
+    normalize: bool,
+) -> Result<EmbeddingRun, ApiError> {
     let model = {
         let store = state.inner.lock().await;
         store.models.iter().find(|model| model.id == id).cloned()
@@ -551,6 +608,70 @@ async fn embed_with_embedding_model(
             "embedding_model_not_found",
         )
     })?;
+
+    if input.is_empty() {
+        return Err(error_json(
+            StatusCode::BAD_REQUEST,
+            "Embedding input cannot be empty.",
+            "invalid_embedding_input",
+        ));
+    }
+    if input.iter().any(|input| input.trim().is_empty()) {
+        return Err(error_json(
+            StatusCode::BAD_REQUEST,
+            "Embedding input strings cannot be empty.",
+            "invalid_embedding_input",
+        ));
+    }
+
+    if model.task.as_deref() == Some("text_generation")
+        && model
+            .format
+            .as_deref()
+            .is_some_and(|format| format.eq_ignore_ascii_case("SafeTensors"))
+        && model
+            .backend_lanes
+            .iter()
+            .any(|lane| lane == "safetensors-hf")
+    {
+        return Err(error_json(
+            StatusCode::BAD_REQUEST,
+            "Model is a chat/generation model, not a text-embedding model.",
+            "not_embedding_model",
+        ));
+    }
+    if model
+        .format
+        .as_deref()
+        .is_some_and(|format| format.eq_ignore_ascii_case("GGUF"))
+        || model
+            .backend_lanes
+            .iter()
+            .any(|lane| lane == "gguf-native" || lane == "gguf")
+    {
+        return Err(error_json(
+            StatusCode::NOT_IMPLEMENTED,
+            "GGUF models are metadata/readiness-only in Fathom and cannot be used for embeddings. No fake vectors were produced.",
+            "embedding_runtime_unavailable",
+        ));
+    }
+    if model.capability_status == "blocked"
+        || model
+            .format
+            .as_deref()
+            .is_some_and(|format| format.eq_ignore_ascii_case("PyTorchBin"))
+        || model
+            .backend_lanes
+            .iter()
+            .any(|lane| lane == "pytorch-trusted-import")
+    {
+        return Err(error_json(
+            StatusCode::NOT_IMPLEMENTED,
+            "PyTorch .bin models are blocked because legacy pickle artifacts can execute code. No embedding runtime was used and no fake vectors were produced.",
+            "embedding_runtime_unavailable",
+        ));
+    }
+
     let model_path = model.model_path.as_ref().ok_or_else(|| {
         error_json(
             StatusCode::BAD_REQUEST,
@@ -579,24 +700,9 @@ async fn embed_with_embedding_model(
             "not_text_embedding_model",
         ));
     }
-    if request.input.is_empty() {
-        return Err(error_json(
-            StatusCode::BAD_REQUEST,
-            "Embedding input cannot be empty.",
-            "invalid_embedding_input",
-        ));
-    }
-    if request.input.iter().any(|input| input.trim().is_empty()) {
-        return Err(error_json(
-            StatusCode::BAD_REQUEST,
-            "Embedding input strings cannot be empty.",
-            "invalid_embedding_input",
-        ));
-    }
-
     let embedding_request = EmbeddingRequest {
-        inputs: &request.input,
-        normalize: request.normalize,
+        inputs: &input,
+        normalize,
     };
     let (runtime_label, output) = match status.runtime_lane {
         "candle-bert-embeddings" => (
@@ -628,19 +734,27 @@ async fn embed_with_embedding_model(
         }
     };
 
-    Ok(Json(serde_json::json!({
-        "model": model.id,
-        "runtime": runtime_label,
-        "embedding_dimension": output.dimension,
-        "data": output.vectors.iter().enumerate().map(|(index, vector)| {
-            serde_json::json!({ "index": index, "embedding": vector.values })
-        }).collect::<Vec<_>>(),
-        "fathom": {
-            "runtime": runtime_label,
-            "metrics": output.metrics,
-            "normalize": request.normalize
-        }
-    })))
+    Ok(EmbeddingRun {
+        model,
+        runtime_label,
+        output,
+        normalize,
+    })
+}
+
+fn embedding_data_json(output: &EmbeddingOutput, openai_object: bool) -> Vec<serde_json::Value> {
+    output
+        .vectors
+        .iter()
+        .enumerate()
+        .map(|(index, vector)| {
+            let mut item = serde_json::json!({ "index": index, "embedding": vector.values });
+            if openai_object {
+                item["object"] = serde_json::json!("embedding");
+            }
+            item
+        })
+        .collect::<Vec<_>>()
 }
 
 async fn create_retrieval_index(
@@ -1432,6 +1546,57 @@ async fn v1_models(State(state): State<AppState>) -> Json<serde_json::Value> {
             }
         })).collect::<Vec<_>>()
     }))
+}
+
+async fn v1_embeddings(
+    State(state): State<AppState>,
+    Json(req): Json<V1EmbeddingsRequest>,
+) -> (StatusCode, Json<serde_json::Value>) {
+    if req
+        .encoding_format
+        .as_deref()
+        .is_some_and(|format| format != "float")
+    {
+        return error_json(
+            StatusCode::BAD_REQUEST,
+            "Only encoding_format='float' is supported for /v1/embeddings. Base64 embeddings are not implemented.",
+            "invalid_request",
+        );
+    }
+    let Some(model_id) = req
+        .model
+        .as_deref()
+        .filter(|model| !model.trim().is_empty())
+    else {
+        return error_json(
+            StatusCode::BAD_REQUEST,
+            "model is required for /v1/embeddings.",
+            "model_not_found",
+        );
+    };
+
+    match run_embedding_model(&state, model_id, req.input.into_vec(), false).await {
+        Ok(run) => (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "object": "list",
+                "data": embedding_data_json(&run.output, true),
+                "model": run.model.id,
+                "usage": {
+                    "prompt_tokens": 0,
+                    "total_tokens": 0
+                },
+                "fathom": {
+                    "runtime": run.runtime_label,
+                    "embedding_dimension": run.output.dimension,
+                    "metrics": run.output.metrics,
+                    "normalize": run.normalize,
+                    "scope": "verified local embedding runtime only"
+                }
+            })),
+        ),
+        Err(error) => error,
+    }
 }
 
 fn render_chat_prompt_for_model(
@@ -3957,7 +4122,7 @@ mod catalog_tests {
         tokio::fs::create_dir_all(&root).await.unwrap();
         tokio::fs::write(
             root.join("config.json"),
-            r#"{"model_type":"bert","architectures":["BertModel"],"vocab_size":3,"hidden_size":4,"intermediate_size":8,"num_hidden_layers":1,"num_attention_heads":1,"max_position_embeddings":8,"type_vocab_size":2,"layer_norm_eps":1e-12}"#,
+            r#"{"model_type":"bert","architectures":["BertModel"],"vocab_size":3,"hidden_size":4,"intermediate_size":8,"num_hidden_layers":1,"num_attention_heads":1,"max_position_embeddings":8,"type_vocab_size":2,"layer_norm_eps":1e-12,"hidden_act":"gelu","hidden_dropout_prob":0.0,"attention_probs_dropout_prob":0.0,"initializer_range":0.02,"pad_token_id":0}"#,
         )
         .await
         .unwrap();
@@ -3993,6 +4158,172 @@ mod catalog_tests {
         );
 
         let _ = tokio::fs::remove_dir_all(root).await;
+    }
+
+    #[tokio::test]
+    async fn v1_embeddings_accepts_string_and_array_for_verified_embedding_model() {
+        let root =
+            std::env::temp_dir().join(format!("fathom-server-v1-bert-embed-{}", Uuid::new_v4()));
+        tokio::fs::create_dir_all(&root).await.unwrap();
+        tokio::fs::write(
+            root.join("config.json"),
+            r#"{"model_type":"bert","architectures":["BertModel"],"vocab_size":3,"hidden_size":4,"intermediate_size":8,"num_hidden_layers":1,"num_attention_heads":1,"max_position_embeddings":8,"type_vocab_size":2,"layer_norm_eps":1e-12,"hidden_act":"gelu","hidden_dropout_prob":0.0,"attention_probs_dropout_prob":0.0,"initializer_range":0.02,"pad_token_id":0}"#,
+        )
+        .await
+        .unwrap();
+        tokio::fs::write(
+            root.join("tokenizer.json"),
+            r#"{"version":"1.0","truncation":null,"padding":null,"added_tokens":[],"normalizer":null,"pre_tokenizer":{"type":"Whitespace"},"post_processor":null,"decoder":null,"model":{"type":"WordLevel","vocab":{"<unk>":0,"hello":1,"world":2},"unk_token":"<unk>"}}"#,
+        )
+        .await
+        .unwrap();
+        write_test_bert_safetensors_header(&root.join("model.safetensors"));
+
+        let mut model = test_model("bert-embedder");
+        model.name = "BERT embedder".into();
+        model.model_path = Some(root.to_string_lossy().to_string());
+        model.status = "ready".into();
+        model.capability_status = "runnable".into();
+        model.backend_lanes = vec!["local-embeddings-retrieval".into()];
+        model.task = Some("text_embedding".into());
+        let state = test_state(vec![model], None);
+
+        let (single_status, Json(single_body)) = v1_embeddings(
+            State(state.clone()),
+            Json(V1EmbeddingsRequest {
+                model: Some("bert-embedder".into()),
+                input: V1EmbeddingInput::Single("hello world".into()),
+                encoding_format: Some("float".into()),
+            }),
+        )
+        .await;
+        assert_eq!(single_status, StatusCode::OK, "{single_body}");
+        assert_eq!(single_body["object"], "list");
+        assert_eq!(single_body["data"].as_array().unwrap().len(), 1);
+        assert_eq!(single_body["data"][0]["object"], "embedding");
+        assert_eq!(
+            single_body["data"][0]["embedding"]
+                .as_array()
+                .unwrap()
+                .len(),
+            4
+        );
+        assert_eq!(single_body["fathom"]["runtime"], "candle-bert-embeddings");
+        assert_eq!(single_body["fathom"]["embedding_dimension"], 4);
+
+        let (array_status, Json(array_body)) = v1_embeddings(
+            State(state),
+            Json(V1EmbeddingsRequest {
+                model: Some("bert-embedder".into()),
+                input: V1EmbeddingInput::Batch(vec!["hello".into(), "world".into()]),
+                encoding_format: None,
+            }),
+        )
+        .await;
+        assert_eq!(array_status, StatusCode::OK);
+        assert_eq!(array_body["data"].as_array().unwrap().len(), 2);
+        assert_eq!(array_body["data"][1]["index"], 1);
+        assert_eq!(array_body["usage"]["prompt_tokens"], 0);
+
+        let _ = tokio::fs::remove_dir_all(root).await;
+    }
+
+    #[tokio::test]
+    async fn v1_embeddings_rejects_unsupported_encoding_format() {
+        let state = test_state(vec![], None);
+
+        let (status, Json(body)) = v1_embeddings(
+            State(state),
+            Json(V1EmbeddingsRequest {
+                model: Some("embedder".into()),
+                input: V1EmbeddingInput::Single("hello".into()),
+                encoding_format: Some("base64".into()),
+            }),
+        )
+        .await;
+
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(body["error"]["type"], "invalid_request");
+        assert!(body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("encoding_format='float'"));
+    }
+
+    #[tokio::test]
+    async fn v1_embeddings_rejects_chat_model_without_inspecting_runtime() {
+        let state = test_state(vec![test_model("local-gpt2")], None);
+
+        let (status, Json(body)) = v1_embeddings(
+            State(state),
+            Json(V1EmbeddingsRequest {
+                model: Some("local-gpt2".into()),
+                input: V1EmbeddingInput::Single("hello".into()),
+                encoding_format: Some("float".into()),
+            }),
+        )
+        .await;
+
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(body["error"]["type"], "not_embedding_model");
+        assert!(body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("chat/generation model"));
+    }
+
+    #[tokio::test]
+    async fn v1_embeddings_missing_model_returns_json_error() {
+        let state = test_state(vec![], None);
+
+        let (status, Json(body)) = v1_embeddings(
+            State(state),
+            Json(V1EmbeddingsRequest {
+                model: Some("missing".into()),
+                input: V1EmbeddingInput::Batch(vec!["hello".into()]),
+                encoding_format: Some("float".into()),
+            }),
+        )
+        .await;
+
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert_eq!(body["error"]["type"], "embedding_model_not_found");
+        assert!(body["error"].get("param").is_some());
+    }
+
+    #[tokio::test]
+    async fn v1_embeddings_refuses_gguf_and_pytorch_without_fake_vectors() {
+        let mut gguf = test_model("gguf-metadata-only");
+        gguf.format = Some("GGUF".into());
+        gguf.backend_lanes = vec!["gguf-native".into()];
+        gguf.capability_status = "metadata_only".into();
+        gguf.task = None;
+
+        let mut pytorch = test_model("blocked-bin");
+        pytorch.format = Some("PyTorchBin".into());
+        pytorch.backend_lanes = vec!["pytorch-trusted-import".into()];
+        pytorch.capability_status = "blocked".into();
+        pytorch.task = None;
+        let state = test_state(vec![gguf, pytorch], None);
+
+        for model_id in ["gguf-metadata-only", "blocked-bin"] {
+            let (status, Json(body)) = v1_embeddings(
+                State(state.clone()),
+                Json(V1EmbeddingsRequest {
+                    model: Some(model_id.into()),
+                    input: V1EmbeddingInput::Single("hello".into()),
+                    encoding_format: Some("float".into()),
+                }),
+            )
+            .await;
+
+            assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
+            assert_eq!(body["error"]["type"], "embedding_runtime_unavailable");
+            assert!(body["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("fake vectors"));
+        }
     }
 
     #[tokio::test]
@@ -4826,19 +5157,36 @@ mod catalog_tests {
             ("encoder.layer.0.output.LayerNorm.bias", vec![4]),
         ];
         let mut tensors = serde_json::Map::new();
+        let mut data = Vec::new();
         let mut offset = 0usize;
         for (name, shape) in specs {
-            let byte_len = shape.iter().product::<usize>() * 4;
+            let element_count = shape.iter().product::<usize>();
+            let byte_len = element_count * 4;
             tensors.insert(
                 name.to_string(),
                 serde_json::json!({"dtype":"F32","shape":shape,"data_offsets":[offset, offset + byte_len]}),
             );
+            for index in 0..element_count {
+                let value = match name {
+                    "embeddings.word_embeddings.weight" => match index / 4 {
+                        0 => [0.5_f32, -0.5, 1.0, -1.0][index % 4],
+                        1 => (index % 4 + 1) as f32,
+                        2 => [2.0_f32, 1.0, 0.0, -1.0][index % 4],
+                        _ => 0.0,
+                    },
+                    "embeddings.LayerNorm.weight"
+                    | "encoder.layer.0.attention.output.LayerNorm.weight"
+                    | "encoder.layer.0.output.LayerNorm.weight" => 1.0,
+                    _ => 0.0,
+                };
+                data.extend_from_slice(&value.to_le_bytes());
+            }
             offset += byte_len;
         }
         let header = serde_json::Value::Object(tensors).to_string();
         let mut bytes = (header.len() as u64).to_le_bytes().to_vec();
         bytes.extend_from_slice(header.as_bytes());
-        bytes.resize(bytes.len() + offset, 0);
+        bytes.extend_from_slice(&data);
         std::fs::write(path, bytes).unwrap();
     }
 

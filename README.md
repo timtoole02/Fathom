@@ -11,7 +11,7 @@ The long-term goal is a local runtime/router that can inspect common model packa
 | Local chat generation | Real generation for narrow custom Rust SafeTensors/HF lanes: GPT-2-style models, Llama/Llama-style tied-embedding packages, Qwen2 fixtures, Phi fixtures, Mistral fixtures, and Gemma fixtures. |
 | Best first demo | **TinyStories GPT-2 10M** from the Models page. Small, trained, and fast enough for visible local text checks. |
 | Larger chat-tuned demo | **SmolLM2 135M Instruct**. Validates the tied-embedding Llama-style lane with a real instruct package; larger than the first-run demo. |
-| Runtime API | OpenAI-style `GET /v1/models` and `POST /v1/chat/completions` for models Fathom actually considers runnable. |
+| Runtime API | OpenAI-style `GET /v1/models`, `POST /v1/chat/completions`, and narrow `POST /v1/embeddings` for models Fathom actually considers runnable for that task. |
 | Capability reporting | `/api/capabilities`, model inspection, backend-lane summaries, and UI copy distinguish runnable, metadata-readable, planned, blocked, and unsupported states. GGUF files can expose bounded header/key-value metadata, tensor descriptors, validated internal payload ranges, tokenizer/architecture compatibility hints, internal bounded tokenizer metadata retention for narrow synthetic GPT-2/BPE and Llama/SentencePiece shapes, private fixture-scoped Llama/SentencePiece encode/decode parity helpers, and internal synthetic payload decode checks without claiming public/runtime tokenizer execution or inference. |
 | Catalog installs | Hugging Face catalog downloads are pinned to exact revisions, checked for expected file sizes, verified with per-file SHA256, and recorded in `fathom-download-manifest.json`. The catalog includes one tiny real GGUF fixture (`aladar/llama-2-tiny-random-GGUF` at revision `8d5321916486e1d33c46b16990e8da6567785769`) strictly for metadata/provenance inspection. |
 | Local embeddings | Default-build Candle/SafeTensors embeddings for the verified `sentence-transformers/all-MiniLM-L6-v2` fixture; vectors are mean-pooled, optionally L2-normalized, and excluded from `/v1/models` chat listings. |
@@ -243,7 +243,7 @@ curl -fsS http://127.0.0.1:8180/api/embedding-models/$EMBED_MODEL_ID/embed \
   | python3 -m json.tool
 ```
 
-This lane loads the verified BertModel/MiniLM SafeTensors package through Candle, tokenizes with `tokenizer.json`, mean-pools `last_hidden_state` over the attention mask, optionally L2-normalizes, and returns finite 384-dimensional vectors. It is embedding/retrieval-only and stays out of `/v1/models`.
+This lane loads the verified BertModel/MiniLM SafeTensors package through Candle, tokenizes with `tokenizer.json`, mean-pools `last_hidden_state` over the attention mask, optionally L2-normalizes, and returns finite 384-dimensional vectors. It is embedding/retrieval-only and stays out of `/v1/models`. The same verified runtime is also available through the narrow OpenAI-style `POST /v1/embeddings` adapter with `input` as a string or array of strings and `encoding_format` omitted or set to `float`; base64, chat models, GGUF, PyTorch `.bin`, and unsupported packages are refused rather than faked.
 
 ## ONNX embeddings (`onnx-embeddings-ort`)
 
@@ -266,7 +266,7 @@ curl -fsS http://127.0.0.1:8180/api/models/catalog/install \
 curl -fsS http://127.0.0.1:8180/api/embedding-models | python3 -m json.tool
 ```
 
-With that feature enabled, `POST /api/embedding-models/:id/embed` loads `tokenizer.json`, tokenizes one or more inputs with `input_ids`, `attention_mask`, and `token_type_ids` when the graph expects them, runs `model_quantized.onnx` through ORT, mean-pools `last_hidden_state` over the attention mask, optionally L2-normalizes, and returns finite 384-dimensional vectors for the installed MiniLM model id. Ordinary builds still return a truthful `501 embedding_runtime_unavailable` instead of fake vectors.
+With that feature enabled, `POST /api/embedding-models/:id/embed` and the narrow `POST /v1/embeddings` adapter load `tokenizer.json`, tokenize one or more inputs with `input_ids`, `attention_mask`, and `token_type_ids` when the graph expects them, run `model_quantized.onnx` through ORT, mean-pool `last_hidden_state` over the attention mask, and return finite 384-dimensional vectors for the installed MiniLM model id. The legacy `/api/embedding-models/:id/embed` endpoint can optionally L2-normalize; the OpenAI-style adapter reports its normalization choice in `fathom.normalize`. Ordinary builds still return a truthful `501 embedding_runtime_unavailable` instead of fake vectors.
 
 This remains narrow: it is verified for the pinned MiniLM embedding fixture, not arbitrary ONNX graphs, ONNX chat, ONNX LLM generation, or general ONNX model execution. ONNX embedding packages stay out of `/v1/models`.
 
