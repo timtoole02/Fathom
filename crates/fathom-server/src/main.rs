@@ -1187,13 +1187,11 @@ async fn register_model(
         task: model_task_label_for_package(&package),
         download_manifest: None,
     };
-    {
-        let mut store = state.inner.lock().await;
+    let model = mutate_model_state_and_persist(&state, |store| {
         upsert_model(&mut store.models, model.clone());
-    }
-    persist_current_model_state(&state)
-        .await
-        .map_err(|error| raw_api_error(error, "model_state_persist_failed"))?;
+        Ok(model)
+    })
+    .await?;
     Ok(Json(model))
 }
 
@@ -1234,13 +1232,11 @@ async fn connect_external_model(
         task: Some("text_generation".into()),
         download_manifest: None,
     };
-    {
-        let mut store = state.inner.lock().await;
+    let model = mutate_model_state_and_persist(&state, |store| {
         upsert_model(&mut store.models, model.clone());
-    }
-    persist_current_model_state(&state)
-        .await
-        .map_err(|error| raw_api_error(error, "model_state_persist_failed"))?;
+        Ok(model)
+    })
+    .await?;
     Ok(Json(model))
 }
 
@@ -1248,30 +1244,31 @@ async fn activate_model(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<Json<ModelRecord>, ApiError> {
-    let mut store = state.inner.lock().await;
-    let model = store
-        .models
-        .iter()
-        .find(|item| item.id == id)
-        .cloned()
-        .ok_or_else(|| api_error(StatusCode::NOT_FOUND, "Model not found.", "model_not_found"))?;
-    if model.provider_kind == "external" || is_runnable_model(&model) {
+    let model = mutate_model_state_and_persist(&state, |store| {
+        let model = store
+            .models
+            .iter()
+            .find(|item| item.id == id)
+            .cloned()
+            .ok_or_else(|| {
+                api_error(StatusCode::NOT_FOUND, "Model not found.", "model_not_found")
+            })?;
+        if !(model.provider_kind == "external" || is_runnable_model(&model)) {
+            return Err(api_error(
+                StatusCode::NOT_IMPLEMENTED,
+                format!(
+                    "{} was detected as {}, but Fathom does not have a real loader/runtime for it yet.",
+                    model.name,
+                    model.format.clone().unwrap_or_else(|| "Unknown".into())
+                ),
+                "not_implemented",
+            ));
+        }
         store.active_model_id = Some(model.id.clone());
-        drop(store);
-        persist_current_model_state(&state)
-            .await
-            .map_err(|error| raw_api_error(error, "model_state_persist_failed"))?;
-        return Ok(Json(model));
-    }
-    Err(api_error(
-        StatusCode::NOT_IMPLEMENTED,
-        format!(
-            "{} was detected as {}, but Fathom does not have a real loader/runtime for it yet.",
-            model.name,
-            model.format.clone().unwrap_or_else(|| "Unknown".into())
-        ),
-        "not_implemented",
-    ))
+        Ok(model)
+    })
+    .await?;
+    Ok(Json(model))
 }
 
 async fn cancel_model_download(
@@ -1365,13 +1362,11 @@ async fn install_catalog_model(
             package,
             capability_report,
         );
-        {
-            let mut store = state.inner.lock().await;
+        mutate_model_state_and_persist(&state, |store| {
             upsert_model(&mut store.models, model.clone());
-        }
-        persist_current_model_state(&state)
-            .await
-            .map_err(|error| raw_api_error(error, "model_state_persist_failed"))?;
+            Ok(())
+        })
+        .await?;
         Ok(model)
     }
     .await;
@@ -2696,15 +2691,26 @@ async fn sync_parent_dir(path: &FsPath) {
     }
 }
 
-async fn persist_current_model_state(state: &AppState) -> Result<(), (StatusCode, String)> {
-    let persisted = {
-        let store = state.inner.lock().await;
-        PersistedModelState {
-            models: store.models.clone(),
-            active_model_id: store.active_model_id.clone(),
-        }
+async fn mutate_model_state_and_persist<R>(
+    state: &AppState,
+    mutation: impl FnOnce(&mut Store) -> Result<R, ApiError>,
+) -> Result<R, ApiError> {
+    let mut store = state.inner.lock().await;
+    let original_models = store.models.clone();
+    let original_active_model_id = store.active_model_id.clone();
+    let result = mutation(&mut store)?;
+    let persisted = PersistedModelState {
+        models: store.models.clone(),
+        active_model_id: store.active_model_id.clone(),
     };
-    write_model_state(&state.model_state_path, &persisted).await
+
+    if let Err(error) = write_model_state(&state.model_state_path, &persisted).await {
+        store.models = original_models;
+        store.active_model_id = original_active_model_id;
+        return Err(raw_api_error(error, "model_state_persist_failed"));
+    }
+
+    Ok(result)
 }
 
 async fn write_model_state(
@@ -3651,6 +3657,136 @@ mod catalog_tests {
         assert_eq!(loaded.state.models.len(), 1);
         assert_eq!(loaded.state.active_model_id, None);
         let _ = tokio::fs::remove_dir_all(root).await;
+    }
+
+    async fn test_state_with_unwritable_model_file(
+        models: Vec<ModelRecord>,
+        active_model_id: Option<String>,
+    ) -> (AppState, PathBuf) {
+        let root = std::env::temp_dir().join(format!("fathom-unwritable-state-{}", Uuid::new_v4()));
+        let path = root.join("models.json");
+        tokio::fs::create_dir_all(path.join("child")).await.unwrap();
+        (test_state_at(path, models, active_model_id), root)
+    }
+
+    #[tokio::test]
+    async fn failed_register_model_persistence_does_not_publish_unsaved_model() {
+        let package_root =
+            std::env::temp_dir().join(format!("fathom-register-txn-{}", Uuid::new_v4()));
+        tokio::fs::create_dir_all(&package_root).await.unwrap();
+        let artifact_path = package_root.join("pytorch_model.bin");
+        tokio::fs::write(&artifact_path, b"pickle-like fixture bytes")
+            .await
+            .unwrap();
+        let (state, state_root) = test_state_with_unwritable_model_file(vec![], None).await;
+
+        let error = register_model(
+            State(state.clone()),
+            Json(RegisterModelRequest {
+                id: Some("unsaved-local".into()),
+                name: "Unsaved local fixture".into(),
+                model_path: artifact_path.to_string_lossy().to_string(),
+                runtime_model_name: None,
+            }),
+        )
+        .await
+        .unwrap_err();
+
+        assert_api_error(
+            error,
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "model_state_persist_failed",
+        );
+        let Json(body) = dashboard(State(state.clone())).await;
+        assert!(body["models"].as_array().unwrap().is_empty());
+        assert_eq!(body["runtime"]["active_model_id"], serde_json::Value::Null);
+        let Json(models_body) = v1_models(State(state)).await;
+        assert!(models_body["data"].as_array().unwrap().is_empty());
+        let _ = tokio::fs::remove_dir_all(package_root).await;
+        let _ = tokio::fs::remove_dir_all(state_root).await;
+    }
+
+    #[tokio::test]
+    async fn failed_external_model_persistence_does_not_publish_unsaved_model() {
+        let (state, state_root) = test_state_with_unwritable_model_file(vec![], None).await;
+
+        let error = connect_external_model(
+            State(state.clone()),
+            Json(ExternalModelRequest {
+                id: "unsaved-external".into(),
+                name: "Unsaved external fixture".into(),
+                model_name: "external-model".into(),
+                api_base: "https://api.example.test/v1".into(),
+                api_key: "test-key".into(),
+                source: "OpenAI-compatible".into(),
+            }),
+        )
+        .await
+        .unwrap_err();
+
+        assert_api_error(
+            error,
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "model_state_persist_failed",
+        );
+        let Json(body) = dashboard(State(state.clone())).await;
+        assert!(body["models"].as_array().unwrap().is_empty());
+        assert_eq!(body["runtime"]["loaded_now"], false);
+        let Json(models_body) = v1_models(State(state)).await;
+        assert!(models_body["data"].as_array().unwrap().is_empty());
+        let _ = tokio::fs::remove_dir_all(state_root).await;
+    }
+
+    #[tokio::test]
+    async fn failed_activate_model_persistence_restores_previous_active_model() {
+        let previous = test_external_model("previous-external");
+        let target = test_external_model("target-external");
+        let (state, state_root) = test_state_with_unwritable_model_file(
+            vec![previous.clone(), target.clone()],
+            Some(previous.id.clone()),
+        )
+        .await;
+
+        let error = activate_model(State(state.clone()), Path(target.id.clone()))
+            .await
+            .unwrap_err();
+
+        assert_api_error(
+            error,
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "model_state_persist_failed",
+        );
+        let Json(runtime_body) = runtime_state(State(state.clone())).await;
+        assert_eq!(runtime_body["active_model_id"], previous.id);
+        let Json(dashboard_body) = dashboard(State(state)).await;
+        assert_eq!(dashboard_body["runtime"]["active_model_id"], previous.id);
+        let _ = tokio::fs::remove_dir_all(state_root).await;
+    }
+
+    #[tokio::test]
+    async fn failed_catalog_final_registration_persistence_does_not_publish_unsaved_model() {
+        let mut model = test_model("unsaved-catalog");
+        model.source = Some("Catalog fixture".into());
+        model.hf_repo = Some("example/catalog-fixture".into());
+        let (state, state_root) = test_state_with_unwritable_model_file(vec![], None).await;
+
+        let error = mutate_model_state_and_persist(&state, |store| {
+            upsert_model(&mut store.models, model.clone());
+            Ok(())
+        })
+        .await
+        .unwrap_err();
+
+        assert_api_error(
+            error,
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "model_state_persist_failed",
+        );
+        let Json(body) = dashboard(State(state.clone())).await;
+        assert!(body["models"].as_array().unwrap().is_empty());
+        let Json(models_body) = v1_models(State(state)).await;
+        assert!(models_body["data"].as_array().unwrap().is_empty());
+        let _ = tokio::fs::remove_dir_all(state_root).await;
     }
 
     #[test]
