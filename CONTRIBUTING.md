@@ -27,6 +27,8 @@ Narrow support is fine when it is honest. For example, a pinned fixture, specifi
 
 ## Verification gates
 
+GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and tests, frontend install/build/copy QA, script and Python syntax checks, and the public-risk scan.
+
 Run the smallest gate that proves your change, and prefer the full set before opening a release-facing PR.
 
 Common gates:
@@ -42,7 +44,7 @@ bash -n scripts/public_risk_scan.sh
 bash scripts/public_risk_scan.sh
 ```
 
-For backend/API changes, also consider:
+For backend/API changes, also consider the networked acceptance smoke locally or in a targeted manual CI run; it is intentionally not part of the default public CI path:
 
 ```bash
 bash -n scripts/backend_acceptance_smoke.sh
