@@ -1,0 +1,14 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node/frontend
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
+
+# Local runtime state
+.fathom/
+*.log
+.DS_Store

@@ -1,0 +1,23 @@
+[package]
+name = "fathom-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+candle-core = "0.10.2"
+candle-nn = "0.10.2"
+candle-transformers = "0.10.2"
+ndarray = { version = "0.16", optional = true }
+ort = { version = "=2.0.0-rc.12", optional = true, default-features = false, features = ["std", "ndarray", "tracing", "download-binaries", "copy-dylibs", "tls-native", "api-24"] }
+serde.workspace = true
+serde_json.workspace = true
+tokenizers = { version = "0.22.1", default-features = false, features = ["onig"] }
+
+[features]
+default = []
+onnx-embeddings-ort = ["dep:ort", "dep:ndarray"]
+
+[dev-dependencies]
+sha2.workspace = true

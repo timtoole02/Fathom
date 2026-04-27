@@ -1,0 +1,20 @@
+{
+  "name": "fathom-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4185",
+    "build": "vite build",
+    "qa:copy": "node scripts/ui-copy-qa.mjs",
+    "preview": "vite preview --host 127.0.0.1 --port 4185"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.8"
+  }
+}

@@ -1,0 +1,24 @@
+[package]
+name = "fathom-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+chrono.workspace = true
+fathom-core = { path = "../fathom-core" }
+serde.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+
+[features]
+default = []
+onnx-embeddings-ort = ["fathom-core/onnx-embeddings-ort"]

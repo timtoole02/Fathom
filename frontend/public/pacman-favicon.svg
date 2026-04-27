@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <mask id="bite">
+      <rect width="64" height="64" fill="white"/>
+      <polygon points="32,32 60,14 60,50" fill="black"/>
+    </mask>
+  </defs>
+  <circle cx="32" cy="32" r="24" fill="#f6d44a" mask="url(#bite)"/>
+  <circle cx="29" cy="21" r="3.2" fill="#1f1f1f"/>
+</svg>
