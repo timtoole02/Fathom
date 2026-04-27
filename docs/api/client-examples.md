@@ -2,6 +2,8 @@
 
 These examples call a running Fathom backend as a local API service. They are intentionally small and focus on the public HTTP surface, not runtime internals. The exact narrow `/v1` request/response contract is documented in [`v1-contract.md`](v1-contract.md).
 
+In CI, the cURL, standard-library Python, SDK, and `.http` examples are checked with a fake loopback server/static assertions so request shapes do not drift. That contract test does not prove real downloads, model loading, generation, or embedding runtime behavior; the separate backend acceptance smoke remains the real-backend gate.
+
 Start the backend first:
 
 ```bash

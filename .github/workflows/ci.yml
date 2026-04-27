@@ -54,6 +54,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Check shell script syntax
         run: |
+          bash -n examples/api/curl-quickstart.sh
           bash -n scripts/public_risk_scan.sh
           bash -n scripts/backend_acceptance_smoke.sh
           bash -n scripts/smoke.sh
@@ -63,8 +64,11 @@ jobs:
       - name: Check Python syntax
         run: |
           python3 -m py_compile \
+            scripts/api_client_examples_regression.py \
             examples/api/python-no-deps.py \
             examples/api/openai-sdk.py \
             scripts/bench_backend.py
+      - name: Run API client example regression
+        run: python3 scripts/api_client_examples_regression.py
       - name: Run public risk scan
         run: bash scripts/public_risk_scan.sh
