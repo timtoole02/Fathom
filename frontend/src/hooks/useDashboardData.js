@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { readApiErrorMessage } from '../lib/apiErrors'
+import { formatApiErrorDetails, readApiErrorDetails } from '../lib/apiErrors'
 import { isExternalModel, isRunnableModel } from '../lib/modelState'
 
 const TAB_STORAGE_KEY = 'fathom.activeTab'
@@ -61,6 +61,10 @@ function buildChatSuccessNotice({ modelType, memoryContext, recovered = false })
   return `${base} Used ${memoryContext.used_count} saved ${memoryContext.used_count === 1 ? 'memory' : 'memories'}${titleSuffix}`
 }
 
+async function readApiErrorNotice(response, fallback) {
+  return formatApiErrorDetails(await readApiErrorDetails(response, fallback), fallback)
+}
+
 export function useDashboardData({ showNotice, clearNotice }) {
   const [dashboard, setDashboard] = useState(null)
   const [tab, setTab] = useState(getInitialTab)
@@ -92,7 +96,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
   const loadDashboard = async ({ silent = false } = {}) => {
     try {
       const res = await fetch('/api/dashboard')
-      if (!res.ok) throw new Error(await readApiErrorMessage(res, 'Could not load Fathom state.'))
+      if (!res.ok) throw new Error(await readApiErrorNotice(res, 'Could not load Fathom state.'))
       const data = await res.json()
       setDashboard(data)
       if (!silent) clearNotice()
@@ -244,7 +248,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
       body: JSON.stringify({ title: manualTitle || null, model_id: selectedModelId || models[0]?.id }),
     })
     if (!res.ok) {
-      throw new Error(await readApiErrorMessage(res, 'Could not create the conversation.'))
+      throw new Error(await readApiErrorNotice(res, 'Could not create the conversation.'))
     }
     const conversation = await res.json()
     await loadDashboard({ silent: true })
@@ -281,7 +285,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
       if (!isExternalModel(resumeModel) && (!runtime?.loaded_now || runtime?.active_model_id !== resumeModelId)) {
         const activateRes = await fetch(`/api/models/${resumeModelId}/activate`, { method: 'POST' })
         if (!activateRes.ok) {
-          throw new Error(await readApiErrorMessage(activateRes, 'Could not reload the selected model after refresh.'))
+          throw new Error(await readApiErrorNotice(activateRes, 'Could not reload the selected model after refresh.'))
         }
       }
 
@@ -292,7 +296,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
       })
 
       if (!res.ok) {
-        throw new Error(await readApiErrorMessage(res, 'Could not resume the pending chat after refresh.'))
+        throw new Error(await readApiErrorNotice(res, 'Could not resume the pending chat after refresh.'))
       }
 
       const updatedConversation = await res.json()
@@ -344,7 +348,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
       if (!isExternalModel(selectedModel) && (!runtime?.loaded_now || runtime?.active_model_id !== selectedModelId)) {
         const activateRes = await fetch(`/api/models/${selectedModelId}/activate`, { method: 'POST' })
         if (!activateRes.ok) {
-          throw new Error(await readApiErrorMessage(activateRes, 'Could not load the selected model.'))
+          throw new Error(await readApiErrorNotice(activateRes, 'Could not load the selected model.'))
         }
       }
 
@@ -355,7 +359,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
       })
 
       if (!res.ok) {
-        throw new Error(await readApiErrorMessage(res, 'Local inference failed.'))
+        throw new Error(await readApiErrorNotice(res, 'Local inference failed.'))
       }
 
       const updatedConversation = await res.json()
@@ -390,7 +394,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
         body: JSON.stringify({ title: trimmedTitle }),
       })
       if (!res.ok) {
-        throw new Error(await readApiErrorMessage(res, 'Could not rename that conversation.'))
+        throw new Error(await readApiErrorNotice(res, 'Could not rename that conversation.'))
       }
       await loadDashboard({ silent: true })
       showNotice('Conversation title updated.', 'success')
@@ -405,7 +409,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     try {
       const res = await fetch(`/api/conversations/${id}`, { method: 'DELETE' })
       if (!res.ok) {
-        throw new Error(await readApiErrorMessage(res, 'Could not delete that conversation.'))
+        throw new Error(await readApiErrorNotice(res, 'Could not delete that conversation.'))
       }
       if (selectedConversationId === id) {
         setSelectedConversationId(null)
@@ -457,7 +461,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
         body: JSON.stringify({ title, body, scope }),
       })
       if (!res.ok) {
-        throw new Error(await readApiErrorMessage(res, 'Could not save that memory.'))
+        throw new Error(await readApiErrorNotice(res, 'Could not save that memory.'))
       }
       await loadDashboard({ silent: true })
       setTab('memory')
@@ -477,7 +481,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
         body: JSON.stringify(changes),
       })
       if (!res.ok) {
-        throw new Error(await readApiErrorMessage(res, 'Could not update that memory.'))
+        throw new Error(await readApiErrorNotice(res, 'Could not update that memory.'))
       }
       await loadDashboard({ silent: true })
       if (successMessage) showNotice(successMessage, 'success')
@@ -492,7 +496,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     try {
       const res = await fetch(`/api/memories/${id}`, { method: 'DELETE' })
       if (!res.ok) {
-        throw new Error(await readApiErrorMessage(res, 'Could not delete that memory.'))
+        throw new Error(await readApiErrorNotice(res, 'Could not delete that memory.'))
       }
       await loadDashboard({ silent: true })
       if (successMessage) showNotice(successMessage, 'success')
@@ -527,7 +531,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     })
 
     if (!res.ok) {
-      showNotice(await readApiErrorMessage(res, 'Could not start the model download.'), 'error')
+      showNotice(await readApiErrorNotice(res, 'Could not start the model download.'), 'error')
       return
     }
 
@@ -543,7 +547,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     })
 
     if (!res.ok) {
-      showNotice(await readApiErrorMessage(res, 'Could not install that Hugging Face model.'), 'error')
+      showNotice(await readApiErrorNotice(res, 'Could not install that Hugging Face model.'), 'error')
       return false
     }
 
@@ -558,7 +562,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     const res = await fetch(`/api/models/${id}/cancel`, { method: 'POST' })
 
     if (!res.ok) {
-      showNotice(await readApiErrorMessage(res, 'Could not cancel that download.'), 'error')
+      showNotice(await readApiErrorNotice(res, 'Could not cancel that download.'), 'error')
       return false
     }
 
@@ -570,7 +574,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
   const activateModel = async (id) => {
     const res = await fetch(`/api/models/${id}/activate`, { method: 'POST' })
     if (!res.ok) {
-      showNotice(await readApiErrorMessage(res, 'Could not activate that model.'), 'error')
+      showNotice(await readApiErrorNotice(res, 'Could not activate that model.'), 'error')
       return
     }
 
@@ -606,7 +610,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     })
 
     if (!res.ok) {
-      showNotice(await readApiErrorMessage(res, 'Could not connect that external model.'), 'error')
+      showNotice(await readApiErrorNotice(res, 'Could not connect that external model.'), 'error')
       return
     }
 
@@ -650,7 +654,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     })
 
     if (!res.ok) {
-      showNotice(await readApiErrorMessage(res, 'Could not register that local model.'), 'error')
+      showNotice(await readApiErrorNotice(res, 'Could not register that local model.'), 'error')
       return
     }
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { formatApiErrorDetails, readApiErrorDetails, readApiErrorMessage } from '../src/lib/apiErrors.js'
 import { buildAssistantMetricSummary, buildAssistantMetricTitle, buildRuntimeCacheAnalytics, formatRuntimeFamily, formatRuntimeResidency } from '../src/lib/formatters.js'
 
 const root = new URL('..', import.meta.url).pathname
@@ -30,6 +31,10 @@ const checks = [
       'local-embeddings-retrieval',
       'Installing…',
       'Downloading and verifying…',
+      'GGUF metadata-only',
+      'Embedding-only',
+      'PyTorch .bin blocked',
+      'Chat template unsupported',
     ],
   },
   {
@@ -37,6 +42,16 @@ const checks = [
     snippets: [
       'Hugging Face model installed and inspected',
       'Could not install that Hugging Face model',
+    ],
+  },
+  {
+    file: 'src/views/ApiView.jsx',
+    snippets: [
+      'narrow local',
+      'stream: true',
+      'streaming is not implemented',
+      'base64 embeddings are refused',
+      'chat-runnable models only; embeddings and metadata-only packages stay out',
     ],
   },
 ]
@@ -94,7 +109,27 @@ const runtimeAnalytics = buildRuntimeCacheAnalytics([
   { role: 'assistant', runtime_residency: 'not_cached', runtime_cache_hit: false, total_ms: 14 },
   { role: 'user', content: 'ignore me' },
 ])
+const structuredRefusal = await readApiErrorDetails(new Response(JSON.stringify({
+  error: {
+    message: 'stream:true is not supported for local chat completions.',
+    type: 'invalid_request_error',
+    code: 'streaming_not_implemented',
+    param: 'stream',
+  },
+}), { status: 400 }), 'Local inference failed.')
+const exampleLocalPath = ['', 'Users', 'example', 'private', 'model.bin'].join('/')
+const pathRefusal = await readApiErrorDetails(new Response(JSON.stringify({
+  error: {
+    message: `artifact ${exampleLocalPath} is blocked`,
+    type: 'invalid_request_error',
+    code: 'pytorch_bin_blocked',
+  },
+}), { status: 422 }), 'Could not activate that model.')
+const legacyMessage = await readApiErrorMessage(new Response(JSON.stringify({ error: { message: 'legacy callers still receive the backend message' } }), { status: 400 }), 'fallback')
+const structuredNotice = formatApiErrorDetails(structuredRefusal, 'Local inference failed.')
+const pathNotice = formatApiErrorDetails(pathRefusal, 'Could not activate that model.')
 const analyticsCopy = readFileSync(join(root, 'src/views/AnalyticsView.jsx'), 'utf8')
+const apiErrorCopy = readFileSync(join(root, 'src/lib/apiErrors.js'), 'utf8')
 const ggufCopyFiles = [
   join(root, '../README.md'),
   join(root, '../docs/research/model-format-landscape.md'),
@@ -103,6 +138,12 @@ const ggufCopyFiles = [
 ]
 const ggufCopy = ggufCopyFiles.map((path) => readFileSync(path, 'utf8')).join('\n')
 
+if (structuredRefusal.message !== 'stream:true is not supported for local chat completions.') failures.push(`structured API errors should parse error.message, got: ${structuredRefusal.message}`)
+if (structuredRefusal.type !== 'invalid_request_error' || structuredRefusal.code !== 'streaming_not_implemented' || structuredRefusal.param !== 'stream') failures.push(`structured API errors should preserve type/code/param, got: ${JSON.stringify(structuredRefusal)}`)
+if (structuredNotice !== 'streaming not implemented: stream:true is not supported for local chat completions.') failures.push(`structured notices should show concise code labels plus backend message, got: ${structuredNotice}`)
+if (pathNotice.includes(exampleLocalPath) || !pathNotice.includes('[local path]')) failures.push(`structured notices should avoid leaking local paths, got: ${pathNotice}`)
+if (legacyMessage !== 'legacy callers still receive the backend message') failures.push(`readApiErrorMessage compatibility failed, got: ${legacyMessage}`)
+if (!apiErrorCopy.includes('readApiErrorDetails') || !apiErrorCopy.includes('readApiErrorMessage')) failures.push('apiErrors helper must keep details and legacy message readers')
 if (formatRuntimeResidency('warm_reused') !== 'Warm runtime') failures.push('warm_reused should render as Warm runtime')
 if (formatRuntimeResidency('cold_loaded') !== 'Cold load') failures.push('cold_loaded should render as Cold load')
 if (formatRuntimeResidency('not_cached') !== null) failures.push('not_cached should not imply a cache state in compact chat copy')

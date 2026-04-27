@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { formatApiErrorDetails, readApiErrorDetails } from '../lib/apiErrors'
 import { clampText, formatDate } from '../lib/formatters'
 
 export default function MemoryView({
@@ -34,11 +35,13 @@ export default function MemoryView({
         ])
         const indexesData = indexesRes.ok ? await indexesRes.json() : null
         const embeddingData = embeddingRes.ok ? await embeddingRes.json() : null
+        const indexError = indexesRes.ok ? '' : formatApiErrorDetails(await readApiErrorDetails(indexesRes, 'Retrieval index status is unavailable right now.'), 'Retrieval index status is unavailable right now.')
+        const embeddingError = embeddingRes.ok ? '' : formatApiErrorDetails(await readApiErrorDetails(embeddingRes, 'Embedding inference status is unavailable right now.'), 'Embedding inference status is unavailable right now.')
         if (cancelled) return
         setRetrievalStatus({
           indexes: indexesData?.items || [],
-          summary: indexesData?.summary || 'Retrieval index status is unavailable right now.',
-          embeddingSummary: embeddingData?.retrieval?.summary || 'Embedding inference status is unavailable right now.',
+          summary: indexesData?.summary || indexError || 'Retrieval index status is unavailable right now.',
+          embeddingSummary: embeddingData?.retrieval?.summary || embeddingError || 'Embedding inference status is unavailable right now.',
           embeddingStatus: embeddingData?.retrieval?.status || '',
           embeddingRuntimeLane: embeddingData?.retrieval?.runtime_lane || '',
           embeddingModels: embeddingData?.items || [],

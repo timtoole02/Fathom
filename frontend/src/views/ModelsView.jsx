@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { readApiErrorMessage } from '../lib/apiErrors'
+import { formatApiErrorDetails, readApiErrorDetails } from '../lib/apiErrors'
 import { formatBytes, formatCompactNumber } from '../lib/formatters'
 import { canLoadIntoRuntime, describeModelState, getModelStatusLabel, hasPlannedCapability, isEmbeddingOnlyModel, isExternalModel, isRunnableModel } from '../lib/modelState'
 
@@ -109,6 +109,56 @@ function getCapabilityChecklist(model, { runnable = false, canLoad = false } = {
   ]
 }
 
+function hasText(model, needle) {
+  const haystack = [model?.capability_status, model?.capability_summary, model?.task, model?.install_error, ...(model?.backend_lanes || [])]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+  return haystack.includes(needle)
+}
+
+function getNonRunnableCallouts(model) {
+  if (!model || isExternalModel(model) || isRunnableModel(model)) return []
+
+  const callouts = []
+  const status = (model.capability_status || '').toString().toLowerCase()
+  const lanes = model.backend_lanes || []
+  const file = `${model.hf_filename || ''} ${model.model_path || ''}`.toLowerCase()
+
+  if (isEmbeddingOnlyModel(model) || hasText(model, 'embedding-only') || model.task === 'text_embedding') {
+    callouts.push('Embedding-only: usable for verified MiniLM vector/retrieval calls, not chat or /v1/models.')
+  }
+
+  if (status === 'metadata_only' || lanes.includes('gguf-native') || hasText(model, 'metadata-only') || hasText(model, 'gguf')) {
+    callouts.push('GGUF metadata-only: inspected for metadata/readiness; native GGUF chat is not implemented.')
+  }
+
+  if (file.endsWith('.bin') || hasText(model, 'pytorch') || hasText(model, 'pickle')) {
+    callouts.push('PyTorch .bin blocked: Fathom does not load pickle/PyTorch weight files.')
+  }
+
+  if (status === 'planned' || status === 'unsupported' || hasPlannedCapability(model) || hasText(model, 'planned') || hasText(model, 'unsupported')) {
+    callouts.push('Backend not runnable: this lane is planned or unsupported until a real verified loader exists.')
+  }
+
+  if (hasText(model, 'chat_template_not_supported') || hasText(model, 'template not supported') || hasText(model, 'unsupported template')) {
+    callouts.push('Chat template unsupported: Fathom refuses unknown templates instead of guessing prompt format.')
+  }
+
+  return [...new Set(callouts)].slice(0, 3)
+}
+
+function NonRunnableCallouts({ model }) {
+  const callouts = getNonRunnableCallouts(model)
+  if (!callouts.length) return null
+
+  return (
+    <div className="models-card-copy-stack" aria-label="Non-runnable model details">
+      {callouts.map((callout) => <p key={callout} className="model-summary">{callout}</p>)}
+    </div>
+  )
+}
+
 function CapabilityChecklist({ model, runnable, canLoad }) {
   const checkpoints = getCapabilityChecklist(model, { runnable, canLoad })
 
@@ -189,7 +239,7 @@ export default function ModelsView({
         const params = new URLSearchParams({ limit: String(CATALOG_PAGE_SIZE) })
         if (query.trim()) params.set('query', query.trim())
         const res = await fetch(`/api/models/catalog?${params.toString()}`, { signal: controller.signal })
-        if (!res.ok) throw new Error(await readApiErrorMessage(res, 'Could not load the model catalog.'))
+        if (!res.ok) throw new Error(formatApiErrorDetails(await readApiErrorDetails(res, 'Could not load the model catalog.'), 'Could not load the model catalog.'))
         const data = await res.json()
         setCatalogItems(data.items || [])
         setCatalogNextCursor(data.next_cursor || null)
@@ -233,7 +283,7 @@ export default function ModelsView({
       const params = new URLSearchParams({ limit: String(CATALOG_PAGE_SIZE), cursor: catalogNextCursor })
       if (query.trim()) params.set('query', query.trim())
       const res = await fetch(`/api/models/catalog?${params.toString()}`)
-      if (!res.ok) throw new Error(await readApiErrorMessage(res, 'Could not load more catalog results.'))
+      if (!res.ok) throw new Error(formatApiErrorDetails(await readApiErrorDetails(res, 'Could not load more catalog results.'), 'Could not load more catalog results.'))
       const data = await res.json()
       setCatalogItems((current) => {
         const existing = new Set(current.map((item) => item.catalog_id))
@@ -398,6 +448,7 @@ export default function ModelsView({
                   </div>
 
                   <CapabilityChecklist model={model} runnable={runnable} canLoad={canLoad} />
+                  <NonRunnableCallouts model={model} />
 
                   {model.backend_lanes?.length > 0 && (
                     <div className="models-card-tags">
@@ -487,6 +538,7 @@ export default function ModelsView({
                     <p className="model-summary">Download source: Hugging Face. Runtime promise: files are saved and inspected, but no fake generation is enabled.</p>
                     {localMatch?.capability_summary && <p className="model-summary">Capability: {localMatch.capability_summary}</p>}
                     {localMatch && <CapabilityChecklist model={localMatch} runnable={runnable} canLoad={canLoad} />}
+                    {localMatch && <NonRunnableCallouts model={localMatch} />}
                     {localMatch?.backend_lanes?.length > 0 && (
                       <div className="models-card-tags">
                         {localMatch.backend_lanes.map((lane) => <div key={lane} className="pin-badge">{lane}</div>)}
@@ -615,6 +667,7 @@ export default function ModelsView({
                   </div>
 
                   <CapabilityChecklist model={model} runnable={runnable} canLoad={canLoad} />
+                  <NonRunnableCallouts model={model} />
 
                   {model.backend_lanes?.length > 0 && (
                     <div className="models-card-tags">
