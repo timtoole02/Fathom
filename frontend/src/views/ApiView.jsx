@@ -27,7 +27,7 @@ export default function ApiView({ runtime, selectedModel }) {
   -H "Content-Type: application/json" \
   -d '{
     "model": "${selectedModel?.id}",
-    "messages": [{"role": "user", "content": "Hello from OpenClaw"}]
+    "messages": [{"role": "user", "content": "Hello from Fathom"}]
   }'`}</pre>
         </div>
       </div>

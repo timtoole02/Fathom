@@ -29,6 +29,7 @@ bash scripts/stop.sh
 
 `scripts/stop.sh` also stops the frontend if it was started by `scripts/start.sh`, but `scripts/start-backend.sh` never starts the frontend.
 
+Minimal client examples for cURL, dependency-free Python, the OpenAI Python SDK, and `.http` editors live in [`client-examples.md`](client-examples.md) and [`../../examples/api/`](../../examples/api/).
 
 ## Optional backend acceptance smoke
 

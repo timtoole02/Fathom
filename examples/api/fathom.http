@@ -1,0 +1,34 @@
+# Fathom local API examples for editors with .http / REST Client support.
+# Override the base URL if your backend runs on another port.
+@base = http://127.0.0.1:8180
+@model = echarlaix-tiny-random-phiforcausallm-model-safetensors
+
+### Health
+GET {{base}}/v1/health
+
+### Install pinned tiny Phi SafeTensors fixture
+POST {{base}}/api/models/catalog/install
+Content-Type: application/json
+
+{
+  "repo_id": "echarlaix/tiny-random-PhiForCausalLM",
+  "filename": "model.safetensors"
+}
+
+### List runnable OpenAI-style chat models
+GET {{base}}/v1/models
+
+### Non-streaming chat completion
+POST {{base}}/v1/chat/completions
+Content-Type: application/json
+
+{
+  "model": "{{model}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Say hello from a local Fathom API smoke test."
+    }
+  ],
+  "max_tokens": 24
+}

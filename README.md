@@ -74,7 +74,7 @@ This starts only `fathom-server` on `http://127.0.0.1:8180`; it does not require
 FATHOM_FEATURES=onnx-embeddings-ort bash scripts/start-backend.sh
 ```
 
-Backend/API examples for health, capabilities, catalog install, `/v1/models`, `/v1/chat/completions`, explicit-vector retrieval, and embedding endpoints live in [`docs/api/backend-only-quickstart.md`](docs/api/backend-only-quickstart.md). For a fuller optional networked backend-only acceptance pass with isolated state/model directories, run `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh`. Before sharing generated artifacts publicly, run `bash scripts/public_risk_scan.sh` and review logs/full JSON payloads for local paths or request text.
+Backend/API examples for health, capabilities, catalog install, `/v1/models`, `/v1/chat/completions`, explicit-vector retrieval, and embedding endpoints live in [`docs/api/backend-only-quickstart.md`](docs/api/backend-only-quickstart.md). Minimal client examples for cURL, dependency-free Python, the OpenAI Python SDK, and `.http` editors live in [`docs/api/client-examples.md`](docs/api/client-examples.md). For a fuller optional networked backend-only acceptance pass with isolated state/model directories, run `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh`. Before sharing generated artifacts publicly, run `bash scripts/public_risk_scan.sh` and review logs/full JSON payloads for local paths or request text.
 
 ## Try local generation in the UI
 
@@ -88,6 +88,8 @@ Backend/API examples for health, capabilities, catalog install, `/v1/models`, `/
 The tiny random GPT-2, Llama, Qwen2, Phi, Mistral, and Gemma SafeTensors catalog entries are useful for backend smoke tests, but their output can be gibberish or whitespace. Use TinyStories or SmolLM2 when you want a demo that looks more like language. The tiny random GGUF catalog fixture is different: it is metadata/provenance-only and will not appear in `/v1/models`.
 
 ## Try local generation by API
+
+For minimal copy-paste client examples, see [`docs/api/client-examples.md`](docs/api/client-examples.md) and the scripts in [`examples/api/`](examples/api/).
 
 List catalog entries:
 
