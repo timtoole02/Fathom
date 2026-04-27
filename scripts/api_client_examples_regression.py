@@ -211,6 +211,10 @@ def assert_public_contract(requests: list[RecordedRequest], *, embeddings: bool,
         filename = request.body.get("filename")
         assert_true(isinstance(repo_id, str) and re.fullmatch(r"[^/\s]+/[^\s]+", repo_id) is not None, f"{label}: invalid catalog repo_id {repo_id!r}")
         assert_true(isinstance(filename, str) and filename.endswith(".safetensors"), f"{label}: invalid catalog filename {filename!r}")
+        assert_true(
+            request.body.get("accept_license") in (None, False) and request.body.get("accepted_license") in (None, False),
+            f"{label}: default permissive catalog examples should not require a license acknowledgement field",
+        )
 
     chat_requests = [r for r in requests if r.method == "POST" and r.path == "/v1/chat/completions"]
     assert_true(len(chat_requests) == 1, f"{label}: expected exactly one chat request")

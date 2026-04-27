@@ -539,11 +539,14 @@ export function useDashboardData({ showNotice, clearNotice }) {
     showNotice('Model download started. Progress will update here as bytes land on disk.', 'success')
   }
 
-  const installCatalogModel = async ({ repo_id, filename }) => {
+  const installCatalogModel = async ({ repo_id, filename, accept_license, accepted_license }) => {
+    const body = { repo_id, filename }
+    if (accept_license || accepted_license) body.accept_license = true
+
     const res = await fetch('/api/models/catalog/install', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ repo_id, filename }),
+      body: JSON.stringify(body),
     })
 
     if (!res.ok) {

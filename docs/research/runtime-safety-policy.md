@@ -125,7 +125,7 @@ This policy applies to local artifact registration, future catalog/download flow
 - Verify hash before detection/routing; never execute or parse unsafe formats during download.
 - Use atomic writes and resume validation; incomplete downloads cannot be registered.
 - Prevent path traversal during archive/external-data extraction.
-- Surface model license and usage restrictions before enabling catalog install; require explicit acceptance for restrictive/non-commercial licenses.
+- Surface model license and usage restrictions before enabling catalog install; require explicit acknowledgement for unknown, restrictive, or non-commercial catalog license status before download starts.
 - Never honor remote `trust_remote_code` or auto-install repo dependencies.
 
 ### Native dependencies and backend adapters
@@ -148,8 +148,8 @@ This policy applies to local artifact registration, future catalog/download flow
 **Policy gates:**
 
 - Parse common license locations where safe: `README.md`/model card front matter, `LICENSE`, `config.json` license fields, Hugging Face metadata manifests, and catalog metadata.
-- Label license state as one of: `known-permissive`, `known-restrictive`, `non-commercial`, `unknown`, or `conflict`.
-- Allow local inspection of unknown-license artifacts, but catalog install and production routing should show an explicit warning.
+- Label license state as one of: `known-permissive`, `known-restrictive`, `non-commercial`, `unknown`, or `conflict`; API catalog responses currently expose the narrower install-policy status as `permissive`, `unknown`, or `restrictive`.
+- Allow local inspection of unknown-license artifacts, but catalog install and production routing should show an explicit warning and require acknowledgement before network install.
 - Never rewrite or hide upstream license text.
 - Track runtime dependency licenses separately from model licenses.
 

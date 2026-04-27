@@ -342,6 +342,10 @@ struct MemoryRequest {
 struct CatalogInstallRequest {
     repo_id: String,
     filename: String,
+    #[serde(default)]
+    accept_license: Option<bool>,
+    #[serde(default)]
+    accepted_license: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -406,6 +410,23 @@ struct CatalogFileSpec {
     filename: &'static str,
     size_bytes: Option<i64>,
     sha256: Option<&'static str>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CatalogLicenseStatus {
+    Permissive,
+    Unknown,
+    Restrictive,
+}
+
+impl CatalogLicenseStatus {
+    const fn as_str(self) -> &'static str {
+        match self {
+            Self::Permissive => "permissive",
+            Self::Unknown => "unknown",
+            Self::Restrictive => "restrictive",
+        }
+    }
 }
 
 const fn catalog_file(
@@ -1434,6 +1455,8 @@ async fn install_catalog_model(
             )
         })?;
 
+    validate_catalog_license_ack(&spec, catalog_install_license_acknowledged(&req))?;
+
     let final_model_dir = fathom_model_dir(&spec.repo_id);
     let staging_dir = create_catalog_install_staging_dir(&spec)
         .await
@@ -1505,6 +1528,9 @@ async fn model_catalog() -> Json<serde_json::Value> {
                 "source": "Hugging Face",
                 "source_url": format!("https://huggingface.co/{}", spec.repo_id),
                 "license": spec.license,
+                "license_status": catalog_license_status(spec.license).as_str(),
+                "license_acknowledgement_required": catalog_license_acknowledgement_required(&spec),
+                "license_warning": catalog_license_warning(&spec),
                 "quant": format_from_filename(spec.primary_filename),
                 "size_bytes": spec.size_bytes,
                 "files": spec.files.iter().map(|file| serde_json::json!({"filename": file.filename, "size_bytes": file.size_bytes, "sha256": file.sha256})).collect::<Vec<_>>(),
@@ -1985,6 +2011,75 @@ fn retrieval_load_error_json(error: (StatusCode, String)) -> ApiError {
         "retrieval_state_error"
     };
     raw_api_error(error, code)
+}
+
+fn catalog_install_license_acknowledged(req: &CatalogInstallRequest) -> bool {
+    req.accept_license.unwrap_or(false) || req.accepted_license.unwrap_or(false)
+}
+
+fn catalog_license_status(license: &str) -> CatalogLicenseStatus {
+    let normalized = license.trim().to_ascii_lowercase();
+    if normalized.is_empty() || normalized == "unknown" || normalized == "other" {
+        return CatalogLicenseStatus::Unknown;
+    }
+
+    if normalized.contains("noncommercial")
+        || normalized.contains("non-commercial")
+        || normalized.contains("cc-by-nc")
+        || normalized.contains("cc-by-sa-nc")
+        || normalized.ends_with("-nc")
+        || normalized.contains("llama")
+    {
+        return CatalogLicenseStatus::Restrictive;
+    }
+
+    match normalized.as_str() {
+        "apache-2.0"
+        | "mit"
+        | "bsd"
+        | "bsd-2-clause"
+        | "bsd-3-clause"
+        | "isc"
+        | "cc0-1.0"
+        | "openrail"
+        | "bigscience-openrail-m" => CatalogLicenseStatus::Permissive,
+        _ => CatalogLicenseStatus::Unknown,
+    }
+}
+
+fn catalog_license_acknowledgement_required(spec: &CatalogModelSpec) -> bool {
+    catalog_license_status(spec.license) != CatalogLicenseStatus::Permissive
+}
+
+fn catalog_license_warning(spec: &CatalogModelSpec) -> Option<&'static str> {
+    match catalog_license_status(spec.license) {
+        CatalogLicenseStatus::Permissive => None,
+        CatalogLicenseStatus::Unknown => Some(
+            "Fathom could not classify this catalog license as permissive. Review the model card/license before downloading.",
+        ),
+        CatalogLicenseStatus::Restrictive => Some(
+            "This catalog license may include use restrictions. Review the model card/license before downloading.",
+        ),
+    }
+}
+
+fn validate_catalog_license_ack(
+    spec: &CatalogModelSpec,
+    acknowledged: bool,
+) -> Result<(), ApiError> {
+    if !catalog_license_acknowledgement_required(spec) || acknowledged {
+        return Ok(());
+    }
+
+    Err(api_error(
+        StatusCode::BAD_REQUEST,
+        format!(
+            "Review the catalog license before installing {}. Fathom lists this entry as {} and requires explicit acknowledgement for unknown or restrictive licenses.",
+            spec.title,
+            catalog_license_status(spec.license).as_str()
+        ),
+        "catalog_license_ack_required",
+    ))
 }
 
 fn catalog_error_json(error: (StatusCode, String)) -> ApiError {
@@ -3152,6 +3247,89 @@ mod catalog_tests {
     }
 
     #[test]
+    fn catalog_license_policy_allows_permissive_without_ack() {
+        let spec = catalog_specs()
+            .into_iter()
+            .find(|spec| spec.catalog_id == "hf-intel-tiny-random-gpt2")
+            .unwrap();
+
+        assert_eq!(
+            catalog_license_status(spec.license),
+            CatalogLicenseStatus::Permissive
+        );
+        assert!(!catalog_license_acknowledgement_required(&spec));
+        validate_catalog_license_ack(&spec, false).unwrap();
+    }
+
+    #[test]
+    fn unknown_catalog_license_requires_ack_and_has_stable_error_envelope() {
+        let spec = catalog_specs()
+            .into_iter()
+            .find(|spec| spec.catalog_id == "hf-yujiepan-qwen2-tiny-random")
+            .unwrap();
+
+        assert_eq!(
+            catalog_license_status(spec.license),
+            CatalogLicenseStatus::Unknown
+        );
+        assert!(catalog_license_acknowledgement_required(&spec));
+        validate_catalog_license_ack(&spec, true).unwrap();
+
+        let (status, Json(body)) = validate_catalog_license_ack(&spec, false).unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(body["error"]["code"], "catalog_license_ack_required");
+        assert_eq!(body["error"]["type"], "catalog_license_ack_required");
+        assert!(body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("requires explicit acknowledgement"));
+        assert!(body["error"].get("param").is_some());
+    }
+
+    #[test]
+    fn catalog_install_request_accepts_both_license_ack_field_names() {
+        let accept_license: CatalogInstallRequest = serde_json::from_value(serde_json::json!({
+            "repo_id": "example/repo",
+            "filename": "model.safetensors",
+            "accept_license": true
+        }))
+        .unwrap();
+        let accepted_license: CatalogInstallRequest = serde_json::from_value(serde_json::json!({
+            "repo_id": "example/repo",
+            "filename": "model.safetensors",
+            "accepted_license": true
+        }))
+        .unwrap();
+
+        assert!(catalog_install_license_acknowledged(&accept_license));
+        assert!(catalog_install_license_acknowledged(&accepted_license));
+    }
+
+    #[tokio::test]
+    async fn catalog_listing_includes_license_policy_metadata() {
+        let Json(body) = model_catalog().await;
+        let items = body["items"].as_array().unwrap();
+        let permissive = items
+            .iter()
+            .find(|item| item["catalog_id"] == "hf-intel-tiny-random-gpt2")
+            .unwrap();
+        let unknown = items
+            .iter()
+            .find(|item| item["catalog_id"] == "hf-yujiepan-qwen2-tiny-random")
+            .unwrap();
+
+        assert_eq!(permissive["license_status"], "permissive");
+        assert_eq!(permissive["license_acknowledgement_required"], false);
+        assert!(permissive["license_warning"].is_null());
+        assert_eq!(unknown["license_status"], "unknown");
+        assert_eq!(unknown["license_acknowledgement_required"], true);
+        assert!(unknown["license_warning"]
+            .as_str()
+            .unwrap()
+            .contains("Review the model card/license"));
+    }
+
+    #[test]
     fn download_manifest_captures_pinned_verified_catalog_provenance() {
         let spec = catalog_specs()
             .into_iter()
@@ -3314,6 +3492,33 @@ mod catalog_tests {
     }
 
     #[tokio::test]
+    async fn unknown_license_catalog_install_refuses_without_ack_before_download() {
+        let root = std::env::temp_dir().join(format!("fathom-license-catalog-{}", Uuid::new_v4()));
+        let state = test_state_at(root.join("models.json"), vec![], None);
+
+        let (status, Json(body)) = install_catalog_model(
+            State(state),
+            Json(CatalogInstallRequest {
+                repo_id: "yujiepan/qwen2-tiny-random".into(),
+                filename: "model.safetensors".into(),
+                accept_license: None,
+                accepted_license: None,
+            }),
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(body["error"]["code"], "catalog_license_ack_required");
+        assert_eq!(body["error"]["type"], "catalog_license_ack_required");
+        assert!(body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("requires explicit acknowledgement"));
+        let _ = tokio::fs::remove_dir_all(root).await;
+    }
+
+    #[tokio::test]
     async fn unknown_catalog_install_returns_json_error_shape() {
         let root = std::env::temp_dir().join(format!("fathom-unknown-catalog-{}", Uuid::new_v4()));
         let state = test_state_at(root.join("models.json"), vec![], None);
@@ -3323,6 +3528,8 @@ mod catalog_tests {
             Json(CatalogInstallRequest {
                 repo_id: "missing/repo".into(),
                 filename: "missing.safetensors".into(),
+                accept_license: None,
+                accepted_license: None,
             }),
         )
         .await

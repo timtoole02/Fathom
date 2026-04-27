@@ -229,6 +229,7 @@ export default function ModelsView({
   const [catalogLoadingMore, setCatalogLoadingMore] = useState(false)
   const [catalogError, setCatalogError] = useState('')
   const [pendingCatalogInstalls, setPendingCatalogInstalls] = useState(() => new Set())
+  const [catalogLicenseAcknowledgements, setCatalogLicenseAcknowledgements] = useState(() => new Set())
 
   useEffect(() => {
     const controller = new AbortController()
@@ -263,9 +264,10 @@ export default function ModelsView({
 
   const installCatalogItem = async (item) => {
     const key = catalogInstallKey(item)
+    const accepted = catalogLicenseAcknowledgements.has(key)
     setPendingCatalogInstalls((current) => new Set(current).add(key))
     try {
-      return await installCatalogModel(item)
+      return await installCatalogModel({ ...item, accept_license: accepted })
     } finally {
       setPendingCatalogInstalls((current) => {
         const next = new Set(current)
@@ -493,7 +495,12 @@ export default function ModelsView({
                 const canLoad = canLoadIntoRuntime(localMatch)
                 const active = runtime?.active_model_id === localMatch?.id
                 const selected = selectedModelId === localMatch?.id
-                const installing = pendingCatalogInstalls.has(catalogInstallKey(item))
+                const installKey = catalogInstallKey(item)
+                const installing = pendingCatalogInstalls.has(installKey)
+                const licenseAckRequired = Boolean(item.license_acknowledgement_required)
+                const licenseAcknowledged = catalogLicenseAcknowledgements.has(installKey)
+                const installDisabled = installing || (licenseAckRequired && !licenseAcknowledged)
+                const licenseStatus = item.license_status || (item.license === 'unknown' ? 'unknown' : 'permissive')
 
                 return (
                   <article key={item.catalog_id} className={`model-card models-model-card models-catalog-card-clean ${active ? 'active-model-card' : ''} ${selected ? 'selected-model-card' : ''} ${installing ? 'is-installing' : ''}`} aria-busy={installing ? 'true' : undefined}>
@@ -514,6 +521,8 @@ export default function ModelsView({
                       {selected && <div className="pin-badge">Next chat</div>}
                       {installing && <div className="pin-badge">Downloading and verifying…</div>}
                       {localMatch?.model_path && <div className="pin-badge">Saved locally</div>}
+                      <div className="pin-badge">License: {item.license || 'unknown'}</div>
+                      {licenseAckRequired && <div className="pin-badge">License acknowledgement required</div>}
                     </div>
 
                     <dl className="models-definition-grid">
@@ -529,6 +538,10 @@ export default function ModelsView({
                         <dt>Download size</dt>
                         <dd>{item.size_bytes ? formatBytes(item.size_bytes) : 'Checked before download'}</dd>
                       </div>
+                      <div>
+                        <dt>License status</dt>
+                        <dd>{licenseStatus}</dd>
+                      </div>
                     </dl>
 
                     {item.description && <p className="model-summary">{item.description}</p>}
@@ -536,6 +549,25 @@ export default function ModelsView({
                     {item?.repo_id === 'sentence-transformers/all-MiniLM-L6-v2' && <p className="model-summary">This is for retrieval experiments through the default Candle/SafeTensors MiniLM embedding lane. It returns local vectors, but it must not appear as a chat/generation model.</p>}
                     {isOnnxEmbeddingFixture(item) && <p className="model-summary">This is for retrieval experiments through the feature-gated ONNX MiniLM embedding lane. It can expose embeddings when ONNX Runtime is compiled, but it must not appear as a chat/generation model.</p>}
                     <p className="model-summary">Download source: Hugging Face. Runtime promise: files are saved and inspected, but no fake generation is enabled.</p>
+                    {item.license_warning && <p className="library-error-copy">{item.license_warning}</p>}
+                    {licenseAckRequired && (
+                      <label className="models-license-ack">
+                        <input
+                          type="checkbox"
+                          checked={licenseAcknowledged}
+                          onChange={(event) => {
+                            setCatalogLicenseAcknowledgements((current) => {
+                              const next = new Set(current)
+                              if (event.target.checked) next.add(installKey)
+                              else next.delete(installKey)
+                              return next
+                            })
+                          }}
+                          disabled={installing}
+                        />
+                        <span>I reviewed the listed license status and want to download this catalog entry.</span>
+                      </label>
+                    )}
                     {localMatch?.capability_summary && <p className="model-summary">Capability: {localMatch.capability_summary}</p>}
                     {localMatch && <CapabilityChecklist model={localMatch} runnable={runnable} canLoad={canLoad} />}
                     {localMatch && <NonRunnableCallouts model={localMatch} />}
@@ -547,7 +579,7 @@ export default function ModelsView({
                     {localMatch?.install_error && <p className="library-error-copy">{localMatch.install_error}</p>}
 
                     <div className="models-card-actions">
-                      {(!localMatch || localMatch.status === 'not_installed' || localMatch.status === 'failed') && <button className="primary-button" onClick={() => installCatalogItem(item)} disabled={installing}>{installing ? 'Downloading and verifying…' : isRecommendedNonGgufDemo(item) ? 'Download SafeTensors demo' : isEmbeddingOnlyFixture(item) ? 'Download embedding model' : 'Download from Hugging Face'}</button>}
+                      {(!localMatch || localMatch.status === 'not_installed' || localMatch.status === 'failed') && <button className="primary-button" onClick={() => installCatalogItem(item)} disabled={installDisabled}>{installing ? 'Downloading and verifying…' : licenseAckRequired && !licenseAcknowledged ? 'Acknowledge license to download' : isRecommendedNonGgufDemo(item) ? 'Download SafeTensors demo' : isEmbeddingOnlyFixture(item) ? 'Download embedding model' : 'Download from Hugging Face'}</button>}
                       {(localMatch?.status === 'downloading' || localMatch?.status === 'canceling') && <button className="ghost-button" onClick={() => cancelModelDownload(localMatch.id)} disabled={localMatch.status === 'canceling' || installing}>{localMatch.status === 'canceling' ? 'Canceling…' : 'Cancel download'}</button>}
                       {runnable && <button className="ghost-button" onClick={() => setSelectedModelId(localMatch.id)} disabled={installing}>{selected ? 'Chosen for next chat' : 'Use for next chat'}</button>}
                       {canLoad && <button className="primary-button" onClick={() => activateModel(localMatch.id)} disabled={installing}>{active ? 'Loaded now' : localMatch.status === 'registered' ? 'Load now and confirm file' : 'Load now'}</button>}

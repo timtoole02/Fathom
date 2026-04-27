@@ -70,11 +70,13 @@ curl -fsS "$BASE/api/capabilities" | python3 -m json.tool
 
 ## Catalog and model APIs
 
-List downloadable catalog entries:
+List downloadable catalog entries. Each item includes `license`, `license_status`, `license_acknowledgement_required`, and `license_warning` so clients can show license visibility before install:
 
 ```bash
 curl -fsS "$BASE/api/models/catalog" | python3 -m json.tool
 ```
+
+Permissive catalog entries install with the existing `{repo_id, filename}` body. Entries marked unknown or restrictive/non-commercial are refused with `catalog_license_ack_required` unless the client includes `"accept_license": true` after the user explicitly acknowledges the listed status.
 
 Install the small trained TinyStories GPT-2 demo through the same verified catalog path used by the UI:
 

@@ -3289,6 +3289,23 @@
   color: var(--color-error) !important;
 }
 
+.models-license-ack {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-warning) 42%, var(--color-border-soft));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.models-license-ack input {
+  margin-top: 2px;
+}
+
 .models-view,
 .models-status-grid,
 .models-toolbar-panel,

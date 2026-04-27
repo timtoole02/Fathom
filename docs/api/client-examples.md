@@ -29,7 +29,7 @@ export FATHOM_PROMPT='Say hello from Fathom.'
 export FATHOM_MAX_TOKENS=24
 ```
 
-The install examples also accept `FATHOM_REPO_ID` and `FATHOM_FILENAME`.
+The install examples also accept `FATHOM_REPO_ID` and `FATHOM_FILENAME`. The default example model is permissive and does not send a license acknowledgement. If you point an example at a catalog entry whose `/api/models/catalog` metadata says `license_acknowledgement_required: true`, acknowledge that status in your own client flow and include `"accept_license": true` on the install request.
 
 Optional embeddings smoke examples are disabled by default so the quickstarts do not download an extra model. To opt in:
 
