@@ -112,6 +112,9 @@ CHECKS = {
     "02-v1-models-after-corrupt-recovery.json": ("models_empty_after_recovery", "Runnable model list is empty after corrupt-state recovery."),
     "02b-api-dashboard-after-corrupt-recovery.json": ("dashboard_recovery_warning", "Dashboard runtime payload exposes the corrupt-state recovery warning."),
     "03-api-capabilities.json": ("capabilities", "Capability discovery includes the SafeTensors/HF backend lane."),
+    "03b-api-models-catalog-license-metadata.json": ("catalog_license_metadata_visible", "Catalog listing exposes license status, acknowledgement, and warning metadata before any install."),
+    "03c-catalog-license-install-refusal.json": ("catalog_license_ack_refusal", "A non-permissive catalog entry is refused without explicit license acknowledgement."),
+    "03d-catalog-license-refusal-model-dir.json": ("catalog_license_refusal_before_staging", "License-acknowledgement refusal happens before any download/staging files appear in the isolated model directory."),
     "04-install-tinystories.json": ("install_tinystories", "Pinned TinyStories SafeTensors/HF fixture installs as runnable."),
     "05-v1-models-after-tinystories.json": ("models_include_chat_fixture", "Runnable /v1/models includes the TinyStories chat fixture."),
     "06-chat-non-stream.json": ("chat_non_stream", "TinyStories fixture returns a real non-streaming chat completion with usage and timing metrics."),
@@ -212,6 +215,17 @@ def assert_finite_number(value, label):
         raise AssertionError(f"{label} must be finite number, got {value!r}")
 
 
+def model_dir_snapshot():
+    if not models_dir.exists():
+        return []
+    paths = []
+    for path in models_dir.rglob("*"):
+        rel = path.relative_to(models_dir).as_posix()
+        kind = "dir" if path.is_dir() else "file" if path.is_file() else "other"
+        paths.append({"path": rel, "kind": kind})
+    return sorted(paths, key=lambda item: (item["path"], item["kind"]))
+
+
 # Discovery surfaces, including corrupt model-state recovery from the seeded registry.
 _, health = request("GET", "/v1/health", artifact="01-v1-health.json", expected=200)
 assert health.get("ok") is True, health
@@ -229,6 +243,57 @@ _, dashboard = request("GET", "/api/dashboard", artifact="02b-api-dashboard-afte
 assert any(warning.get("type") == "model_state_recovered" for warning in (dashboard.get("runtime", {}).get("warnings") or [])), dashboard
 _, capabilities = request("GET", "/api/capabilities", artifact="03-api-capabilities.json", expected=200)
 assert any(lane.get("id") == "safetensors-hf" for lane in capabilities.get("backend_lanes", [])), capabilities
+
+# Catalog license metadata and acknowledgement gate before any catalog install/download.
+_, catalog = request("GET", "/api/models/catalog", artifact="03b-api-models-catalog-license-metadata.json", expected=200)
+catalog_items = catalog.get("items") or []
+assert catalog_items, catalog
+permissive_items = [
+    item for item in catalog_items
+    if item.get("license_status") == "permissive"
+    and item.get("license_acknowledgement_required") is False
+    and item.get("license_warning") is None
+]
+assert permissive_items, catalog
+non_permissive_items = [
+    item for item in catalog_items
+    if item.get("license_status") != "permissive"
+    and item.get("license_acknowledgement_required") is True
+    and isinstance(item.get("license_warning"), str)
+    and item.get("license_warning")
+]
+assert non_permissive_items, catalog
+license_gated_item = non_permissive_items[0]
+model_dir_before_license_refusal = model_dir_snapshot()
+_, license_refusal = request(
+    "POST",
+    "/api/models/catalog/install",
+    {"repo_id": license_gated_item["repo_id"], "filename": license_gated_item["filename"]},
+    artifact="03c-catalog-license-install-refusal.json",
+    expected=400,
+)
+license_error = license_refusal.get("error") or {}
+assert license_error.get("code") == "catalog_license_ack_required", license_refusal
+assert license_error.get("type") == "catalog_license_ack_required", license_refusal
+model_dir_after_license_refusal = model_dir_snapshot()
+save(
+    "03d-catalog-license-refusal-model-dir.json",
+    {
+        "attempted_catalog_entry": {
+            "repo_id": license_gated_item.get("repo_id"),
+            "filename": license_gated_item.get("filename"),
+            "license": license_gated_item.get("license"),
+            "license_status": license_gated_item.get("license_status"),
+            "license_acknowledgement_required": license_gated_item.get("license_acknowledgement_required"),
+        },
+        "before": model_dir_before_license_refusal,
+        "after": model_dir_after_license_refusal,
+        "unchanged": model_dir_after_license_refusal == model_dir_before_license_refusal,
+    },
+    200,
+    200,
+)
+assert model_dir_after_license_refusal == model_dir_before_license_refusal, model_dir_after_license_refusal
 
 # Pinned TinyStories SafeTensors/HF catalog install and chat.
 _, tiny = request(
@@ -441,6 +506,7 @@ with (artifacts / "summary.md").open("w", encoding="utf-8") as f:
     f.write("- No arbitrary SafeTensors support claim; only the pinned fixtures above are exercised.\n")
     f.write("- No GGUF runtime, tokenizer execution, or generation claim; GGUF is metadata-only/refusal evidence.\n")
     f.write("- No ONNX chat or general ONNX support claim.\n")
+    f.write("- Catalog license checks prove metadata visibility and acknowledgement gating, not legal review, legal advice, or compatibility for any use case.\n")
     f.write("- No performance claim or benchmark evidence.\n")
 print(f"✓ backend acceptance smoke passed; artifacts written under {artifacts}")
 PY

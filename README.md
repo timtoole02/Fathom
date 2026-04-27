@@ -74,7 +74,7 @@ This starts only `fathom-server` on `http://127.0.0.1:8180`; it does not require
 FATHOM_FEATURES=onnx-embeddings-ort bash scripts/start-backend.sh
 ```
 
-The narrow `/v1` contract is documented in [`docs/api/v1-contract.md`](docs/api/v1-contract.md). Backend/API examples for health, capabilities, catalog install, `/v1/models`, `/v1/chat/completions`, explicit-vector retrieval, and embedding endpoints live in [`docs/api/backend-only-quickstart.md`](docs/api/backend-only-quickstart.md). Minimal client examples for cURL, dependency-free Python, the OpenAI Python SDK, and `.http` editors live in [`docs/api/client-examples.md`](docs/api/client-examples.md). Security posture and local threat-model notes live in [`SECURITY.md`](SECURITY.md); contribution truthfulness and verification expectations live in [`CONTRIBUTING.md`](CONTRIBUTING.md). For a fuller optional networked backend-only acceptance pass with isolated state/model directories, run `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh`. Before sharing generated artifacts publicly, run `bash scripts/public_risk_scan.sh` and review logs/full JSON payloads for local paths or request text.
+The narrow `/v1` contract is documented in [`docs/api/v1-contract.md`](docs/api/v1-contract.md). Backend/API examples for health, capabilities, catalog install, `/v1/models`, `/v1/chat/completions`, explicit-vector retrieval, and embedding endpoints live in [`docs/api/backend-only-quickstart.md`](docs/api/backend-only-quickstart.md). Minimal client examples for cURL, dependency-free Python, the OpenAI Python SDK, and `.http` editors live in [`docs/api/client-examples.md`](docs/api/client-examples.md). Security posture and local threat-model notes live in [`SECURITY.md`](SECURITY.md); contribution truthfulness and verification expectations live in [`CONTRIBUTING.md`](CONTRIBUTING.md). For a fuller optional networked backend-only acceptance pass with isolated state/model directories, run `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh`; it includes catalog license metadata/acknowledgement-gating evidence before the first fixture download. Before sharing generated artifacts publicly, run `bash scripts/public_risk_scan.sh` and review logs/full JSON payloads for local paths or request text.
 
 ## Try local generation in the UI
 
@@ -96,6 +96,8 @@ List catalog entries:
 ```bash
 curl -fsS http://127.0.0.1:8180/api/models/catalog | python3 -m json.tool
 ```
+
+Catalog entries expose `license_status`, `license_acknowledgement_required`, and `license_warning`. Unknown or restrictive/non-commercial entries require explicit acknowledgement before install; that gate is visibility/refusal evidence, not legal review or license-compatibility advice.
 
 Install TinyStories GPT-2 10M through the same catalog path used by the UI:
 

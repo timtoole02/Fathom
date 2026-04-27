@@ -39,7 +39,7 @@ For a fuller backend-only acceptance pass, run:
 FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh
 ```
 
-This optional script starts only `fathom-server` on an alternate port with isolated state/model directories, downloads pinned catalog fixtures, captures JSON artifacts, and verifies health/runtime/capabilities, TinyStories chat, MiniLM embeddings, explicit-vector retrieval, retrieval-context chat metadata, and GGUF metadata-only refusal. It is networked and intentionally not part of default CI or benchmark evidence.
+This optional script starts only `fathom-server` on an alternate port with isolated state/model directories, downloads pinned catalog fixtures, captures JSON artifacts, and verifies health/runtime/capabilities, catalog license metadata and acknowledgement gating, TinyStories chat, MiniLM embeddings, explicit-vector retrieval, retrieval-context chat metadata, and GGUF metadata-only refusal. It is networked and intentionally not part of default CI or benchmark evidence.
 
 ### Reading acceptance artifacts
 
@@ -48,6 +48,7 @@ Set `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1` to keep the temporary artifact director
 Useful evidence files:
 
 - `00-corrupt-state-runtime.json`, `00-corrupt-state-files.json`, and `02b-api-dashboard-after-corrupt-recovery.json` show corrupt model-state recovery.
+- `03b-api-models-catalog-license-metadata.json`, `03c-catalog-license-install-refusal.json`, and `03d-catalog-license-refusal-model-dir.json` show catalog license metadata visibility, acknowledgement-required refusal for a non-permissive entry, and refusal before download/staging in the isolated model directory. This is gating evidence only, not legal review or license-compatibility advice.
 - `06-chat-non-stream.json` shows the pinned TinyStories SafeTensors/HF fixture returning a real non-streaming chat completion; `07-chat-stream-refusal.json` shows streaming refusal.
 - `10-v1-embeddings-minilm.json` shows `POST /v1/embeddings` returning an OpenAI-style list with one finite 384-dimensional float vector from the pinned MiniLM SafeTensors runtime.
 - `10b-v1-embeddings-base64-refusal.json` shows `encoding_format: "base64"` refused with `invalid_request`; only float embeddings are supported.
@@ -76,7 +77,7 @@ List downloadable catalog entries. Each item includes `license`, `license_status
 curl -fsS "$BASE/api/models/catalog" | python3 -m json.tool
 ```
 
-Permissive catalog entries install with the existing `{repo_id, filename}` body. Entries marked unknown or restrictive/non-commercial are refused with `catalog_license_ack_required` unless the client includes `"accept_license": true` after the user explicitly acknowledges the listed status.
+Permissive catalog entries install with the existing `{repo_id, filename}` body. Entries marked unknown or restrictive/non-commercial are refused with `catalog_license_ack_required` unless the client includes `"accept_license": true` after the user explicitly acknowledges the listed status. This acknowledgement gate is a visibility/safety guardrail; it is not legal advice or a compatibility determination for your intended use.
 
 Install the small trained TinyStories GPT-2 demo through the same verified catalog path used by the UI:
 
