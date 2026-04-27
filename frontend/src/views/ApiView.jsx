@@ -15,7 +15,11 @@ export default function ApiView({ runtime, selectedModel }) {
         </div>
         <div className="api-card">
           <strong>Model listing</strong>
-          <code>{runtime?.api_base}/models</code>
+          <code>{runtime?.api_base}/models · chat-runnable models only</code>
+        </div>
+        <div className="api-card">
+          <strong>Embeddings</strong>
+          <code>{runtime?.api_base}/embeddings · verified MiniLM float vectors only</code>
         </div>
         <div className="api-card">
           <strong>Health check</strong>

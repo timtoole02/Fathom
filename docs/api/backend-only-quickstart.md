@@ -29,7 +29,7 @@ bash scripts/stop.sh
 
 `scripts/stop.sh` also stops the frontend if it was started by `scripts/start.sh`, but `scripts/start-backend.sh` never starts the frontend.
 
-Minimal client examples for cURL, dependency-free Python, the OpenAI Python SDK, and `.http` editors live in [`client-examples.md`](client-examples.md) and [`../../examples/api/`](../../examples/api/).
+The exact narrow `/v1` contract is documented in [`v1-contract.md`](v1-contract.md). Minimal client examples for cURL, dependency-free Python, the OpenAI Python SDK, and `.http` editors live in [`client-examples.md`](client-examples.md) and [`../../examples/api/`](../../examples/api/).
 
 ## Optional backend acceptance smoke
 
@@ -58,6 +58,8 @@ Useful evidence files:
 If artifacts were created in the script's default temp directory, they are rebuildable and safe to remove after you have copied anything you need. Be more careful with custom `FATHOM_ACCEPTANCE_MODELS_DIR`, `FATHOM_ACCEPTANCE_STATE_DIR`, or `FATHOM_ACCEPTANCE_ARTIFACT_DIR` values: delete only the acceptance-run directories you intentionally created, not a shared/user model store or source-of-truth state. Run `bash scripts/public_risk_scan.sh` before public handoff to catch tracked-file privacy regressions and uncaveated support claims.
 
 ## Health and runtime discovery
+
+For supported `/v1` JSON shapes and unsupported OpenAI features, see [`v1-contract.md`](v1-contract.md).
 
 ```bash
 BASE=http://127.0.0.1:8180
@@ -187,7 +189,7 @@ curl -fsS "$BASE/v1/embeddings" \
   | python3 -m json.tool
 ```
 
-The SafeTensors lane returns finite 384-dimensional vectors and stays out of `/v1/models` because it is not a chat/generation model. The `/v1/embeddings` adapter is intentionally narrow: string or array input, float embeddings only, and no fake vectors for chat, GGUF, PyTorch `.bin`, or unsupported packages.
+The SafeTensors lane returns finite 384-dimensional vectors and stays out of `/v1/models` because it is not a chat/generation model. The `/v1/embeddings` adapter is intentionally narrow: string or array input, float embeddings only, and no fake vectors for chat, GGUF, PyTorch `.bin`, or unsupported packages. See [`v1-contract.md`](v1-contract.md) for the request/response envelope.
 
 Fathom also has a pinned ONNX MiniLM embedding fixture. ONNX inference is real but non-default because it brings ONNX Runtime binaries; build/start with the feature when you want that lane:
 

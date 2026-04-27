@@ -65,7 +65,7 @@ export default function SystemView({ runtime, selectedModel }) {
             <div className="runtime-stat"><span>Loaded model</span><strong>{runtime?.loaded_now ? runtime?.active_model_id : 'Nothing loaded'}</strong></div>
             <div className="runtime-stat"><span>Ready models</span><strong>{runtime?.ready_model_count ?? 0} local</strong></div>
             <div className="runtime-stat"><span>Retrieval API</span><strong>Explicit vectors</strong></div>
-            <div className="runtime-stat"><span>Embedding lane</span><strong>SafeTensors MiniLM; ONNX optional</strong></div>
+            <div className="runtime-stat"><span>Embedding lane</span><strong>MiniLM float vectors; not chat-runnable</strong></div>
             <div className="runtime-stat"><span>GPU support</span><strong>{runtime?.llama_server_installed ? 'Backend-specific' : 'Planned backend lane'}</strong></div>
             <div className="runtime-stat"><span>Next chat selection</span><strong>{selectedModelName}</strong></div>
             <div className="runtime-stat"><span>API base</span><strong>{apiBase}</strong></div>
@@ -144,7 +144,7 @@ export default function SystemView({ runtime, selectedModel }) {
           <div>
             <p className="panel-kicker">Developer</p>
             <h2>OpenAI-compatible local API</h2>
-            <p className="hero-summary">The local /v1 surface is online for integration checks. Chat completions stays truthful: it only generates for models that validate against the current narrow custom Rust SafeTensors lanes.</p>
+            <p className="hero-summary">The local /v1 surface is online for integration checks. Chat completions stays truthful: it only generates for models that validate against the current narrow custom Rust SafeTensors lanes. Embeddings are separate float-vector endpoints for verified MiniLM packages and are not listed as chat-runnable models.</p>
           </div>
           <div className={`status-pill ${runtime?.loaded_now ? 'ready' : 'warm'}`}>{runtime?.loaded_now ? 'Local generation loaded' : 'No fake local generation'}</div>
         </div>
@@ -162,8 +162,8 @@ export default function SystemView({ runtime, selectedModel }) {
             <code>{runtime?.api_base ? '/api/retrieval-indexes · explicit vectors only' : 'Unavailable until the local API is running'}</code>
           </div>
           <div className="api-card">
-            <strong>Embedding lane</strong>
-            <code>{runtime?.api_base ? '/api/embedding-models/:id/embed · verified MiniLM text embeddings only' : 'Unavailable until the local API is running'}</code>
+            <strong>Embeddings</strong>
+            <code>{runtime?.api_base ? `${runtime.api_base}/embeddings · verified MiniLM float vectors only` : 'Unavailable until the local API is running'}</code>
           </div>
           <div className="api-card">
             <strong>Health</strong>

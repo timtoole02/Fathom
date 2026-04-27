@@ -1,6 +1,6 @@
 # API client examples
 
-These examples call a running Fathom backend as a local API service. They are intentionally small and focus on the public HTTP surface, not runtime internals.
+These examples call a running Fathom backend as a local API service. They are intentionally small and focus on the public HTTP surface, not runtime internals. The exact narrow `/v1` request/response contract is documented in [`v1-contract.md`](v1-contract.md).
 
 Start the backend first:
 
@@ -71,6 +71,8 @@ The SDK example points the OpenAI client at `FATHOM_BASE_URL + /v1`. It still us
 Open [`examples/api/fathom.http`](../../examples/api/fathom.http) in an editor that supports REST Client-style `.http` requests and run the requests top to bottom. The MiniLM install and embeddings requests are optional; skip them if you do not want the extra model download.
 
 ## Current boundaries
+
+For the full supported `/v1` endpoint list and standard error envelope, see [`v1-contract.md`](v1-contract.md).
 
 - `stream: true` is not supported by Fathom's chat completions today; use non-streaming requests.
 - `/v1/embeddings` currently supports the verified local MiniLM embedding runtime with float vectors only; `encoding_format: "base64"` is refused with `invalid_request`.
