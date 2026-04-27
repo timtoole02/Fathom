@@ -4,6 +4,8 @@ Fathom exposes a deliberately small OpenAI-style `/v1` surface for local integra
 
 Base URL in local development: `http://127.0.0.1:8180`.
 
+Security note: Fathom's local API has no built-in authentication and is intended for loopback development, not direct internet exposure. See [`../../SECURITY.md`](../../SECURITY.md) before proxying, tunneling, or sharing logs/artifacts.
+
 ## Standard error envelope
 
 All `/v1` application errors use this JSON shape:
