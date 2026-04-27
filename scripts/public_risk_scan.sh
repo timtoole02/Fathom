@@ -20,6 +20,11 @@ personal_machine_pattern = "|".join(["Ti" + "ms-M" + "ac", "M" + "ac m" + "ini",
 private_temp_pattern = "|".join(["/pri" + "vate/t" + "mp", "/var/fo" + "lders"])
 homebrew_pattern = "/opt/home" + "brew"
 
+public_repo_urls = [
+    "https://github.com/" + personal_owner + "/Fathom/",
+    "https://github.com/" + personal_owner + "/Fathom.git",
+]
+
 privacy_patterns = [
     ("personal GitHub owner", re.compile(r"github\.com/" + re.escape(personal_owner), re.IGNORECASE)),
     ("personal username", re.compile(re.escape(personal_user), re.IGNORECASE)),
@@ -49,8 +54,11 @@ for rel in tracked:
     except UnicodeDecodeError:
         continue
     for line_no, line in enumerate(text.splitlines(), 1):
+        privacy_line = line
+        for public_repo_url in public_repo_urls:
+            privacy_line = privacy_line.replace(public_repo_url, "")
         for label, pattern in privacy_patterns:
-            if pattern.search(line):
+            if pattern.search(privacy_line):
                 failures.append(f"{rel}:{line_no}: {label}: {line.strip()}")
         lowered = line.lower()
         caveated = any(marker in lowered for marker in ["no ", "not ", "unsupported", "blocked", "refused", "metadata-only", "does not", "without claiming"])

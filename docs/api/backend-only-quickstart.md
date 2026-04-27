@@ -5,7 +5,7 @@ Use this when you want Fathom as a local API/runtime layer without the React fro
 ## Start only the API server
 
 ```bash
-git clone https://github.com/YOUR_ORG/Fathom.git fathom
+git clone https://github.com/timtoole02/Fathom/ fathom
 cd fathom
 cargo test
 bash scripts/start-backend.sh

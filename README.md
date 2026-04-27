@@ -39,7 +39,7 @@ Supported today means narrow: a compatible HF package must include `config.json`
 ## Quick start
 
 ```bash
-git clone https://github.com/YOUR_ORG/Fathom.git fathom
+git clone https://github.com/timtoole02/Fathom/ fathom
 cd fathom
 npm --prefix frontend install
 cargo test
