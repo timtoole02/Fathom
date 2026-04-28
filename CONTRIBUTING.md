@@ -27,7 +27,7 @@ Narrow support is fine when it is honest. For example, a pinned fixture, specifi
 
 ## Verification gates
 
-GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and default-build tests, the no-download real-backend public API contract smoke, frontend install/build/copy QA, script and Python syntax checks, fake-loopback API client example regression, offline backend acceptance artifact QA, CI static-policy checks, and the public-risk scan. Default CI intentionally does not run networked backend acceptance smoke, model downloads, or non-default ONNX Runtime feature tests.
+GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and default-build tests, the no-download real-backend public API contract smoke, frontend install/build/copy QA, script and Python syntax checks, fake-loopback API client example regression, offline backend acceptance artifact QA, CI static-policy checks, and the public-risk scan. Default CI intentionally does not run networked backend acceptance smoke, model downloads, or non-default ONNX Runtime feature tests. The public launch checklist in [`docs/public-launch-checklist.md`](docs/public-launch-checklist.md) summarizes the clean clone/install path, no-download gates, optional acceptance artifact review, and troubleshooting flow.
 
 Run the smallest gate that proves your change, and prefer the full set before opening a release-facing PR.
 

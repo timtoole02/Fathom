@@ -283,49 +283,42 @@ This roadmap tracks the phases already completed, the next phase, and the comple
 
 ---
 
-### ➡️ [ ] Phase 14 — No-download real-backend public contract smoke
+### [x] Phase 14 — No-download real-backend public contract smoke
 
-**What will be worked on next**
+**What was worked on**
 
-- Add a small real-backend smoke script that starts `fathom-server` with isolated temp state/model dirs.
-- Exercise the public `/v1` contract over real HTTP without model downloads, ONNX features, catalog installs, or external provider calls.
-- Prove route wiring and refusal behavior beyond static docs/fake-loopback checks.
-
-**Candidate checks**
-
-- `GET /v1/health` returns `ok`, `engine: fathom`, and `generation_ready: false` in empty isolated state.
-- `GET /v1/models` returns OpenAI-style empty list in empty isolated state.
-- `POST /v1/chat/completions` with `stream: true` returns structured `501 not_implemented` and no `choices`.
-- Missing-model non-streaming chat returns structured `model_not_found` and no fake response.
-- `/v1/embeddings` base64 request returns `400 invalid_request` before requiring fixtures.
-- Unknown embedding model returns `404 embedding_model_not_found`.
-- Optional fake external placeholder remains excluded/refused without provider calls.
+- Added `scripts/public_api_contract_smoke.sh`, a small real-backend smoke that starts `fathom-server` with isolated temporary state/model/log directories.
+- Exercised the public `/v1` contract over real HTTP without model downloads, ONNX features, catalog installs, or external provider calls.
+- Verified empty-state health/model listing, streaming refusal, missing chat model refusal, base64 embedding refusal, unknown embedding-model refusal, and external placeholder exclusion/refusal.
+- Wired the smoke into default CI alongside the offline public contract QA and CI static policy.
 
 **Completion criteria**
 
-- New smoke is deterministic, offline/no-download, and uses isolated temp dirs.
+- Smoke is deterministic, offline/no-download, and uses isolated temp dirs.
 - It starts and stops the real server cleanly.
 - It verifies standard error envelopes over HTTP.
-- It is either wired into default CI if fast/reliable enough or documented as a local pre-PR gate if not.
-- It does not replace or broaden the optional networked backend acceptance smoke.
+- It is wired into default CI without replacing or broadening the optional networked backend acceptance smoke.
+
+**Status:** complete as of `caf52c4 Add public API contract smoke`. Fresh-clone QA for that commit completed before this roadmap refresh; Phase 14 did not add runtime/model-support scope.
 
 ---
 
-### [ ] Phase 15 — Public launch readiness bundle
+### ➡️ [ ] Phase 15 — Public launch readiness bundle
 
-**What still needs work**
+**What will be worked on next**
 
-- Confirm fresh-clone QA for the latest commit after each launch-facing push.
-- Keep README/backend quickstart/client examples tight and newcomer-friendly.
-- Ensure GitHub Actions stays green and policy-protected.
-- Optionally add a concise launch checklist linking install, backend-only API, acceptance artifacts, and troubleshooting.
+- Keep README, backend quickstart, client examples, and the public launch checklist newcomer-friendly and aligned with the narrow launch contract.
+- Confirm fresh-clone QA for the latest launch-facing commit after push.
+- Ensure GitHub Actions stays green and policy-protected: no default model downloads, no networked backend acceptance smoke, and no non-default ONNX feature tests.
+- Keep public-risk scan, focused sensitive checks, and tracked-large-file checks clean.
 
 **Completion criteria**
 
-- Fresh clone passes documented gates.
-- Public risk scan and focused sensitive grep are clean.
-- No tracked files over 1 MiB unless deliberately justified.
-- README tells an outside developer how to install, run, verify, and understand current boundaries in minutes.
+- [`docs/public-launch-checklist.md`](docs/public-launch-checklist.md) explains clean clone/install, no-download gates, backend/API quick smoke, optional networked acceptance artifacts, boundaries, and troubleshooting.
+- README and backend quickstart link the checklist from the launch/API verification path.
+- `scripts/public_api_contract_qa.py` guards the checklist/linkage against public contract drift.
+- Fresh clone passes documented gates for the launch-facing commit.
+- Public docs do not broaden claims around production readiness, performance, legal/license advice, full OpenAI parity, streaming, external proxying, GGUF/ONNX/PyTorch, or arbitrary SafeTensors/Hugging Face execution.
 
 ---
 
@@ -353,9 +346,9 @@ These are intentionally **not** next until the public launch contract is stable.
 
 ## Current next step
 
-➡️ **Phase 14: No-download real-backend public contract smoke.**
+➡️ **Phase 15: Public launch readiness bundle.**
 
-This is the next best launch-confidence step because it proves the documented public API contract against the actual server process while staying offline, no-download, and no-claim-broadening.
+This is the next best launch-confidence step because Phase 14 is complete and the repo now needs one newcomer-friendly, checklist-backed path for clean clone, no-download verification, backend/API smoke, optional acceptance artifacts, and scoped launch boundaries. Phase 16 runtime expansion remains deferred until the launch contract is stable.
 
 ## Always-on completion gates for public-facing phases
 

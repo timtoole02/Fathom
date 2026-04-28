@@ -20,12 +20,13 @@ MANIFEST = ROOT / "docs" / "api" / "public-contract.json"
 V1_CONTRACT = ROOT / "docs" / "api" / "v1-contract.md"
 CLIENT_EXAMPLES = ROOT / "docs" / "api" / "client-examples.md"
 BACKEND_QUICKSTART = ROOT / "docs" / "api" / "backend-only-quickstart.md"
+LAUNCH_CHECKLIST = ROOT / "docs" / "public-launch-checklist.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
-DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, README]
+DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, README]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
 TEXT_PATHS = DOC_PATHS + EXAMPLE_PATHS + [CI]
 
@@ -135,9 +136,18 @@ def assert_boundary_docs() -> None:
     assert_contains(client_text, "expected boundaries", "adopter checklist")
     assert_contains(readme_text, "public launch API contract", "README API section")
     assert_contains(readme_text, "scripts/public_api_contract_smoke.sh", "README public contract smoke")
+    launch_text = read(LAUNCH_CHECKLIST)
     assert_contains(read(BACKEND_QUICKSTART), "scripts/public_api_contract_smoke.sh", "backend quickstart public contract smoke")
     assert_contains(read(CONTRIBUTING), "scripts/public_api_contract_smoke.sh", "contributing public contract smoke")
+    assert_contains(readme_text, "docs/public-launch-checklist.md", "README launch checklist link")
+    assert_contains(read(BACKEND_QUICKSTART), "../public-launch-checklist.md", "backend quickstart launch checklist link")
+    assert_contains(read(CONTRIBUTING), "docs/public-launch-checklist.md", "contributing launch checklist link")
     assert_contains(v1_text, "public-contract.json", "v1 contract manifest link")
+    assert_contains(launch_text, "api/public-contract.json", "launch checklist manifest link")
+    assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
+    assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
+    assert_contains(launch_text, "scripts/backend_acceptance_smoke.sh", "launch checklist optional acceptance smoke")
+    assert_contains(launch_text, "What this launch does not prove", "launch checklist boundaries")
 
 
 def assert_examples_static() -> None:

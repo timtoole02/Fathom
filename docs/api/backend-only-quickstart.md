@@ -29,7 +29,7 @@ bash scripts/stop.sh
 
 `scripts/stop.sh` also stops the frontend if it was started by `scripts/start.sh`, but `scripts/start-backend.sh` never starts the frontend.
 
-The exact narrow `/v1` contract is documented in [`v1-contract.md`](v1-contract.md), and the launch-supported boundary is mirrored in [`public-contract.json`](public-contract.json) for offline QA. Minimal client examples and the adopter checklist for base URL, runnable-model discovery, and expected refusal boundaries live in [`client-examples.md`](client-examples.md) and [`../../examples/api/`](../../examples/api/). For local threat-model, model artifact safety, and reporting guidance, see [`../../SECURITY.md`](../../SECURITY.md); for contribution boundaries and verification gates, see [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md).
+The exact narrow `/v1` contract is documented in [`v1-contract.md`](v1-contract.md), and the launch-supported boundary is mirrored in [`public-contract.json`](public-contract.json) for offline QA. Minimal client examples and the adopter checklist for base URL, runnable-model discovery, and expected refusal boundaries live in [`client-examples.md`](client-examples.md) and [`../../examples/api/`](../../examples/api/). For a clean clone/install, no-download verification, backend/API smoke, optional acceptance-artifact review, and first-run troubleshooting path, see [`../public-launch-checklist.md`](../public-launch-checklist.md). For local threat-model, model artifact safety, and reporting guidance, see [`../../SECURITY.md`](../../SECURITY.md); for contribution boundaries and verification gates, see [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md).
 
 ## No-download public contract smoke
 
