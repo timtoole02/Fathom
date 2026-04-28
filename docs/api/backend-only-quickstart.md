@@ -41,7 +41,7 @@ bash scripts/public_api_contract_smoke.sh
 
 The manifest-driven script starts `fathom-server` on a temporary local port with isolated state/model/log directories, loads [`public-contract.json`](public-contract.json), verifies empty `/v1/health` readiness, empty `/v1/models`, streaming chat refusal, missing-model chat refusal, a base64 embedding request refused with `invalid_request`, unknown embedding-model refusal, and external placeholder exclusion/refusals. It cleans up its temporary directories and proves routing/error-envelope behavior only; it is not acceptance evidence for real generation, embeddings, quality, or performance.
 
-Set `FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR` to keep sanitized `public-contract-smoke-summary.json` and `.md` handoff artifacts with pass/fail, commit, manifest name/status, endpoint checks, boundary checks, and scope caveats. The summary intentionally excludes local temp paths, server log tails, request secrets, and model/provider payloads.
+Set `FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR` to keep sanitized `public-contract-smoke-summary.json` and `.md` handoff artifacts with pass/fail, commit, manifest path/name/status, endpoint checks, boundary checks, and scope caveats. The summary intentionally excludes local temp paths, server log tails, request secrets, and model/provider payloads; validate saved summaries offline with `python3 scripts/public_contract_smoke_artifact_qa.py <artifact-dir>` before sharing.
 
 ## Optional backend acceptance smoke
 

@@ -205,6 +205,8 @@ def assert_smoke_manifest_wiring() -> None:
     assert_contains(smoke_text, "supported_endpoints", "public contract smoke endpoint coverage")
     assert_contains(smoke_text, "expected_boundary_errors", "public contract smoke boundary coverage")
     assert_contains(smoke_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "public contract smoke artifact env")
+    assert_contains(smoke_text, "fathom.public_contract_smoke.summary.v1", "public contract smoke artifact schema")
+    assert_contains(smoke_text, "partial diagnostic evidence", "public contract smoke failed artifact caveat")
 
 
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
@@ -212,7 +214,9 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     expected = manifest["ci_policy"]["offline_static_gate"]
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
     assert_contains(ci_text, "scripts/public_api_contract_qa.py", "CI public API contract QA wiring")
+    assert_contains(ci_text, "scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA wiring")
     assert_contains(ci_text, expected, "CI public API contract QA run step")
+    assert_contains(ci_text, "python3 scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA run step")
     assert_contains(ci_text, "bash scripts/public_api_contract_smoke.sh", "CI public API contract smoke run step")
     assert_contains(ci_text, "bash -n scripts/public_api_contract_smoke.sh", "CI public API contract smoke syntax step")
     if re.search(r"cargo\s+test\b[^\n]*--features\s+[^\n]*onnx-embeddings-ort", ci_text):

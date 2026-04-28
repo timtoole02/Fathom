@@ -134,13 +134,20 @@ def write_summary(passed):
         f"- {item['boundary']}: {item['reason']}"
         for item in summary["deferred_manifest_boundaries"]
     ] or ["- none"]
+    failure_note = []
+    if not passed:
+        failure_note = [
+            "",
+            "This failed smoke summary is partial diagnostic evidence only; it must not be treated as a passed public contract smoke.",
+        ]
     md = "\n".join(
         [
             f"# Public contract smoke summary: {status}",
             "",
             f"- Commit: `{summary['commit']}`",
-            f"- Manifest: `{summary['manifest']['name']}` (`{summary['manifest']['status']}`)",
-            "- Scope: no-download real-backend routing/refusal smoke only; not model quality, performance, downloads, external proxying, or broad runtime evidence.",
+            f"- Manifest: `{summary['manifest']['path']}` / `{summary['manifest']['name']}` (`{summary['manifest']['status']}`)",
+            "- Scope: no-download real-backend routing/refusal smoke only; does not prove model downloads, generation quality, embedding quality, performance, external proxying, or broad model support.",
+            *failure_note,
             "",
             "## Endpoint checks",
             *endpoint_lines,
