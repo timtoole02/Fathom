@@ -24,8 +24,6 @@ jobs:
         run: cargo fmt --all --check
       - name: Run tests
         run: cargo test -q
-      - name: Run ONNX feature tests
-        run: cargo test -q --features onnx-embeddings-ort
 
   frontend:
     name: Frontend gates
@@ -66,6 +64,7 @@ jobs:
           python3 -m py_compile \
             scripts/api_client_examples_regression.py \
             scripts/backend_acceptance_artifact_qa.py \
+            scripts/ci_static_policy.py \
             examples/api/python-no-deps.py \
             examples/api/openai-sdk.py \
             scripts/bench_backend.py
@@ -73,5 +72,7 @@ jobs:
         run: python3 scripts/api_client_examples_regression.py
       - name: Run backend acceptance artifact QA
         run: python3 scripts/backend_acceptance_artifact_qa.py
+      - name: Run CI static policy
+        run: python3 scripts/ci_static_policy.py
       - name: Run public risk scan
         run: bash scripts/public_risk_scan.sh

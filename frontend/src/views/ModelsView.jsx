@@ -428,10 +428,10 @@ export default function ModelsView({
       <section className="panel models-section-panel">
         <div className="models-section-heading">
           <div>
-            <p className="panel-kicker">Ready to use</p>
-            <h3>{readyModels.length === 0 ? 'Nothing ready yet' : `${readyModels.length} ready ${readyModels.length === 1 ? 'model' : 'models'}`}</h3>
+            <p className="panel-kicker">Set up entries</p>
+            <h3>{readyModels.length === 0 ? 'Nothing set up yet' : `${readyModels.length} set up ${readyModels.length === 1 ? 'entry' : 'entries'}`}</h3>
           </div>
-          <p className="model-summary">These models are ready for a chat right now, either locally or through a connected API.</p>
+          <p className="model-summary">These entries are set up locally or through a connected API. Only cards marked chat-ready can be selected for chat; embedding and metadata-only artifacts stay excluded from chat use.</p>
         </div>
 
         {readyModels.length === 0 ? (

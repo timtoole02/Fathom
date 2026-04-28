@@ -1561,7 +1561,7 @@ async fn v1_health(State(state): State<AppState>) -> Json<serde_json::Value> {
     Json(serde_json::json!({
         "ok": true,
         "engine": "fathom",
-        "generation_ready": store.models.iter().any(is_runnable_model)
+        "generation_ready": store.models.iter().any(is_v1_chat_runnable_model)
     }))
 }
 
@@ -1569,7 +1569,7 @@ async fn v1_models(State(state): State<AppState>) -> Json<serde_json::Value> {
     let store = state.inner.lock().await;
     Json(serde_json::json!({
         "object": "list",
-        "data": store.models.iter().filter(|m| is_runnable_model(m)).map(|m| serde_json::json!({
+        "data": store.models.iter().filter(|m| is_v1_chat_runnable_model(m)).map(|m| serde_json::json!({
             "id": m.id,
             "object": "model",
             "created": 0,
@@ -3086,6 +3086,10 @@ fn is_runnable_model(model: &ModelRecord) -> bool {
         return false;
     }
     true
+}
+
+fn is_v1_chat_runnable_model(model: &ModelRecord) -> bool {
+    model.provider_kind != "external" && is_runnable_model(model)
 }
 
 fn now() -> String {
@@ -5000,6 +5004,16 @@ mod catalog_tests {
     }
 
     #[tokio::test]
+    async fn v1_health_excludes_external_proxy_models_from_generation_ready() {
+        let state = test_state(vec![test_external_model("external-gpt")], None);
+
+        let Json(body) = v1_health(State(state)).await;
+
+        assert_eq!(body["ok"], true);
+        assert_eq!(body["generation_ready"], false);
+    }
+
+    #[tokio::test]
     async fn v1_models_returns_openai_list_shape_with_fathom_metadata_nested() {
         let mut unsupported = test_model("known-unsupported");
         unsupported.status = "registered".into();
@@ -5012,11 +5026,11 @@ mod catalog_tests {
         let data = body["data"].as_array().unwrap();
         assert_eq!(
             data.len(),
-            2,
-            "only runnable local/external models are advertised"
+            1,
+            "only local models that /v1/chat/completions can run are advertised"
         );
         assert!(data.iter().any(|model| model["id"] == "local-gpt2"));
-        assert!(data.iter().any(|model| model["id"] == "external-gpt"));
+        assert!(!data.iter().any(|model| model["id"] == "external-gpt"));
         assert!(body.get("choices").is_none());
         assert!(body.get("error").is_none());
 

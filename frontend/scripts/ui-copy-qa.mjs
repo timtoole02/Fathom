@@ -39,6 +39,7 @@ const checks = [
       'License audit trail',
       'acknowledgement required and recorded',
       'acknowledgement not required; none recorded',
+      'Only cards marked chat-ready can be selected for chat',
     ],
   },
   {
@@ -176,6 +177,8 @@ if (!ggufCopy.includes('public/runtime tokenizer execution') && !ggufCopy.includ
 if (!modelsCopy.includes('License audit trail: status')) failures.push('Models copy must surface installed license audit status factually')
 if (!modelsCopy.includes('acknowledgement required and recorded')) failures.push('Models copy must distinguish recorded acknowledgement for acknowledgement-required installs')
 if (!modelsCopy.includes('acknowledgement not required; none recorded')) failures.push('Models copy must avoid implying permissive installs had a user acknowledgement')
+if (!modelsCopy.includes('Only cards marked chat-ready can be selected for chat')) failures.push('Models ready-section copy must not imply every set-up entry can chat')
+if (modelsCopy.includes('These models are ready for a chat right now')) failures.push('Models ready-section copy must not overclaim that every ready/local/API entry is chat-ready')
 if (/license safe|license-safe|approved|compliant|legal review completed/i.test(modelsCopy)) failures.push('Models license audit copy must not imply legal approval, compliance, or review completion')
 for (const text of [warmSummary, coldSummary, title, analyticsCopy]) {
   if (/session memory|instant|client ttft|streaming ttft|production throughput|batching|\bgpu\b|gguf chat|onnx chat/i.test(text)) {

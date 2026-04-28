@@ -25,7 +25,6 @@
 - [ ] `git diff --check`
 - [ ] `cargo fmt --all --check`
 - [ ] `cargo test -q`
-- [ ] `cargo test -q --features onnx-embeddings-ort`
 - [ ] `npm --prefix frontend run build`
 - [ ] `npm --prefix frontend run qa:copy`
 - [ ] `bash -n scripts/public_risk_scan.sh`
@@ -35,6 +34,7 @@
 ## Manual or release-facing checks
 
 - [ ] For backend/API changes, I considered the optional networked acceptance smoke. It remains non-default CI and should be run only as a targeted manual check when appropriate: `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh`.
+- [ ] For ONNX embedding changes, I considered the targeted/manual feature gate: `cargo test -q --features onnx-embeddings-ort`.
 - [ ] Release-facing claims include exact evidence and caveats: commit, feature flags, model or fixture, request shape, warm/cold state, and what the evidence does not prove.
 
 ## Notes for reviewers

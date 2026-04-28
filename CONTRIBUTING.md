@@ -27,7 +27,7 @@ Narrow support is fine when it is honest. For example, a pinned fixture, specifi
 
 ## Verification gates
 
-GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and tests, frontend install/build/copy QA, script and Python syntax checks, fake-loopback API client example regression, offline backend acceptance artifact QA, and the public-risk scan.
+GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and default-build tests, frontend install/build/copy QA, script and Python syntax checks, fake-loopback API client example regression, offline backend acceptance artifact QA, CI static-policy checks, and the public-risk scan. Default CI intentionally does not run networked backend acceptance smoke, model downloads, or non-default ONNX Runtime feature tests.
 
 Run the smallest gate that proves your change, and prefer the full set before opening a release-facing PR.
 
@@ -37,20 +37,21 @@ Common gates:
 git diff --check
 cargo fmt --all --check
 cargo test -q
-cargo test -q --features onnx-embeddings-ort
 npm --prefix frontend run build
 npm --prefix frontend run qa:copy
 bash -n scripts/public_risk_scan.sh
 python3 scripts/api_client_examples_regression.py
 python3 scripts/backend_acceptance_artifact_qa.py
+python3 scripts/ci_static_policy.py
 bash scripts/public_risk_scan.sh
 ```
 
-The API client example regression uses a local fake loopback server to contract-test example request shapes without downloads or inference. For backend/API changes, also consider the networked acceptance smoke locally or in a targeted manual CI run; it is intentionally not part of the default public CI path:
+The API client example regression uses a local fake loopback server to contract-test example request shapes without downloads or inference. For backend/API changes, also consider the networked acceptance smoke locally or in a targeted manual CI run; it is intentionally not part of the default public CI path. The ONNX embedding feature test is also targeted/manual because it may involve native ONNX Runtime binaries:
 
 ```bash
 bash -n scripts/backend_acceptance_smoke.sh
 FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh
+cargo test -q --features onnx-embeddings-ort
 ```
 
 For docs-only changes, `git diff --check`, script syntax checks, and `bash scripts/public_risk_scan.sh` are usually the minimum useful gates.
