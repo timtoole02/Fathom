@@ -28,7 +28,7 @@ Fathom does **not** currently claim general model support. In particular:
 - No PyTorch `.bin`, MLX, CoreML, TensorRT, or arbitrary Hugging Face model execution.
 - No fake fallbacks: if a model is known but not runnable, Fathom should return a clear error instead of placeholder text.
 
-Supported today means narrow: a compatible HF package must include `config.json`, tokenizer files, and `model.safetensors`, then pass the lane-specific loader checks for a current custom Rust runtime path. Chat models must pass generation checks; embedding models must pass embedding-loader, pooling, and vector-shape checks. For packages with Hugging Face `chat_template` metadata, Fathom renders only a small tested set of local patterns today: ChatML/Qwen-style, `[INST] ... [/INST]`, and Gemma `<start_of_turn>` user/model turns; unsupported templates are refused with `chat_template_not_supported` instead of guessed.
+Supported today means narrow: a compatible HF package must include `config.json`, tokenizer files, and `model.safetensors`, then pass the lane-specific loader checks for a current custom Rust runtime path. Chat models must pass generation checks; embedding models must pass embedding-loader, pooling, and vector-shape checks. For packages with Hugging Face `chat_template` metadata, Fathom renders only a small tested set of local patterns today: ChatML/Qwen-style, `[INST] ... [/INST]`, Llama-3 `<|start_header_id|>...<|end_header_id|>` header turns, and Gemma `<start_of_turn>` user/model turns; unsupported templates are refused with `chat_template_not_supported` instead of guessed.
 
 ## Prerequisites
 

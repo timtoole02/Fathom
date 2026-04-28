@@ -328,15 +328,14 @@ This roadmap tracks the phases already completed, the next phase, and the comple
 
 ---
 
-### ➡️ [ ] Phase 16 — Future runtime expansion lanes
+### ➡️ [~] Phase 16 — Future runtime expansion lanes
 
-Phase 16 has started with narrow prep only. The first prep lane added [`docs/api/refusal-boundary-matrix.md`](docs/api/refusal-boundary-matrix.md), which records checked refusals, optional fixture/networked evidence boundaries, and explicit non-claims before any runtime expansion.
+Phase 16 has started conservatively. The first prep lane added [`docs/api/refusal-boundary-matrix.md`](docs/api/refusal-boundary-matrix.md), which records checked refusals, optional fixture/networked evidence boundaries, and explicit non-claims before runtime expansion. The first implementation lane is a narrow chat-template expansion for already-verified SafeTensors/HF Llama-style runtimes: strict Llama-3 header-turn rendering with refusal tests, not a new architecture or loader.
 
-Runtime expansion remains deferred until a narrow, fail-closed, fixture/static-test-backed implementation lane is selected.
-
-**Prep completed**
+**Prep/implementation completed**
 
 - [x] Public refusal boundary matrix: `9768d40 Add public refusal boundary matrix`
+- [x] Narrow Llama-3 header chat-template rendering for existing Llama-style SafeTensors/HF runtime lanes, backed by static renderer tests.
 
 **Candidate future lanes**
 
@@ -358,9 +357,9 @@ Runtime expansion remains deferred until a narrow, fail-closed, fixture/static-t
 
 ## Current next step
 
-➡️ **Phase 16: Future runtime expansion lanes — deferred pending a narrow, fail-closed plan.**
+➡️ **Phase 16: Future runtime expansion lanes — continue one narrow verified lane at a time.**
 
-The public launch contract/checklist/artifact QA bundle is complete. The next implementation lane should not broaden runtime support by default; it should first choose a narrow Phase 16 prep item with fixtures or static tests, explicit refusal behavior, and no claims beyond verified behavior.
+The public launch contract/checklist/artifact QA bundle is complete. The first implementation lane added strict Llama-3 header chat-template rendering for already-runnable Llama-style SafeTensors/HF packages. The next implementation lane should stay equally narrow, fixture/static-test backed, explicit about refusal behavior, and avoid claims beyond verified behavior.
 
 ## Always-on completion gates for public-facing phases
 

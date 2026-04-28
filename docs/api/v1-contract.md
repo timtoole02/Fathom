@@ -32,7 +32,7 @@ Common status/code pairs include:
 - `400 invalid_model` when a runnable model record is inconsistent.
 - `501 not_implemented` when the requested feature or model family is intentionally not runnable.
 - `501 external_proxy_not_implemented` when a saved external API entry is only a metadata placeholder and Fathom refuses to proxy chat or activation.
-- `501 chat_template_not_supported` for unsupported Hugging Face chat-template patterns.
+- `501 chat_template_not_supported` for unsupported Hugging Face chat-template patterns. Fathom renders only a small tested local set today: ChatML/Qwen-style, `[INST] ... [/INST]`, Llama-3 header turns, and Gemma user/model turns.
 - `501 embedding_runtime_unavailable` when an embedding package is recognized but the required runtime is not compiled/enabled.
 - `500 generation_error` or `500 embedding_error` for runtime failures.
 

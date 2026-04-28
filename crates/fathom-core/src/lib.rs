@@ -950,12 +950,15 @@ pub fn render_hf_chat_template_prompt(
     if supports_inst_hf_template(&template.template) {
         return render_inst_prompt(messages, options);
     }
+    if supports_llama3_header_hf_template(&template.template) {
+        return render_llama3_header_prompt(messages, options);
+    }
     if supports_gemma_hf_template(&template.template) {
         return render_gemma_prompt(messages, options);
     }
 
     anyhow::bail!(
-        "chat_template_not_supported: chat template at {} uses {:?}; Fathom extracted it, but only a small tested set of ChatML/Qwen, [INST], and Gemma HF template patterns is supported for local rendering today",
+        "chat_template_not_supported: chat template at {} uses {:?}; Fathom extracted it, but only a small tested set of ChatML/Qwen, [INST], Llama-3 header, and Gemma HF template patterns is supported for local rendering today",
         template.source.display(),
         template.format
     );
@@ -971,6 +974,16 @@ fn supports_chatml_hf_template(template: &str) -> bool {
 fn supports_inst_hf_template(template: &str) -> bool {
     template.contains("[INST]")
         && template.contains("[/INST]")
+        && (template.contains("message['role']") || template.contains("message.role"))
+        && (template.contains("message['content']") || template.contains("message.content"))
+}
+
+fn supports_llama3_header_hf_template(template: &str) -> bool {
+    template.contains("<|start_header_id|>")
+        && template.contains("<|end_header_id|>")
+        && template.contains("<|eot_id|>")
+        && template.contains("add_generation_prompt")
+        && template.contains("assistant")
         && (template.contains("message['role']") || template.contains("message.role"))
         && (template.contains("message['content']") || template.contains("message.content"))
 }
@@ -1079,6 +1092,25 @@ fn render_inst_prompt(
         turn += 1;
     }
 
+    Ok(prompt)
+}
+
+fn render_llama3_header_prompt(
+    messages: &[ChatMessage],
+    options: &PromptRenderOptions,
+) -> anyhow::Result<String> {
+    let mut prompt = String::new();
+    for message in messages {
+        let role = supported_hf_chat_role(message)?;
+        prompt.push_str("<|start_header_id|>");
+        prompt.push_str(role);
+        prompt.push_str("<|end_header_id|>\n\n");
+        prompt.push_str(message.content.trim_end());
+        prompt.push_str("<|eot_id|>");
+    }
+    if options.add_generation_prompt {
+        prompt.push_str("<|start_header_id|>assistant<|end_header_id|>\n\n");
+    }
     Ok(prompt)
 }
 
@@ -13420,6 +13452,71 @@ int main(int argc, char **argv) {
             prompt,
             "<s>[INST] <<SYS>>\nBe direct.\n<</SYS>>\n\nHi [/INST] Hello. </s><s>[INST] Again [/INST]"
         );
+    }
+
+    #[test]
+    fn renders_llama3_header_hf_chat_template_with_generation_prompt() {
+        let template = ChatTemplateMetadata {
+            source: PathBuf::from("tokenizer_config.json"),
+            template: "{% for message in messages %}{{ '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n' + message['content'] | trim + '<|eot_id|>' }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\\n\\n' }}{% endif %}".into(),
+            format: ChatTemplateFormat::HuggingFaceJinja,
+            needs_template_engine: true,
+        };
+
+        let prompt = render_hf_chat_template_prompt(
+            &template,
+            &[
+                ChatMessage {
+                    role: "system".into(),
+                    content: "Be direct.".into(),
+                },
+                ChatMessage {
+                    role: "user".into(),
+                    content: "Hi".into(),
+                },
+                ChatMessage {
+                    role: "assistant".into(),
+                    content: "Hello.".into(),
+                },
+                ChatMessage {
+                    role: "user".into(),
+                    content: "Again".into(),
+                },
+            ],
+            &PromptRenderOptions {
+                add_generation_prompt: true,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(
+            prompt,
+            "<|start_header_id|>system<|end_header_id|>\n\nBe direct.<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nHi<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nHello.<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nAgain<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+        );
+    }
+
+    #[test]
+    fn refuses_llama3_like_template_without_generation_prompt_marker() {
+        let template = ChatTemplateMetadata {
+            source: PathBuf::from("tokenizer_config.json"),
+            template: "{% for message in messages %}{{ '<|start_header_id|>' + message['role'] + '<|end_header_id|>' + message['content'] + '<|eot_id|>' }}{% endfor %}".into(),
+            format: ChatTemplateFormat::HuggingFaceJinja,
+            needs_template_engine: true,
+        };
+
+        let error = render_hf_chat_template_prompt(
+            &template,
+            &[ChatMessage {
+                role: "user".into(),
+                content: "Hi".into(),
+            }],
+            &PromptRenderOptions {
+                add_generation_prompt: true,
+            },
+        )
+        .unwrap_err();
+
+        assert!(error.to_string().contains("chat_template_not_supported"));
     }
 
     #[test]
