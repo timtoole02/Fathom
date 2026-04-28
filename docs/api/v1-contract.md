@@ -87,7 +87,7 @@ Important boundaries:
 
 ## `POST /v1/chat/completions`
 
-Runs one non-streaming local chat completion against a validated runnable local SafeTensors/Hugging Face chat model. Requests naming a connected external placeholder return a structured not-implemented error instead of proxying or faking a reply.
+Runs one non-streaming local chat completion against a validated runnable local SafeTensors/Hugging Face chat model. Requests naming a connected external placeholder return `501 external_proxy_not_implemented` instead of proxying, calling a provider, or faking a reply.
 
 Request:
 

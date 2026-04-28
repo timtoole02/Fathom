@@ -4,8 +4,8 @@ This snapshot records the current public launch verification state for Fathom. I
 
 ## Snapshot
 
-- Commit: `7fe374ce2aedf49780da069dc63823521117d8fb` (`Add public contract smoke artifact QA`)
-- Scope: no-download public `/v1` contract, public launch checklist, manifest-driven smoke, sanitized public-contract smoke artifacts, offline artifact QA, and CI/static policy wiring.
+- Commit: `a32505eadac6539865d224a8b4195656003a0032` (`Close out public launch readiness phase`)
+- Scope: no-download public `/v1` contract, public launch checklist, public launch evidence snapshot, manifest-driven smoke, sanitized public-contract smoke artifacts, offline artifact QA, and CI/static policy wiring.
 - Fresh-clone QA: passed for `origin/main` at the commit above.
 
 ## Gates represented by the snapshot
