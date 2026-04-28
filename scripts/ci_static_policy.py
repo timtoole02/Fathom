@@ -44,6 +44,15 @@ def main() -> None:
     if re.search(r"FATHOM_ACCEPTANCE_KEEP_ARTIFACTS|FATHOM_ACCEPTANCE_PORT|backend_acceptance_smoke\.sh\s*$", text):
         failures.append("default CI must not invoke networked backend acceptance smoke")
 
+    if "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR" in text:
+        failures.append("default CI must not persist public contract smoke artifacts")
+
+    if re.search(r"actions/(upload-artifact|cache)@", text):
+        failures.append("default CI must not upload or cache QA/model artifacts")
+
+    if re.search(r"(models|artifacts|target)\s*:", text, re.IGNORECASE):
+        failures.append("default CI must not define broad model/artifact/target caches")
+
     if failures:
         raise SystemExit("CI static policy failed:\n- " + "\n- ".join(failures))
 
