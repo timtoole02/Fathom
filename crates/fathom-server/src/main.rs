@@ -1842,8 +1842,8 @@ async fn v1_chat_completions(
     if model.provider_kind == "external" {
         return error_json(
             StatusCode::NOT_IMPLEMENTED,
-            "External OpenAI-compatible proxying is not implemented by Fathom yet. No fake inference was produced.",
-            "not_implemented",
+            "External OpenAI-compatible proxying is not implemented by Fathom yet. No provider was called and no fake inference was produced.",
+            "external_proxy_not_implemented",
         );
     }
     if !is_runnable_model(&model)
@@ -5206,19 +5206,23 @@ mod catalog_tests {
     }
 
     #[tokio::test]
-    async fn v1_chat_external_model_proxy_shape_is_truthful_not_implemented() {
+    async fn v1_chat_external_model_proxy_shape_is_truthful_external_proxy_not_implemented() {
         let state = test_state(vec![test_external_model("external-gpt")], None);
 
         let (status, Json(body)) =
             v1_chat_completions(State(state), Json(test_chat_request(Some("external-gpt")))).await;
 
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
-        assert_v1_error_envelope(&body, "not_implemented");
+        assert_v1_error_envelope(&body, "external_proxy_not_implemented");
         assert_no_fake_chat_success(&body);
         assert!(body["error"]["message"]
             .as_str()
             .unwrap()
             .contains("External OpenAI-compatible proxying"));
+        assert!(body["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("No provider was called"));
     }
 
     #[tokio::test]
@@ -5257,6 +5261,15 @@ mod catalog_tests {
             StatusCode::NOT_IMPLEMENTED,
             "external_proxy_not_implemented",
         );
+
+        let (status, Json(chat_body)) = v1_chat_completions(
+            State(state.clone()),
+            Json(test_chat_request(Some("connected-external"))),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
+        assert_v1_error_envelope(&chat_body, "external_proxy_not_implemented");
+        assert_no_fake_chat_success(&chat_body);
 
         let Json(runtime_body) = runtime_state(State(state)).await;
         assert_eq!(runtime_body["loaded_now"], false);

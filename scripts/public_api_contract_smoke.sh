@@ -345,7 +345,7 @@ try:
         {"model": "external-placeholder-smoke", "messages": [{"role": "user", "content": "hello"}]},
     )
     assert status == 501, (status, external_chat)
-    assert_error(external_chat, "not_implemented")
+    assert_error(external_chat, "external_proxy_not_implemented")
     assert_no_chat_success(external_chat)
     record_boundary("external placeholder chat or activation", "external-placeholder-exclusion-activation-chat-refusal", 501, "external_proxy_not_implemented")
 
