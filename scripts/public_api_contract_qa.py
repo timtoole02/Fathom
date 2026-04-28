@@ -22,13 +22,14 @@ CLIENT_EXAMPLES = ROOT / "docs" / "api" / "client-examples.md"
 BACKEND_QUICKSTART = ROOT / "docs" / "api" / "backend-only-quickstart.md"
 LAUNCH_CHECKLIST = ROOT / "docs" / "public-launch-checklist.md"
 LAUNCH_EVIDENCE = ROOT / "docs" / "public-launch-evidence.md"
+REFUSAL_MATRIX = ROOT / "docs" / "api" / "refusal-boundary-matrix.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
-DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, README]
+DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, REFUSAL_MATRIX, README]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
 TEXT_PATHS = DOC_PATHS + EXAMPLE_PATHS + [CI]
 
@@ -158,6 +159,24 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "What this evidence does not prove", "launch evidence caveats")
     assert_contains(evidence_text, "external_proxy_not_implemented", "launch evidence external placeholder refusal")
+
+    matrix_text = read(REFUSAL_MATRIX)
+    for phrase in (
+        "Streamed chat-completion requests",
+        "Base64 embeddings",
+        "Missing chat model",
+        "Unknown embedding model",
+        "External placeholder chat or activation",
+        "GGUF metadata-only chat attempts",
+        "PyTorch `.bin` execution",
+        "Unsupported ONNX chat or general ONNX model execution",
+        "Unverified SafeTensors/Hugging Face model execution",
+        "Full OpenAI API parity",
+        "not a runtime expansion plan",
+    ):
+        assert_contains(matrix_text, phrase, "refusal boundary matrix")
+    assert_contains(v1_text, "refusal-boundary-matrix.md", "v1 contract refusal matrix link")
+    assert_contains(launch_text, "refusal-boundary-matrix.md", "launch checklist refusal matrix link")
 
     quickstart_text = read(BACKEND_QUICKSTART)
     contributing_text = read(CONTRIBUTING)

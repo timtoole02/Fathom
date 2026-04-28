@@ -5,6 +5,7 @@ Fathom exposes a deliberately small OpenAI-style `/v1` surface for local integra
 Base URL in local development: `http://127.0.0.1:8180`.
 
 For offline CI and adopter review, the same launch boundary is summarized in the small machine-checkable [`public-contract.json`](public-contract.json) manifest. It is a launch contract, not a complete OpenAPI spec.
+The public refusal/non-claim boundary matrix lives in [`refusal-boundary-matrix.md`](refusal-boundary-matrix.md).
 
 Security note: Fathom's local API has no built-in authentication and is intended for loopback development, not direct internet exposure. See [`../../SECURITY.md`](../../SECURITY.md) before proxying, tunneling, or sharing logs/artifacts.
 

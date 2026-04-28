@@ -59,6 +59,7 @@ bash scripts/stop.sh
 ```
 
 Use [`docs/api/backend-only-quickstart.md`](api/backend-only-quickstart.md) for catalog install examples, TinyStories chat, MiniLM embeddings, retrieval, and expected refusals. Those catalog demos require network access for pinned fixture downloads.
+For a compact refusal/non-claim checklist before Phase 16 work, see [`docs/api/refusal-boundary-matrix.md`](api/refusal-boundary-matrix.md).
 
 ## 4. Optional networked acceptance smoke
 
