@@ -27,7 +27,7 @@ Narrow support is fine when it is honest. For example, a pinned fixture, specifi
 
 ## Verification gates
 
-GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and tests, frontend install/build/copy QA, script and Python syntax checks, fake-loopback API client example regression, and the public-risk scan.
+GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and tests, frontend install/build/copy QA, script and Python syntax checks, fake-loopback API client example regression, offline backend acceptance artifact QA, and the public-risk scan.
 
 Run the smallest gate that proves your change, and prefer the full set before opening a release-facing PR.
 
@@ -42,6 +42,7 @@ npm --prefix frontend run build
 npm --prefix frontend run qa:copy
 bash -n scripts/public_risk_scan.sh
 python3 scripts/api_client_examples_regression.py
+python3 scripts/backend_acceptance_artifact_qa.py
 bash scripts/public_risk_scan.sh
 ```
 

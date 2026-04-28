@@ -65,10 +65,13 @@ jobs:
         run: |
           python3 -m py_compile \
             scripts/api_client_examples_regression.py \
+            scripts/backend_acceptance_artifact_qa.py \
             examples/api/python-no-deps.py \
             examples/api/openai-sdk.py \
             scripts/bench_backend.py
       - name: Run API client example regression
         run: python3 scripts/api_client_examples_regression.py
+      - name: Run backend acceptance artifact QA
+        run: python3 scripts/backend_acceptance_artifact_qa.py
       - name: Run public risk scan
         run: bash scripts/public_risk_scan.sh
