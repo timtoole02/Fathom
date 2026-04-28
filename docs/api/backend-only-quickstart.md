@@ -31,6 +31,16 @@ bash scripts/stop.sh
 
 The exact narrow `/v1` contract is documented in [`v1-contract.md`](v1-contract.md), and the launch-supported boundary is mirrored in [`public-contract.json`](public-contract.json) for offline QA. Minimal client examples and the adopter checklist for base URL, runnable-model discovery, and expected refusal boundaries live in [`client-examples.md`](client-examples.md) and [`../../examples/api/`](../../examples/api/). For local threat-model, model artifact safety, and reporting guidance, see [`../../SECURITY.md`](../../SECURITY.md); for contribution boundaries and verification gates, see [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md).
 
+## No-download public contract smoke
+
+For a cheap real-backend gate that does not download models or call providers, run:
+
+```bash
+bash scripts/public_api_contract_smoke.sh
+```
+
+The script starts `fathom-server` on a temporary local port with isolated state/model/log directories, verifies empty `/v1/health` readiness, empty `/v1/models`, streaming chat refusal, missing-model chat refusal, a base64 embedding request refused with `invalid_request`, unknown embedding-model refusal, and external placeholder exclusion/refusals. It cleans up its temporary directories and proves routing/error-envelope behavior only; it is not acceptance evidence for real generation, embeddings, quality, or performance.
+
 ## Optional backend acceptance smoke
 
 For a fuller backend-only acceptance pass, run:

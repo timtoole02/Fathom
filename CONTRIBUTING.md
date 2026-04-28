@@ -27,7 +27,7 @@ Narrow support is fine when it is honest. For example, a pinned fixture, specifi
 
 ## Verification gates
 
-GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and default-build tests, frontend install/build/copy QA, script and Python syntax checks, fake-loopback API client example regression, offline backend acceptance artifact QA, CI static-policy checks, and the public-risk scan. Default CI intentionally does not run networked backend acceptance smoke, model downloads, or non-default ONNX Runtime feature tests.
+GitHub Actions runs the core public gates on pull requests and pushes to `main`: Rust formatting and default-build tests, the no-download real-backend public API contract smoke, frontend install/build/copy QA, script and Python syntax checks, fake-loopback API client example regression, offline backend acceptance artifact QA, CI static-policy checks, and the public-risk scan. Default CI intentionally does not run networked backend acceptance smoke, model downloads, or non-default ONNX Runtime feature tests.
 
 Run the smallest gate that proves your change, and prefer the full set before opening a release-facing PR.
 
@@ -43,10 +43,11 @@ bash -n scripts/public_risk_scan.sh
 python3 scripts/api_client_examples_regression.py
 python3 scripts/backend_acceptance_artifact_qa.py
 python3 scripts/ci_static_policy.py
+bash scripts/public_api_contract_smoke.sh
 bash scripts/public_risk_scan.sh
 ```
 
-The API client example regression uses a local fake loopback server to contract-test example request shapes without downloads or inference. For backend/API changes, also consider the networked acceptance smoke locally or in a targeted manual CI run; it is intentionally not part of the default public CI path. The ONNX embedding feature test is also targeted/manual because it may involve native ONNX Runtime binaries:
+The API client example regression uses a local fake loopback server to contract-test example request shapes without downloads or inference. `scripts/public_api_contract_smoke.sh` starts the real `fathom-server` on an isolated local port with temporary state/model directories and verifies the narrow `/v1` routing/refusal contract without catalog installs, model downloads, ONNX features, or external provider calls; it is not model-runtime, quality, or acceptance evidence. For backend/API changes, also consider the networked acceptance smoke locally or in a targeted manual CI run; it is intentionally separate from the no-download contract smoke. The ONNX embedding feature test is also targeted/manual because it may involve native ONNX Runtime binaries:
 
 ```bash
 bash -n scripts/backend_acceptance_smoke.sh

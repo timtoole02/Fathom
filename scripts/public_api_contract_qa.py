@@ -21,6 +21,7 @@ V1_CONTRACT = ROOT / "docs" / "api" / "v1-contract.md"
 CLIENT_EXAMPLES = ROOT / "docs" / "api" / "client-examples.md"
 BACKEND_QUICKSTART = ROOT / "docs" / "api" / "backend-only-quickstart.md"
 README = ROOT / "README.md"
+CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
@@ -133,6 +134,9 @@ def assert_boundary_docs() -> None:
     assert_contains(client_text, "/v1/models", "adopter checklist")
     assert_contains(client_text, "expected boundaries", "adopter checklist")
     assert_contains(readme_text, "public launch API contract", "README API section")
+    assert_contains(readme_text, "scripts/public_api_contract_smoke.sh", "README public contract smoke")
+    assert_contains(read(BACKEND_QUICKSTART), "scripts/public_api_contract_smoke.sh", "backend quickstart public contract smoke")
+    assert_contains(read(CONTRIBUTING), "scripts/public_api_contract_smoke.sh", "contributing public contract smoke")
     assert_contains(v1_text, "public-contract.json", "v1 contract manifest link")
 
 
@@ -182,6 +186,8 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
     assert_contains(ci_text, "scripts/public_api_contract_qa.py", "CI public API contract QA wiring")
     assert_contains(ci_text, expected, "CI public API contract QA run step")
+    assert_contains(ci_text, "bash scripts/public_api_contract_smoke.sh", "CI public API contract smoke run step")
+    assert_contains(ci_text, "bash -n scripts/public_api_contract_smoke.sh", "CI public API contract smoke syntax step")
     if re.search(r"cargo\s+test\b[^\n]*--features\s+[^\n]*onnx-embeddings-ort", ci_text):
         raise AssertionError("default CI must not enable onnx-embeddings-ort")
     for line_no, line in enumerate(ci_text.splitlines(), start=1):

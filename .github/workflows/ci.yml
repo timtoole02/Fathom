@@ -24,6 +24,8 @@ jobs:
         run: cargo fmt --all --check
       - name: Run tests
         run: cargo test -q
+      - name: Run public API contract smoke
+        run: bash scripts/public_api_contract_smoke.sh
 
   frontend:
     name: Frontend gates
@@ -54,6 +56,7 @@ jobs:
         run: |
           bash -n examples/api/curl-quickstart.sh
           bash -n scripts/public_risk_scan.sh
+          bash -n scripts/public_api_contract_smoke.sh
           bash -n scripts/backend_acceptance_smoke.sh
           bash -n scripts/smoke.sh
           bash -n scripts/start-backend.sh

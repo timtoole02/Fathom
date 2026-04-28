@@ -22,14 +22,24 @@ def main() -> None:
     if re.search(r"cargo\s+test\b[^\n]*--features\s+[^\n]*onnx-embeddings-ort", text):
         failures.append("default CI must not run onnx-embeddings-ort feature tests")
 
+    saw_public_contract_smoke = False
     for line_number, line in enumerate(text.splitlines(), start=1):
-        if "scripts/backend_acceptance_smoke.sh" not in line:
-            continue
         stripped = line.strip()
-        if stripped != "bash -n scripts/backend_acceptance_smoke.sh":
-            failures.append(
-                f"default CI must only syntax-check backend_acceptance_smoke.sh, line {line_number}: {stripped}"
-            )
+        if "scripts/backend_acceptance_smoke.sh" in line:
+            if stripped != "bash -n scripts/backend_acceptance_smoke.sh":
+                failures.append(
+                    f"default CI must only syntax-check backend_acceptance_smoke.sh, line {line_number}: {stripped}"
+                )
+        if "scripts/public_api_contract_smoke.sh" in line:
+            if stripped in {"bash scripts/public_api_contract_smoke.sh", "run: bash scripts/public_api_contract_smoke.sh"}:
+                saw_public_contract_smoke = True
+            elif stripped not in {"bash -n scripts/public_api_contract_smoke.sh", "run: bash -n scripts/public_api_contract_smoke.sh"}:
+                failures.append(
+                    f"default CI may only syntax-check or run public_api_contract_smoke.sh, line {line_number}: {stripped}"
+                )
+
+    if not saw_public_contract_smoke:
+        failures.append("default CI must run the no-download public API contract smoke")
 
     if re.search(r"FATHOM_ACCEPTANCE_KEEP_ARTIFACTS|FATHOM_ACCEPTANCE_PORT|backend_acceptance_smoke\.sh\s*$", text):
         failures.append("default CI must not invoke networked backend acceptance smoke")
