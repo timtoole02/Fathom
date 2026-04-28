@@ -81,6 +81,18 @@ def load_manifest() -> dict[str, Any]:
     return data
 
 
+def manifest_expected_boundaries(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    expected: dict[str, dict[str, Any]] = {}
+    for item in manifest.get("expected_boundary_errors", []):
+        if not isinstance(item, dict):
+            raise AssertionError("manifest expected_boundary_errors entries must be objects")
+        boundary = item.get("boundary")
+        if not isinstance(boundary, str) or not boundary:
+            raise AssertionError(f"manifest boundary entry missing boundary name: {item!r}")
+        expected[boundary] = item
+    return expected
+
+
 def load_json(path: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -228,6 +240,7 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError("external placeholder wording must be refusal-only")
 
     manifest_data = load_manifest()
+    expected_by_name = manifest_expected_boundaries(manifest_data)
     if summary["passed"] is True:
         manifest_endpoints = {(item["method"], item["path"]) for item in manifest_data.get("supported_endpoints", [])}
         checked_endpoints = {(item.get("method"), item.get("path")) for item in endpoint_checks}
@@ -237,11 +250,26 @@ def validate_summary_dir(directory: Path) -> None:
         missing_boundaries = sorted(REQUIRED_NO_DOWNLOAD_BOUNDARIES - set(boundary_by_name))
         if missing_boundaries:
             raise AssertionError(f"passed summary missing no-download boundary coverage: {missing_boundaries}")
+        for boundary, result in boundary_by_name.items():
+            expected = expected_by_name.get(boundary)
+            if expected is None:
+                raise AssertionError(f"passed summary has boundary not present in public-contract.json: {boundary!r}")
+            if "status" in expected and result.get("status") != expected["status"]:
+                raise AssertionError(
+                    f"passed summary boundary {boundary!r} status {result.get('status')!r} does not match public-contract.json {expected['status']!r}"
+                )
+            if "code" in expected and result.get("code") != expected["code"]:
+                raise AssertionError(
+                    f"passed summary boundary {boundary!r} code {result.get('code')!r} does not match public-contract.json {expected['code']!r}"
+                )
         deferred_names = {item.get("boundary") for item in deferred}
-        expected_names = {item.get("boundary") for item in manifest_data.get("expected_boundary_errors", [])}
-        unexpected_gap = sorted(expected_names - REQUIRED_NO_DOWNLOAD_BOUNDARIES - deferred_names)
-        if unexpected_gap:
-            raise AssertionError(f"passed summary missing deferred manifest boundaries: {unexpected_gap}")
+        expected_names = set(expected_by_name)
+        expected_deferred_names = expected_names - REQUIRED_NO_DOWNLOAD_BOUNDARIES
+        if deferred_names != expected_deferred_names:
+            raise AssertionError(
+                "passed summary deferred manifest boundaries must exactly match public-contract.json minus no-download boundaries: "
+                f"missing={sorted(expected_deferred_names - deferred_names)} unexpected={sorted(deferred_names - expected_deferred_names)}"
+            )
 
 
 def passed_sample() -> dict[str, Any]:
@@ -356,6 +384,38 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("share-safety/overclaim self-check did not fail")
+
+        bad_status = root / "bad-status"
+        mutated = passed_sample()
+        for item in mutated["boundary_checks"]:
+            if item["boundary"] == "streaming chat completions":
+                item["status"] = 400
+                item["code"] = "invalid_request"
+        write_sample(bad_status, mutated)
+        try:
+            validate_summary_dir(bad_status)
+        except AssertionError as exc:
+            if "public-contract.json" not in str(exc):
+                raise
+        else:
+            raise AssertionError("manifest status/code drift self-check did not fail")
+
+        bad_deferred = root / "bad-deferred"
+        mutated = passed_sample()
+        mutated["deferred_manifest_boundaries"].append(
+            {
+                "boundary": "invented boundary",
+                "reason": "requires downloaded/registered model state outside the no-download smoke",
+            }
+        )
+        write_sample(bad_deferred, mutated)
+        try:
+            validate_summary_dir(bad_deferred)
+        except AssertionError as exc:
+            if "deferred manifest boundaries" not in str(exc):
+                raise
+        else:
+            raise AssertionError("unexpected deferred boundary self-check did not fail")
 
 
 def main() -> None:
