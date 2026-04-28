@@ -105,6 +105,7 @@ artifacts.mkdir(parents=True, exist_ok=True)
 TINYSTORIES_ID = "vijaymohan-gpt2-tinystories-from-scratch-10m-model-safetensors"
 MINILM_ID = "sentence-transformers-all-minilm-l6-v2-model-safetensors"
 GGUF_ID = "aladar-llama-2-tiny-random-gguf-llama-2-tiny-random-gguf"
+EXTERNAL_ID = "acceptance-external-placeholder"
 
 CHECKS = {
     "00-corrupt-state-runtime.json": ("corrupt_state_runtime_warning", "Runtime starts after seeded corrupt model registry and reports model_state_recovered."),
@@ -119,6 +120,10 @@ CHECKS = {
     "04-install-tinystories.json": ("install_tinystories", "Pinned TinyStories SafeTensors/HF fixture installs as runnable."),
     "04b-tinystories-license-manifest-audit.json": ("tinystories_license_manifest_audit", "Installed TinyStories manifest preserves share-safe catalog license audit fields next to pinned provenance."),
     "05-v1-models-after-tinystories.json": ("models_include_chat_fixture", "Runnable /v1/models includes the TinyStories chat fixture."),
+    "05b-connect-external-placeholder.json": ("external_placeholder_connected_metadata_only", "Fake external OpenAI-compatible entry is saved as a planned metadata placeholder with a configured key flag and no proxying."),
+    "05c-v1-models-after-external-placeholder.json": ("external_placeholder_excluded_from_v1_models", "External placeholder stays out of chat-runnable /v1/models; only verified local chat models are listed."),
+    "05d-external-placeholder-activation-refusal.json": ("external_placeholder_activation_refusal", "External placeholder activation is refused with external_proxy_not_implemented instead of becoming chat-ready."),
+    "05e-v1-chat-external-placeholder-refusal.json": ("external_placeholder_v1_chat_refusal", "External placeholder chat completion is refused with structured JSON and no fake choices."),
     "06-chat-non-stream.json": ("chat_non_stream", "TinyStories fixture returns a real non-streaming chat completion with usage and timing metrics."),
     "07-chat-stream-refusal.json": ("chat_stream_refusal", "Streaming chat is truthfully refused with not_implemented."),
     "08-install-minilm-safetensors.json": ("install_minilm_safetensors", "Pinned MiniLM SafeTensors fixture installs as a text embedding model."),
@@ -150,6 +155,7 @@ summary = {
         "chat": TINYSTORIES_ID,
         "embedding": MINILM_ID,
         "gguf_metadata_only": GGUF_ID,
+        "external_placeholder": EXTERNAL_ID,
     },
     "checks": [],
 }
@@ -236,6 +242,7 @@ def write_summary(passed, failure=None):
         f.write("- No arbitrary SafeTensors support claim; only the pinned fixtures above are exercised.\n")
         f.write("- No GGUF runtime, tokenizer execution, or generation claim; GGUF is metadata-only/refusal evidence.\n")
         f.write("- No ONNX chat or general ONNX support claim.\n")
+        f.write("- No external-provider proxying claim; connected external API entries are metadata placeholders only, with activation/chat refusal evidence and no provider call.\n")
         f.write("- Catalog license checks prove metadata visibility, acknowledgement gating, and installed manifest audit persistence, not legal review, legal advice, or compatibility for any use case.\n")
         f.write("- No performance claim or benchmark evidence.\n")
     summary_written = True
@@ -468,6 +475,69 @@ for item in models.get("data", []):
     assert fathom.get("capability_status") == "runnable", item
     assert fathom.get("provider_kind") != "external", item
     assert "safetensors-hf" in fathom.get("backend_lanes", []), item
+
+# Fake external OpenAI-compatible placeholder evidence. This is intentionally
+# metadata-only and non-networked: example.test is never called by this smoke.
+_, external = request(
+    "POST",
+    "/api/models/external",
+    {
+        "id": EXTERNAL_ID,
+        "name": "Acceptance external placeholder",
+        "source": "Example OpenAI-compatible API",
+        "api_base": "https://api.example.test/v1",
+        "api_key": "acceptance-placeholder-not-real",
+        "model_name": "example-chat-model",
+    },
+    artifact="05b-connect-external-placeholder.json",
+    expected=200,
+)
+assert external.get("id") == EXTERNAL_ID, external
+assert external.get("provider_kind") == "external", external
+assert external.get("capability_status") == "planned", external
+assert external.get("task") is None, external
+assert external.get("api_key_configured") is True, external
+assert "api_key" not in external, external
+assert external.get("model_path") is None, external
+assert "external-openai" in external.get("backend_lanes", []), external
+external_summary = (external.get("capability_summary") or "").lower()
+assert "metadata" in external_summary and "does not proxy chat" in external_summary, external
+
+_, models_after_external = request(
+    "GET",
+    "/v1/models",
+    artifact="05c-v1-models-after-external-placeholder.json",
+    expected=200,
+)
+ids_after_external = [item.get("id") for item in models_after_external.get("data", [])]
+assert TINYSTORIES_ID in ids_after_external, models_after_external
+assert EXTERNAL_ID not in ids_after_external, models_after_external
+for item in models_after_external.get("data", []):
+    fathom = item.get("fathom") or {}
+    assert fathom.get("provider_kind") != "external", item
+
+_, external_activation = request(
+    "POST",
+    f"/api/models/{EXTERNAL_ID}/activate",
+    artifact="05d-external-placeholder-activation-refusal.json",
+    expected=501,
+)
+activation_error = external_activation.get("error") or {}
+assert activation_error.get("code") == "external_proxy_not_implemented", external_activation
+assert activation_error.get("type") == "external_proxy_not_implemented", external_activation
+
+_, external_chat = request(
+    "POST",
+    "/v1/chat/completions",
+    {"model": EXTERNAL_ID, "messages": [{"role": "user", "content": "Hello"}], "max_tokens": 8},
+    artifact="05e-v1-chat-external-placeholder-refusal.json",
+    expected=501,
+)
+chat_error = external_chat.get("error") or {}
+assert chat_error.get("type") == "not_implemented", external_chat
+assert chat_error.get("code") == "not_implemented", external_chat
+assert "fake" in (chat_error.get("message") or "").lower(), external_chat
+assert "choices" not in external_chat, external_chat
 
 chat_body = {
     "model": TINYSTORIES_ID,

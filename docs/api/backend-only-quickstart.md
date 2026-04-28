@@ -39,7 +39,7 @@ For a fuller backend-only acceptance pass, run:
 FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh
 ```
 
-This optional script starts only `fathom-server` on an alternate port with isolated state/model directories, downloads pinned catalog fixtures, captures JSON artifacts, and verifies health/runtime/capabilities, catalog license metadata and acknowledgement gating, TinyStories chat, MiniLM embeddings, explicit-vector retrieval, retrieval-context chat metadata, and GGUF metadata-only refusal. It is networked and intentionally not part of default CI or benchmark evidence.
+This optional script starts only `fathom-server` on an alternate port with isolated state/model directories, downloads pinned catalog fixtures, captures JSON artifacts, and verifies health/runtime/capabilities, catalog license metadata and acknowledgement gating, TinyStories chat, external API placeholder refusal, MiniLM embeddings, explicit-vector retrieval, retrieval-context chat metadata, and GGUF metadata-only refusal. It is networked for local fixture downloads but does not call external providers, and it is intentionally not part of default CI or benchmark evidence.
 
 ### Reading acceptance artifacts
 
@@ -50,6 +50,7 @@ Useful evidence files:
 - `00-corrupt-state-runtime.json`, `00-corrupt-state-files.json`, and `02b-api-dashboard-after-corrupt-recovery.json` show corrupt model-state recovery.
 - `03b-api-models-catalog-license-metadata.json`, `03c-catalog-license-install-refusal.json`, and `03d-catalog-license-refusal-model-dir.json` show catalog license metadata visibility, acknowledgement-required refusal for a non-permissive entry, and refusal before download/staging in the isolated model directory. This is gating evidence only, not legal review or license-compatibility advice.
 - `04b-tinystories-license-manifest-audit.json` shows the installed TinyStories manifest preserving share-safe catalog license audit fields next to pinned repo/revision/SHA256 provenance.
+- `05b-connect-external-placeholder.json`, `05c-v1-models-after-external-placeholder.json`, `05d-external-placeholder-activation-refusal.json`, and `05e-v1-chat-external-placeholder-refusal.json` show a fake `example.test` external OpenAI-compatible entry saved as planned metadata only, excluded from `/v1/models`, and refused for activation/chat with structured errors and no fake choices. No external provider is called.
 - `06-chat-non-stream.json` shows the pinned TinyStories SafeTensors/HF fixture returning a real non-streaming chat completion; `07-chat-stream-refusal.json` shows streaming refusal.
 - `10-v1-embeddings-minilm.json` shows `POST /v1/embeddings` returning an OpenAI-style list with one finite 384-dimensional float vector from the pinned MiniLM SafeTensors runtime.
 - `10b-v1-embeddings-base64-refusal.json` shows `encoding_format: "base64"` refused with `invalid_request`; only float embeddings are supported.

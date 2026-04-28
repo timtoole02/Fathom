@@ -82,4 +82,5 @@ For the full supported `/v1` endpoint list and standard error envelope, see [`v1
 - GGUF packages are metadata/provenance-only right now and are not chat inference or embedding models.
 - ONNX chat and general ONNX model execution are not supported.
 - PyTorch `.bin` and arbitrary SafeTensors execution are not supported.
+- Saved external OpenAI-compatible API entries are metadata placeholders only; these examples do not use them as proxy targets or send real external API credentials.
 - Fathom does not claim arbitrary Hugging Face or full OpenAI API parity; `/v1/models` only lists models the local backend has validated as chat-runnable.
