@@ -28,8 +28,15 @@
     }
   ],
   "standard_error_envelope": {
-    "top_level": ["error"],
-    "error_fields": ["message", "type", "code", "param"]
+    "top_level": [
+      "error"
+    ],
+    "error_fields": [
+      "message",
+      "type",
+      "code",
+      "param"
+    ]
   },
   "expected_boundary_errors": [
     {
@@ -81,7 +88,7 @@
       "code": "not_implemented"
     },
     {
-      "boundary": "arbitrary SafeTensors/Hugging Face execution",
+      "boundary": "unverified SafeTensors/Hugging Face model execution",
       "status": 501,
       "code": "not_implemented"
     },

@@ -330,7 +330,13 @@ This roadmap tracks the phases already completed, the next phase, and the comple
 
 ### ➡️ [ ] Phase 16 — Future runtime expansion lanes
 
-These remain deferred until a narrow, fail-closed, fixture/static-test-backed runtime-prep lane is selected.
+Phase 16 has started with narrow prep only. The first prep lane added [`docs/api/refusal-boundary-matrix.md`](docs/api/refusal-boundary-matrix.md), which records checked refusals, optional fixture/networked evidence boundaries, and explicit non-claims before any runtime expansion.
+
+Runtime expansion remains deferred until a narrow, fail-closed, fixture/static-test-backed implementation lane is selected.
+
+**Prep completed**
+
+- [x] Public refusal boundary matrix: `9768d40 Add public refusal boundary matrix`
 
 **Candidate future lanes**
 
