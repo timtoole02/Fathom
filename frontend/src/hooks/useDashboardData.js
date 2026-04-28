@@ -51,8 +51,8 @@ function slugifyModelId(value) {
 
 function buildChatSuccessNotice({ modelType, memoryContext, recovered = false }) {
   const base = recovered
-    ? (modelType === 'external' ? 'Connected reply recovered after refresh.' : 'Local reply recovered after refresh.')
-    : (modelType === 'external' ? 'Connected model replied successfully.' : 'Local response generated successfully.')
+    ? (modelType === 'external' ? 'External placeholder refusal recovered after refresh.' : 'Local reply recovered after refresh.')
+    : (modelType === 'external' ? 'External placeholder returned without local generation.' : 'Local response generated successfully.')
 
   if (!memoryContext?.used_count) return base
 
@@ -327,7 +327,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     const messageContent = composer.trim()
 
     setSending(true)
-    showNotice(isExternalModel(selectedModel) ? 'Sending to the connected model…' : 'Running local inference…', 'info')
+    showNotice(isExternalModel(selectedModel) ? 'External API proxying is not implemented in Fathom yet…' : 'Running local inference…', 'info')
 
     try {
       let conversationId = selectedConversation?.id
@@ -618,7 +618,6 @@ export function useDashboardData({ showNotice, clearNotice }) {
     }
 
     await loadDashboard({ silent: true })
-    setSelectedModelId(derivedId)
     setExternalForm({
       id: '',
       name: '',
@@ -627,7 +626,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
       api_key: '',
       model_name: '',
     })
-    showNotice('External API model connected and ready to use.', 'success')
+    showNotice('External API details saved locally as a connected placeholder. Chat proxying is not implemented yet.', 'success')
   }
 
   const registerModel = async () => {

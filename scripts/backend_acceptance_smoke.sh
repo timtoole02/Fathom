@@ -466,7 +466,8 @@ assert TINYSTORIES_ID in model_ids, models
 for item in models.get("data", []):
     fathom = item.get("fathom") or {}
     assert fathom.get("capability_status") == "runnable", item
-    assert "safetensors-hf" in fathom.get("backend_lanes", []) or fathom.get("provider_kind") == "external", item
+    assert fathom.get("provider_kind") != "external", item
+    assert "safetensors-hf" in fathom.get("backend_lanes", []), item
 
 chat_body = {
     "model": TINYSTORIES_ID,

@@ -40,6 +40,9 @@ const checks = [
       'acknowledgement required and recorded',
       'acknowledgement not required; none recorded',
       'Only cards marked chat-ready can be selected for chat',
+      'External API placeholder',
+      'Chat proxy not implemented',
+      'connected metadata placeholder only',
     ],
   },
   {
@@ -47,6 +50,8 @@ const checks = [
     snippets: [
       'Hugging Face model installed and inspected',
       'Could not install that Hugging Face model',
+      'External API details saved locally as a connected placeholder',
+      'Chat proxying is not implemented yet',
     ],
   },
   {
@@ -143,6 +148,7 @@ const ggufCopyFiles = [
 ]
 const ggufCopy = ggufCopyFiles.map((path) => readFileSync(path, 'utf8')).join('\n')
 const modelsCopy = readFileSync(join(root, 'src/views/ModelsView.jsx'), 'utf8')
+const dashboardCopy = readFileSync(join(root, 'src/hooks/useDashboardData.js'), 'utf8')
 
 if (structuredRefusal.message !== 'stream:true is not supported for local chat completions.') failures.push(`structured API errors should parse error.message, got: ${structuredRefusal.message}`)
 if (structuredRefusal.type !== 'invalid_request_error' || structuredRefusal.code !== 'streaming_not_implemented' || structuredRefusal.param !== 'stream') failures.push(`structured API errors should preserve type/code/param, got: ${JSON.stringify(structuredRefusal)}`)
@@ -178,6 +184,11 @@ if (!modelsCopy.includes('License audit trail: status')) failures.push('Models c
 if (!modelsCopy.includes('acknowledgement required and recorded')) failures.push('Models copy must distinguish recorded acknowledgement for acknowledgement-required installs')
 if (!modelsCopy.includes('acknowledgement not required; none recorded')) failures.push('Models copy must avoid implying permissive installs had a user acknowledgement')
 if (!modelsCopy.includes('Only cards marked chat-ready can be selected for chat')) failures.push('Models ready-section copy must not imply every set-up entry can chat')
+if (!modelsCopy.includes('External API placeholder: connected metadata only; Fathom does not proxy chat to external endpoints yet.')) failures.push('Models copy must describe external APIs as non-chat-runnable placeholders')
+if (!modelsCopy.includes('Chat proxy not implemented')) failures.push('Models external placeholder action must not offer chat selection')
+if (/External API model connected and ready to use|Fathom will call its connected API|Connected and ready whenever you want it|Use for next chat.{0,120}external/i.test(modelsCopy)) failures.push('Models external API copy must not imply external placeholders are chat-runnable')
+const externalConnectRegion = dashboardCopy.split('const connectExternalModel = async () => {')[1]?.split('const registerModel = async () => {')[0] || ''
+if (externalConnectRegion.includes('setSelectedModelId(derivedId)')) failures.push('Connecting an external placeholder must not select it for chat')
 if (modelsCopy.includes('These models are ready for a chat right now')) failures.push('Models ready-section copy must not overclaim that every ready/local/API entry is chat-ready')
 if (/license safe|license-safe|approved|compliant|legal review completed/i.test(modelsCopy)) failures.push('Models license audit copy must not imply legal approval, compliance, or review completion')
 for (const text of [warmSummary, coldSummary, title, analyticsCopy]) {

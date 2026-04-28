@@ -33,7 +33,7 @@ function formatModelMeta(model) {
 }
 
 function formatModelOrigin(model) {
-  if (isExternalModel(model)) return 'Connected through an external OpenAI-compatible API.'
+  if (isExternalModel(model)) return 'Connected external OpenAI-compatible metadata only; Fathom keeps the key local but does not proxy chat yet.'
   if (model.status === 'registered') return 'Imported from a local model artifact and waiting for a real backend that can load it.'
   if (model.status === 'downloading') return 'Downloading into Fathom-managed storage.'
   if (model.status === 'canceling') return 'Stopping the download and cleaning up the partial file.'
@@ -85,11 +85,10 @@ function getNextStepCopy(model, { active, selected, runnable } = {}) {
   if (active) return 'Already loaded and ready to answer immediately.'
   if (model.status === 'downloading') return 'Wait for the download to finish before loading it, or cancel it if it is the wrong model.'
   if (model.status === 'canceling') return 'Fathom is stopping this download.'
-  if (model.status === 'failed') return isExternalModel(model) ? 'Reconnect the API details to make it usable again.' : 'Retry the download to finish setting it up locally.'
+  if (model.status === 'failed') return isExternalModel(model) ? 'Reconnect the API details to keep the placeholder metadata current.' : 'Retry the download to finish setting it up locally.'
+  if (isExternalModel(model)) return 'Connected placeholder only: Fathom stores the endpoint and local key flag, but external chat proxying is not implemented yet.'
   if (isEmbeddingOnlyModel(model) && model.model_path) return 'Ready for embedding/retrieval calls. It is intentionally excluded from chat selection and runtime loading.'
   if (model.status === 'registered') return 'Load it once to confirm the file path and move it into the ready set.'
-  if (isExternalModel(model) && selected) return 'Chosen for the next chat. Fathom will call its connected API on send.'
-  if (isExternalModel(model) && runnable) return 'Connected and ready whenever you want it.'
   if (runnable && selected) return 'Chosen for your next chat, or load it now for immediate use.'
   if (runnable) return 'Ready locally, choose it for the next chat or load it now.'
   return 'Download it before you can use it.'
@@ -104,8 +103,8 @@ function getCapabilityChecklist(model, { runnable = false, canLoad = false } = {
   return [
     { label: 'Detected', done: detected, detail: detected ? 'Known to Fathom' : 'Catalog only' },
     { label: 'Metadata', done: metadataReadable, detail: metadataReadable ? 'Capability reported' : 'Not inspected yet' },
-    { label: 'Lane', done: laneClaimed, detail: laneClaimed ? (external ? 'External API' : 'Backend mapped') : 'No backend lane yet' },
-    { label: 'Runnable', done: runnable || isEmbeddingOnlyModel(model), detail: runnable ? 'Chat-ready now' : isEmbeddingOnlyModel(model) ? 'Embedding-ready only' : hasPlannedCapability(model) ? 'Backend planned' : canLoad ? 'First load required' : 'Not runnable yet' },
+    { label: 'Lane', done: laneClaimed, detail: laneClaimed ? (external ? 'External placeholder' : 'Backend mapped') : 'No backend lane yet' },
+    { label: 'Runnable', done: runnable || isEmbeddingOnlyModel(model), detail: runnable ? 'Chat-ready now' : external ? 'Proxy not implemented' : isEmbeddingOnlyModel(model) ? 'Embedding-ready only' : hasPlannedCapability(model) ? 'Backend planned' : canLoad ? 'First load required' : 'Not runnable yet' },
   ]
 }
 
@@ -118,12 +117,16 @@ function hasText(model, needle) {
 }
 
 function getNonRunnableCallouts(model) {
-  if (!model || isExternalModel(model) || isRunnableModel(model)) return []
+  if (!model || isRunnableModel(model)) return []
 
   const callouts = []
   const status = (model.capability_status || '').toString().toLowerCase()
   const lanes = model.backend_lanes || []
   const file = `${model.hf_filename || ''} ${model.model_path || ''}`.toLowerCase()
+
+  if (isExternalModel(model)) {
+    callouts.push('External API placeholder: connected metadata only; Fathom does not proxy chat to external endpoints yet.')
+  }
 
   if (isEmbeddingOnlyModel(model) || hasText(model, 'embedding-only') || model.task === 'text_embedding') {
     callouts.push('Embedding-only: usable for verified MiniLM vector/retrieval calls, not chat or /v1/models.')
@@ -431,7 +434,7 @@ export default function ModelsView({
             <p className="panel-kicker">Set up entries</p>
             <h3>{readyModels.length === 0 ? 'Nothing set up yet' : `${readyModels.length} set up ${readyModels.length === 1 ? 'entry' : 'entries'}`}</h3>
           </div>
-          <p className="model-summary">These entries are set up locally or through a connected API. Only cards marked chat-ready can be selected for chat; embedding and metadata-only artifacts stay excluded from chat use.</p>
+          <p className="model-summary">These entries are set up locally or through a connected API. Only cards marked chat-ready can be selected for chat; external API placeholders, embedding artifacts, and metadata-only artifacts stay excluded from chat use.</p>
         </div>
 
         {readyModels.length === 0 ? (
@@ -458,7 +461,7 @@ export default function ModelsView({
                   <div className="models-card-tags">
                     {active && <div className="pin-badge">Loaded now</div>}
                     {selected && <div className="pin-badge">Next chat</div>}
-                    {external && <div className="pin-badge">API connected</div>}
+                    {external && <div className="pin-badge">API placeholder</div>}
                     {model.model_path && !external && <div className="pin-badge">Saved locally</div>}
                   </div>
 
@@ -481,7 +484,11 @@ export default function ModelsView({
                   {model.install_error && <p className="library-error-copy">{model.install_error}</p>}
 
                   <div className="models-card-actions">
-                    <button className="ghost-button" onClick={() => setSelectedModelId(model.id)}>{selected ? 'Chosen for next chat' : 'Use for next chat'}</button>
+                    {runnable ? (
+                      <button className="ghost-button" onClick={() => setSelectedModelId(model.id)}>{selected ? 'Chosen for next chat' : 'Use for next chat'}</button>
+                    ) : (
+                      <button className="ghost-button" disabled>{external ? 'Chat proxy not implemented' : 'Not chat-runnable'}</button>
+                    )}
                     {canLoad && !external && <button className="primary-button" onClick={() => activateModel(model.id)}>{active ? 'Loaded now' : 'Load now'}</button>}
                   </div>
                 </article>
@@ -659,9 +666,9 @@ export default function ModelsView({
           <div className="models-section-heading">
             <div>
               <p className="panel-kicker">Connect a hosted model</p>
-              <h3>Link an external OpenAI-compatible API</h3>
+              <h3>Link an external OpenAI-compatible API placeholder</h3>
             </div>
-            <p className="model-summary">Add the provider label, base URL, key, and remote model name. Fathom keeps the key local and verifies the connection before marking it ready.</p>
+            <p className="model-summary">Add the provider label, base URL, key, and remote model name. Fathom keeps the key local and saves the connection details as metadata only until external proxying exists.</p>
           </div>
 
           <div className="models-form-stack">
@@ -678,8 +685,8 @@ export default function ModelsView({
               <input type="password" value={externalForm.api_key} onChange={(e) => setExternalForm((form) => ({ ...form, api_key: e.target.value }))} placeholder="API key" autoComplete="off" />
             </div>
             <div className="import-callout-row">
-              <p className="model-summary">Tip: for ChatGPT-style APIs, use the full API base, usually something like <code>https://api.openai.com/v1</code>.</p>
-              <button className="primary-button" onClick={connectExternalModel}>Connect external model</button>
+              <p className="model-summary">Tip: for ChatGPT-style APIs, use the full API base, usually something like <code>https://api.openai.com/v1</code>. The API key stays local in Fathom state; today this creates a connected metadata placeholder only, not a chat-runnable proxy.</p>
+              <button className="primary-button" onClick={connectExternalModel}>Save external placeholder</button>
             </div>
           </div>
         </div>

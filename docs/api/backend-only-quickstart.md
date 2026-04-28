@@ -95,7 +95,7 @@ List runnable OpenAI-style models:
 curl -fsS "$BASE/v1/models" | python3 -m json.tool
 ```
 
-Only models Fathom has actually validated as runnable appear in `/v1/models`.
+Only local models Fathom has actually validated as chat-runnable appear in `/v1/models`. Connected external OpenAI-compatible entries are persisted as metadata placeholders only; Fathom does not proxy chat to them yet, so they stay excluded from `/v1/models` and activation.
 
 Install the tiny pinned GGUF metadata fixture when you want to verify real GGUF provenance and inspection without claiming inference:
 

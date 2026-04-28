@@ -46,7 +46,7 @@ Response:
 }
 ```
 
-`generation_ready` is `true` when at least one local chat model is runnable. Embedding-only models do not make chat generation ready.
+`generation_ready` is `true` when at least one local chat model is runnable. Embedding-only models and connected external API placeholders do not make chat generation ready.
 
 ## `GET /v1/models`
 
@@ -78,12 +78,13 @@ Response:
 Important boundaries:
 
 - Embedding-only models are excluded from `/v1/models` because they are not chat/generation models.
+- Connected external OpenAI-compatible entries are excluded because Fathom only persists their metadata/key-local configuration today; external chat proxying is not implemented.
 - Metadata-only GGUF packages are excluded.
 - Blocked PyTorch `.bin`, unsupported packages, and planned-but-not-runnable formats are excluded.
 
 ## `POST /v1/chat/completions`
 
-Runs one non-streaming local chat completion against a validated runnable SafeTensors/Hugging Face chat model.
+Runs one non-streaming local chat completion against a validated runnable local SafeTensors/Hugging Face chat model. Requests naming a connected external placeholder return a structured not-implemented error instead of proxying or faking a reply.
 
 Request:
 

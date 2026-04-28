@@ -17,7 +17,7 @@ export function isEmbeddingOnlyModel(model) {
 }
 
 export function hasRunnableCapability(model) {
-  if (isExternalModel(model)) return Boolean(model?.api_base && model?.runtime_model_name && model?.api_key_configured)
+  if (isExternalModel(model)) return false
   if (isEmbeddingOnlyModel(model)) return false
   return normalizeCapabilityStatus(model?.capability_status) === 'runnable'
 }
@@ -41,7 +41,7 @@ export function getModelStatusLabel(model) {
   if (model.status === 'downloading') return 'Downloading'
   if (model.status === 'canceling') return 'Canceling download'
   if (model.status === 'failed') return 'Needs attention'
-  if (isExternalModel(model) && model.status === 'ready') return 'Connected API model'
+  if (isExternalModel(model) && model.status === 'ready') return 'Connected API placeholder'
   if (isEmbeddingOnlyModel(model) && model.model_path) return 'Embedding-ready, not chat'
   if (hasPlannedCapability(model) && model.model_path) return 'Downloaded, backend planned'
   if (model.status === 'registered') return 'Imported, first load pending'
@@ -54,8 +54,8 @@ export function describeModelState(model) {
   if (!model) return 'Choose a model to decide what you want to use for the next chat.'
   if (model.status === 'downloading') return 'This model is still downloading to local storage, so it cannot be used yet.'
   if (model.status === 'canceling') return 'Fathom is stopping the download and cleaning up the partial file.'
-  if (model.status === 'failed') return isExternalModel(model) ? 'This API connection needs attention before Fathom can use it.' : 'The last download did not finish. Retry to continue or start again if needed.'
-  if (isExternalModel(model) && model.status === 'ready') return 'Connected through an external OpenAI-compatible API. You can use it for the next chat right away.'
+  if (model.status === 'failed') return isExternalModel(model) ? 'This API connection needs attention before Fathom can keep its metadata.' : 'The last download did not finish. Retry to continue or start again if needed.'
+  if (isExternalModel(model) && model.status === 'ready') return 'Connected external OpenAI-compatible metadata only. Fathom stores the endpoint and key locally, but chat proxying is not implemented yet, so it stays out of next-chat selection.'
   if (isEmbeddingOnlyModel(model) && model.model_path) return 'Ready for local embedding and retrieval experiments. It is not a chat model and will stay out of next-chat selection.'
   if (hasPlannedCapability(model) && model.model_path) return 'Downloaded into Fathom-managed storage, but this backend lane is still planned. It is not chat-runnable until the real generation backend is wired.'
   if (model.status === 'registered') return 'The file is listed locally, but Fathom still needs to load it once before it is ready to chat.'

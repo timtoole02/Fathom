@@ -1092,6 +1092,13 @@ async fn chat_conversation(
             "model_not_runnable",
         )
     })?;
+    if model.provider_kind == "external" {
+        return Err(api_error(
+            StatusCode::NOT_IMPLEMENTED,
+            "External OpenAI-compatible API entries are connected metadata only. Fathom does not proxy chat to external endpoints yet. No fake answer was produced.",
+            "external_proxy_not_implemented",
+        ));
+    }
     if !is_runnable_model(&model)
         || !model
             .backend_lanes
@@ -1368,11 +1375,11 @@ async fn connect_external_model(
         install_error: None,
         api_base: Some(req.api_base),
         api_key_configured: Some(true),
-        capability_status: "runnable".into(),
+        capability_status: "planned".into(),
         capability_summary:
-            "External OpenAI-compatible API is runnable when the key and endpoint are valid.".into(),
+            "External OpenAI-compatible API details are connected as metadata only; Fathom does not proxy chat to external endpoints yet.".into(),
         backend_lanes: vec!["external-openai".into()],
-        task: Some("text_generation".into()),
+        task: None,
         download_manifest: None,
     };
     let model = mutate_model_state_and_persist(&state, |store| {
@@ -1396,7 +1403,14 @@ async fn activate_model(
             .ok_or_else(|| {
                 api_error(StatusCode::NOT_FOUND, "Model not found.", "model_not_found")
             })?;
-        if !(model.provider_kind == "external" || is_runnable_model(&model)) {
+        if model.provider_kind == "external" {
+            return Err(api_error(
+                StatusCode::NOT_IMPLEMENTED,
+                "External OpenAI-compatible API entries are connected metadata only. Fathom does not proxy chat to external endpoints yet, so they cannot be activated for local chat readiness.",
+                "external_proxy_not_implemented",
+            ));
+        }
+        if !is_runnable_model(&model) {
             return Err(api_error(
                 StatusCode::NOT_IMPLEMENTED,
                 format!(
@@ -3036,10 +3050,20 @@ fn runtime_json(store: &Store) -> serde_json::Value {
     let machine = current_machine_profile();
     let backend_lanes = backend_lanes_for_machine(&machine);
     let port = std::env::var("FATHOM_PORT").unwrap_or_else(|_| "8180".into());
+    let active_chat_model_id = store
+        .active_model_id
+        .as_ref()
+        .filter(|active_id| {
+            store
+                .models
+                .iter()
+                .any(|model| &model.id == *active_id && is_runnable_model(model))
+        })
+        .cloned();
     serde_json::json!({
         "ready": true,
-        "loaded_now": store.active_model_id.is_some(),
-        "active_model_id": store.active_model_id.clone(),
+        "loaded_now": active_chat_model_id.is_some(),
+        "active_model_id": active_chat_model_id,
         "engine": "Fathom Rust Runtime",
         "api_base": format!("http://127.0.0.1:{port}/v1"),
         "storage_root": "~/.fathom/models",
@@ -3070,7 +3094,7 @@ fn is_runnable_model(model: &ModelRecord) -> bool {
         return false;
     }
     if model.provider_kind == "external" {
-        return true;
+        return false;
     }
     if model.capability_status != "runnable" {
         return false;
@@ -4199,8 +4223,8 @@ mod catalog_tests {
 
     #[tokio::test]
     async fn failed_activate_model_persistence_restores_previous_active_model() {
-        let previous = test_external_model("previous-external");
-        let target = test_external_model("target-external");
+        let previous = test_model("previous-local");
+        let target = test_model("target-local");
         let (state, state_root) = test_state_with_unwritable_model_file(
             vec![previous.clone(), target.clone()],
             Some(previous.id.clone()),
@@ -5198,6 +5222,48 @@ mod catalog_tests {
     }
 
     #[tokio::test]
+    async fn external_model_connection_is_metadata_only_and_activation_refuses() {
+        let state = test_state(vec![], None);
+
+        let Json(model) = connect_external_model(
+            State(state.clone()),
+            Json(ExternalModelRequest {
+                id: "connected-external".into(),
+                name: "Connected external placeholder".into(),
+                model_name: "gpt-placeholder".into(),
+                api_base: "https://api.example.test/v1".into(),
+                api_key: "test-key".into(),
+                source: "OpenAI-compatible".into(),
+            }),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(model.status, "ready");
+        assert_eq!(model.provider_kind, "external");
+        assert_eq!(model.capability_status, "planned");
+        assert!(model.capability_summary.contains("metadata only"));
+        assert!(model.capability_summary.contains("does not proxy chat"));
+        assert!(!is_runnable_model(&model));
+
+        let Json(models_body) = v1_models(State(state.clone())).await;
+        assert_eq!(models_body["data"].as_array().unwrap().len(), 0);
+
+        let error = activate_model(State(state.clone()), Path(model.id.clone()))
+            .await
+            .unwrap_err();
+        assert_api_error(
+            error,
+            StatusCode::NOT_IMPLEMENTED,
+            "external_proxy_not_implemented",
+        );
+
+        let Json(runtime_body) = runtime_state(State(state)).await;
+        assert_eq!(runtime_body["loaded_now"], false);
+        assert_eq!(runtime_body["active_model_id"], serde_json::Value::Null);
+    }
+
+    #[tokio::test]
     async fn v1_chat_rejects_streaming_until_supported() {
         let state = test_state(vec![test_model("local-gpt2")], None);
         let mut req = test_chat_request(Some("local-gpt2"));
@@ -5316,6 +5382,29 @@ mod catalog_tests {
         .unwrap_err();
 
         assert_api_error(error, StatusCode::BAD_REQUEST, "invalid_chat_message");
+    }
+
+    #[tokio::test]
+    async fn chat_external_placeholder_refuses_without_fake_answer() {
+        let state = test_state(vec![test_external_model("external-gpt")], None);
+        insert_test_conversation(&state, "conversation-a", Some("external-gpt".into())).await;
+
+        let error = chat_conversation(
+            State(state),
+            Path("conversation-a".into()),
+            Json(ChatRequest {
+                content: "Hello".into(),
+                model_id: Some("external-gpt".into()),
+            }),
+        )
+        .await
+        .unwrap_err();
+
+        assert_api_error(
+            error,
+            StatusCode::NOT_IMPLEMENTED,
+            "external_proxy_not_implemented",
+        );
     }
 
     #[tokio::test]
@@ -5593,10 +5682,12 @@ mod catalog_tests {
         model.engine = Some("External API".into());
         model.api_base = Some("https://api.example.test/v1".into());
         model.api_key_configured = Some(true);
+        model.capability_status = "planned".into();
         model.capability_summary =
-            "External OpenAI-compatible API is runnable when the key and endpoint are valid."
+            "External OpenAI-compatible API details are connected as metadata only; Fathom does not proxy chat to external endpoints yet."
                 .into();
         model.backend_lanes = vec!["external-openai".into()];
+        model.task = None;
         model
     }
 
