@@ -24,6 +24,7 @@ CHAT_MODEL_ID = "echarlaix-tiny-random-phiforcausallm-model-safetensors"
 CHAT_REPO_ID = "echarlaix/tiny-random-PhiForCausalLM"
 EMBEDDING_MODEL_ID = "sentence-transformers-all-minilm-l6-v2-model-safetensors"
 EMBEDDING_REPO_ID = "sentence-transformers/all-MiniLM-L6-v2"
+PUBLIC_CONTRACT = ROOT / "docs" / "api" / "public-contract.json"
 
 
 @dataclass(frozen=True)
@@ -74,8 +75,8 @@ class FakeFathomHandler(BaseHTTPRequestHandler):
                 body=body,
             )
         )
-        response = self._response_for(body)
-        self.send_response(200)
+        status, response = self._response_for(body)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps(response).encode("utf-8"))
@@ -91,20 +92,20 @@ class FakeFathomHandler(BaseHTTPRequestHandler):
             self.send_error(400, f"invalid JSON: {exc}")
             return None
 
-    def _response_for(self, body: Any | None) -> dict[str, Any]:
+    def _response_for(self, body: Any | None) -> tuple[int, dict[str, Any]]:
         if self.command == "GET" and self.path == "/v1/health":
-            return {"ok": True, "engine": "fathom", "generation_ready": True}
+            return 200, {"ok": True, "engine": "fathom", "generation_ready": True}
         if self.command == "POST" and self.path == "/api/models/catalog/install":
             repo_id = body.get("repo_id", "unknown/unknown") if isinstance(body, dict) else "unknown/unknown"
             filename = body.get("filename", "model.safetensors") if isinstance(body, dict) else "model.safetensors"
             model_id = EMBEDDING_MODEL_ID if repo_id == EMBEDDING_REPO_ID else CHAT_MODEL_ID
-            return {
+            return 200, {
                 "ok": True,
                 "status": "available",
                 "model": {"id": model_id, "repo_id": repo_id, "filename": filename},
             }
         if self.command == "GET" and self.path == "/v1/models":
-            return {
+            return 200, {
                 "object": "list",
                 "data": [
                     {
@@ -122,7 +123,7 @@ class FakeFathomHandler(BaseHTTPRequestHandler):
                 ],
             }
         if self.command == "POST" and self.path == "/v1/chat/completions":
-            return {
+            return 200, {
                 "id": "chatcmpl-fake-loopback",
                 "object": "chat.completion",
                 "created": 0,
@@ -138,7 +139,7 @@ class FakeFathomHandler(BaseHTTPRequestHandler):
                 "fathom": {"runtime": "fake-loopback", "metrics": {"total_ms": 0}},
             }
         if self.command == "POST" and self.path == "/v1/embeddings":
-            return {
+            return 200, {
                 "object": "list",
                 "data": [{"object": "embedding", "embedding": [0.125, -0.25, 0.5], "index": 0}],
                 "model": EMBEDDING_MODEL_ID,
@@ -149,7 +150,43 @@ class FakeFathomHandler(BaseHTTPRequestHandler):
                     "scope": "verified local embedding runtime only",
                 },
             }
-        return {"ok": False, "error": {"message": f"unexpected {self.command} {self.path}"}}
+        return 404, {
+            "error": {
+                "message": f"unexpected fake-loopback endpoint {self.command} {self.path}",
+                "type": "invalid_request_error",
+                "code": "unexpected_example_endpoint",
+                "param": None,
+            }
+        }
+
+
+def load_public_contract() -> dict[str, Any]:
+    data = json.loads(PUBLIC_CONTRACT.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise AssertionError("public contract manifest must be a JSON object")
+    return data
+
+
+def allowed_example_endpoints() -> set[tuple[str, str]]:
+    manifest = load_public_contract()
+    allowed: set[tuple[str, str]] = set()
+    for endpoint in manifest.get("supported_endpoints", []):
+        method = endpoint.get("method")
+        path = endpoint.get("path")
+        if not isinstance(method, str) or not isinstance(path, str):
+            raise AssertionError("manifest supported_endpoints entries must include string method/path")
+        allowed.add((method, path))
+    for item in manifest.get("non_contract_surfaces_allowed_in_examples", []):
+        if not isinstance(item, str):
+            raise AssertionError("manifest non-contract example surfaces must be strings")
+        try:
+            method, path = item.split(" ", 1)
+        except ValueError as exc:
+            raise AssertionError(f"invalid non-contract example surface {item!r}") from exc
+        if path.startswith("/v1/"):
+            raise AssertionError(f"non-contract example surface must not be a /v1 endpoint: {item}")
+        allowed.add((method, path))
+    return allowed
 
 
 def assert_true(condition: bool, message: str) -> None:
@@ -193,6 +230,11 @@ def run_example(command: list[str], *, embeddings: bool) -> list[RecordedRequest
 
 def assert_public_contract(requests: list[RecordedRequest], *, embeddings: bool, label: str) -> None:
     paths = [(request.method, request.path) for request in requests]
+    allowed_paths = allowed_example_endpoints()
+    if not embeddings:
+        allowed_paths = {item for item in allowed_paths if item != ("POST", "/v1/embeddings")}
+    unexpected_paths = [path for path in paths if path not in allowed_paths]
+    assert_true(not unexpected_paths, f"{label}: unexpected non-contract endpoints called: {unexpected_paths}")
     expected_prefix = [
         ("GET", "/v1/health"),
         ("POST", "/api/models/catalog/install"),
@@ -260,6 +302,27 @@ def static_checks() -> None:
     assert_true("client.chat.completions.create" in sdk_text, "openai-sdk.py missing chat completion call")
     assert_true("stream=True" not in sdk_text and '"stream": true' not in sdk_text, "openai-sdk.py must stay non-streaming")
     assert_true('encoding_format="float"' in sdk_text, "openai-sdk.py embeddings must request float encoding")
+
+    executable_text = "\n".join(
+        (ROOT / path).read_text(encoding="utf-8")
+        for path in (
+            "examples/api/curl-quickstart.sh",
+            "examples/api/python-no-deps.py",
+            "examples/api/openai-sdk.py",
+            "examples/api/fathom.http",
+        )
+    )
+    forbidden_endpoints = (
+        "/v1/responses",
+        "/v1/files",
+        "/v1/batches",
+        "/v1/fine_tuning",
+        "/v1/assistants",
+        "/v1/audio",
+        "/v1/images",
+    )
+    for endpoint in forbidden_endpoints:
+        assert_true(endpoint not in executable_text, f"examples must not mention non-contract endpoint {endpoint}")
 
 
 def main() -> int:
