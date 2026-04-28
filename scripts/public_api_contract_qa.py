@@ -69,21 +69,33 @@ DANGEROUS_POSITIVE_PATTERNS = [
     ),
 ]
 
-ALLOWED_EXAMPLE_ENDPOINTS = {
-    "GET /v1/health",
-    "GET /v1/models",
-    "POST /v1/chat/completions",
-    "POST /v1/embeddings",
-    "GET /api/models/catalog",
-    "POST /api/models/catalog/install",
-}
-
-
 def load_manifest() -> dict[str, Any]:
     data = json.loads(MANIFEST.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise AssertionError("public contract manifest must be a JSON object")
     return data
+
+
+def allowed_example_endpoints(manifest: dict[str, Any]) -> set[str]:
+    allowed: set[str] = set()
+    for endpoint in manifest.get("supported_endpoints", []):
+        method = endpoint.get("method")
+        path = endpoint.get("path")
+        if not isinstance(method, str) or not isinstance(path, str):
+            raise AssertionError("manifest supported_endpoints entries must include string method/path")
+        allowed.add(f"{method} {path}")
+
+    for item in manifest.get("non_contract_surfaces_allowed_in_examples", []):
+        if not isinstance(item, str):
+            raise AssertionError("manifest non-contract example surfaces must be strings")
+        try:
+            _method, path = item.split(" ", 1)
+        except ValueError as exc:
+            raise AssertionError(f"invalid non-contract example surface {item!r}") from exc
+        if path.startswith("/v1/"):
+            raise AssertionError(f"non-contract example surface must not be a /v1 endpoint: {item}")
+        allowed.add(item)
+    return allowed
 
 
 def read(path: Path) -> str:
@@ -209,7 +221,8 @@ def assert_boundary_docs() -> None:
     assert_contains(contributing_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "contributing public contract artifact env")
 
 
-def assert_examples_static() -> None:
+def assert_examples_static(manifest: dict[str, Any]) -> None:
+    allowed_endpoints = allowed_example_endpoints(manifest)
     example_text = "\n".join(read(path) for path in EXAMPLE_PATHS)
     assert_contains(example_text, "/v1/health", "examples/api")
     assert_contains(example_text, "/v1/models", "examples/api")
@@ -235,7 +248,7 @@ def assert_examples_static() -> None:
                     continue
                 if endpoint.startswith("/v1/") or endpoint.startswith("/api/models/catalog"):
                     endpoints.add(f"{method} {endpoint}")
-        unexpected = {item for item in endpoints if item not in ALLOWED_EXAMPLE_ENDPOINTS}
+        unexpected = {item for item in endpoints if item not in allowed_endpoints}
         if unexpected:
             raise AssertionError(f"{path.relative_to(ROOT)} uses endpoints outside public examples allow-list: {sorted(unexpected)}")
 
@@ -280,7 +293,7 @@ def main() -> int:
     manifest = load_manifest()
     assert_endpoint_docs(manifest)
     assert_boundary_docs()
-    assert_examples_static()
+    assert_examples_static(manifest)
     assert_no_positive_overclaims()
     assert_smoke_manifest_wiring()
     assert_ci_wiring(manifest)
