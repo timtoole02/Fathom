@@ -3402,11 +3402,13 @@ fn validate_candle_qwen2_tensor_headers(
             vec![config.vocab_size, config.hidden_size],
         ),
         ("model.norm.weight".to_string(), vec![config.hidden_size]),
-        (
+    ];
+    if !config.tie_word_embeddings {
+        required.push((
             "lm_head.weight".to_string(),
             vec![config.vocab_size, config.hidden_size],
-        ),
-    ];
+        ));
+    }
     for layer_idx in 0..config.num_hidden_layers {
         required.extend([
             (
@@ -5396,7 +5398,7 @@ pub fn backend_lanes_for_machine(machine: &MachineProfile) -> Vec<BackendLane> {
             name: "Custom Rust SafeTensors / HF runtime",
             kind: BackendLaneKind::SafeTensorsHf,
             status: CapabilityStatus::Runnable,
-            summary: "Fathom's from-scratch Rust runtime can run verified HF SafeTensors causal-LM packages for GPT-2, Llama/Llama-style tied-embedding fixtures, Qwen2, Phi, Mistral, Gemma, and TinyStories GPT-2. Other HF/SafeTensors packages are only detected or planned until they pass a lane-specific loader and generation test.",
+            summary: "Fathom's from-scratch Rust runtime can run verified HF SafeTensors causal-LM packages for GPT-2, Llama/Llama-style tied-embedding fixtures, Qwen2 including tied-output checkpoints when validation passes, Phi, Mistral, Gemma, and TinyStories GPT-2. Other HF/SafeTensors packages are only detected or planned until they pass a lane-specific loader and generation test.",
             formats: vec![ModelFormat::SafeTensors, ModelFormat::SafeTensorsIndex, ModelFormat::ConfigJson, ModelFormat::TokenizerJson, ModelFormat::TokenizerConfigJson, ModelFormat::SentencePiece, ModelFormat::ChatTemplate],
             blockers: vec![],
         },
@@ -6373,7 +6375,7 @@ pub fn capability_report_for_package(
     } else if is_candle_llama_supported_package(&package) {
         "Fathom can run this verified LlamaForCausalLM SafeTensors/HF package through its custom Rust Llama lane, including tied-embedding fixtures when the checkpoint validates.".to_string()
     } else if is_candle_qwen2_supported_package(&package) {
-        "Fathom can run this verified Qwen2ForCausalLM SafeTensors/HF package through its custom Rust Qwen2 lane.".to_string()
+        "Fathom can run this verified Qwen2ForCausalLM SafeTensors/HF package through its custom Rust Qwen2 lane, including tied-output checkpoints when the checkpoint validates.".to_string()
     } else if is_candle_phi_supported_package(&package) {
         "Fathom can run this verified PhiForCausalLM SafeTensors/HF package through its custom Rust Phi lane.".to_string()
     } else if is_candle_mistral_supported_package(&package) {
@@ -12110,10 +12112,13 @@ int main(int argc, char **argv) {
     }
 
     fn write_minimal_qwen2_safetensors_header(path: &Path) {
-        let specs = [
+        write_minimal_qwen2_safetensors_header_with_lm_head(path, true);
+    }
+
+    fn write_minimal_qwen2_safetensors_header_with_lm_head(path: &Path, include_lm_head: bool) {
+        let mut specs = vec![
             ("model.embed_tokens.weight", vec![3, 4]),
             ("model.norm.weight", vec![4]),
-            ("lm_head.weight", vec![3, 4]),
             ("model.layers.0.input_layernorm.weight", vec![4]),
             ("model.layers.0.post_attention_layernorm.weight", vec![4]),
             ("model.layers.0.self_attn.q_proj.weight", vec![4, 4]),
@@ -12127,6 +12132,9 @@ int main(int argc, char **argv) {
             ("model.layers.0.mlp.up_proj.weight", vec![8, 4]),
             ("model.layers.0.mlp.down_proj.weight", vec![4, 8]),
         ];
+        if include_lm_head {
+            specs.insert(2, ("lm_head.weight", vec![3, 4]));
+        }
         let mut tensors = serde_json::Map::new();
         let mut offset = 0usize;
         for (name, shape) in specs {
@@ -12577,6 +12585,58 @@ int main(int argc, char **argv) {
         assert!(report.runnable);
         assert_eq!(report.best_status, CapabilityStatus::Runnable);
         assert!(report.summary.contains("custom Rust Qwen2"));
+
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn maps_tied_qwen2_safetensors_without_lm_head_when_config_allows() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("fathom-qwen2-tied-capability-test-{unique}"));
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(
+            dir.join("config.json"),
+            r#"{"model_type":"qwen2","architectures":["Qwen2ForCausalLM"],"vocab_size":3,"hidden_size":4,"intermediate_size":8,"num_hidden_layers":1,"num_attention_heads":1,"num_key_value_heads":1,"max_position_embeddings":8,"sliding_window":8,"max_window_layers":1,"tie_word_embeddings":true,"rope_theta":10000.0,"rms_norm_eps":1e-6,"use_sliding_window":false,"hidden_act":"silu","eos_token_id":2}"#,
+        )
+        .unwrap();
+        write_minimal_wordlevel_tokenizer(&dir.join("tokenizer.json"));
+        write_minimal_qwen2_safetensors_header_with_lm_head(&dir.join("model.safetensors"), false);
+
+        let package = inspect_model_package(&dir).unwrap();
+        validate_candle_qwen2_supported_package(&package).unwrap();
+        let report = capability_report_for_package(package, &current_machine_profile());
+        assert!(report.runnable);
+        assert_eq!(report.best_status, CapabilityStatus::Runnable);
+        assert!(report.summary.contains("custom Rust Qwen2"));
+
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn rejects_untied_qwen2_safetensors_without_lm_head() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!(
+            "fathom-qwen2-untied-no-head-capability-test-{unique}"
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(
+            dir.join("config.json"),
+            r#"{"model_type":"qwen2","architectures":["Qwen2ForCausalLM"],"vocab_size":3,"hidden_size":4,"intermediate_size":8,"num_hidden_layers":1,"num_attention_heads":1,"num_key_value_heads":1,"max_position_embeddings":8,"sliding_window":8,"max_window_layers":1,"tie_word_embeddings":false,"rope_theta":10000.0,"rms_norm_eps":1e-6,"use_sliding_window":false,"hidden_act":"silu","eos_token_id":2}"#,
+        )
+        .unwrap();
+        write_minimal_wordlevel_tokenizer(&dir.join("tokenizer.json"));
+        write_minimal_qwen2_safetensors_header_with_lm_head(&dir.join("model.safetensors"), false);
+
+        let package = inspect_model_package(&dir).unwrap();
+        let error = validate_candle_qwen2_supported_package(&package).unwrap_err();
+        assert!(error.to_string().contains("missing lm_head.weight"));
+        assert!(!is_candle_qwen2_supported_package(&package));
 
         fs::remove_dir_all(dir).unwrap();
     }

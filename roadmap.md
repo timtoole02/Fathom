@@ -336,6 +336,7 @@ Phase 16 has started conservatively. The first prep lane added [`docs/api/refusa
 
 - [x] Public refusal boundary matrix: `9768d40 Add public refusal boundary matrix`
 - [x] Narrow Llama-3 header chat-template rendering for existing Llama-style SafeTensors/HF runtime lanes, backed by static renderer tests.
+- [x] Qwen2 tied-output SafeTensors validation, allowing missing `lm_head.weight` only when `tie_word_embeddings: true` and preserving fail-closed untied checkpoint validation.
 
 **Candidate future lanes**
 

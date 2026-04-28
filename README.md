@@ -8,7 +8,7 @@ The long-term goal is a local runtime/router that can inspect common model packa
 
 | Area | Status |
 | --- | --- |
-| Local chat generation | Real generation for narrow custom Rust SafeTensors/HF lanes: GPT-2-style models, Llama/Llama-style tied-embedding packages, Qwen2 fixtures, Phi fixtures, Mistral fixtures, and Gemma fixtures. |
+| Local chat generation | Real generation for narrow custom Rust SafeTensors/HF lanes: GPT-2-style models, Llama/Llama-style tied-embedding packages, Qwen2 fixtures including tied-output checkpoints when validation passes, Phi fixtures, Mistral fixtures, and Gemma fixtures. |
 | Best first demo | **TinyStories GPT-2 10M** from the Models page. Small, trained, and fast enough for visible local text checks. |
 | Larger chat-tuned demo | **SmolLM2 135M Instruct**. Validates the tied-embedding Llama-style lane with a real instruct package; larger than the first-run demo. |
 | Runtime API | OpenAI-style `GET /v1/models`, `POST /v1/chat/completions`, and narrow `POST /v1/embeddings` for local models Fathom actually considers runnable for that task; connected external API entries are metadata placeholders, not proxied chat models yet. |
