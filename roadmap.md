@@ -303,28 +303,34 @@ This roadmap tracks the phases already completed, the next phase, and the comple
 
 ---
 
-### ➡️ [ ] Phase 15 — Public launch readiness bundle
+### [x] Phase 15 — Public launch readiness bundle
 
-**What will be worked on next**
+**What was worked on**
 
-- Keep README, backend quickstart, client examples, and the public launch checklist newcomer-friendly and aligned with the narrow launch contract.
-- Confirm fresh-clone QA for the latest launch-facing commit after push.
-- Ensure GitHub Actions stays green and policy-protected: no default model downloads, no networked backend acceptance smoke, and no non-default ONNX feature tests.
-- Keep public-risk scan, focused sensitive checks, and tracked-large-file checks clean.
+- Added [`docs/public-launch-checklist.md`](docs/public-launch-checklist.md), tying together clean clone/install, no-download verification gates, backend/API quick smoke, optional public-contract smoke artifacts, optional networked acceptance artifacts, launch boundaries, and first-run troubleshooting.
+- Made `scripts/public_api_contract_smoke.sh` manifest-driven from `docs/api/public-contract.json` and kept it offline/no-download with isolated temporary state/model/log directories.
+- Added sanitized optional public-contract smoke handoff artifacts with `FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR`.
+- Added `scripts/public_contract_smoke_artifact_qa.py`, an offline/dependency-free validator for public-contract smoke summary JSON/Markdown artifacts.
+- Aligned external placeholder `/v1/chat/completions` refusal with the documented `external_proxy_not_implemented` boundary, without adding provider calls or proxying.
+- Wired launch checklist, manifest-driven smoke, artifact QA, CI static policy, README/backend quickstart/CONTRIBUTING, and public-risk scan into the public launch verification path.
+- Captured current launch verification evidence in [`docs/public-launch-evidence.md`](docs/public-launch-evidence.md).
 
 **Completion criteria**
 
-- [`docs/public-launch-checklist.md`](docs/public-launch-checklist.md) explains clean clone/install, no-download gates, backend/API quick smoke, optional networked acceptance artifacts, boundaries, and troubleshooting.
-- README and backend quickstart link the checklist from the launch/API verification path.
-- `scripts/public_api_contract_qa.py` guards the checklist/linkage against public contract drift.
-- Fresh clone passes documented gates for the launch-facing commit.
+- Public launch checklist explains clean clone/install, no-download gates, backend/API quick smoke, optional artifacts, boundaries, and troubleshooting.
+- README and backend quickstart link the launch checklist from the launch/API verification path.
+- `scripts/public_api_contract_qa.py` guards checklist, manifest, smoke, CI, and artifact-QA linkage against public contract drift.
+- Fresh clone passes documented gates for the latest launch-facing commit.
+- Default CI remains offline/no-download with respect to model downloads, networked acceptance smoke, and non-default ONNX feature tests.
 - Public docs do not broaden claims around production readiness, performance, legal/license advice, full OpenAI parity, streaming, external proxying, GGUF/ONNX/PyTorch, or arbitrary SafeTensors/Hugging Face execution.
+
+**Status:** complete as of `7fe374c Add public contract smoke artifact QA` plus fresh-clone QA for that commit. Phase 15 did not add runtime/model-support scope.
 
 ---
 
-### [ ] Phase 16 — Future runtime expansion lanes
+### ➡️ [ ] Phase 16 — Future runtime expansion lanes
 
-These are intentionally **not** next until the public launch contract is stable.
+These remain deferred until a narrow, fail-closed, fixture/static-test-backed runtime-prep lane is selected.
 
 **Candidate future lanes**
 
@@ -346,9 +352,9 @@ These are intentionally **not** next until the public launch contract is stable.
 
 ## Current next step
 
-➡️ **Phase 15: Public launch readiness bundle.**
+➡️ **Phase 16: Future runtime expansion lanes — deferred pending a narrow, fail-closed plan.**
 
-This is the next best launch-confidence step because Phase 14 is complete and the repo now needs one newcomer-friendly, checklist-backed path for clean clone, no-download verification, backend/API smoke, optional acceptance artifacts, and scoped launch boundaries. Phase 16 runtime expansion remains deferred until the launch contract is stable.
+The public launch contract/checklist/artifact QA bundle is complete. The next implementation lane should not broaden runtime support by default; it should first choose a narrow Phase 16 prep item with fixtures or static tests, explicit refusal behavior, and no claims beyond verified behavior.
 
 ## Always-on completion gates for public-facing phases
 
@@ -360,8 +366,10 @@ cargo fmt --all --check
 cargo test -q
 python3 scripts/ci_static_policy.py
 python3 scripts/public_api_contract_qa.py
+python3 scripts/public_contract_smoke_artifact_qa.py
 python3 scripts/api_client_examples_regression.py
 python3 scripts/backend_acceptance_artifact_qa.py
+bash -n scripts/public_api_contract_smoke.sh
 bash -n scripts/backend_acceptance_smoke.sh
 bash scripts/public_risk_scan.sh
 npm --prefix frontend run build

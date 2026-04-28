@@ -21,13 +21,14 @@ V1_CONTRACT = ROOT / "docs" / "api" / "v1-contract.md"
 CLIENT_EXAMPLES = ROOT / "docs" / "api" / "client-examples.md"
 BACKEND_QUICKSTART = ROOT / "docs" / "api" / "backend-only-quickstart.md"
 LAUNCH_CHECKLIST = ROOT / "docs" / "public-launch-checklist.md"
+LAUNCH_EVIDENCE = ROOT / "docs" / "public-launch-evidence.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
-DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, README]
+DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, README]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
 TEXT_PATHS = DOC_PATHS + EXAMPLE_PATHS + [CI]
 
@@ -149,7 +150,14 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
     assert_contains(launch_text, "scripts/backend_acceptance_smoke.sh", "launch checklist optional acceptance smoke")
+    assert_contains(launch_text, "public-launch-evidence.md", "launch checklist evidence link")
     assert_contains(launch_text, "What this launch does not prove", "launch checklist boundaries")
+
+    evidence_text = read(LAUNCH_EVIDENCE)
+    assert_contains(evidence_text, "7fe374ce2aedf49780da069dc63823521117d8fb", "launch evidence commit")
+    assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
+    assert_contains(evidence_text, "What this evidence does not prove", "launch evidence caveats")
+    assert_contains(evidence_text, "external_proxy_not_implemented", "launch evidence external placeholder refusal")
 
     quickstart_text = read(BACKEND_QUICKSTART)
     contributing_text = read(CONTRIBUTING)
