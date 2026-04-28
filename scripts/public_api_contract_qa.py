@@ -24,6 +24,7 @@ LAUNCH_CHECKLIST = ROOT / "docs" / "public-launch-checklist.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
+SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
 DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, README]
@@ -146,8 +147,16 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "api/public-contract.json", "launch checklist manifest link")
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
+    assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
     assert_contains(launch_text, "scripts/backend_acceptance_smoke.sh", "launch checklist optional acceptance smoke")
     assert_contains(launch_text, "What this launch does not prove", "launch checklist boundaries")
+
+    quickstart_text = read(BACKEND_QUICKSTART)
+    contributing_text = read(CONTRIBUTING)
+    assert_contains(quickstart_text, "manifest-driven", "backend quickstart public contract smoke")
+    assert_contains(quickstart_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "backend quickstart public contract artifact env")
+    assert_contains(contributing_text, "public-contract.json", "contributing manifest-driven public contract smoke")
+    assert_contains(contributing_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "contributing public contract artifact env")
 
 
 def assert_examples_static() -> None:
@@ -190,6 +199,14 @@ def assert_no_positive_overclaims() -> None:
                     raise AssertionError(f"{path.relative_to(ROOT)}:{line_no}: {label}: {line.strip()}")
 
 
+def assert_smoke_manifest_wiring() -> None:
+    smoke_text = read(SMOKE)
+    assert_contains(smoke_text, "docs/api/public-contract.json", "public contract smoke manifest load")
+    assert_contains(smoke_text, "supported_endpoints", "public contract smoke endpoint coverage")
+    assert_contains(smoke_text, "expected_boundary_errors", "public contract smoke boundary coverage")
+    assert_contains(smoke_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "public contract smoke artifact env")
+
+
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
@@ -211,6 +228,7 @@ def main() -> int:
     assert_boundary_docs()
     assert_examples_static()
     assert_no_positive_overclaims()
+    assert_smoke_manifest_wiring()
     assert_ci_wiring(manifest)
     print("public API contract QA passed")
     return 0

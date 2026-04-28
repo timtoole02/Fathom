@@ -36,6 +36,15 @@ bash scripts/public_api_contract_smoke.sh
 
 That smoke starts `fathom-server` with isolated temporary state/model/log directories and checks the public `/v1` routing/refusal boundary from [`docs/api/public-contract.json`](api/public-contract.json) and [`docs/api/v1-contract.md`](api/v1-contract.md). It does not install catalog models, download fixtures, enable ONNX features, call providers, or prove model quality.
 
+To keep a share-safe pass/fail summary for release handoff, set `FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR` to a directory you control:
+
+```bash
+FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR=public-contract-artifacts \
+  bash scripts/public_api_contract_smoke.sh
+```
+
+The optional `public-contract-smoke-summary.json` and `.md` files include commit, manifest name/status, endpoint checks, boundary checks, and scope caveats only. They intentionally omit local temp paths, server log tails, request secrets, and model/provider payloads.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:

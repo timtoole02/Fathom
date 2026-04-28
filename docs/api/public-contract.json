@@ -45,6 +45,18 @@
       "code": "invalid_request"
     },
     {
+      "boundary": "missing chat model",
+      "request_hint": "unknown local chat model id",
+      "status": 400,
+      "code": "model_not_found"
+    },
+    {
+      "boundary": "unknown embedding model",
+      "request_hint": "unknown local embedding model id",
+      "status": 404,
+      "code": "embedding_model_not_found"
+    },
+    {
       "boundary": "external placeholder chat or activation",
       "status": 501,
       "code": "external_proxy_not_implemented"
