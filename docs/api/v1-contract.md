@@ -4,6 +4,8 @@ Fathom exposes a deliberately small OpenAI-style `/v1` surface for local integra
 
 Base URL in local development: `http://127.0.0.1:8180`.
 
+For offline CI and adopter review, the same launch boundary is summarized in the small machine-checkable [`public-contract.json`](public-contract.json) manifest. It is a launch contract, not a complete OpenAPI spec.
+
 Security note: Fathom's local API has no built-in authentication and is intended for loopback development, not direct internet exposure. See [`../../SECURITY.md`](../../SECURITY.md) before proxying, tunneling, or sharing logs/artifacts.
 
 ## Standard error envelope
@@ -28,6 +30,7 @@ Common status/code pairs include:
 - `404 embedding_model_not_found` when `/v1/embeddings` names a model Fathom does not know.
 - `400 invalid_model` when a runnable model record is inconsistent.
 - `501 not_implemented` when the requested feature or model family is intentionally not runnable.
+- `501 external_proxy_not_implemented` when a saved external API entry is only a metadata placeholder and Fathom refuses to proxy chat or activation.
 - `501 chat_template_not_supported` for unsupported Hugging Face chat-template patterns.
 - `501 embedding_runtime_unavailable` when an embedding package is recognized but the required runtime is not compiled/enabled.
 - `500 generation_error` or `500 embedding_error` for runtime failures.
@@ -215,10 +218,10 @@ The feature-gated ONNX MiniLM runtime reports `fathom.runtime: "onnx-embeddings-
 Fathom intentionally does not support these OpenAI API features today:
 
 - Streaming chat completions.
-- Base64 embeddings.
+- Base64 embeddings are not supported.
 - Tools, function calling, or structured tool invocation.
 - Image, audio, or multimodal inputs/outputs.
 - Fine-tuning, files, batches, assistants, responses API, or arbitrary model execution.
-- Full OpenAI API parity.
+- Full OpenAI API parity is not supported or claimed.
 - Turning embedding models into chat/generation models or listing them in `/v1/models`.
 - No native GGUF chat/inference, no ONNX chat/LLM generation, no PyTorch `.bin` execution, and no arbitrary SafeTensors/Hugging Face execution.

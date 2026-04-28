@@ -2,7 +2,16 @@
 
 These examples call a running Fathom backend as a local API service. They are intentionally small and focus on the public HTTP surface, not runtime internals. The exact narrow `/v1` request/response contract is documented in [`v1-contract.md`](v1-contract.md).
 
-In CI, the cURL, standard-library Python, SDK, and `.http` examples are checked with a fake loopback server/static assertions so request shapes do not drift. That contract test does not prove real downloads, model loading, generation, or embedding runtime behavior; the separate backend acceptance smoke remains the real-backend gate.
+In CI, the cURL, standard-library Python, SDK, and `.http` examples are checked with a fake loopback server/static assertions so request shapes do not drift. The dedicated public launch manifest lives at [`public-contract.json`](public-contract.json), and `scripts/public_api_contract_qa.py` keeps this page, the examples, README, and CI policy aligned with it. That contract test does not prove real downloads, model loading, generation, or embedding runtime behavior; the separate backend acceptance smoke remains the real-backend gate.
+
+## Adopter checklist
+
+- Use `http://127.0.0.1:8180` as the local base URL unless you started Fathom with a different `FATHOM_PORT`.
+- Treat `GET /v1/health`, `GET /v1/models`, non-streaming `POST /v1/chat/completions`, and float-only `POST /v1/embeddings` as the current launch-supported `/v1` surface.
+- Discover chat-runnable models with `/v1/models`; do not assume saved external placeholders, embedding-only entries, GGUF metadata packages, or unsupported local artifacts are chat models.
+- Keep chat requests non-streaming (`stream` omitted or `false`) and embeddings as floats (`encoding_format` omitted or `"float"`).
+- Treat `not_implemented`, `external_proxy_not_implemented`, `invalid_request`, `model_not_found`, and `embedding_model_not_found` as expected boundaries for unsupported requests, not proof that the server should fake a response.
+- Do not rely on full OpenAI API parity, external provider proxying, PyTorch `.bin`, ONNX chat/general execution, GGUF inference, base64 embeddings, or arbitrary SafeTensors/HF execution yet.
 
 Start the backend first:
 

@@ -65,11 +65,14 @@ jobs:
             scripts/api_client_examples_regression.py \
             scripts/backend_acceptance_artifact_qa.py \
             scripts/ci_static_policy.py \
+            scripts/public_api_contract_qa.py \
             examples/api/python-no-deps.py \
             examples/api/openai-sdk.py \
             scripts/bench_backend.py
       - name: Run API client example regression
         run: python3 scripts/api_client_examples_regression.py
+      - name: Run public API contract QA
+        run: python3 scripts/public_api_contract_qa.py
       - name: Run backend acceptance artifact QA
         run: python3 scripts/backend_acceptance_artifact_qa.py
       - name: Run CI static policy

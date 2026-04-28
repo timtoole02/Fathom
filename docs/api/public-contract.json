@@ -1,0 +1,91 @@
+{
+  "name": "Fathom public launch API contract",
+  "status": "launch-supported-narrow-local-api",
+  "base_url": "http://127.0.0.1:8180",
+  "scope_note": "Machine-checkable launch contract for the public docs and examples. This is intentionally smaller than OpenAPI and does not imply full OpenAI API parity.",
+  "supported_endpoints": [
+    {
+      "method": "GET",
+      "path": "/v1/health",
+      "purpose": "local API health and chat-generation readiness"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/models",
+      "purpose": "runnable local chat/generation models only"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "purpose": "non-streaming local chat completion for verified runnable SafeTensors/Hugging Face chat lanes",
+      "required_boundary": "stream must be omitted or false"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/embeddings",
+      "purpose": "narrow OpenAI-style float embeddings for verified local MiniLM embedding runtimes",
+      "required_boundary": "encoding_format must be omitted or float"
+    }
+  ],
+  "standard_error_envelope": {
+    "top_level": ["error"],
+    "error_fields": ["message", "type", "code", "param"]
+  },
+  "expected_boundary_errors": [
+    {
+      "boundary": "streaming chat completions",
+      "request_hint": "stream: true",
+      "status": 501,
+      "code": "not_implemented"
+    },
+    {
+      "boundary": "base64 embeddings",
+      "request_hint": "encoding_format: base64",
+      "status": 400,
+      "code": "invalid_request"
+    },
+    {
+      "boundary": "external placeholder chat or activation",
+      "status": 501,
+      "code": "external_proxy_not_implemented"
+    },
+    {
+      "boundary": "embedding models in /v1/models",
+      "expected_behavior": "excluded from /v1/models because they are not chat/generation models"
+    },
+    {
+      "boundary": "GGUF metadata-only chat attempts",
+      "status": 501,
+      "code": "not_implemented"
+    },
+    {
+      "boundary": "PyTorch .bin execution",
+      "status": 501,
+      "code": "not_implemented"
+    },
+    {
+      "boundary": "unsupported ONNX chat or general ONNX model execution",
+      "status": 501,
+      "code": "not_implemented"
+    },
+    {
+      "boundary": "arbitrary SafeTensors/Hugging Face execution",
+      "status": 501,
+      "code": "not_implemented"
+    },
+    {
+      "boundary": "full OpenAI API parity",
+      "expected_behavior": "not claimed"
+    }
+  ],
+  "non_contract_surfaces_allowed_in_examples": [
+    "GET /api/models/catalog",
+    "POST /api/models/catalog/install"
+  ],
+  "ci_policy": {
+    "offline_static_gate": "python3 scripts/public_api_contract_qa.py",
+    "no_default_network_acceptance_smoke": true,
+    "no_default_onnx_embeddings_ort": true,
+    "no_default_model_downloads": true
+  }
+}
