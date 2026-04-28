@@ -161,7 +161,7 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "external_proxy_not_implemented", "launch evidence external placeholder refusal")
 
     matrix_text = read(REFUSAL_MATRIX)
-    for phrase in (
+    matrix_required_phrases = (
         "Streamed chat-completion requests",
         "Base64 embeddings",
         "Missing chat model",
@@ -173,8 +173,31 @@ def assert_boundary_docs() -> None:
         "Unverified SafeTensors/Hugging Face model execution",
         "Full OpenAI API parity",
         "not a runtime expansion plan",
-    ):
+    )
+    for phrase in matrix_required_phrases:
         assert_contains(matrix_text, phrase, "refusal boundary matrix")
+
+    manifest = load_manifest()
+    matrix_aliases = {
+        "streaming chat completions": "Streamed chat-completion requests",
+        "base64 embeddings": "Base64 embeddings",
+        "missing chat model": "Missing chat model",
+        "unknown embedding model": "Unknown embedding model",
+        "external placeholder chat or activation": "External placeholder chat or activation",
+        "embedding models in /v1/models": "Embedding models in `/v1/models`",
+        "GGUF metadata-only chat attempts": "GGUF metadata-only chat attempts",
+        "PyTorch .bin execution": "PyTorch `.bin` execution",
+        "unsupported ONNX chat or general ONNX model execution": "Unsupported ONNX chat or general ONNX model execution",
+        "unverified SafeTensors/Hugging Face model execution": "Unverified SafeTensors/Hugging Face model execution",
+        "full OpenAI API parity": "Full OpenAI API parity",
+    }
+    for boundary in manifest.get("expected_boundary_errors", []):
+        name = boundary.get("boundary")
+        expected = matrix_aliases.get(name)
+        if expected is None:
+            raise AssertionError(f"docs/api/public-contract.json boundary {name!r} is missing a refusal matrix alias")
+        assert_contains(matrix_text, expected, "refusal boundary matrix manifest coverage")
+
     assert_contains(v1_text, "refusal-boundary-matrix.md", "v1 contract refusal matrix link")
     assert_contains(launch_text, "refusal-boundary-matrix.md", "launch checklist refusal matrix link")
 
