@@ -6,11 +6,11 @@ Purpose: pin a bit-for-bit external tokenizer oracle before any Camelid/Fathom L
 
 ## Reference inputs
 
-- Model: `/Volumes/SSK Drive/Camelid/models/Meta-Llama-3-8B-Instruct-Q8_0.gguf`
+- Model: local Meta-Llama-3-8B-Instruct Q8_0 GGUF fixture (not redistributed by Fathom)
 - Model size: `8,540,770,880` bytes
-- Reference repo: `/Users/timtoole/.openclaw/workspace/projects/llama.cpp`
+- Reference repo: local llama.cpp checkout
 - Reference revision: `665abc6`
-- Reference binary: `/Users/timtoole/.openclaw/workspace/projects/llama.cpp/build-debug-callback/bin/llama-tokenize`
+- Reference binary: local `llama-tokenize` build from the reference repo
 - Reproduction script: `scripts/reference_llama3_tokenizer_ids.py`
 
 ## Expected token IDs
@@ -32,9 +32,9 @@ Note: default mode adds BOS `128000`; when the input already begins with `<|begi
 Validated with:
 
 ```bash
-cmake --build /Users/timtoole/.openclaw/workspace/projects/llama.cpp/build-debug-callback --target llama-tokenize -j 4
+cmake --build /path/to/llama.cpp/build --target llama-tokenize -j 4
 scripts/reference_llama3_tokenizer_ids.py \
-  --llama-tokenize /Users/timtoole/.openclaw/workspace/projects/llama.cpp/build-debug-callback/bin/llama-tokenize \
+  --llama-tokenize /path/to/llama.cpp/build/bin/llama-tokenize \
   --pretty
 ```
 
