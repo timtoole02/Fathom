@@ -83,5 +83,7 @@ jobs:
         run: python3 scripts/backend_acceptance_artifact_qa.py
       - name: Run CI static policy
         run: python3 scripts/ci_static_policy.py
+      - name: Run public risk scan self-test
+        run: bash scripts/public_risk_scan.sh --self-test
       - name: Run public risk scan
         run: bash scripts/public_risk_scan.sh
