@@ -8672,6 +8672,29 @@ mod tests {
     const LLAMA_CPP_TOKENIZE_REFERENCE_REVISION: &str = "15f786e65";
     const LLAMA_CPP_DECODE_REFERENCE_REVISION: &str = "15f786e65";
     const LLAMA_CPP_HOMEBREW_REFERENCE_VERSION: &str = "8680";
+    const LLAMA3_8B_INSTRUCT_Q8_0_GGUF_SIZE: u64 = 8_540_770_880;
+    const LLAMA_CPP_LLAMA3_TOKENIZE_REFERENCE_REVISION: &str = "665abc6";
+
+    // Pinned llama.cpp references for the local Llama 3 8B Instruct Q8_0 GGUF.
+    // These are external-oracle IDs only; they do not bless or expose a GGUF tokenizer path.
+    const GGUF_TOKENIZER_LLAMA3_ENCODE_GOLDENS: &[GgufTokenizerEncodeGolden] = &[
+        GgufTokenizerEncodeGolden {
+            label: "quick brown fox",
+            input: "The quick brown fox jumps over the lazy dog.",
+            no_bos_no_special_ids: &[791, 4062, 14198, 39935, 35308, 927, 279, 16053, 5679, 13],
+            default_ids: &[
+                128000, 791, 4062, 14198, 39935, 35308, 927, 279, 16053, 5679, 13,
+            ],
+        },
+        GgufTokenizerEncodeGolden {
+            label: "begin text hello hows it going",
+            input: "<|begin_of_text|>hello how's it going?",
+            no_bos_no_special_ids: &[
+                27, 91, 7413, 3659, 4424, 91, 29, 15339, 1268, 596, 433, 2133, 30,
+            ],
+            default_ids: &[128000, 128000, 15339, 1268, 596, 433, 2133, 30],
+        },
+    ];
 
     // These are internal reference goldens only. They intentionally do not expose a GGUF tokenizer.
     // GGUF remains metadata-only; private helpers must stay internal and match these pinned
@@ -9209,6 +9232,34 @@ mod tests {
         }
     }
 
+    #[test]
+    fn gguf_tokenizer_llama3_encode_goldens_are_pinned_and_cover_reference_modes() {
+        assert_eq!(LLAMA_CPP_LLAMA3_TOKENIZE_REFERENCE_REVISION, "665abc6");
+        assert_eq!(LLAMA3_8B_INSTRUCT_Q8_0_GGUF_SIZE, 8_540_770_880);
+        assert_eq!(GGUF_TOKENIZER_LLAMA3_ENCODE_GOLDENS.len(), 2);
+        assert_eq!(
+            GGUF_TOKENIZER_LLAMA3_ENCODE_GOLDENS[0].default_ids,
+            &[128000, 791, 4062, 14198, 39935, 35308, 927, 279, 16053, 5679, 13]
+        );
+        assert_eq!(
+            GGUF_TOKENIZER_LLAMA3_ENCODE_GOLDENS[1].default_ids,
+            &[128000, 128000, 15339, 1268, 596, 433, 2133, 30]
+        );
+        for golden in GGUF_TOKENIZER_LLAMA3_ENCODE_GOLDENS {
+            assert_eq!(
+                golden.default_ids.first().copied(),
+                Some(128000),
+                "default llama.cpp mode should add Llama 3 BOS for {}",
+                golden.label
+            );
+            assert!(
+                !golden.no_bos_no_special_ids.contains(&128000),
+                "no-BOS/no-special mode should not parse or prepend Llama 3 BOS for {}",
+                golden.label
+            );
+        }
+    }
+
     fn gguf_tokenizer_llama_tokenize_bin_for_tests() -> Option<PathBuf> {
         std::env::var("LLAMA_TOKENIZE_BIN").ok().map(PathBuf::from)
     }
@@ -9284,6 +9335,29 @@ mod tests {
                 let path = std::env::temp_dir().join("llama-2-tiny-random.gguf");
                 path.exists().then_some(path)
             })
+    }
+
+    fn gguf_tokenizer_llama3_fixture_for_tests() -> Option<PathBuf> {
+        std::env::var("FATHOM_GGUF_LLAMA3_FIXTURE")
+            .ok()
+            .map(PathBuf::from)
+            .or_else(|| {
+                let path = PathBuf::from(
+                    "/Volumes/SSK Drive/Camelid/models/Meta-Llama-3-8B-Instruct-Q8_0.gguf",
+                );
+                path.exists().then_some(path)
+            })
+    }
+
+    fn gguf_tokenizer_assert_llama3_fixture_for_tests(path: &Path) {
+        let metadata = fs::metadata(path).unwrap_or_else(|error| {
+            panic!("FATHOM_GGUF_LLAMA3_FIXTURE must point at the local Llama 3 GGUF: {error}")
+        });
+        assert_eq!(
+            metadata.len(),
+            LLAMA3_8B_INSTRUCT_Q8_0_GGUF_SIZE,
+            "local Llama 3 8B Instruct Q8_0 GGUF fixture size changed"
+        );
     }
 
     fn llama_encode_test_spec(extra: &[(&str, f32)]) -> GgufTokenizerSpec {
@@ -9673,6 +9747,57 @@ mod tests {
                 actual_default,
                 gguf_tokenizer_format_ids_for_tests(golden.default_ids),
                 "llama.cpp default encode IDs changed for {}",
+                golden.label
+            );
+        }
+
+        fs::remove_file(prompt_path).unwrap();
+    }
+
+    #[test]
+    #[ignore = "requires FATHOM_GGUF_LLAMA3_FIXTURE plus LLAMA_TOKENIZE_BIN"]
+    fn gguf_tokenizer_llama3_encode_goldens_match_llama_cpp_when_configured() {
+        let Some(fixture_path) = gguf_tokenizer_llama3_fixture_for_tests() else {
+            return;
+        };
+        let Some(llama_tokenize_bin) = gguf_tokenizer_llama_tokenize_bin_for_tests() else {
+            return;
+        };
+        gguf_tokenizer_assert_llama3_fixture_for_tests(&fixture_path);
+
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let prompt_path = std::env::temp_dir().join(format!(
+            "fathom-gguf-tokenizer-llama3-tokenize-prompt-{unique}.txt"
+        ));
+
+        for golden in GGUF_TOKENIZER_LLAMA3_ENCODE_GOLDENS {
+            fs::write(&prompt_path, golden.input.as_bytes()).unwrap();
+            let actual_no_bos_no_special = gguf_tokenizer_run_llama_tokenize_ids_for_tests(
+                &llama_tokenize_bin,
+                &fixture_path,
+                &prompt_path,
+                true,
+            );
+            assert_eq!(
+                actual_no_bos_no_special,
+                gguf_tokenizer_format_ids_for_tests(golden.no_bos_no_special_ids),
+                "llama.cpp Llama 3 no-BOS/no-special encode IDs changed for {}",
+                golden.label
+            );
+
+            let actual_default = gguf_tokenizer_run_llama_tokenize_ids_for_tests(
+                &llama_tokenize_bin,
+                &fixture_path,
+                &prompt_path,
+                false,
+            );
+            assert_eq!(
+                actual_default,
+                gguf_tokenizer_format_ids_for_tests(golden.default_ids),
+                "llama.cpp Llama 3 default encode IDs changed for {}",
                 golden.label
             );
         }
