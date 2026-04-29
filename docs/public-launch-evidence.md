@@ -29,7 +29,7 @@ The fresh-clone QA for this snapshot verified:
 - Public-contract smoke summary artifacts have an offline QA gate for schema, pass/fail semantics, coverage, caveats, and share-safety.
 - External OpenAI-compatible entries remain metadata placeholders; activation and `/v1/chat/completions` refuse with `external_proxy_not_implemented` and no provider call.
 - Default CI remains scoped to local/offline gates and does not run model downloads, networked acceptance smoke, or non-default ONNX feature tests.
-- The optional Qwen2.5 0.5B Instruct catalog demo is pinned to a specific revision with exact file sizes, SHA256 hashes, Apache-2.0 metadata, and local runtime-smoke evidence captured outside default CI.
+- The optional Qwen2.5 0.5B Instruct catalog demo is pinned to a specific revision with exact file sizes, SHA256 hashes, Apache-2.0 metadata, and local runtime-smoke evidence captured outside default CI; see `docs/benchmarks/2026-04-29-qwen25-local-runtime-smoke.md`.
 
 ## What this evidence does not prove
 
