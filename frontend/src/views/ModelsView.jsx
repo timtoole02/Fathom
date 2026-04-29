@@ -504,7 +504,7 @@ export default function ModelsView({
             <p className="panel-kicker">Download new models</p>
             <h3>Public model format lanes</h3>
           </div>
-          <p className="model-summary">Downloads come from Hugging Face. Fathom’s verified local chat lanes are narrow: TinyStories/DistilGPT-2-style GPT-2, tiny Llama including tied embeddings, tiny Qwen2, tiny Phi, tiny Mistral, and tiny Gemma through the custom Rust SafeTensors runtime. MiniLM embedding packages belong to the separate local-embeddings-retrieval lane and are not chat models.</p>
+          <p className="model-summary">Downloads come from Hugging Face. Fathom’s verified local chat lanes are narrow: TinyStories/DistilGPT-2-style GPT-2, Llama including tied embeddings, Qwen2 including the optional Qwen2.5 0.5B Instruct demo, tiny Phi, tiny Mistral, and tiny Gemma through the custom Rust SafeTensors runtime. MiniLM embedding packages belong to the separate local-embeddings-retrieval lane and are not chat models.</p>
         </div>
 
         {catalogError && <p className="library-error-copy">{catalogError}</p>}

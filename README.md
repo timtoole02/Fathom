@@ -10,7 +10,7 @@ The long-term goal is a local runtime/router that can inspect common model packa
 | --- | --- |
 | Local chat generation | Real generation for narrow custom Rust SafeTensors/HF lanes: GPT-2-style models, Llama/Llama-style tied-embedding packages, Qwen2 fixtures including tied-output checkpoints when validation passes, Phi fixtures, Mistral fixtures, and Gemma fixtures. |
 | Best first demo | **TinyStories GPT-2 10M** from the Models page. Small, trained, and fast enough for visible local text checks. |
-| Larger chat-tuned demo | **SmolLM2 135M Instruct**. Validates the tied-embedding Llama-style lane with a real instruct package; larger than the first-run demo. |
+| Larger chat-tuned demos | **SmolLM2 135M Instruct** validates the tied-embedding Llama-style lane. **Qwen2.5 0.5B Instruct** validates the Qwen2/ChatML lane with a real chat-tuned package. Both are larger optional demos, not first-run defaults. |
 | Runtime API | OpenAI-style `GET /v1/models`, `POST /v1/chat/completions`, and narrow `POST /v1/embeddings` for local models Fathom actually considers runnable for that task; connected external API entries are metadata placeholders, not proxied chat models yet. |
 | Capability reporting | `/api/capabilities`, model inspection, backend-lane summaries, and UI copy distinguish runnable, metadata-readable, planned, blocked, and unsupported states. GGUF files can expose bounded header/key-value metadata, tensor descriptors, validated internal payload ranges, tokenizer/architecture compatibility hints, internal bounded tokenizer metadata retention for narrow synthetic GPT-2/BPE and Llama/SentencePiece shapes, private fixture-scoped Llama/SentencePiece encode/decode parity helpers, and internal synthetic payload decode checks without claiming public/runtime tokenizer execution or inference. |
 | Catalog installs | Hugging Face catalog downloads are pinned to exact revisions, checked for expected file sizes, verified with per-file SHA256, license-visible in `/api/models/catalog`, and recorded in `fathom-download-manifest.json`. Catalog entries with unknown or restrictive/non-commercial license status require explicit acknowledgement before install; permissive entries keep the existing `{repo_id, filename}` request shape. The catalog includes one tiny real GGUF fixture (`aladar/llama-2-tiny-random-GGUF` at revision `8d5321916486e1d33c46b16990e8da6567785769`) strictly for metadata/provenance inspection. |
@@ -85,7 +85,7 @@ The narrow `/v1` contract is documented in [`docs/api/v1-contract.md`](docs/api/
 5. Wait for the package to save into Fathom-managed storage, verify, and register.
 6. Select/load it, then send a short prompt.
 
-The tiny random GPT-2, Llama, Qwen2, Phi, Mistral, and Gemma SafeTensors catalog entries are useful for backend smoke tests, but their output can be gibberish or whitespace. Use TinyStories or SmolLM2 when you want a demo that looks more like language. The tiny random GGUF catalog fixture is different: it is metadata/provenance-only and will not appear in `/v1/models`.
+The tiny random GPT-2, Llama, Qwen2, Phi, Mistral, and Gemma SafeTensors catalog entries are useful for backend smoke tests, but their output can be gibberish or whitespace. Use TinyStories, SmolLM2, or Qwen2.5 0.5B Instruct when you want a demo that looks more like language. The tiny random GGUF catalog fixture is different: it is metadata/provenance-only and will not appear in `/v1/models`.
 
 ## Try local generation by API
 
