@@ -14,12 +14,15 @@ use candle_transformers::models::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    cmp::Ordering,
+    collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet},
     fs,
     path::{Path, PathBuf},
     sync::{Arc, Mutex, MutexGuard, OnceLock},
     time::{Instant, SystemTime},
 };
+
+const GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE: usize = 128_256;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ModelFormat {
@@ -656,6 +659,7 @@ pub struct GgufTokenizerSpec {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GgufTokenizerSpecFamily {
     SyntheticGpt2ByteLevelBpe,
+    Llama3Bpe,
     LlamaSentencePiece,
 }
 
@@ -6574,9 +6578,9 @@ pub fn read_gguf_metadata_summary(path: impl AsRef<Path>) -> anyhow::Result<Gguf
     const MAX_GGUF_ARRAY_PREVIEW: usize = 8;
     const MAX_GGUF_ARRAY_ELEMENTS: u64 = 1_000_000;
     const MAX_GGUF_ARRAY_BYTES_TO_SKIP: u64 = 64 * 1024 * 1024;
-    const MAX_GGUF_TOKENIZER_SPEC_STRINGS: u64 = 8_192;
-    const MAX_GGUF_LLAMA_TOKENIZER_SPEC_TOKENS: u64 = 64 * 1024;
-    const MAX_GGUF_TOKENIZER_SPEC_STRING_BYTES: u64 = 1_048_576;
+    const MAX_GGUF_BPE_TOKENIZER_SPEC_MERGES: u64 = 512 * 1024;
+    const MAX_GGUF_LLAMA_TOKENIZER_SPEC_TOKENS: u64 = GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE as u64;
+    const MAX_GGUF_TOKENIZER_SPEC_STRING_BYTES: u64 = 64 * 1024 * 1024;
     const MAX_GGUF_INTERNAL_PAYLOAD_RANGE_BYTES: u64 = 512 * 1024 * 1024;
 
     struct Reader {
@@ -6780,10 +6784,10 @@ pub fn read_gguf_metadata_summary(path: impl AsRef<Path>) -> anyhow::Result<Gguf
         }
         let tokenizer_spec_string_array_key = is_tokenizer_spec_string_array_key(key);
         let tokenizer_spec_numeric_array_key = is_tokenizer_spec_numeric_array_key(key);
-        let string_retention_limit = if key == "tokenizer.ggml.tokens" {
-            MAX_GGUF_LLAMA_TOKENIZER_SPEC_TOKENS
-        } else {
-            MAX_GGUF_TOKENIZER_SPEC_STRINGS
+        let string_retention_limit = match key {
+            "tokenizer.ggml.tokens" => MAX_GGUF_LLAMA_TOKENIZER_SPEC_TOKENS,
+            "tokenizer.ggml.merges" => MAX_GGUF_BPE_TOKENIZER_SPEC_MERGES,
+            _ => 0,
         };
         let retain_full_strings = tokenizer_spec_string_array_key
             && element_type == GgufMetadataValueType::String
@@ -7029,15 +7033,96 @@ pub fn read_gguf_metadata_summary(path: impl AsRef<Path>) -> anyhow::Result<Gguf
         };
         let normalized_model = model.to_ascii_lowercase();
         match normalized_model.as_str() {
+            "gpt2" | "gpt-2"
+                if metadata_string(metadata, "tokenizer.ggml.pre")
+                    .is_some_and(|pre| pre == "llama-bpe") =>
+            {
+                build_llama3_bpe_tokenizer_spec(metadata, model)
+            }
             "gpt2" | "gpt-2" => build_gpt2_tokenizer_spec(metadata, model),
             "llama" => build_llama_sentencepiece_tokenizer_spec(metadata, model),
             _ => (
                 None,
                 vec![format!(
-                    "GGUF tokenizer spec not built: tokenizer family {model:?} is outside the narrow synthetic GPT-2/ByteLevel-BPE and Llama/SentencePiece metadata-retention proofs."
+                    "GGUF tokenizer spec not built: tokenizer family {model:?} is outside the narrow synthetic GPT-2/ByteLevel-BPE, Llama 3 BPE, and Llama/SentencePiece metadata-retention proofs."
                 )],
             ),
         }
+    }
+
+    fn build_llama3_bpe_tokenizer_spec(
+        metadata: &[GgufMetadataEntry],
+        model: String,
+    ) -> (Option<GgufTokenizerSpec>, Vec<String>) {
+        let Some(tokens) = metadata_array_full_strings(metadata, "tokenizer.ggml.tokens") else {
+            return (None, vec!["GGUF Llama 3 BPE tokenizer spec not built: tokenizer.ggml.tokens is missing, malformed, or over the internal Llama 3 retention limit.".into()]);
+        };
+        let Some(merges) = metadata_array_full_strings(metadata, "tokenizer.ggml.merges") else {
+            return (None, vec!["GGUF Llama 3 BPE tokenizer spec not built: tokenizer.ggml.merges is missing, malformed, or over the internal Llama 3 retention limit.".into()]);
+        };
+        if tokens.len() != GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE {
+            return (None, vec![format!(
+                "GGUF Llama 3 BPE tokenizer spec not built: tokenizer.ggml.tokens length {} does not match expected Llama 3 vocab size {GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE}.",
+                tokens.len()
+            )]);
+        }
+        if merges.is_empty() {
+            return (
+                None,
+                vec!["GGUF Llama 3 BPE tokenizer spec not built: merge array is empty.".into()],
+            );
+        }
+        let mut seen_tokens = HashSet::new();
+        for (index, token) in tokens.iter().enumerate() {
+            if token.is_empty() {
+                return (
+                    None,
+                    vec![format!(
+                        "GGUF Llama 3 BPE tokenizer spec not built: token at index {index} is empty."
+                    )],
+                );
+            }
+            if !seen_tokens.insert(token.clone()) {
+                return (
+                    None,
+                    vec![format!(
+                        "GGUF Llama 3 BPE tokenizer spec not built: duplicate token {token:?}."
+                    )],
+                );
+            }
+        }
+        for (index, merge) in merges.iter().enumerate() {
+            if gguf_bpe_split_merge(merge).is_none() {
+                return (None, vec![format!("GGUF Llama 3 BPE tokenizer spec not built: merge at index {index} is not a two-token BPE merge.")]);
+            }
+        }
+        let mut special_token_ids = BTreeMap::new();
+        for (label, key) in [
+            ("bos", "tokenizer.ggml.bos_token_id"),
+            ("eos", "tokenizer.ggml.eos_token_id"),
+            ("unk", "tokenizer.ggml.unknown_token_id"),
+            ("pad", "tokenizer.ggml.padding_token_id"),
+        ] {
+            if let Some(value) = metadata_unsigned(metadata, key) {
+                if value >= tokens.len() as u64 {
+                    return (None, vec![format!("GGUF Llama 3 BPE tokenizer spec not built: {key} value {value} is outside token array length {}.", tokens.len())]);
+                }
+                special_token_ids.insert(label.to_string(), value);
+            }
+        }
+        (
+            Some(GgufTokenizerSpec {
+                family: GgufTokenizerSpecFamily::Llama3Bpe,
+                model,
+                tokens,
+                merges,
+                scores: Vec::new(),
+                token_types: Vec::new(),
+                special_token_ids,
+                has_byte_fallback: false,
+            }),
+            vec!["Internal tokenizer spec retained for exact-size Llama 3 BPE GGUF metadata only; no public/runtime tokenizer execution, weight loading, or inference readiness is claimed.".into()],
+        )
     }
 
     fn build_gpt2_tokenizer_spec(
@@ -7837,6 +7922,338 @@ pub fn read_gguf_metadata_summary(path: impl AsRef<Path>) -> anyhow::Result<Gguf
         payload_range_status,
         notes: vec!["Metadata-only GGUF inspection; header, key/value metadata, tensor descriptors, tokenizer hints, architecture compatibility signals, and bounded internal tokenizer metadata for narrow synthetic GPT-2/BPE or Llama/SentencePiece shapes may be retained privately, with private fixture-scoped Llama/SentencePiece encode/decode parity helpers. No public/runtime GGUF tokenizer execution is implemented or runnable; runtime weight loading, dequantization/kernels, architecture runtime, and generation are also absent.".into()],
     })
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum GgufBpeError {
+    UnsupportedFamily { family: GgufTokenizerSpecFamily },
+    VocabSizeMismatch { expected: usize, actual: usize },
+    MalformedMerge { index: usize, merge: String },
+    DuplicateToken { token: String },
+    DuplicateMerge { merge: String },
+    UnknownToken { token: String },
+    TokenIdTooLarge { index: usize },
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Eq, PartialEq)]
+struct GgufBpeMergeCandidate {
+    rank: usize,
+    position: usize,
+    left: String,
+    right: String,
+}
+
+impl Ord for GgufBpeMergeCandidate {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other
+            .rank
+            .cmp(&self.rank)
+            .then_with(|| other.position.cmp(&self.position))
+            .then_with(|| other.left.cmp(&self.left))
+            .then_with(|| other.right.cmp(&self.right))
+    }
+}
+
+impl PartialOrd for GgufBpeMergeCandidate {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+struct GgufBpeRegistry {
+    token_to_id: HashMap<String, u32>,
+    merge_ranks: HashMap<(String, String), usize>,
+}
+
+impl GgufBpeRegistry {
+    #[allow(dead_code)]
+    fn from_llama3_spec(spec: &GgufTokenizerSpec) -> Result<Self, GgufBpeError> {
+        if spec.family != GgufTokenizerSpecFamily::Llama3Bpe {
+            return Err(GgufBpeError::UnsupportedFamily {
+                family: spec.family,
+            });
+        }
+        if spec.tokens.len() != GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE {
+            return Err(GgufBpeError::VocabSizeMismatch {
+                expected: GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE,
+                actual: spec.tokens.len(),
+            });
+        }
+        Self::from_tokens_and_merges(&spec.tokens, &spec.merges)
+    }
+
+    fn from_tokens_and_merges(tokens: &[String], merges: &[String]) -> Result<Self, GgufBpeError> {
+        let mut token_to_id = HashMap::new();
+        for (index, token) in tokens.iter().enumerate() {
+            let token_id =
+                u32::try_from(index).map_err(|_| GgufBpeError::TokenIdTooLarge { index })?;
+            if token_to_id.insert(token.clone(), token_id).is_some() {
+                return Err(GgufBpeError::DuplicateToken {
+                    token: token.clone(),
+                });
+            }
+        }
+
+        let mut merge_ranks = HashMap::new();
+        for (index, merge) in merges.iter().enumerate() {
+            let Some((left, right)) = gguf_bpe_split_merge(merge) else {
+                return Err(GgufBpeError::MalformedMerge {
+                    index,
+                    merge: merge.clone(),
+                });
+            };
+            if merge_ranks
+                .insert((left.to_string(), right.to_string()), index)
+                .is_some()
+            {
+                return Err(GgufBpeError::DuplicateMerge {
+                    merge: merge.clone(),
+                });
+            }
+        }
+
+        Ok(Self {
+            token_to_id,
+            merge_ranks,
+        })
+    }
+
+    fn encode_piece(&self, piece: &str) -> Result<Vec<u32>, GgufBpeError> {
+        if piece.is_empty() {
+            return Ok(Vec::new());
+        }
+        let mut pieces = piece.chars().map(|ch| ch.to_string()).collect::<Vec<_>>();
+
+        while pieces.len() > 1 {
+            let mut heap = BinaryHeap::new();
+            for position in 0..pieces.len() - 1 {
+                if let Some(rank) = self
+                    .merge_ranks
+                    .get(&(pieces[position].clone(), pieces[position + 1].clone()))
+                    .copied()
+                {
+                    heap.push(GgufBpeMergeCandidate {
+                        rank,
+                        position,
+                        left: pieces[position].clone(),
+                        right: pieces[position + 1].clone(),
+                    });
+                }
+            }
+            let Some(best) = heap.pop() else {
+                break;
+            };
+            let merged = format!("{}{}", pieces[best.position], pieces[best.position + 1]);
+            pieces.splice(best.position..=best.position + 1, [merged]);
+        }
+
+        pieces
+            .iter()
+            .map(|token| {
+                self.token_to_id
+                    .get(token)
+                    .copied()
+                    .ok_or_else(|| GgufBpeError::UnknownToken {
+                        token: token.clone(),
+                    })
+            })
+            .collect()
+    }
+
+    fn encode_pretokenized(&self, pieces: &[String]) -> Result<Vec<u32>, GgufBpeError> {
+        let mut token_ids = Vec::new();
+        for piece in pieces {
+            token_ids.extend(self.encode_piece(piece)?);
+        }
+        Ok(token_ids)
+    }
+}
+
+#[allow(dead_code)]
+fn gguf_bpe_split_merge(merge: &str) -> Option<(&str, &str)> {
+    let (left, right) = merge.split_once(' ')?;
+    if left.is_empty() || right.is_empty() || right.contains(' ') {
+        return None;
+    }
+    Some((left, right))
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum GgufLlama3Pretoken {
+    Text(String),
+    Special { text: String, token_id: u32 },
+}
+
+#[allow(dead_code)]
+fn gguf_llama3_bpe_pretokenize(
+    text: &str,
+    special_fragments: &[(String, u32)],
+    parse_special: bool,
+) -> Vec<GgufLlama3Pretoken> {
+    let mut specials = special_fragments.to_vec();
+    specials.sort_by(|(left_text, left_id), (right_text, right_id)| {
+        right_text
+            .len()
+            .cmp(&left_text.len())
+            .then_with(|| left_text.cmp(right_text))
+            .then_with(|| left_id.cmp(right_id))
+    });
+
+    let mut tokens = Vec::new();
+    let mut offset = 0usize;
+    while offset < text.len() {
+        if parse_special {
+            if let Some((special_text, token_id)) = specials
+                .iter()
+                .find(|(special_text, _)| text[offset..].starts_with(special_text.as_str()))
+            {
+                tokens.push(GgufLlama3Pretoken::Special {
+                    text: special_text.clone(),
+                    token_id: *token_id,
+                });
+                offset += special_text.len();
+                continue;
+            }
+        }
+
+        let next_offset = gguf_llama3_bpe_next_pretoken_end(text, offset);
+        tokens.push(GgufLlama3Pretoken::Text(
+            text[offset..next_offset].to_string(),
+        ));
+        offset = next_offset;
+    }
+    tokens
+}
+
+#[allow(dead_code)]
+fn gguf_llama3_bpe_next_pretoken_end(text: &str, offset: usize) -> usize {
+    if let Some(end) = gguf_llama3_bpe_contraction_end(text, offset) {
+        return end;
+    }
+    let current = gguf_char_at(text, offset).expect("offset is inside text");
+    if current != '\r' && current != '\n' && !current.is_alphabetic() && !current.is_numeric() {
+        let next_offset = offset + current.len_utf8();
+        if next_offset < text.len()
+            && gguf_char_at(text, next_offset).is_some_and(|ch| ch.is_alphabetic())
+        {
+            return gguf_consume_while(text, next_offset, |ch| ch.is_alphabetic());
+        }
+    }
+    if current.is_alphabetic() {
+        return gguf_consume_while(text, offset, |ch| ch.is_alphabetic());
+    }
+    if current.is_numeric() {
+        return gguf_consume_up_to(text, offset, 3, |ch| ch.is_numeric());
+    }
+    if current == ' ' {
+        let next_offset = offset + current.len_utf8();
+        if next_offset < text.len()
+            && gguf_char_at(text, next_offset)
+                .is_some_and(|ch| !ch.is_whitespace() && !ch.is_alphabetic() && !ch.is_numeric())
+        {
+            return gguf_llama3_bpe_consume_punctuation(text, next_offset);
+        }
+    }
+    if !current.is_whitespace() && !current.is_alphabetic() && !current.is_numeric() {
+        return gguf_llama3_bpe_consume_punctuation(text, offset);
+    }
+    if current.is_whitespace() {
+        return gguf_llama3_bpe_consume_whitespace(text, offset);
+    }
+    offset + current.len_utf8()
+}
+
+#[allow(dead_code)]
+fn gguf_llama3_bpe_contraction_end(text: &str, offset: usize) -> Option<usize> {
+    const CONTRACTIONS: [&str; 7] = ["'s", "'t", "'re", "'ve", "'m", "'ll", "'d"];
+    let remaining = &text[offset..];
+    CONTRACTIONS.iter().find_map(|contraction| {
+        if remaining.len() >= contraction.len()
+            && remaining[..contraction.len()].eq_ignore_ascii_case(contraction)
+        {
+            Some(offset + contraction.len())
+        } else {
+            None
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn gguf_llama3_bpe_consume_punctuation(text: &str, offset: usize) -> usize {
+    let mut end = gguf_consume_while(text, offset, |ch| {
+        !ch.is_whitespace() && !ch.is_alphabetic() && !ch.is_numeric()
+    });
+    while end < text.len() {
+        let ch = gguf_char_at(text, end).expect("end is inside text");
+        if ch == '\r' || ch == '\n' {
+            end += ch.len_utf8();
+        } else {
+            break;
+        }
+    }
+    end
+}
+
+#[allow(dead_code)]
+fn gguf_llama3_bpe_consume_whitespace(text: &str, offset: usize) -> usize {
+    let mut end = offset;
+    let mut saw_newline = false;
+    while end < text.len() {
+        let ch = gguf_char_at(text, end).expect("end is inside text");
+        if !ch.is_whitespace() {
+            break;
+        }
+        saw_newline |= ch == '\r' || ch == '\n';
+        end += ch.len_utf8();
+    }
+    if saw_newline || end == text.len() {
+        end
+    } else {
+        gguf_consume_while(text, offset, |ch| ch.is_whitespace())
+    }
+}
+
+#[allow(dead_code)]
+fn gguf_char_at(text: &str, offset: usize) -> Option<char> {
+    text[offset..].chars().next()
+}
+
+#[allow(dead_code)]
+fn gguf_consume_while(text: &str, offset: usize, mut predicate: impl FnMut(char) -> bool) -> usize {
+    let mut end = offset;
+    while end < text.len() {
+        let ch = gguf_char_at(text, end).expect("end is inside text");
+        if !predicate(ch) {
+            break;
+        }
+        end += ch.len_utf8();
+    }
+    end
+}
+
+#[allow(dead_code)]
+fn gguf_consume_up_to(
+    text: &str,
+    offset: usize,
+    max_chars: usize,
+    mut predicate: impl FnMut(char) -> bool,
+) -> usize {
+    let mut end = offset;
+    let mut count = 0usize;
+    while end < text.len() && count < max_chars {
+        let ch = gguf_char_at(text, end).expect("end is inside text");
+        if !predicate(ch) {
+            break;
+        }
+        end += ch.len_utf8();
+        count += 1;
+    }
+    end
 }
 
 #[allow(dead_code)]
@@ -9236,6 +9653,7 @@ mod tests {
     fn gguf_tokenizer_llama3_encode_goldens_are_pinned_and_cover_reference_modes() {
         assert_eq!(LLAMA_CPP_LLAMA3_TOKENIZE_REFERENCE_REVISION, "665abc6");
         assert_eq!(LLAMA3_8B_INSTRUCT_Q8_0_GGUF_SIZE, 8_540_770_880);
+        assert_eq!(GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE, 128_256);
         assert_eq!(GGUF_TOKENIZER_LLAMA3_ENCODE_GOLDENS.len(), 2);
         assert_eq!(
             GGUF_TOKENIZER_LLAMA3_ENCODE_GOLDENS[0].default_ids,
@@ -9258,6 +9676,95 @@ mod tests {
                 golden.label
             );
         }
+    }
+
+    #[test]
+    fn gguf_llama3_manual_pretokenizer_covers_contractions_punctuation_and_whitespace() {
+        let tokens = gguf_llama3_bpe_pretokenize("Hello, world!\n\nIt's fine.", &[], false);
+        assert_eq!(
+            tokens,
+            vec![
+                GgufLlama3Pretoken::Text("Hello".into()),
+                GgufLlama3Pretoken::Text(",".into()),
+                GgufLlama3Pretoken::Text(" world".into()),
+                GgufLlama3Pretoken::Text("!\n\n".into()),
+                GgufLlama3Pretoken::Text("It".into()),
+                GgufLlama3Pretoken::Text("'s".into()),
+                GgufLlama3Pretoken::Text(" fine".into()),
+                GgufLlama3Pretoken::Text(".".into()),
+            ]
+        );
+
+        let numeric_and_trailing_ws = gguf_llama3_bpe_pretokenize("abc1234   ", &[], false);
+        assert_eq!(
+            numeric_and_trailing_ws,
+            vec![
+                GgufLlama3Pretoken::Text("abc".into()),
+                GgufLlama3Pretoken::Text("123".into()),
+                GgufLlama3Pretoken::Text("4".into()),
+                GgufLlama3Pretoken::Text("   ".into()),
+            ]
+        );
+    }
+
+    #[test]
+    fn gguf_llama3_manual_pretokenizer_handles_special_tokens_without_regex() {
+        let specials = vec![("<|begin_of_text|>".to_string(), 128000)];
+        let tokens =
+            gguf_llama3_bpe_pretokenize("<|begin_of_text|>hello how's it going?", &specials, true);
+        assert_eq!(
+            tokens,
+            vec![
+                GgufLlama3Pretoken::Special {
+                    text: "<|begin_of_text|>".into(),
+                    token_id: 128000,
+                },
+                GgufLlama3Pretoken::Text("hello".into()),
+                GgufLlama3Pretoken::Text(" how".into()),
+                GgufLlama3Pretoken::Text("'s".into()),
+                GgufLlama3Pretoken::Text(" it".into()),
+                GgufLlama3Pretoken::Text(" going".into()),
+                GgufLlama3Pretoken::Text("?".into()),
+            ]
+        );
+    }
+
+    #[test]
+    fn gguf_bpe_registry_merges_with_std_binary_heap_priority() {
+        let tokens = ["a", "b", "c", "ab", "bc", "abc"]
+            .into_iter()
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        let merges = ["a b", "b c", "ab c"]
+            .into_iter()
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        let registry = GgufBpeRegistry::from_tokens_and_merges(&tokens, &merges).unwrap();
+
+        assert_eq!(registry.encode_piece("abc").unwrap(), vec![5]);
+        assert_eq!(
+            registry
+                .encode_pretokenized(&["ab".to_string(), "c".to_string()])
+                .unwrap(),
+            vec![3, 2]
+        );
+    }
+
+    #[test]
+    fn gguf_bpe_registry_fails_closed_on_bad_metadata() {
+        let duplicate_tokens = vec!["a".to_string(), "a".to_string()];
+        let merges = vec!["a a".to_string()];
+        assert!(matches!(
+            GgufBpeRegistry::from_tokens_and_merges(&duplicate_tokens, &merges),
+            Err(GgufBpeError::DuplicateToken { .. })
+        ));
+
+        let tokens = vec!["a".to_string(), "b".to_string()];
+        let bad_merges = vec!["a".to_string()];
+        assert!(matches!(
+            GgufBpeRegistry::from_tokens_and_merges(&tokens, &bad_merges),
+            Err(GgufBpeError::MalformedMerge { .. })
+        ));
     }
 
     fn gguf_tokenizer_llama_tokenize_bin_for_tests() -> Option<PathBuf> {
@@ -9358,6 +9865,40 @@ mod tests {
             LLAMA3_8B_INSTRUCT_Q8_0_GGUF_SIZE,
             "local Llama 3 8B Instruct Q8_0 GGUF fixture size changed"
         );
+    }
+
+    #[test]
+    #[ignore = "requires FATHOM_GGUF_LLAMA3_FIXTURE or the local Camelid Llama 3 GGUF"]
+    fn gguf_tokenizer_llama3_fixture_retains_exact_128k_bpe_metadata_before_runtime_use() {
+        let Some(fixture_path) = gguf_tokenizer_llama3_fixture_for_tests() else {
+            return;
+        };
+        gguf_tokenizer_assert_llama3_fixture_for_tests(&fixture_path);
+        let metadata = read_gguf_metadata_summary(&fixture_path).unwrap();
+        assert_eq!(
+            metadata.tokenizer_summary.token_count,
+            Some(GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE as u64)
+        );
+        assert_eq!(metadata.tokenizer_summary.model.as_deref(), Some("gpt2"));
+        let spec = metadata
+            .tokenizer_spec
+            .as_ref()
+            .expect("Llama 3 fixture should retain private BPE tokenizer metadata");
+        assert_eq!(spec.family, GgufTokenizerSpecFamily::Llama3Bpe);
+        assert_eq!(spec.tokens.len(), GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE);
+        assert_eq!(
+            spec.tokens.get(128000).map(String::as_str),
+            Some("<|begin_of_text|>")
+        );
+        assert_eq!(
+            spec.tokens.get(128001).map(String::as_str),
+            Some("<|end_of_text|>")
+        );
+        assert_eq!(spec.special_token_ids.get("bos"), Some(&128000));
+        assert_eq!(spec.special_token_ids.get("eos"), Some(&128001));
+        let registry = GgufBpeRegistry::from_llama3_spec(spec).unwrap();
+        assert_eq!(registry.token_to_id.get("<|begin_of_text|>"), Some(&128000));
+        assert_eq!(registry.token_to_id.get("<|end_of_text|>"), Some(&128001));
     }
 
     fn llama_encode_test_spec(extra: &[(&str, f32)]) -> GgufTokenizerSpec {
@@ -11700,7 +12241,7 @@ int main(int argc, char **argv) {
         let metadata = read_gguf_metadata_summary(&path).unwrap();
         assert!(metadata.tokenizer_spec.is_none());
         assert!(metadata.tokenizer_summary.notes.iter().any(|note| note
-            .contains("outside the narrow synthetic GPT-2/ByteLevel-BPE and Llama/SentencePiece")));
+            .contains("outside the narrow synthetic GPT-2/ByteLevel-BPE, Llama 3 BPE, and Llama/SentencePiece")));
 
         fs::remove_file(path).unwrap();
     }
@@ -11722,14 +12263,14 @@ int main(int argc, char **argv) {
         write_gguf_string(&mut bytes, "tokenizer.ggml.tokens");
         bytes.extend_from_slice(&9u32.to_le_bytes());
         bytes.extend_from_slice(&8u32.to_le_bytes());
-        bytes.extend_from_slice(&65_537u64.to_le_bytes());
-        for index in 0..65_537 {
+        bytes.extend_from_slice(&128_257u64.to_le_bytes());
+        for index in 0..128_257 {
             write_gguf_string(&mut bytes, &format!("token-{index}"));
         }
         fs::write(&path, bytes).unwrap();
 
         let metadata = read_gguf_metadata_summary(&path).unwrap();
-        assert_eq!(metadata.tokenizer_summary.token_count, Some(65_537));
+        assert_eq!(metadata.tokenizer_summary.token_count, Some(128_257));
         assert_eq!(metadata.tokenizer_summary.token_samples.len(), 8);
         assert!(metadata.tokenizer_spec.is_none());
         assert!(metadata
