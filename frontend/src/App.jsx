@@ -63,6 +63,7 @@ function App() {
     filteredConversations,
     models,
     runtime,
+    capabilities,
     selectedConversation,
     selectedModel,
     selectedModelRunnable,
@@ -292,6 +293,7 @@ function App() {
         {tab === 'library' && (
           <ModelsView
             runtime={runtime}
+            capabilities={capabilities}
             registerForm={registerForm}
             setRegisterForm={setRegisterForm}
             externalForm={externalForm}
@@ -308,7 +310,7 @@ function App() {
           />
         )}
 
-        {tab === 'system' && <SystemView runtime={runtime} selectedModel={selectedModel} />}
+        {tab === 'system' && <SystemView runtime={runtime} capabilities={capabilities} selectedModel={selectedModel} />}
       </main>
 
       <ConversationDeleteDialog

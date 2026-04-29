@@ -185,6 +185,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
   const memories = dashboard?.memories || []
   const models = dashboard?.models || []
   const runtime = dashboard?.runtime
+  const capabilities = dashboard?.capabilities
 
   useEffect(() => {
     if (!pendingChat) return
@@ -691,6 +692,7 @@ export function useDashboardData({ showNotice, clearNotice }) {
     memories,
     models,
     runtime,
+    capabilities,
     selectedConversation,
     selectedModel,
     selectedModelRunnable,

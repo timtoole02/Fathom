@@ -14,6 +14,10 @@ const FILTERS = [
 
 const CATALOG_PAGE_SIZE = 18
 
+function normalizeLaneStatus(status) {
+  return (status || '').toString().trim().toLowerCase()
+}
+
 function getGroupKey(model, runtime) {
   if (runtime?.active_model_id === model.id) return 'installed'
   if (isExternalModel(model)) return model.status === 'ready' ? 'external' : 'attention'
@@ -94,6 +98,42 @@ function getNextStepCopy(model, { active, selected, runnable } = {}) {
   return 'Download it before you can use it.'
 }
 
+function buildLaneIndex(capabilities) {
+  return new Map((capabilities?.backend_lanes || []).map((lane) => [lane.id, lane]))
+}
+
+function formatLaneStatus(status) {
+  return (status || 'unknown').toString().replace(/([a-z])([A-Z])/g, '$1 $2')
+}
+
+function formatModelSupportContract(model, laneIndex) {
+  if (!model) return 'Support contract unavailable until Fathom has inspected a model record.'
+  if (isExternalModel(model)) return 'Support contract: external API placeholder only. Fathom stores endpoint metadata locally, but chat proxying is not implemented yet and this stays out of next-chat selection.'
+  if (isEmbeddingOnlyModel(model) && model.model_path) return 'Support contract: embeddings/retrieval only. It can serve vector APIs when verified, but it is deliberately excluded from chat completions and runtime load actions.'
+
+  const status = normalizeLaneStatus(model.capability_status)
+  if (status === 'runnable') return 'Support contract: chat is allowed only through this verified backend lane; load and send still require the inspected ready artifact, not just a matching filename or quant label.'
+  if (status === 'metadata_only') return 'Support contract: metadata can be inspected, but tokenizer execution, runtime weights, dequantization/kernels, and generation are not available.'
+  if (status === 'planned') return 'Support contract: the format or architecture is recognized, but the real runtime lane is still planned. Download/import does not make it chat-runnable.'
+  if (status === 'blocked') return 'Support contract: blocked by the safety/runtime policy. Fathom will not load or chat with this artifact.'
+  if (status === 'unsupported') return 'Support contract: unsupported on this machine/runtime. It will remain visible for tracking, but load and chat stay disabled.'
+
+  const laneStatuses = (model.backend_lanes || [])
+    .map((laneId) => laneIndex.get(laneId))
+    .filter(Boolean)
+    .map((lane) => `${lane.name}: ${formatLaneStatus(lane.status)}`)
+  if (laneStatuses.length) return `Support contract from /api/capabilities: ${laneStatuses.join('; ')}. This model stays out of chat until inspection marks the exact artifact runnable.`
+  if (model.status === 'not_installed') return 'Support contract: catalog listing only. Fathom must download, verify, inspect, and map a runnable lane before chat is offered.'
+  return 'Support contract: unsupported until /api/capabilities exposes a runnable lane and artifact inspection marks this exact model runnable.'
+}
+
+function formatCatalogSupportContract(item) {
+  if (isEmbeddingOnlyFixture(item)) return 'Catalog support contract: embedding/retrieval candidate only. After download it may expose vector APIs, but it is not a chat/completions model.'
+  if (item?.filename?.toLowerCase().endsWith('.gguf')) return 'Catalog support contract: GGUF is metadata/readiness-only today. Downloading verifies and inspects metadata; it does not enable tokenizer execution, weight loading, or generation.'
+  if (item?.filename?.toLowerCase().endsWith('.onnx')) return 'Catalog support contract: ONNX chat/generation is planned, not claimed. Only the pinned MiniLM embedding path can serve vectors when that runtime feature is available.'
+  return 'Catalog support contract: /api/capabilities plus artifact inspection decides support after download; repo popularity, filename, architecture label, or quant label alone never enables chat.'
+}
+
 function getCapabilityChecklist(model, { runnable = false, canLoad = false } = {}) {
   const external = isExternalModel(model)
   const detected = Boolean(model && model.status !== 'not_installed')
@@ -104,7 +144,7 @@ function getCapabilityChecklist(model, { runnable = false, canLoad = false } = {
     { label: 'Detected', done: detected, detail: detected ? 'Known to Fathom' : 'Catalog only' },
     { label: 'Metadata', done: metadataReadable, detail: metadataReadable ? 'Capability reported' : 'Not inspected yet' },
     { label: 'Lane', done: laneClaimed, detail: laneClaimed ? (external ? 'External placeholder' : 'Backend mapped') : 'No backend lane yet' },
-    { label: 'Runnable', done: runnable || isEmbeddingOnlyModel(model), detail: runnable ? 'Chat-ready now' : external ? 'Proxy not implemented' : isEmbeddingOnlyModel(model) ? 'Embedding-ready only' : hasPlannedCapability(model) ? 'Backend planned' : canLoad ? 'First load required' : 'Not runnable yet' },
+    { label: 'Chat path', done: runnable, detail: runnable ? 'Chat-ready now' : external ? 'Proxy not implemented' : isEmbeddingOnlyModel(model) ? 'Embedding/retrieval only' : hasPlannedCapability(model) ? 'Backend planned' : canLoad ? 'First load required' : 'Not runnable yet' },
   ]
 }
 
@@ -228,6 +268,7 @@ function compareCatalogItemsByTitle(left, right) {
 
 export default function ModelsView({
   runtime,
+  capabilities,
   registerForm,
   setRegisterForm,
   externalForm,
@@ -375,6 +416,7 @@ export default function ModelsView({
   )
 
   const selectedRunnable = isRunnableModel(selectedLocalModel)
+  const capabilityLaneIndex = useMemo(() => buildLaneIndex(capabilities), [capabilities])
   const readyModels = [...groupedModels.installed, ...groupedModels.external].sort(compareModelsByName)
   const setupModels = [...groupedModels.imported, ...groupedModels.downloading, ...groupedModels.attention].sort(compareModelsByName)
   const discoverCatalogItems = useMemo(
@@ -469,6 +511,7 @@ export default function ModelsView({
                     <p className="model-summary">{describeModelState(model)}</p>
                     <p className="model-summary">{formatModelOrigin(model)}</p>
                     {model.capability_summary && <p className="model-summary">Capability: {model.capability_summary}</p>}
+                    <p className="model-summary">{formatModelSupportContract(model, capabilityLaneIndex)}</p>
                   </div>
 
                   <DownloadManifestProvenance model={model} />
@@ -596,6 +639,7 @@ export default function ModelsView({
                       </label>
                     )}
                     {localMatch?.capability_summary && <p className="model-summary">Capability: {localMatch.capability_summary}</p>}
+                    <p className="model-summary">{localMatch ? formatModelSupportContract(localMatch, capabilityLaneIndex) : formatCatalogSupportContract(item)}</p>
                     {localMatch && <DownloadManifestProvenance model={localMatch} />}
                     {localMatch && <CapabilityChecklist model={localMatch} runnable={runnable} canLoad={canLoad} />}
                     {localMatch && <NonRunnableCallouts model={localMatch} />}
@@ -724,6 +768,7 @@ export default function ModelsView({
                     <p className="model-summary">{describeModelState(model)}</p>
                     <p className="model-summary">{formatModelOrigin(model)}</p>
                     {model.capability_summary && <p className="model-summary">Capability: {model.capability_summary}</p>}
+                    <p className="model-summary">{formatModelSupportContract(model, capabilityLaneIndex)}</p>
                   </div>
 
                   <DownloadManifestProvenance model={model} />

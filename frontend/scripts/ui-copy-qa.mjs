@@ -21,6 +21,8 @@ const checks = [
       'Retrieval API',
       'Embedding lane',
       'explicit-vector retrieval',
+      '/api/capabilities',
+      'support contract',
     ],
   },
   {
@@ -43,6 +45,8 @@ const checks = [
       'External API placeholder',
       'Chat proxy not implemented',
       'connected metadata placeholder only',
+      'Chat path',
+      'filename, architecture label, or quant label alone never enables chat',
     ],
   },
   {

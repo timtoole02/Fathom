@@ -1,4 +1,4 @@
-import { describeModelState } from '../lib/modelState'
+import { describeModelState, isRunnableModel } from '../lib/modelState'
 
 const CAPABILITY_STAGES = [
   { label: 'Detected', detail: 'Fathom recognizes the artifact or API connection.' },
@@ -23,6 +23,10 @@ function laneTone(status) {
   return 'warm'
 }
 
+function countLanes(lanes, status) {
+  return lanes.filter((lane) => lane.status === status).length
+}
+
 function runtimeWarningText(warning) {
   if (warning?.type === 'model_state_recovered') {
     return warning.message || 'Recovered from unreadable model registry; the corrupt file was preserved for inspection.'
@@ -30,11 +34,15 @@ function runtimeWarningText(warning) {
   return warning?.message || null
 }
 
-export default function SystemView({ runtime, selectedModel }) {
+export default function SystemView({ runtime, capabilities, selectedModel }) {
   const runtimePill = runtimeReadinessLabel(runtime)
   const selectedModelName = selectedModel?.name || 'No next-chat model selected'
   const apiBase = runtime?.api_base || 'Local API unavailable'
   const runtimeWarnings = (runtime?.warnings || []).map(runtimeWarningText).filter(Boolean)
+  const capabilityLanes = capabilities?.backend_lanes || runtime?.backend_lanes || []
+  const machineProfile = capabilities?.machine || runtime?.machine
+  const capabilitiesEndpoint = runtime?.api_base ? runtime.api_base.replace(/\/v1$/, '/api/capabilities') : '/api/capabilities'
+  const apiExampleModelId = isRunnableModel(selectedModel) ? selectedModel.id : '<runnable-model-id>'
 
   return (
     <section className="view-stack system-layout-single view-shell">
@@ -66,6 +74,9 @@ export default function SystemView({ runtime, selectedModel }) {
             <div className="runtime-stat"><span>Ready models</span><strong>{runtime?.ready_model_count ?? 0} local</strong></div>
             <div className="runtime-stat"><span>Retrieval API</span><strong>Explicit vectors</strong></div>
             <div className="runtime-stat"><span>Embedding lane</span><strong>MiniLM float vectors; not chat-runnable</strong></div>
+            <div className="runtime-stat"><span>Capability contract</span><strong>{capabilitiesEndpoint}</strong></div>
+            <div className="runtime-stat"><span>Runnable lanes</span><strong>{countLanes(capabilityLanes, 'Runnable')}</strong></div>
+            <div className="runtime-stat"><span>Metadata/planned lanes</span><strong>{countLanes(capabilityLanes, 'MetadataOnly') + countLanes(capabilityLanes, 'Planned')}</strong></div>
             <div className="runtime-stat"><span>GPU support</span><strong>{runtime?.llama_server_installed ? 'Backend-specific' : 'Planned backend lane'}</strong></div>
             <div className="runtime-stat"><span>Next chat selection</span><strong>{selectedModelName}</strong></div>
             <div className="runtime-stat"><span>API base</span><strong>{apiBase}</strong></div>
@@ -88,6 +99,8 @@ export default function SystemView({ runtime, selectedModel }) {
             <div className="activity-item">GPU backend support will be reported by Fathom backends as they come online; the current verified local lane is a custom Rust SafeTensors runtime, not a llama.cpp wrapper.</div>
             <div className="activity-item">Current next-chat model state: {describeModelState(selectedModel)}</div>
             <div className="activity-item">Fathom separates detected/imported/runnable so it never claims a model can run until a backend lane proves it.</div>
+            <div className="activity-item"><code>/api/capabilities</code> is the support contract: <strong>Runnable</strong> lanes may serve only inspected ready models; <strong>MetadataOnly</strong>, <strong>Planned</strong>, <strong>Blocked</strong>, and <strong>Unsupported</strong> lanes stay out of chat and load actions.</div>
+            <div className="activity-item">Machine profile for compatibility checks: {machineProfile ? `${machineProfile.os || 'unknown OS'} / ${machineProfile.arch || 'unknown arch'}${machineProfile.apple_platform ? ' / Apple platform' : ''}` : 'reported by the capabilities endpoint'}.</div>
             <div className="activity-item">The OpenAI-compatible local API is exposed at {apiBase}.</div>
           </div>
         </div>
@@ -109,7 +122,7 @@ export default function SystemView({ runtime, selectedModel }) {
             ))}
           </div>
           <div className="backend-lane-grid">
-            {(runtime?.backend_lanes || []).map((lane) => (
+            {capabilityLanes.map((lane) => (
               <article key={lane.id} className="backend-lane-card">
                 <div className="backend-lane-card-head">
                   <strong>{lane.name}</strong>
@@ -134,7 +147,7 @@ export default function SystemView({ runtime, selectedModel }) {
                 )}
               </article>
             ))}
-            {(!runtime?.backend_lanes || runtime.backend_lanes.length === 0) && <div className="activity-item">Backend lane reporting is unavailable.</div>}
+            {capabilityLanes.length === 0 && <div className="activity-item">Backend lane reporting is unavailable.</div>}
           </div>
         </div>
       </div>
@@ -149,6 +162,10 @@ export default function SystemView({ runtime, selectedModel }) {
           <div className={`status-pill ${runtime?.loaded_now ? 'ready' : 'warm'}`}>{runtime?.loaded_now ? 'Local generation loaded' : 'No fake local generation'}</div>
         </div>
         <div className="api-grid api-grid-polished">
+          <div className="api-card">
+            <strong>Capabilities contract</strong>
+            <code>{capabilitiesEndpoint} · lane status, machine profile, and blockers</code>
+          </div>
           <div className="api-card">
             <strong>Chat completions</strong>
             <code>{runtime?.api_base ? `${runtime.api_base}/chat/completions · verified custom Rust SafeTensors models only` : 'Unavailable until the local API is running'}</code>
@@ -174,7 +191,7 @@ export default function SystemView({ runtime, selectedModel }) {
             <pre>{runtime?.api_base ? `curl ${runtime.api_base}/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "${selectedModel?.id}",
+    "model": "${apiExampleModelId}",
     "messages": [{"role": "user", "content": "Hello from Fathom"}]
   }'` : 'Start the local runtime to test the truthful API surface.'}</pre>
           </div>
