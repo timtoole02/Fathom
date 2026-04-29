@@ -2,7 +2,7 @@
 
 This matrix is a Phase 16 prep artifact for Fathom's narrow public API contract. It records which unsupported boundaries are actively checked by no-download gates, which require optional fixture/networked evidence, and which remain explicit non-claims.
 
-It is not a runtime expansion plan. It keeps these areas refused or unclaimed: streamed chat responses, external proxy behavior, GGUF execution, non-embedding ONNX execution, PyTorch `.bin`, arbitrary SafeTensors/Hugging Face execution, and full OpenAI API parity.
+It is not a runtime expansion plan. It keeps these areas refused or unclaimed: streamed chat responses, external proxy behavior, GGUF execution, public/runtime GGUF tokenizer execution, non-embedding ONNX execution, PyTorch `.bin`, arbitrary SafeTensors/Hugging Face execution, and full OpenAI API parity.
 
 ## No-download checked boundaries
 
@@ -23,7 +23,7 @@ These boundaries need registered/downloaded model state or catalog fixtures, so 
 
 | Boundary | Expected behavior | Evidence |
 | --- | --- | --- |
-| GGUF metadata-only chat attempts | `501 not_implemented`; metadata/readiness only, no generation | optional backend acceptance smoke |
+| GGUF metadata-only chat attempts | `501 not_implemented`; metadata/readiness only, no public/runtime tokenizer execution and no generation | optional backend acceptance smoke |
 | PyTorch `.bin` execution | `501 not_implemented`; blocked because pickle artifacts can execute code | server tests and optional acceptance-style refusal evidence |
 | Unsupported ONNX chat or general ONNX model execution | `501 not_implemented`; ONNX embeddings remain separate and narrow | docs/static contract boundary |
 | Unverified SafeTensors/Hugging Face model execution | `501 not_implemented`; only explicitly verified local lanes are runnable | docs/static contract boundary and runtime tests for supported lanes |
