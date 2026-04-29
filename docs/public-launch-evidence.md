@@ -4,9 +4,10 @@ This snapshot records the current public launch verification state for Fathom. I
 
 ## Snapshot
 
-- Commit: `a32505eadac6539865d224a8b4195656003a0032` (`Close out public launch readiness phase`)
-- Scope: no-download public `/v1` contract, public launch checklist, public launch evidence snapshot, manifest-driven smoke, sanitized public-contract smoke artifacts, offline artifact QA, and CI/static policy wiring.
-- Fresh-clone QA: passed for `origin/main` at the commit above.
+- Launch baseline commit: `a32505eadac6539865d224a8b4195656003a0032` (`Close out public launch readiness phase`)
+- Current evidence commit: `128550afcdd6c993011b5cedcaa048ebd4038840` (`Add Qwen2.5 instruct catalog demo`)
+- Scope: no-download public `/v1` contract, public launch checklist/evidence snapshot, manifest-driven smoke, sanitized public-contract smoke artifacts, offline artifact QA, CI/static policy wiring, and Phase 16 narrow catalog-backed runtime evidence through the optional Qwen2.5 0.5B Instruct demo.
+- Fresh-clone QA: passed for the launch baseline and current evidence commits. For `128550a`, focused fresh-clone QA passed after reducing cold-build pressure with `CARGO_BUILD_JOBS=1` and shared local target artifacts.
 
 ## Gates represented by the snapshot
 
@@ -28,9 +29,10 @@ The fresh-clone QA for this snapshot verified:
 - Public-contract smoke summary artifacts have an offline QA gate for schema, pass/fail semantics, coverage, caveats, and share-safety.
 - External OpenAI-compatible entries remain metadata placeholders; activation and `/v1/chat/completions` refuse with `external_proxy_not_implemented` and no provider call.
 - Default CI remains scoped to local/offline gates and does not run model downloads, networked acceptance smoke, or non-default ONNX feature tests.
+- The optional Qwen2.5 0.5B Instruct catalog demo is pinned to a specific revision with exact file sizes, SHA256 hashes, Apache-2.0 metadata, and local runtime-smoke evidence captured outside default CI.
 
 ## What this evidence does not prove
 
-- It does not prove model download success, generation quality, embedding quality, latency, throughput, production readiness, legal/license suitability, or security hardening for exposed deployments.
+- It does not prove broad model download success, generation quality, embedding quality, latency, throughput, production readiness, legal/license suitability, or security hardening for exposed deployments.
 - It does not prove full OpenAI API parity, streaming chat, real external provider proxying, GGUF runtime/tokenizer execution/generation, ONNX chat/general execution, PyTorch `.bin` loading, or arbitrary SafeTensors/Hugging Face execution.
-- Optional networked backend acceptance smoke remains separate and should be reviewed before sharing artifacts publicly.
+- Optional networked backend acceptance smoke and large-model runtime artifacts remain separate and should be reviewed before sharing artifacts publicly.
