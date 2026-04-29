@@ -9729,6 +9729,162 @@ mod tests {
         );
     }
 
+    fn exact_size_llama3_bpe_tokens_for_tests() -> Vec<String> {
+        let mut tokens = (0..GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE)
+            .map(|index| format!("tok{index}"))
+            .collect::<Vec<_>>();
+        tokens[128000] = "<|begin_of_text|>".into();
+        tokens[128001] = "<|end_of_text|>".into();
+        tokens
+    }
+
+    fn write_minimal_llama3_bpe_tokenizer_gguf(
+        path: &Path,
+        tokens: &[String],
+        merges: &[&str],
+        special_ids: &[(&str, u32)],
+    ) {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(b"GGUF");
+        bytes.extend_from_slice(&3u32.to_le_bytes());
+        bytes.extend_from_slice(&0u64.to_le_bytes());
+        bytes.extend_from_slice(&(4u64 + special_ids.len() as u64).to_le_bytes());
+        write_gguf_string_kv(&mut bytes, "tokenizer.ggml.model", "gpt2");
+        write_gguf_string_kv(&mut bytes, "tokenizer.ggml.pre", "llama-bpe");
+        let token_refs = tokens.iter().map(String::as_str).collect::<Vec<_>>();
+        write_gguf_string_array_kv(&mut bytes, "tokenizer.ggml.tokens", &token_refs);
+        write_gguf_string_array_kv(&mut bytes, "tokenizer.ggml.merges", merges);
+        for (key, value) in special_ids {
+            write_gguf_u32_kv(&mut bytes, key, *value);
+        }
+        fs::write(path, bytes).unwrap();
+    }
+
+    #[test]
+    fn builds_exact_size_llama3_bpe_tokenizer_spec_as_internal_metadata_only() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("fathom-gguf-llama3-bpe-{unique}.gguf"));
+        write_minimal_llama3_bpe_tokenizer_gguf(
+            &path,
+            &exact_size_llama3_bpe_tokens_for_tests(),
+            &["tok1 tok2", "tok3 tok4"],
+            &[
+                ("tokenizer.ggml.bos_token_id", 128000),
+                ("tokenizer.ggml.eos_token_id", 128001),
+            ],
+        );
+
+        let metadata = read_gguf_metadata_summary(&path).unwrap();
+        let spec = metadata
+            .tokenizer_spec
+            .as_ref()
+            .expect("exact-size Llama 3 BPE metadata should be retained internally");
+        assert_eq!(spec.family, GgufTokenizerSpecFamily::Llama3Bpe);
+        assert_eq!(spec.tokens.len(), GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE);
+        assert_eq!(spec.merges, vec!["tok1 tok2", "tok3 tok4"]);
+        assert_eq!(spec.special_token_ids.get("bos"), Some(&128000));
+        assert_eq!(spec.special_token_ids.get("eos"), Some(&128001));
+        assert!(metadata
+            .tokenizer_summary
+            .notes
+            .iter()
+            .any(|note| { note.contains("no public/runtime tokenizer execution") }));
+
+        let public_json = serde_json::to_value(&metadata).unwrap();
+        assert!(public_json.get("tokenizer_spec").is_none());
+        assert!(public_json["metadata"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|entry| entry.get("value"))
+            .all(|value| value.get("full_strings").is_none()));
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn rejects_malformed_llama3_bpe_metadata_before_internal_retention() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+
+        let short_path =
+            std::env::temp_dir().join(format!("fathom-gguf-llama3-short-{unique}.gguf"));
+        write_minimal_llama3_bpe_tokenizer_gguf(
+            &short_path,
+            &["tok0".into(), "tok1".into()],
+            &["tok0 tok1"],
+            &[],
+        );
+        let metadata = read_gguf_metadata_summary(&short_path).unwrap();
+        assert!(metadata.tokenizer_spec.is_none());
+        assert!(metadata
+            .tokenizer_summary
+            .notes
+            .iter()
+            .any(|note| { note.contains("does not match expected Llama 3 vocab size") }));
+        fs::remove_file(short_path).unwrap();
+
+        let malformed_merge_path =
+            std::env::temp_dir().join(format!("fathom-gguf-llama3-merge-{unique}.gguf"));
+        write_minimal_llama3_bpe_tokenizer_gguf(
+            &malformed_merge_path,
+            &exact_size_llama3_bpe_tokens_for_tests(),
+            &["tok0"],
+            &[],
+        );
+        let metadata = read_gguf_metadata_summary(&malformed_merge_path).unwrap();
+        assert!(metadata.tokenizer_spec.is_none());
+        assert!(metadata
+            .tokenizer_summary
+            .notes
+            .iter()
+            .any(|note| note.contains("not a two-token BPE merge")));
+        fs::remove_file(malformed_merge_path).unwrap();
+
+        let duplicate_path =
+            std::env::temp_dir().join(format!("fathom-gguf-llama3-dupe-{unique}.gguf"));
+        let mut duplicate_tokens = exact_size_llama3_bpe_tokens_for_tests();
+        duplicate_tokens[42] = duplicate_tokens[41].clone();
+        write_minimal_llama3_bpe_tokenizer_gguf(
+            &duplicate_path,
+            &duplicate_tokens,
+            &["tok1 tok2"],
+            &[],
+        );
+        let metadata = read_gguf_metadata_summary(&duplicate_path).unwrap();
+        assert!(metadata.tokenizer_spec.is_none());
+        assert!(metadata
+            .tokenizer_summary
+            .notes
+            .iter()
+            .any(|note| note.contains("duplicate token")));
+        fs::remove_file(duplicate_path).unwrap();
+
+        let special_path =
+            std::env::temp_dir().join(format!("fathom-gguf-llama3-special-{unique}.gguf"));
+        write_minimal_llama3_bpe_tokenizer_gguf(
+            &special_path,
+            &exact_size_llama3_bpe_tokens_for_tests(),
+            &["tok1 tok2"],
+            &[(
+                "tokenizer.ggml.bos_token_id",
+                GGUF_LLAMA3_BPE_EXPECTED_VOCAB_SIZE as u32,
+            )],
+        );
+        let metadata = read_gguf_metadata_summary(&special_path).unwrap();
+        assert!(metadata.tokenizer_spec.is_none());
+        assert!(metadata
+            .tokenizer_summary
+            .notes
+            .iter()
+            .any(|note| note.contains("outside token array length")));
+        fs::remove_file(special_path).unwrap();
+    }
+
     #[test]
     fn gguf_bpe_registry_merges_with_std_binary_heap_priority() {
         let tokens = ["a", "b", "c", "ab", "bc", "abc"]
