@@ -8,6 +8,8 @@ This is optional local API evidence for the pinned catalog entry `hf-huggingface
 - Revision: `12fd25f77366fa6b3b4b768ec3050bf629380bac`
 - License metadata: `apache-2.0`
 - Fathom lane: existing custom Rust/Candle `LlamaForCausalLM` SafeTensors/HF lane
+- Catalog id: `hf-huggingfacetb-smollm2-135m-instruct`
+- Installed `/v1` model id: `huggingfacetb-smollm2-135m-instruct-model-safetensors`
 - Template lane: strict Llama-3 header-turn renderer
 - Public contract: unchanged; default public CI remains no-download/offline for model fixtures.
 - Evidence commit: `0a3c8d0f556321b295a76d1f95d1d0d4073433bd`

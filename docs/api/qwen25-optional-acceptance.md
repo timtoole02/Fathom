@@ -8,7 +8,7 @@ Do not add this flow to default CI. It downloads or reuses about 1.0 GB of model
 
 - The catalog entry is still pinned to `Qwen/Qwen2.5-0.5B-Instruct` at revision `7ae557604adf67be50417f59c2c2f167def9a775`.
 - Catalog installation verifies expected file sizes, SHA256 hashes, Apache-2.0 metadata, and manifest fields before the model becomes runnable.
-- After install/inspection, `/v1/models` includes the Qwen2.5 chat model as a validated local `safetensors-hf`/Candle model.
+- After install/inspection, `/v1/models` includes the Qwen2.5 chat model as a validated local `safetensors-hf`/Candle model. The catalog id is `hf-qwen-qwen2-5-0-5b-instruct`; the installed `/v1` model id is `qwen-qwen2-5-0-5b-instruct-model-safetensors`.
 - Two same-process non-streaming `/v1/chat/completions` calls return real local assistant content and expose `fathom.metrics.runtime_family: qwen2` plus cold/warm residency evidence.
 - `stream: true` remains refused with `501 not_implemented`.
 
@@ -84,7 +84,7 @@ Run two non-streaming chat calls in the same server process:
 for phase in cold warm; do
   curl -fsS "$BASE/v1/chat/completions" \
     -H 'content-type: application/json' \
-    -d '{"model":"hf-qwen-qwen2-5-0-5b-instruct","messages":[{"role":"user","content":"Reply with one short sentence about local inference."}],"max_tokens":24,"temperature":0.2}' \
+    -d '{"model":"qwen-qwen2-5-0-5b-instruct-model-safetensors","messages":[{"role":"user","content":"Reply with one short sentence about local inference."}],"max_tokens":24,"temperature":0.2}' \
     | tee "$FATHOM_QWEN25_ACCEPTANCE_ROOT/chat-${phase}.json" \
     | python3 -m json.tool
 done
@@ -97,7 +97,7 @@ curl -sS -o "$FATHOM_QWEN25_ACCEPTANCE_ROOT/stream-refusal.json" \
   -w '%{http_code}\n' \
   "$BASE/v1/chat/completions" \
   -H 'content-type: application/json' \
-  -d '{"model":"hf-qwen-qwen2-5-0-5b-instruct","messages":[{"role":"user","content":"Hello"}],"stream":true}'
+  -d '{"model":"qwen-qwen2-5-0-5b-instruct-model-safetensors","messages":[{"role":"user","content":"Hello"}],"stream":true}'
 python3 -m json.tool "$FATHOM_QWEN25_ACCEPTANCE_ROOT/stream-refusal.json"
 ```
 

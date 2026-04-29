@@ -8,6 +8,8 @@ This is optional local evidence for the pinned catalog entry `hf-qwen-qwen2-5-0-
 - Revision: `7ae557604adf67be50417f59c2c2f167def9a775`
 - License metadata: `apache-2.0`
 - Fathom lane: existing custom Rust/Candle `Qwen2ForCausalLM` SafeTensors/HF lane
+- Catalog id: `hf-qwen-qwen2-5-0-5b-instruct`
+- Installed `/v1` model id: `qwen-qwen2-5-0-5b-instruct-model-safetensors`
 - Template lane: existing ChatML/Qwen-style renderer
 - Public contract: unchanged; default public CI remains no-download/offline for model fixtures.
 

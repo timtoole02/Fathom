@@ -8,7 +8,7 @@ Do not add this flow to default CI. It downloads or reuses about 271 MB of model
 
 - The catalog entry is still pinned to `HuggingFaceTB/SmolLM2-135M-Instruct` at revision `12fd25f77366fa6b3b4b768ec3050bf629380bac`.
 - Catalog installation verifies expected file sizes, SHA256 hashes, Apache-2.0 metadata, and manifest fields before the model becomes runnable.
-- After install/inspection, `/v1/models` includes the SmolLM2 chat model as a validated local `safetensors-hf`/Candle model.
+- After install/inspection, `/v1/models` includes the SmolLM2 chat model as a validated local `safetensors-hf`/Candle model. The catalog id is `hf-huggingfacetb-smollm2-135m-instruct`; the installed `/v1` model id is `huggingfacetb-smollm2-135m-instruct-model-safetensors`.
 - Two same-process non-streaming `/v1/chat/completions` calls return real local assistant content and expose `fathom.metrics.runtime_family: llama` plus cold/warm residency evidence.
 - `stream: true` remains refused with `501 not_implemented`.
 
