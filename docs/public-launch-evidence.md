@@ -31,6 +31,7 @@ The fresh-clone QA for this snapshot verified:
 - Default CI remains scoped to local/offline gates and does not run model downloads, networked acceptance smoke, or non-default ONNX feature tests.
 - The optional Qwen2.5 0.5B Instruct catalog demo is pinned to a specific revision with exact file sizes, SHA256 hashes, Apache-2.0 metadata, local runtime-smoke evidence, and opt-in API acceptance evidence captured outside default CI; see `docs/benchmarks/2026-04-29-qwen25-local-runtime-smoke.md` and `docs/benchmarks/2026-04-29-qwen25-api-acceptance.md`.
 - The optional SmolLM2 135M Instruct catalog demo has opt-in API acceptance evidence for catalog install, `/v1/models`, cold/warm non-streaming chat metrics, and streaming refusal; see `docs/benchmarks/2026-04-29-smollm2-api-acceptance.md`.
+- The optional MiniLM SafeTensors embedding demo has opt-in API acceptance evidence for catalog install, `/api/embedding-models`, `/v1/models` exclusion, float `/v1/embeddings`, `encoding_format: "base64"` refused with `invalid_request`, and chat refusal; see `docs/benchmarks/2026-04-29-minilm-embeddings-api-acceptance.md`.
 
 ## What this evidence does not prove
 
