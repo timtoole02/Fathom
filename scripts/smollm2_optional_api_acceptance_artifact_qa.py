@@ -14,7 +14,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-MODEL_ID = "hf-huggingfacetb-smollm2-135m-instruct"
+MODEL_ID = "huggingfacetb-smollm2-135m-instruct-model-safetensors"
 REPO_ID = "HuggingFaceTB/SmolLM2-135M-Instruct"
 REVISION = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
 EXPECTED_TOTAL_BYTES = 271_170_520

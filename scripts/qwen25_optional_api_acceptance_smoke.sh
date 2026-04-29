@@ -94,7 +94,7 @@ repo_commit = sys.argv[4]
 started_at = sys.argv[5]
 artifacts.mkdir(parents=True, exist_ok=True)
 
-MODEL_ID = "hf-qwen-qwen2-5-0-5b-instruct"
+MODEL_ID = "qwen-qwen2-5-0-5b-instruct-model-safetensors"
 REPO_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 REVISION = "7ae557604adf67be50417f59c2c2f167def9a775"
 

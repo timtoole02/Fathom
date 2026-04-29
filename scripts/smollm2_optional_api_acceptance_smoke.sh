@@ -94,7 +94,7 @@ repo_commit = sys.argv[4]
 started_at = sys.argv[5]
 artifacts.mkdir(parents=True, exist_ok=True)
 
-MODEL_ID = "hf-huggingfacetb-smollm2-135m-instruct"
+MODEL_ID = "huggingfacetb-smollm2-135m-instruct-model-safetensors"
 REPO_ID = "HuggingFaceTB/SmolLM2-135M-Instruct"
 REVISION = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
 

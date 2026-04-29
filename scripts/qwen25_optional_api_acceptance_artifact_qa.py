@@ -14,7 +14,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-MODEL_ID = "hf-qwen-qwen2-5-0-5b-instruct"
+MODEL_ID = "qwen-qwen2-5-0-5b-instruct-model-safetensors"
 REPO_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 REVISION = "7ae557604adf67be50417f59c2c2f167def9a775"
 EXPECTED_TOTAL_BYTES = 999_597_690
