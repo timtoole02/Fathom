@@ -12,6 +12,27 @@ Do not add this flow to default CI. It downloads or reuses about 1.0 GB of model
 - Two same-process non-streaming `/v1/chat/completions` calls return real local assistant content and expose `fathom.metrics.runtime_family: qwen2` plus cold/warm residency evidence.
 - `stream: true` remains refused with `501 not_implemented`.
 
+
+## One-command optional smoke
+
+The manual steps below are captured in an opt-in harness:
+
+```bash
+FATHOM_QWEN25_ACCEPTANCE=1 \
+FATHOM_QWEN25_ACCEPTANCE_KEEP_ARTIFACTS=1 \
+bash scripts/qwen25_optional_api_acceptance_smoke.sh
+```
+
+The script starts an isolated server, installs only the pinned Qwen2.5 catalog entry, writes health/install/`/v1/models`/cold-chat/warm-chat/stream-refusal artifacts plus `summary.json` and `summary.md`, then runs offline artifact QA. It is intentionally not part of default CI.
+
+Validate preserved artifacts later with:
+
+```bash
+python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py /path/to/artifacts
+```
+
+With no arguments, the artifact QA runs a dependency-free synthetic self-test.
+
 ## Isolated run skeleton
 
 Use isolated state/model directories so the acceptance pass cannot mutate your normal Fathom install:
