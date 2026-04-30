@@ -11,7 +11,7 @@ cargo test
 bash scripts/start-backend.sh
 ```
 
-The backend listens on `http://127.0.0.1:8180` by default and writes logs to `~/.fathom/logs/server.log`.
+The backend listens on `http://127.0.0.1:8180` by default and writes logs to `~/.fathom/logs/server.log`. It has no built-in authentication and is intended for loopback development; do not expose it directly to the internet without adding your own access controls and reviewing [`../../SECURITY.md`](../../SECURITY.md).
 
 Useful environment overrides:
 
