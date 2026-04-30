@@ -58,7 +58,7 @@ curl -fsS "$BASE/v1/models" | python3 -m json.tool
 bash scripts/stop.sh
 ```
 
-Use [`docs/api/backend-only-quickstart.md`](api/backend-only-quickstart.md) for catalog install examples, TinyStories chat, MiniLM embeddings, retrieval, and expected refusals. Those catalog demos require network access for pinned fixture downloads.
+Use [`docs/api/backend-only-quickstart.md`](api/backend-only-quickstart.md) for catalog install examples, TinyStories chat, MiniLM embeddings, retrieval, and expected refusals. Those catalog demos require network access for pinned fixture downloads. The backend API has no built-in authentication and is intended for loopback development; do not expose it directly to the internet or an untrusted LAN without your own access controls and a [`SECURITY.md`](../SECURITY.md) review.
 For a compact refusal/non-claim checklist before Phase 16 work, see [`docs/api/refusal-boundary-matrix.md`](api/refusal-boundary-matrix.md).
 
 ## 4. Optional networked acceptance smoke
