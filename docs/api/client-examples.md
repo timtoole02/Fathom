@@ -27,6 +27,8 @@ By default, the examples install and use this tiny SafeTensors/Hugging Face chat
 
 The model is random and tiny, so generated text may be gibberish or whitespace. Use it to verify that install, `/v1/models`, and non-streaming `/v1/chat/completions` are wired up. Use a trained runnable model from the catalog when you want more language-like output.
 
+Catalog install requests use Hugging Face-style `repo_id`/`filename` values, but `/v1` calls use the installed model id returned by `/v1/models` or `/api/embedding-models`. If you override the catalog entry, update `FATHOM_MODEL_ID` or `FATHOM_EMBEDDING_MODEL_ID` to the installed id before calling `/v1/chat/completions` or `/v1/embeddings`.
+
 ## Environment variables
 
 All examples default to `http://127.0.0.1:8180` and can be configured with:
