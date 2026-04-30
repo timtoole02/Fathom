@@ -11,7 +11,7 @@ This snapshot records the current public launch verification state for Fathom. I
 
 ## Gates represented by the snapshot
 
-The fresh-clone QA for this snapshot verified:
+The referenced fresh-clone QA gates verified:
 
 - exact `origin/main` checkout and clean initial/final status;
 - no repo-local `AGENTS.md`;
