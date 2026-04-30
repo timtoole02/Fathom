@@ -337,7 +337,9 @@ Phase 16 has started conservatively. The first prep lane added [`docs/api/refusa
 - [x] Public refusal boundary matrix: `9768d40 Add public refusal boundary matrix`
 - [x] Narrow Llama-3 header chat-template rendering for existing Llama-style SafeTensors/HF runtime lanes, backed by static renderer tests.
 - [x] Qwen2 tied-output SafeTensors validation, allowing missing `lm_head.weight` only when `tie_word_embeddings: true` and preserving fail-closed untied checkpoint validation.
-- [x] Catalog-backed Qwen2.5 0.5B Instruct optional demo entry, pinned to exact revision, file sizes, SHA256 hashes, Apache-2.0 license metadata, and local runtime-smoke evidence.
+- [x] Catalog-backed Qwen2.5 0.5B Instruct optional demo entry, pinned to exact revision, file sizes, SHA256 hashes, Apache-2.0 license metadata, local runtime-smoke evidence, and opt-in API acceptance evidence.
+- [x] Opt-in SmolLM2 135M Instruct API acceptance evidence for the existing Llama-style SafeTensors/HF lane, covering catalog install, `/v1/models`, cold/warm non-streaming chat metrics, and streaming refusal.
+- [x] Opt-in MiniLM SafeTensors embeddings API acceptance evidence for the existing default-build embedding lane, covering catalog install, `/api/embedding-models`, `/v1/models` exclusion, float `/v1/embeddings`, base64 refusal, and chat refusal.
 
 **Candidate future lanes**
 
