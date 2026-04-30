@@ -6,7 +6,7 @@ In CI, the cURL, standard-library Python, SDK, and `.http` examples are checked 
 
 ## Adopter checklist
 
-- Use `http://127.0.0.1:8180` as the local base URL unless you started Fathom with a different `FATHOM_PORT`.
+- Use `http://127.0.0.1:8180` as the local base URL unless you started Fathom with a different `FATHOM_PORT`; Fathom has no built-in authentication, so keep examples on loopback unless you have added your own access controls.
 - Treat `GET /v1/health`, `GET /v1/models`, non-streaming `POST /v1/chat/completions`, and float-only `POST /v1/embeddings` as the current launch-supported `/v1` surface.
 - Discover chat-runnable models with `/v1/models`; do not assume saved external placeholders, embedding-only entries, GGUF metadata packages, or unsupported local artifacts are chat models.
 - Keep chat requests non-streaming (`stream` omitted or `false`) and embeddings as floats (`encoding_format` omitted or `"float"`).
