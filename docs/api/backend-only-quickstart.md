@@ -206,7 +206,7 @@ curl -fsS "$BASE/v1/embeddings" \
   | python3 -m json.tool
 ```
 
-The SafeTensors lane returns finite 384-dimensional vectors and stays out of `/v1/models` because it is not a chat/generation model. The `/v1/embeddings` adapter is intentionally narrow: string or array input, float embeddings only, and no fake vectors for chat, GGUF, PyTorch `.bin`, or unsupported packages. See [`v1-contract.md`](v1-contract.md) for the request/response envelope.
+The SafeTensors lane returns finite 384-dimensional vectors and stays out of `/v1/models` because it is not a chat/generation model. The `/v1/embeddings` adapter is intentionally narrow: string or array input, float embeddings only, and no fake vectors for chat, GGUF, PyTorch `.bin`, or unsupported packages. `encoding_format: "base64"` is refused with `invalid_request`; request `"float"` or omit the field. See [`v1-contract.md`](v1-contract.md) for the request/response envelope.
 
 Fathom also has a pinned ONNX MiniLM embedding fixture. ONNX inference is real but non-default because it brings ONNX Runtime binaries; build/start with the feature when you want that lane:
 
