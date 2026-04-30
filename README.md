@@ -68,7 +68,7 @@ Fathom can run as a standalone API layer without the frontend:
 bash scripts/start-backend.sh
 ```
 
-This starts only `fathom-server` on `http://127.0.0.1:8180`; it does not require `npm install` and does not launch Vite. Use `FATHOM_PORT`, `FATHOM_MODELS_DIR`, and `FATHOM_STATE_DIR` to isolate API tests. To enable the non-default ONNX embedding runtime lane, start with:
+This starts only `fathom-server` on `http://127.0.0.1:8180`; it does not require `npm install` and does not launch Vite. The local API has no built-in authentication and is intended for loopback development, not direct internet or untrusted-LAN exposure. Use `FATHOM_PORT`, `FATHOM_MODELS_DIR`, and `FATHOM_STATE_DIR` to isolate API tests. To enable the non-default ONNX embedding runtime lane, start with:
 
 ```bash
 FATHOM_FEATURES=onnx-embeddings-ort bash scripts/start-backend.sh
