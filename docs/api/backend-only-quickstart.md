@@ -93,6 +93,8 @@ curl -fsS "$BASE/api/models/catalog" | python3 -m json.tool
 
 Permissive catalog entries install with the existing `{repo_id, filename}` body. Entries marked unknown or restrictive/non-commercial are refused with `catalog_license_ack_required` unless the client includes `"accept_license": true` after the user explicitly acknowledges the listed status. This acknowledgement gate is a visibility/safety guardrail; it is not legal advice or a compatibility determination for your intended use. Installed manifests persist the catalog license status, whether acknowledgement was required, whether it was recorded, and a neutral policy note for later API/UI visibility.
 
+Catalog install requests use upstream `repo_id`/`filename` values. Chat and embedding calls use installed Fathom ids returned by `/v1/models` or `/api/embedding-models`; do not pass catalog ids directly to `/v1/chat/completions` or `/v1/embeddings`.
+
 Install the small trained TinyStories GPT-2 demo through the same verified catalog path used by the UI:
 
 ```bash
