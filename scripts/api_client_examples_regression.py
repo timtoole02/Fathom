@@ -283,6 +283,25 @@ def assert_json_request(request: RecordedRequest, label: str) -> None:
 
 
 def static_checks() -> None:
+    required_loopback_warning_terms = {
+        "README.md": ("no built-in authentication", "loopback"),
+        "docs/api/v1-contract.md": ("no built-in authentication", "loopback", "SECURITY.md"),
+        "docs/api/backend-only-quickstart.md": ("no built-in authentication", "loopback", "access controls", "SECURITY.md"),
+        "docs/api/client-examples.md": ("no built-in authentication", "loopback", "access controls"),
+        "docs/public-launch-checklist.md": ("no built-in authentication", "loopback", "access controls", "SECURITY.md"),
+        "examples/api/curl-quickstart.sh": ("no built-in authentication", "FATHOM_BASE_URL", "loopback", "access controls"),
+        "examples/api/fathom.http": ("no built-in authentication", "@base", "loopback", "access controls"),
+        "examples/api/openai-sdk.py": ("no built-in authentication", "FATHOM_BASE_URL", "loopback", "access controls"),
+        "examples/api/python-no-deps.py": ("no built-in authentication", "FATHOM_BASE_URL", "loopback", "access controls"),
+    }
+    for relative_path, required_terms in required_loopback_warning_terms.items():
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        missing_terms = [term for term in required_terms if term not in text]
+        assert_true(
+            not missing_terms,
+            f"{relative_path} missing loopback/no-auth warning terms: {missing_terms}",
+        )
+
     http_path = ROOT / "examples/api/fathom.http"
     http_text = http_path.read_text(encoding="utf-8")
     for endpoint in (
