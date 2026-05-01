@@ -331,6 +331,15 @@ try:
         "api_key": "placeholder-key",
         "model_name": "placeholder-model",
     }
+    status, capabilities = request("GET", "/api/capabilities")
+    assert status == 200, (status, capabilities)
+    external_lane = next(
+        lane for lane in capabilities.get("backend_lanes", []) if lane.get("id") == "external-openai"
+    )
+    assert str(external_lane.get("status", "")).lower() == "planned", external_lane
+    assert "proxying is not implemented" in external_lane.get("summary", "").lower(), external_lane
+    assert external_lane.get("blockers"), external_lane
+
     status, external = request("POST", "/api/models/external", external_body)
     assert status == 200, (status, external)
     assert external.get("provider_kind") == "external", external
@@ -354,7 +363,7 @@ try:
     assert status == 501, (status, external_chat)
     assert_error(external_chat, "external_proxy_not_implemented")
     assert_no_chat_success(external_chat)
-    record_boundary("external placeholder chat or activation", "external-placeholder-exclusion-activation-chat-refusal", 501, "external_proxy_not_implemented")
+    record_boundary("external placeholder chat or activation", "external-placeholder-capability-planned-exclusion-activation-chat-refusal", 501, "external_proxy_not_implemented")
 
     verify_manifest_coverage()
     write_summary(True)
@@ -369,5 +378,5 @@ except Exception:
     finally:
         raise
 
-print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary")
+print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, capabilities external metadata-only guard")
 PY
