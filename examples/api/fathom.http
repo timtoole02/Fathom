@@ -1,5 +1,6 @@
 # Fathom local API examples for editors with .http / REST Client support.
 # Override the base URL if your backend runs on another port.
+# Fathom has no built-in authentication; keep @base on loopback unless you have added your own access controls.
 # The MiniLM embedding requests are optional and download an extra local model.
 @base = http://127.0.0.1:8180
 @model = echarlaix-tiny-random-phiforcausallm-model-safetensors

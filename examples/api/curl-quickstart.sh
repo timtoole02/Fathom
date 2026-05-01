@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Fathom has no built-in authentication; keep FATHOM_BASE_URL on loopback unless you have added your own access controls.
 BASE="${FATHOM_BASE_URL:-http://127.0.0.1:8180}"
 BASE="${BASE%/}"
 MODEL_ID="${FATHOM_MODEL_ID:-echarlaix-tiny-random-phiforcausallm-model-safetensors}"

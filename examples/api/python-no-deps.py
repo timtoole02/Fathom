@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Dependency-free Fathom API smoke example using urllib.
 
-Requires a running Fathom backend. By default this installs and calls the tiny
-random Phi SafeTensors fixture; output may be gibberish because the model is a
-small random test fixture.
+Requires a running Fathom backend. Fathom has no built-in authentication; keep
+FATHOM_BASE_URL on loopback unless you have added your own access controls. By
+default this installs and calls the tiny random Phi SafeTensors fixture; output
+may be gibberish because the model is a small random test fixture.
 
 Set FATHOM_RUN_EMBEDDINGS=1 to additionally install the pinned MiniLM
 SafeTensors embedding fixture and call /v1/embeddings. That opt-in path downloads

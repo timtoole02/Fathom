@@ -4,9 +4,11 @@
 Install the optional SDK first:
   python3 -m pip install openai
 
-Requires a running Fathom backend and an installed runnable chat model. The
-pinned tiny random Phi fixture is the default model id used here; its output may
-be gibberish because it is a small random smoke-test fixture.
+Requires a running Fathom backend and an installed runnable chat model. Fathom
+has no built-in authentication; keep FATHOM_BASE_URL on loopback unless you have
+added your own access controls. The pinned tiny random Phi fixture is the default
+model id used here; its output may be gibberish because it is a small random
+smoke-test fixture.
 
 Set FATHOM_RUN_EMBEDDINGS=1 to also install the pinned MiniLM embedding fixture
 through Fathom's local catalog endpoint and call the OpenAI-style
