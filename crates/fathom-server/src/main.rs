@@ -1099,12 +1099,7 @@ async fn chat_conversation(
             "external_proxy_not_implemented",
         ));
     }
-    if !is_runnable_model(&model)
-        || !model
-            .backend_lanes
-            .iter()
-            .any(|lane| lane == "safetensors-hf")
-    {
+    if !is_v1_chat_runnable_model(&model) {
         return Err(api_error(
             StatusCode::BAD_REQUEST,
             "Fathom detected the model, but no real generation backend is implemented for it yet. No fake answer was produced.",
@@ -1410,7 +1405,7 @@ async fn activate_model(
                 "external_proxy_not_implemented",
             ));
         }
-        if !is_runnable_model(&model) {
+        if !is_v1_chat_runnable_model(&model) {
             return Err(api_error(
                 StatusCode::NOT_IMPLEMENTED,
                 format!(
@@ -1846,12 +1841,7 @@ async fn v1_chat_completions(
             "external_proxy_not_implemented",
         );
     }
-    if !is_runnable_model(&model)
-        || !model
-            .backend_lanes
-            .iter()
-            .any(|lane| lane == "safetensors-hf")
-    {
+    if !is_v1_chat_runnable_model(&model) {
         let is_gguf = model
             .format
             .as_deref()
@@ -3077,7 +3067,7 @@ fn runtime_json(store: &Store) -> serde_json::Value {
             store
                 .models
                 .iter()
-                .any(|model| &model.id == *active_id && is_runnable_model(model))
+                .any(|model| &model.id == *active_id && is_v1_chat_runnable_model(model))
         })
         .cloned();
     serde_json::json!({
@@ -3087,7 +3077,7 @@ fn runtime_json(store: &Store) -> serde_json::Value {
         "engine": "Fathom Rust Runtime",
         "api_base": format!("http://127.0.0.1:{port}/v1"),
         "storage_root": "~/.fathom/models",
-        "ready_model_count": store.models.iter().filter(|model| is_runnable_model(model)).count(),
+        "ready_model_count": store.models.iter().filter(|model| is_v1_chat_runnable_model(model)).count(),
         "machine": machine,
         "backend_lanes": backend_lanes,
         "warnings": store.startup_warnings.clone(),
@@ -3133,7 +3123,17 @@ fn is_runnable_model(model: &ModelRecord) -> bool {
 }
 
 fn is_v1_chat_runnable_model(model: &ModelRecord) -> bool {
-    model.provider_kind != "external" && is_runnable_model(model)
+    if !is_runnable_model(model) {
+        return false;
+    }
+    if !model
+        .backend_lanes
+        .iter()
+        .any(|lane| lane == "safetensors-hf")
+    {
+        return false;
+    }
+    matches!(model.task.as_deref(), None | Some("text_generation"))
 }
 
 fn now() -> String {
@@ -5055,6 +5055,51 @@ mod catalog_tests {
 
         assert_eq!(body["ok"], true);
         assert_eq!(body["generation_ready"], false);
+    }
+
+    #[tokio::test]
+    async fn v1_chat_readiness_requires_safetensors_hf_generation_lane() {
+        let mut stale = test_model("stale-local-ready");
+        stale.format = Some("GGUF".into());
+        stale.model_path = Some("/tmp/fathom-stale-ready-gguf".into());
+        stale.backend_lanes = vec!["gguf-native".into()];
+        stale.task = Some("text_generation".into());
+        let safe = test_model("local-gpt2");
+        let state = test_state(vec![stale.clone(), safe.clone()], Some(stale.id.clone()));
+
+        assert!(is_runnable_model(&stale));
+        assert!(!is_v1_chat_runnable_model(&stale));
+        assert!(is_v1_chat_runnable_model(&safe));
+
+        let Json(health_body) = v1_health(State(state.clone())).await;
+        assert_eq!(health_body["generation_ready"], true);
+
+        let Json(models_body) = v1_models(State(state.clone())).await;
+        let models = models_body["data"].as_array().unwrap();
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0]["id"], "local-gpt2");
+
+        let Json(runtime_body) = runtime_state(State(state.clone())).await;
+        assert_eq!(runtime_body["loaded_now"], false);
+        assert_eq!(runtime_body["active_model_id"], serde_json::Value::Null);
+        assert_eq!(runtime_body["ready_model_count"], 1);
+
+        let error = activate_model(State(state), Path("stale-local-ready".into()))
+            .await
+            .unwrap_err();
+        assert_api_error(error, StatusCode::NOT_IMPLEMENTED, "not_implemented");
+    }
+
+    #[tokio::test]
+    async fn v1_chat_readiness_excludes_non_generation_tasks() {
+        let mut model = test_model("retrieval-task");
+        model.task = Some("retrieval_context".into());
+        let state = test_state(vec![model], None);
+
+        let Json(health_body) = v1_health(State(state.clone())).await;
+        assert_eq!(health_body["generation_ready"], false);
+        let Json(models_body) = v1_models(State(state)).await;
+        assert_eq!(models_body["data"].as_array().unwrap().len(), 0);
     }
 
     #[tokio::test]

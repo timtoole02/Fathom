@@ -5464,10 +5464,10 @@ pub fn backend_lanes_for_machine(machine: &MachineProfile) -> Vec<BackendLane> {
             id: "external-openai",
             name: "External OpenAI-compatible API",
             kind: BackendLaneKind::ExternalOpenAiCompatible,
-            status: CapabilityStatus::Runnable,
-            summary: "Compatibility lane for remote or already-running OpenAI-compatible APIs; not a local model artifact runtime.",
+            status: CapabilityStatus::Planned,
+            summary: "Metadata-only placeholder lane for remote or already-running OpenAI-compatible APIs. Provider proxying is not implemented yet, so this lane is not runnable.",
             formats: vec![],
-            blockers: vec![],
+            blockers: vec!["external provider proxying is not implemented"],
         },
     ]
 }
@@ -9034,6 +9034,22 @@ mod tests {
         process::Command,
         time::{SystemTime, UNIX_EPOCH},
     };
+
+    #[test]
+    fn external_openai_backend_lane_is_metadata_only_until_proxy_exists() {
+        let lanes = backend_lanes_for_machine(&current_machine_profile());
+        let external = lanes
+            .iter()
+            .find(|lane| lane.id == "external-openai")
+            .expect("external-openai lane should be reported");
+
+        assert_eq!(external.status, CapabilityStatus::Planned);
+        assert!(external.summary.contains("Metadata-only placeholder"));
+        assert!(external
+            .summary
+            .contains("Provider proxying is not implemented"));
+        assert!(!external.blockers.is_empty());
+    }
 
     #[test]
     fn runtime_file_fingerprint_changes_when_file_changes() {
