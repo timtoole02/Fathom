@@ -16,6 +16,7 @@ These boundaries are exercised by `scripts/public_api_contract_smoke.sh` against
 | Unknown embedding model | `404 embedding_model_not_found`, no embedding `data` | public contract smoke |
 | External placeholder chat or activation | `501 external_proxy_not_implemented`, no provider call, no fake response | public contract smoke and server tests |
 | Embedding models in `/v1/models` | excluded from chat/generation model listing | public contract smoke empty-state exclusion |
+| PyTorch `.bin` execution | `501 not_implemented`; blocked because pickle artifacts can execute code, no fake response | public contract smoke with a tiny synthetic local artifact and server tests |
 
 ## Optional fixture/networked evidence boundaries
 
@@ -24,7 +25,6 @@ These boundaries need registered/downloaded model state or catalog fixtures, so 
 | Boundary | Expected behavior | Evidence |
 | --- | --- | --- |
 | GGUF metadata-only chat attempts | `501 not_implemented`; metadata/readiness only, no public/runtime tokenizer execution and no generation | optional backend acceptance smoke |
-| PyTorch `.bin` execution | `501 not_implemented`; blocked because pickle artifacts can execute code | server tests and optional acceptance-style refusal evidence |
 | Unsupported ONNX chat or general ONNX model execution | `501 not_implemented`; ONNX embeddings remain separate and narrow | docs/static contract boundary |
 | Unverified SafeTensors/Hugging Face model execution | `501 not_implemented`; only explicitly verified local lanes are runnable | docs/static contract boundary and runtime tests for supported lanes |
 

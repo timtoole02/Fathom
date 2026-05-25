@@ -39,6 +39,7 @@ REQUIRED_NO_DOWNLOAD_BOUNDARIES = {
     "unknown embedding model",
     "embedding models in /v1/models",
     "external placeholder chat or activation",
+    "PyTorch .bin execution",
 }
 REFUSAL_ONLY_BOUNDARY = "external placeholder chat or activation"
 REFUSAL_ONLY_CODE = "external_proxy_not_implemented"
@@ -291,6 +292,8 @@ def passed_sample() -> dict[str, Any]:
             item.update({"status": 404, "code": "embedding_model_not_found"})
         elif boundary == REFUSAL_ONLY_BOUNDARY:
             item.update({"status": 501, "code": REFUSAL_ONLY_CODE})
+        elif boundary == "PyTorch .bin execution":
+            item.update({"status": 501, "code": "not_implemented"})
         boundary_checks.append(item)
     return {
         "schema": SCHEMA,

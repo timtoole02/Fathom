@@ -71,7 +71,7 @@ if ! curl -fsS "$BASE/v1/health" >/dev/null 2>&1; then
   exit 1
 fi
 
-python3 - "$BASE" "${FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR:-}" <<'PY'
+python3 - "$BASE" "${FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR:-}" "$RUN_DIR" <<'PY'
 import json
 import subprocess
 import sys
@@ -82,6 +82,7 @@ from pathlib import Path
 
 base = sys.argv[1].rstrip("/")
 artifact_dir = Path(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2] else None
+run_dir = Path(sys.argv[3])
 root = Path.cwd()
 manifest_path = root / "docs" / "api" / "public-contract.json"
 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -236,6 +237,7 @@ def verify_manifest_coverage():
         "base64 embeddings",
         "external placeholder chat or activation",
         "embedding models in /v1/models",
+        "PyTorch .bin execution",
         "missing chat model",
         "unknown embedding model",
     }
@@ -365,6 +367,51 @@ try:
     assert_no_chat_success(external_chat)
     record_boundary("external placeholder chat or activation", "external-placeholder-capability-planned-exclusion-activation-chat-refusal", 501, "external_proxy_not_implemented")
 
+    pytorch_fixture = run_dir / "pytorch-bin-fixture"
+    pytorch_fixture.mkdir(parents=True, exist_ok=True)
+    pytorch_artifact = pytorch_fixture / "pytorch_model.bin"
+    pytorch_artifact.write_bytes(b"synthetic pickle-like bytes; do not deserialize")
+    status, pytorch_model = request(
+        "POST",
+        "/api/models/register",
+        {
+            "id": "unsafe-pytorch-bin-smoke",
+            "name": "Unsafe PyTorch bin smoke fixture",
+            "model_path": str(pytorch_artifact),
+        },
+    )
+    assert status == 200, (status, pytorch_model)
+    assert pytorch_model.get("capability_status") == "blocked", pytorch_model
+    assert pytorch_model.get("format") == "PyTorchBin", pytorch_model
+    assert "pytorch-trusted-import" in pytorch_model.get("backend_lanes", []), pytorch_model
+    combined_pytorch_text = " ".join(
+        str(pytorch_model.get(key, "")) for key in ("install_error", "capability_summary")
+    ).lower()
+    assert "pytorch" in combined_pytorch_text, pytorch_model
+    assert "pickle" in combined_pytorch_text, pytorch_model
+    assert "execute code" in combined_pytorch_text, pytorch_model
+    assert "not runnable" in combined_pytorch_text, pytorch_model
+
+    status, models_after_pytorch = request("GET", "/v1/models")
+    assert status == 200, (status, models_after_pytorch)
+    assert not any(model.get("id") == "unsafe-pytorch-bin-smoke" for model in models_after_pytorch.get("data", [])), models_after_pytorch
+
+    status, pytorch_chat = request(
+        "POST",
+        "/v1/chat/completions",
+        {"model": "unsafe-pytorch-bin-smoke", "messages": [{"role": "user", "content": "hello"}]},
+    )
+    assert status == 501, (status, pytorch_chat)
+    assert_error(pytorch_chat, "not_implemented")
+    assert_no_chat_success(pytorch_chat)
+    pytorch_message = pytorch_chat["error"]["message"]
+    assert "PyTorch" in pytorch_message, pytorch_chat
+    assert "pickle" in pytorch_message, pytorch_chat
+    assert ".bin" in pytorch_message, pytorch_chat
+    assert "blocked" in pytorch_message, pytorch_chat
+    assert "No fake inference" in pytorch_message, pytorch_chat
+    record_boundary("PyTorch .bin execution", "synthetic-local-pytorch-bin-registration-and-chat-refusal", 501, "not_implemented")
+
     verify_manifest_coverage()
     write_summary(True)
 except Exception:
@@ -378,5 +425,5 @@ except Exception:
     finally:
         raise
 
-print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, capabilities external metadata-only guard")
+print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, synthetic PyTorch .bin refusal, capabilities external metadata-only guard")
 PY
