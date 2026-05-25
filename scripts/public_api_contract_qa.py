@@ -168,9 +168,12 @@ def assert_boundary_docs() -> None:
 
     evidence_text = read(LAUNCH_EVIDENCE)
     assert_contains(evidence_text, "a32505eadac6539865d224a8b4195656003a0032", "launch evidence commit")
+    assert_contains(evidence_text, "268fc7a36cf386bae5060328fafdaeecd3dd6746", "launch evidence PyTorch refusal commit")
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "What this evidence does not prove", "launch evidence caveats")
     assert_contains(evidence_text, "external_proxy_not_implemented", "launch evidence external placeholder refusal")
+    assert_contains(evidence_text, "synthetic PyTorch `.bin` public-contract refusal smoke", "launch evidence PyTorch refusal scope")
+    assert_contains(evidence_text, "without deserializing pickle bytes or faking inference", "launch evidence PyTorch refusal boundary")
 
     matrix_text = read(REFUSAL_MATRIX)
     matrix_required_phrases = (

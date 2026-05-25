@@ -5,8 +5,9 @@ This snapshot records the current public launch verification state for Fathom. I
 ## Snapshot
 
 - Launch baseline commit: `a32505eadac6539865d224a8b4195656003a0032` (`Close out public launch readiness phase`)
+- Latest no-download refusal evidence commit: `268fc7a36cf386bae5060328fafdaeecd3dd6746` (`Promote PyTorch bin refusal public smoke`)
 - Latest optional API evidence commit: `0655fc073af296f7687a04708053a30b9570fcdf` (`Record MiniLM embeddings API acceptance evidence`)
-- Scope: no-download public `/v1` contract, public launch checklist/evidence snapshot, manifest-driven smoke, sanitized public-contract smoke artifacts, offline artifact QA, CI/static policy wiring, and Phase 16 narrow catalog-backed optional API/runtime evidence for MiniLM embeddings, SmolLM2 135M Instruct, and Qwen2.5 0.5B Instruct.
+- Scope: no-download public `/v1` contract, public launch checklist/evidence snapshot, manifest-driven smoke, sanitized public-contract smoke artifacts, synthetic PyTorch `.bin` public-contract refusal smoke, offline artifact QA, CI/static policy wiring, and Phase 16 narrow catalog-backed optional API/runtime evidence for MiniLM embeddings, SmolLM2 135M Instruct, and Qwen2.5 0.5B Instruct.
 - Fresh-clone QA: passed for the launch baseline and earlier evidence commits. For `128550a`, focused fresh-clone QA passed after reducing cold-build pressure with `CARGO_BUILD_JOBS=1` and shared local target artifacts. Later optional API evidence commits are covered by focused static/public-risk/artifact QA gates and preserved opt-in local artifact QA, not a new full fresh-clone run.
 
 ## Gates represented by the snapshot
@@ -28,6 +29,7 @@ The referenced fresh-clone QA gates verified:
 - The documented no-download public `/v1` routing/refusal contract works against the real backend process in isolated empty state.
 - Public-contract smoke summary artifacts have an offline QA gate for schema, pass/fail semantics, coverage, caveats, and share-safety.
 - External OpenAI-compatible entries remain metadata placeholders; activation and `/v1/chat/completions` refuse with `external_proxy_not_implemented` and no provider call.
+- PyTorch `.bin` artifacts remain blocked: the no-download public contract smoke registers a tiny synthetic local `.bin` artifact, confirms it is excluded from `/v1/models`, and confirms chat refuses with `501 not_implemented` without deserializing pickle bytes or faking inference.
 - Default CI remains scoped to local/offline gates and does not run model downloads, networked acceptance smoke, or non-default ONNX feature tests.
 - The optional Qwen2.5 0.5B Instruct catalog demo is pinned to a specific revision with exact file sizes, SHA256 hashes, Apache-2.0 metadata, local runtime-smoke evidence, and opt-in API acceptance evidence captured outside default CI; see `docs/benchmarks/2026-04-29-qwen25-local-runtime-smoke.md` and `docs/benchmarks/2026-04-29-qwen25-api-acceptance.md`.
 - The optional SmolLM2 135M Instruct catalog demo has opt-in API acceptance evidence for catalog install, `/v1/models`, cold/warm non-streaming chat metrics, and streaming refusal; see `docs/benchmarks/2026-04-29-smollm2-api-acceptance.md`.
