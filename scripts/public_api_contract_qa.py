@@ -223,6 +223,26 @@ def assert_boundary_docs() -> None:
             raise AssertionError(f"docs/api/public-contract.json boundary {name!r} is missing a refusal matrix alias")
         assert_contains(matrix_text, expected, "refusal boundary matrix manifest coverage")
 
+    v1_aliases = {
+        "streaming chat completions": "Streaming chat completions.",
+        "base64 embeddings": "Base64 embeddings are not supported.",
+        "missing chat model": "`400 model_not_found`",
+        "unknown embedding model": "`404 embedding_model_not_found`",
+        "external placeholder chat or activation": "`501 external_proxy_not_implemented`",
+        "embedding models in /v1/models": "Embedding-only models are excluded from `/v1/models`",
+        "GGUF metadata-only chat attempts": "No native GGUF chat/inference",
+        "PyTorch .bin execution": "no PyTorch `.bin` execution",
+        "unsupported ONNX chat or general ONNX model execution": "no ONNX chat/LLM generation",
+        "unverified SafeTensors/Hugging Face model execution": "no arbitrary SafeTensors/Hugging Face execution",
+        "full OpenAI API parity": "not full OpenAI API parity",
+    }
+    for boundary in manifest.get("expected_boundary_errors", []):
+        name = boundary.get("boundary")
+        expected = v1_aliases.get(name)
+        if expected is None:
+            raise AssertionError(f"docs/api/public-contract.json boundary {name!r} is missing a /v1 docs alias")
+        assert_contains(v1_text, expected, "/v1 contract manifest boundary coverage")
+
     assert_contains(v1_text, "refusal-boundary-matrix.md", "v1 contract refusal matrix link")
     assert_contains(launch_text, "refusal-boundary-matrix.md", "launch checklist refusal matrix link")
 
