@@ -7,8 +7,9 @@ This snapshot records the current public launch verification state for Fathom. I
 - Launch baseline commit: `a32505eadac6539865d224a8b4195656003a0032` (`Close out public launch readiness phase`)
 - Latest no-download refusal evidence commit: `687aaebc27fdaa00588dd889d9ae3226f5b26000` (`Promote GGUF refusal to public smoke`)
 - Latest optional API evidence commit: `0655fc073af296f7687a04708053a30b9570fcdf` (`Record MiniLM embeddings API acceptance evidence`)
-- Scope: no-download public `/v1` contract, public launch checklist/evidence snapshot, manifest-driven smoke, sanitized public-contract smoke artifacts, synthetic PyTorch `.bin` public-contract refusal smoke, unsupported ONNX chat/general public-contract refusal smoke, unverified SafeTensors/Hugging Face public-contract refusal smoke, metadata-only GGUF public-contract refusal smoke, offline artifact QA, CI/static policy wiring, and Phase 16 narrow catalog-backed optional API/runtime evidence for MiniLM embeddings, SmolLM2 135M Instruct, and Qwen2.5 0.5B Instruct.
-- Fresh-clone QA: passed for the launch baseline and earlier evidence commits. For `128550a`, focused fresh-clone QA passed after reducing cold-build pressure with `CARGO_BUILD_JOBS=1` and shared local target artifacts. Later optional API evidence commits are covered by focused static/public-risk/artifact QA gates and preserved opt-in local artifact QA, not a new full fresh-clone run.
+- Latest optional artifact QA CI wiring commit: `e9195bc7462999284960f5631d3a74aa5391bffc` (`Wire optional artifact QA into CI`)
+- Scope: no-download public `/v1` contract, public launch checklist/evidence snapshot, manifest-driven smoke, sanitized public-contract smoke artifacts, synthetic PyTorch `.bin` public-contract refusal smoke, unsupported ONNX chat/general public-contract refusal smoke, unverified SafeTensors/Hugging Face public-contract refusal smoke, metadata-only GGUF public-contract refusal smoke, offline public-contract artifact QA, offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests, CI/static policy wiring, and Phase 16 narrow catalog-backed optional API/runtime evidence for MiniLM embeddings, SmolLM2 135M Instruct, and Qwen2.5 0.5B Instruct.
+- Fresh-clone QA: passed for the launch baseline and earlier evidence commits. For `128550a`, focused fresh-clone QA passed after reducing cold-build pressure with `CARGO_BUILD_JOBS=1` and shared local target artifacts. Later optional API evidence and optional artifact-QA CI wiring commits are covered by focused static/public-risk/artifact QA gates and preserved opt-in local artifact QA, not a new full fresh-clone run.
 
 ## Gates represented by the snapshot
 
@@ -22,12 +23,14 @@ The referenced fresh-clone QA gates verified:
 - `cargo fmt --all --check` and `cargo test -q`;
 - manifest-driven public contract smoke in default and artifact modes;
 - public-contract smoke artifact summaries accepted by `scripts/public_contract_smoke_artifact_qa.py`;
+- MiniLM, SmolLM2, and Qwen2.5 optional API acceptance artifact schemas covered by offline self-tests in default CI;
 - frontend install/build/copy QA.
 
 ## What this evidence proves
 
 - The documented no-download public `/v1` routing/refusal contract works against the real backend process in isolated empty state.
 - Public-contract smoke summary artifacts have an offline QA gate for schema, pass/fail semantics, coverage, caveats, and share-safety.
+- Optional MiniLM, SmolLM2, and Qwen2.5 API acceptance artifact QA self-tests run offline in default CI as schema/caveat checks only; they do not download models, start the backend, or add runtime proof.
 - External OpenAI-compatible entries remain metadata placeholders; activation and `/v1/chat/completions` refuse with `external_proxy_not_implemented` and no provider call.
 - PyTorch `.bin` artifacts remain blocked: the no-download public contract smoke registers a tiny synthetic local `.bin` artifact, confirms it is excluded from `/v1/models`, and confirms chat refuses with `501 not_implemented` without deserializing pickle bytes or faking inference.
 - Unsupported ONNX chat/general model execution remains refused: the no-download public contract smoke registers a tiny synthetic local `.onnx` artifact, confirms it is excluded from `/v1/models`, and confirms chat refuses with `501 not_implemented` without enabling ONNX Runtime, loading the graph, or faking inference. The feature-gated MiniLM ONNX embedding path remains separate.
