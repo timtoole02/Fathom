@@ -69,6 +69,103 @@ DANGEROUS_POSITIVE_PATTERNS = [
     ),
 ]
 
+
+def assert_non_empty_string(value: Any, label: str) -> None:
+    if not isinstance(value, str) or not value:
+        raise AssertionError(f"{label} must be a non-empty string")
+
+
+def assert_manifest_shape(manifest: dict[str, Any]) -> None:
+    for key in ("name", "status", "base_url", "scope_note"):
+        assert_non_empty_string(manifest.get(key), f"manifest.{key}")
+
+    endpoints = manifest.get("supported_endpoints")
+    if not isinstance(endpoints, list) or not endpoints:
+        raise AssertionError("manifest.supported_endpoints must be a non-empty list")
+    seen_endpoints: set[tuple[str, str]] = set()
+    for index, endpoint in enumerate(endpoints):
+        if not isinstance(endpoint, dict):
+            raise AssertionError(f"manifest.supported_endpoints[{index}] must be an object")
+        method = endpoint.get("method")
+        path = endpoint.get("path")
+        purpose = endpoint.get("purpose")
+        assert_non_empty_string(method, f"manifest.supported_endpoints[{index}].method")
+        assert_non_empty_string(path, f"manifest.supported_endpoints[{index}].path")
+        assert_non_empty_string(purpose, f"manifest.supported_endpoints[{index}].purpose")
+        if method not in {"GET", "POST"}:
+            raise AssertionError(f"manifest endpoint uses unsupported method {method!r}: {endpoint!r}")
+        if not path.startswith("/v1/"):
+            raise AssertionError(f"manifest supported endpoint must stay in the /v1 public contract: {endpoint!r}")
+        endpoint_key = (method, path)
+        if endpoint_key in seen_endpoints:
+            raise AssertionError(f"manifest duplicate supported endpoint: {method} {path}")
+        seen_endpoints.add(endpoint_key)
+        if "required_boundary" in endpoint:
+            assert_non_empty_string(endpoint.get("required_boundary"), f"manifest.supported_endpoints[{index}].required_boundary")
+
+    envelope = manifest.get("standard_error_envelope")
+    if not isinstance(envelope, dict):
+        raise AssertionError("manifest.standard_error_envelope must be an object")
+    if envelope.get("top_level") != ["error"]:
+        raise AssertionError("manifest.standard_error_envelope.top_level must be ['error']")
+    if envelope.get("error_fields") != ["message", "type", "code", "param"]:
+        raise AssertionError("manifest.standard_error_envelope.error_fields must be message/type/code/param")
+
+    boundaries = manifest.get("expected_boundary_errors")
+    if not isinstance(boundaries, list) or not boundaries:
+        raise AssertionError("manifest.expected_boundary_errors must be a non-empty list")
+    seen_boundaries: set[str] = set()
+    for index, boundary in enumerate(boundaries):
+        if not isinstance(boundary, dict):
+            raise AssertionError(f"manifest.expected_boundary_errors[{index}] must be an object")
+        name = boundary.get("boundary")
+        assert_non_empty_string(name, f"manifest.expected_boundary_errors[{index}].boundary")
+        if name in seen_boundaries:
+            raise AssertionError(f"manifest duplicate expected boundary: {name}")
+        seen_boundaries.add(name)
+
+        has_status = "status" in boundary
+        has_code = "code" in boundary
+        has_expected_behavior = "expected_behavior" in boundary
+        if has_status != has_code:
+            raise AssertionError(f"manifest boundary must include status and code together: {boundary!r}")
+        if has_status:
+            status = boundary.get("status")
+            code = boundary.get("code")
+            if not isinstance(status, int) or status < 400 or status > 599:
+                raise AssertionError(f"manifest boundary status must be a 4xx/5xx integer: {boundary!r}")
+            assert_non_empty_string(code, f"manifest.expected_boundary_errors[{index}].code")
+            if code not in REQUIRED_ERROR_CODES:
+                raise AssertionError(f"manifest boundary code {code!r} is not in the documented public error-code set")
+        if has_expected_behavior:
+            assert_non_empty_string(
+                boundary.get("expected_behavior"),
+                f"manifest.expected_boundary_errors[{index}].expected_behavior",
+            )
+        if not has_status and not has_expected_behavior:
+            raise AssertionError(f"manifest boundary must include status/code or expected_behavior: {boundary!r}")
+        if "request_hint" in boundary:
+            assert_non_empty_string(boundary.get("request_hint"), f"manifest.expected_boundary_errors[{index}].request_hint")
+
+    allowed = manifest.get("non_contract_surfaces_allowed_in_examples")
+    if not isinstance(allowed, list):
+        raise AssertionError("manifest.non_contract_surfaces_allowed_in_examples must be a list")
+    seen_allowed: set[str] = set()
+    for index, item in enumerate(allowed):
+        assert_non_empty_string(item, f"manifest.non_contract_surfaces_allowed_in_examples[{index}]")
+        if item in seen_allowed:
+            raise AssertionError(f"manifest duplicate non-contract example surface: {item}")
+        seen_allowed.add(item)
+
+    ci_policy = manifest.get("ci_policy")
+    if not isinstance(ci_policy, dict):
+        raise AssertionError("manifest.ci_policy must be an object")
+    assert_non_empty_string(ci_policy.get("offline_static_gate"), "manifest.ci_policy.offline_static_gate")
+    for key in ("no_default_network_acceptance_smoke", "no_default_onnx_embeddings_ort", "no_default_model_downloads"):
+        if not isinstance(ci_policy.get(key), bool):
+            raise AssertionError(f"manifest.ci_policy.{key} must be a boolean")
+
+
 def load_manifest() -> dict[str, Any]:
     data = json.loads(MANIFEST.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
@@ -344,6 +441,7 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
 
 def main() -> int:
     manifest = load_manifest()
+    assert_manifest_shape(manifest)
     assert_endpoint_docs(manifest)
     assert_boundary_docs()
     assert_examples_static(manifest)

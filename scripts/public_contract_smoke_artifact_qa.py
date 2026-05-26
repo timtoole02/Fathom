@@ -94,6 +94,8 @@ def manifest_expected_boundaries(manifest: dict[str, Any]) -> dict[str, dict[str
         boundary = item.get("boundary")
         if not isinstance(boundary, str) or not boundary:
             raise AssertionError(f"manifest boundary entry missing boundary name: {item!r}")
+        if boundary in expected:
+            raise AssertionError(f"manifest duplicate boundary entry: {boundary}")
         expected[boundary] = item
     return expected
 
