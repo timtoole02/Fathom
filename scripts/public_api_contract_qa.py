@@ -174,6 +174,8 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "external_proxy_not_implemented", "launch evidence external placeholder refusal")
     assert_contains(evidence_text, "synthetic PyTorch `.bin` public-contract refusal smoke", "launch evidence PyTorch refusal scope")
     assert_contains(evidence_text, "without deserializing pickle bytes or faking inference", "launch evidence PyTorch refusal boundary")
+    assert_contains(evidence_text, "unsupported ONNX chat/general public-contract refusal smoke", "launch evidence ONNX refusal scope")
+    assert_contains(evidence_text, "without enabling ONNX Runtime, loading the graph, or faking inference", "launch evidence ONNX refusal boundary")
 
     matrix_text = read(REFUSAL_MATRIX)
     matrix_required_phrases = (

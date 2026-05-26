@@ -238,6 +238,7 @@ def verify_manifest_coverage():
         "external placeholder chat or activation",
         "embedding models in /v1/models",
         "PyTorch .bin execution",
+        "unsupported ONNX chat or general ONNX model execution",
         "missing chat model",
         "unknown embedding model",
     }
@@ -412,6 +413,50 @@ try:
     assert "No fake inference" in pytorch_message, pytorch_chat
     record_boundary("PyTorch .bin execution", "synthetic-local-pytorch-bin-registration-and-chat-refusal", 501, "not_implemented")
 
+    onnx_fixture = run_dir / "onnx-chat-fixture"
+    onnx_fixture.mkdir(parents=True, exist_ok=True)
+    onnx_artifact = onnx_fixture / "model.onnx"
+    onnx_artifact.write_bytes(b"synthetic onnx bytes; do not load with ONNX Runtime")
+    status, onnx_model = request(
+        "POST",
+        "/api/models/register",
+        {
+            "id": "unsupported-onnx-chat-smoke",
+            "name": "Unsupported ONNX chat smoke fixture",
+            "model_path": str(onnx_artifact),
+        },
+    )
+    assert status == 200, (status, onnx_model)
+    assert onnx_model.get("capability_status") == "planned", onnx_model
+    assert str(onnx_model.get("format", "")).lower() == "onnx", onnx_model
+    assert "onnx" in onnx_model.get("backend_lanes", []), onnx_model
+    combined_onnx_text = " ".join(
+        str(onnx_model.get(key, "")) for key in ("install_error", "capability_summary")
+    ).lower()
+    assert "onnx" in combined_onnx_text, onnx_model
+    assert "not runnable" in combined_onnx_text, onnx_model
+    assert "chat-ready" not in combined_onnx_text, onnx_model
+
+    status, models_after_onnx = request("GET", "/v1/models")
+    assert status == 200, (status, models_after_onnx)
+    assert not any(model.get("id") == "unsupported-onnx-chat-smoke" for model in models_after_onnx.get("data", [])), models_after_onnx
+
+    status, onnx_chat = request(
+        "POST",
+        "/v1/chat/completions",
+        {"model": "unsupported-onnx-chat-smoke", "messages": [{"role": "user", "content": "hello"}]},
+    )
+    assert status == 501, (status, onnx_chat)
+    assert_error(onnx_chat, "not_implemented")
+    assert_no_chat_success(onnx_chat)
+    onnx_message = onnx_chat["error"]["message"]
+    assert "ONNX" in onnx_message, onnx_chat
+    assert "not chat-runnable" in onnx_message, onnx_chat
+    assert "not supported" in onnx_message, onnx_chat
+    assert "non-default pinned MiniLM embedding" in onnx_message, onnx_chat
+    assert "No fake inference" in onnx_message, onnx_chat
+    record_boundary("unsupported ONNX chat or general ONNX model execution", "synthetic-local-onnx-registration-and-chat-refusal", 501, "not_implemented")
+
     verify_manifest_coverage()
     write_summary(True)
 except Exception:
@@ -425,5 +470,5 @@ except Exception:
     finally:
         raise
 
-print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, synthetic PyTorch .bin refusal, capabilities external metadata-only guard")
+print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, capabilities external metadata-only guard")
 PY

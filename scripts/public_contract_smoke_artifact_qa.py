@@ -40,6 +40,7 @@ REQUIRED_NO_DOWNLOAD_BOUNDARIES = {
     "embedding models in /v1/models",
     "external placeholder chat or activation",
     "PyTorch .bin execution",
+    "unsupported ONNX chat or general ONNX model execution",
 }
 REFUSAL_ONLY_BOUNDARY = "external placeholder chat or activation"
 REFUSAL_ONLY_CODE = "external_proxy_not_implemented"
@@ -293,6 +294,8 @@ def passed_sample() -> dict[str, Any]:
         elif boundary == REFUSAL_ONLY_BOUNDARY:
             item.update({"status": 501, "code": REFUSAL_ONLY_CODE})
         elif boundary == "PyTorch .bin execution":
+            item.update({"status": 501, "code": "not_implemented"})
+        elif boundary == "unsupported ONNX chat or general ONNX model execution":
             item.update({"status": 501, "code": "not_implemented"})
         boundary_checks.append(item)
     return {

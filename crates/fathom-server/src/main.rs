@@ -1873,6 +1873,18 @@ async fn v1_chat_completions(
                 "not_implemented",
             );
         }
+        let is_unsupported_onnx_chat_or_general_execution = model
+            .format
+            .as_deref()
+            .is_some_and(|format| format.eq_ignore_ascii_case("ONNX"))
+            || model.backend_lanes.iter().any(|lane| lane == "onnx");
+        if is_unsupported_onnx_chat_or_general_execution {
+            return error_json(
+                StatusCode::NOT_IMPLEMENTED,
+                "This ONNX model is not chat-runnable in Fathom. General ONNX model execution and ONNX chat/generation are not supported; the only ONNX runtime lane is a separate non-default pinned MiniLM embedding fixture path. No fake inference was produced.",
+                "not_implemented",
+            );
+        }
         return error_json(
             StatusCode::NOT_IMPLEMENTED,
             "This model is known to Fathom, but no real local generation backend is implemented for its format yet. No fake inference was produced.",
@@ -5208,6 +5220,59 @@ mod catalog_tests {
         assert!(message.contains(".bin"));
         assert!(message.contains("blocked"));
         assert!(message.contains("trusted-import"));
+        assert!(message.contains("No fake inference"));
+
+        let _ = tokio::fs::remove_dir_all(root).await;
+    }
+
+    #[tokio::test]
+    async fn unsupported_onnx_registration_stays_out_of_models_and_chat() {
+        let root = std::env::temp_dir().join(format!("fathom-server-onnx-{}", Uuid::new_v4()));
+        tokio::fs::create_dir_all(&root).await.unwrap();
+        let artifact_path = root.join("model.onnx");
+        tokio::fs::write(&artifact_path, b"synthetic onnx fixture bytes")
+            .await
+            .unwrap();
+        let state = test_state(vec![], None);
+
+        let Json(model) = register_model(
+            State(state.clone()),
+            Json(RegisterModelRequest {
+                id: Some("unsupported-onnx-chat".into()),
+                name: "Unsupported ONNX chat fixture".into(),
+                model_path: artifact_path.to_string_lossy().to_string(),
+                runtime_model_name: None,
+            }),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(model.status, "registered");
+        assert_eq!(model.capability_status, "planned");
+        assert_eq!(model.format.as_deref(), Some("Onnx"));
+        assert!(model.backend_lanes.iter().any(|lane| lane == "onnx"));
+        let install_error = model.install_error.as_deref().unwrap_or_default();
+        assert!(install_error.contains("ONNX"));
+        assert!(!install_error.to_ascii_lowercase().contains("chat-ready"));
+        assert!(model.capability_summary.contains("not runnable"));
+        assert!(!model.capability_summary.contains("chat-ready"));
+
+        let Json(models_body) = v1_models(State(state.clone())).await;
+        assert_eq!(models_body["data"].as_array().unwrap().len(), 0);
+
+        let (status, Json(body)) = v1_chat_completions(
+            State(state),
+            Json(test_chat_request(Some("unsupported-onnx-chat"))),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
+        assert_v1_error_envelope(&body, "not_implemented");
+        assert_no_fake_chat_success(&body);
+        let message = body["error"]["message"].as_str().unwrap();
+        assert!(message.contains("ONNX"));
+        assert!(message.contains("not chat-runnable"));
+        assert!(message.contains("not supported"));
+        assert!(message.contains("non-default pinned MiniLM embedding"));
         assert!(message.contains("No fake inference"));
 
         let _ = tokio::fs::remove_dir_all(root).await;
