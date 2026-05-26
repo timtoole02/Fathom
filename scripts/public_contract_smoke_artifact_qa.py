@@ -30,6 +30,7 @@ SCOPE_PHRASES = [
     "embedding quality",
     "performance",
     "external proxying",
+    "gguf runtime, tokenizer execution, or generation claim",
     "broad model support",
 ]
 REQUIRED_NO_DOWNLOAD_BOUNDARIES = {
@@ -42,6 +43,7 @@ REQUIRED_NO_DOWNLOAD_BOUNDARIES = {
     "PyTorch .bin execution",
     "unsupported ONNX chat or general ONNX model execution",
     "unverified SafeTensors/Hugging Face model execution",
+    "GGUF metadata-only chat attempts",
 }
 REFUSAL_ONLY_BOUNDARY = "external placeholder chat or activation"
 REFUSAL_ONLY_CODE = "external_proxy_not_implemented"
@@ -300,6 +302,8 @@ def passed_sample() -> dict[str, Any]:
             item.update({"status": 501, "code": "not_implemented"})
         elif boundary == "unverified SafeTensors/Hugging Face model execution":
             item.update({"status": 501, "code": "not_implemented"})
+        elif boundary == "GGUF metadata-only chat attempts":
+            item.update({"status": 501, "code": "not_implemented"})
         boundary_checks.append(item)
     return {
         "schema": SCHEMA,
@@ -307,7 +311,7 @@ def passed_sample() -> dict[str, Any]:
         "commit": "sample",
         "manifest": {"path": "docs/api/public-contract.json", "name": manifest.get("name"), "status": manifest.get("status")},
         "passed": True,
-        "proof_scope": "No-download real-backend routing/refusal smoke only. Does not prove model downloads, generation quality, embedding quality, performance, external proxying, or broad model support.",
+        "proof_scope": "No-download real-backend routing/refusal smoke only. Does not prove model downloads, generation quality, embedding quality, performance, external proxying, a GGUF runtime, tokenizer execution, or generation claim, or broad model support.",
         "endpoint_checks": endpoint_checks,
         "boundary_checks": boundary_checks,
         "deferred_manifest_boundaries": [
@@ -355,7 +359,7 @@ def write_sample(directory: Path, summary: dict[str, Any]) -> None:
             "",
             f"- Commit: `{summary['commit']}`",
             f"- Manifest: `docs/api/public-contract.json` / `{summary['manifest']['name']}` (`{summary['manifest']['status']}`)",
-            "- Scope: no-download real-backend routing/refusal smoke only; does not prove model downloads, generation quality, embedding quality, performance, external proxying, or broad model support.",
+            "- Scope: no-download real-backend routing/refusal smoke only; does not prove model downloads, generation quality, embedding quality, performance, external proxying, a GGUF runtime, tokenizer execution, or generation claim, or broad model support.",
             *failure_note,
             "",
             "## Endpoint checks",

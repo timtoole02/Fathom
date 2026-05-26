@@ -178,6 +178,8 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "without enabling ONNX Runtime, loading the graph, or faking inference", "launch evidence ONNX refusal boundary")
     assert_contains(evidence_text, "unverified SafeTensors/Hugging Face public-contract refusal smoke", "launch evidence SafeTensors/HF refusal scope")
     assert_contains(evidence_text, "without loading weights or faking inference", "launch evidence SafeTensors/HF refusal boundary")
+    assert_contains(evidence_text, "metadata-only GGUF public-contract refusal smoke", "launch evidence GGUF refusal scope")
+    assert_contains(evidence_text, "without making a GGUF runtime, tokenizer execution, or generation claim", "launch evidence GGUF refusal boundary")
 
     matrix_text = read(REFUSAL_MATRIX)
     matrix_required_phrases = (

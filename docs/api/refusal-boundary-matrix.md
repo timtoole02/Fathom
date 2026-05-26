@@ -19,14 +19,11 @@ These boundaries are exercised by `scripts/public_api_contract_smoke.sh` against
 | PyTorch `.bin` execution | `501 not_implemented`; blocked because pickle artifacts can execute code, no fake response | public contract smoke with a tiny synthetic local artifact and server tests |
 | Unsupported ONNX chat or general ONNX model execution | `501 not_implemented`; ONNX embeddings remain separate and narrow, no fake response | public contract smoke with a tiny synthetic local artifact and server tests |
 | Unverified SafeTensors/Hugging Face model execution | `501 not_implemented`; only explicitly verified local lanes are runnable, no fake response | public contract smoke with a tiny synthetic local HF-style SafeTensors package |
+| GGUF metadata-only chat attempts | `501 not_implemented`; metadata/readiness only, no public/runtime tokenizer execution, no runtime weight loading, no dequantization/kernels, and no generation | public contract smoke with a tiny synthetic metadata-only local GGUF file, plus optional backend acceptance smoke |
 
 ## Optional fixture/networked evidence boundaries
 
-These boundaries need registered/downloaded model state or catalog fixtures, so they are intentionally outside default no-download CI. They are covered by optional backend acceptance evidence when that smoke is run locally with network access.
-
-| Boundary | Expected behavior | Evidence |
-| --- | --- | --- |
-| GGUF metadata-only chat attempts | `501 not_implemented`; metadata/readiness only, no public/runtime tokenizer execution and no generation | optional backend acceptance smoke |
+No manifest boundaries currently require optional fixture/networked evidence. Optional backend acceptance smoke still records catalog-backed GGUF metadata-only evidence, but the public no-download smoke now covers the GGUF refusal contract with a tiny synthetic local file.
 
 ## Non-claim boundaries
 

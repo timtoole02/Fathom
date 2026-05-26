@@ -73,6 +73,7 @@ fi
 
 python3 - "$BASE" "${FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR:-}" "$RUN_DIR" <<'PY'
 import json
+import struct
 import subprocess
 import sys
 import urllib.error
@@ -97,7 +98,7 @@ summary = {
         "status": manifest.get("status"),
     },
     "passed": False,
-    "proof_scope": "No-download real-backend routing/refusal smoke only. Does not prove model downloads, generation quality, embedding quality, performance, external proxying, or broad model support.",
+    "proof_scope": "No-download real-backend routing/refusal smoke only. Does not prove model downloads, generation quality, embedding quality, performance, external proxying, a GGUF runtime, tokenizer execution, or generation claim, or broad model support.",
     "endpoint_checks": [],
     "boundary_checks": [],
     "deferred_manifest_boundaries": [],
@@ -147,7 +148,7 @@ def write_summary(passed):
             "",
             f"- Commit: `{summary['commit']}`",
             f"- Manifest: `{summary['manifest']['path']}` / `{summary['manifest']['name']}` (`{summary['manifest']['status']}`)",
-            "- Scope: no-download real-backend routing/refusal smoke only; does not prove model downloads, generation quality, embedding quality, performance, external proxying, or broad model support.",
+            "- Scope: no-download real-backend routing/refusal smoke only; does not prove model downloads, generation quality, embedding quality, performance, external proxying, a GGUF runtime, tokenizer execution, or generation claim, or broad model support.",
             *failure_note,
             "",
             "## Endpoint checks",
@@ -220,6 +221,36 @@ def assert_no_embedding_success(payload):
     assert payload.get("object") != "list", payload
 
 
+def write_gguf_string(buffer, value):
+    encoded = value.encode("utf-8")
+    buffer.extend(struct.pack("<Q", len(encoded)))
+    buffer.extend(encoded)
+
+
+def write_gguf_string_kv(buffer, key, value):
+    write_gguf_string(buffer, key)
+    buffer.extend(struct.pack("<I", 8))
+    write_gguf_string(buffer, value)
+
+
+def write_gguf_u32_kv(buffer, key, value):
+    write_gguf_string(buffer, key)
+    buffer.extend(struct.pack("<I", 4))
+    buffer.extend(struct.pack("<I", value))
+
+
+def write_minimal_metadata_only_gguf(path):
+    buffer = bytearray()
+    buffer.extend(b"GGUF")
+    buffer.extend(struct.pack("<I", 3))
+    buffer.extend(struct.pack("<Q", 0))  # tensor_count
+    buffer.extend(struct.pack("<Q", 3))  # metadata_kv_count
+    write_gguf_string_kv(buffer, "general.architecture", "llama")
+    write_gguf_u32_kv(buffer, "general.alignment", 32)
+    write_gguf_string_kv(buffer, "tokenizer.ggml.model", "llama")
+    path.write_bytes(buffer)
+
+
 def verify_manifest_coverage():
     endpoints = manifest.get("supported_endpoints", [])
     summary["endpoint_checks"] = []
@@ -240,6 +271,7 @@ def verify_manifest_coverage():
         "PyTorch .bin execution",
         "unsupported ONNX chat or general ONNX model execution",
         "unverified SafeTensors/Hugging Face model execution",
+        "GGUF metadata-only chat attempts",
         "missing chat model",
         "unknown embedding model",
     }
@@ -504,6 +536,54 @@ try:
     assert "No fake inference" in safetensors_message, safetensors_chat
     record_boundary("unverified SafeTensors/Hugging Face model execution", "synthetic-local-unverified-safetensors-hf-registration-and-chat-refusal", 501, "not_implemented")
 
+    gguf_fixture = run_dir / "metadata-only-gguf-fixture"
+    gguf_fixture.mkdir(parents=True, exist_ok=True)
+    gguf_artifact = gguf_fixture / "synthetic-metadata-only.gguf"
+    write_minimal_metadata_only_gguf(gguf_artifact)
+    status, gguf_model = request(
+        "POST",
+        "/api/models/register",
+        {
+            "id": "metadata-only-gguf-smoke",
+            "name": "Metadata-only GGUF smoke fixture",
+            "model_path": str(gguf_artifact),
+        },
+    )
+    assert status == 200, (status, gguf_model)
+    assert gguf_model.get("capability_status") == "metadata_only", gguf_model
+    assert gguf_model.get("format") == "Gguf", gguf_model
+    assert "gguf-native" in gguf_model.get("backend_lanes", []), gguf_model
+    combined_gguf_text = " ".join(
+        str(gguf_model.get(key, "")) for key in ("install_error", "capability_summary")
+    ).lower()
+    assert "gguf" in combined_gguf_text, gguf_model
+    assert "metadata-only" in combined_gguf_text, gguf_model
+    assert "not runnable" in combined_gguf_text, gguf_model
+    assert "runtime weight loading" in combined_gguf_text, gguf_model
+    assert "generation" in combined_gguf_text, gguf_model
+
+    status, models_after_gguf = request("GET", "/v1/models")
+    assert status == 200, (status, models_after_gguf)
+    assert not any(model.get("id") == "metadata-only-gguf-smoke" for model in models_after_gguf.get("data", [])), models_after_gguf
+
+    status, gguf_chat = request(
+        "POST",
+        "/v1/chat/completions",
+        {"model": "metadata-only-gguf-smoke", "messages": [{"role": "user", "content": "hello"}]},
+    )
+    assert status == 501, (status, gguf_chat)
+    assert_error(gguf_chat, "not_implemented")
+    assert_no_chat_success(gguf_chat)
+    gguf_message = gguf_chat["error"]["message"]
+    assert "GGUF" in gguf_message, gguf_chat
+    assert "metadata-only" in gguf_message, gguf_chat
+    assert "not runnable" in gguf_message, gguf_chat
+    assert "public/runtime tokenizer execution" in gguf_message, gguf_chat
+    assert "runtime weight loading" in gguf_message, gguf_chat
+    assert "generation" in gguf_message, gguf_chat
+    assert "No fake inference" in gguf_message, gguf_chat
+    record_boundary("GGUF metadata-only chat attempts", "synthetic-local-gguf-metadata-registration-and-chat-refusal", 501, "not_implemented")
+
     verify_manifest_coverage()
     write_summary(True)
 except Exception:
@@ -517,5 +597,5 @@ except Exception:
     finally:
         raise
 
-print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, synthetic unverified SafeTensors/HF refusal, capabilities external metadata-only guard")
+print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, synthetic unverified SafeTensors/HF refusal, synthetic GGUF metadata-only refusal, capabilities external metadata-only guard")
 PY
