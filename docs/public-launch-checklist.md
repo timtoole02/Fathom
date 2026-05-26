@@ -23,6 +23,9 @@ python3 -m py_compile scripts/public_api_contract_qa.py scripts/public_contract_
 python3 scripts/ci_static_policy.py
 python3 scripts/public_api_contract_qa.py
 python3 scripts/public_contract_smoke_artifact_qa.py
+python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py
+python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py
+python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py
 bash -n scripts/public_api_contract_smoke.sh
 bash -n scripts/backend_acceptance_smoke.sh
 bash scripts/public_risk_scan.sh
@@ -75,7 +78,7 @@ Review `summary.md` first, then `summary.json` and the named JSON artifacts. Kee
 
 - The documented no-download public `/v1` contract routes and refusal envelopes work against the real backend process.
 - Default CI stays offline with respect to model downloads, networked acceptance smoke, and non-default ONNX feature tests.
-- Offline artifact QA covers optional public-contract smoke summaries, and the optional backend acceptance smoke can produce share-safe success/failure summaries for the current pinned fixture path when networked downloads succeed.
+- Offline artifact QA covers optional public-contract smoke summaries plus MiniLM, SmolLM2, and Qwen2.5 optional API acceptance artifact schemas; the optional backend acceptance smoke can produce share-safe success/failure summaries for the current pinned fixture path when networked downloads succeed.
 - The current launch evidence snapshot is recorded in [`public-launch-evidence.md`](public-launch-evidence.md).
 
 ## What this launch does not prove

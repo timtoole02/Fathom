@@ -287,8 +287,26 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
     assert_contains(ci_text, "scripts/public_api_contract_qa.py", "CI public API contract QA wiring")
     assert_contains(ci_text, "scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA wiring")
+    assert_contains(ci_text, "scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py", "CI MiniLM optional artifact QA wiring")
+    assert_contains(ci_text, "scripts/smollm2_optional_api_acceptance_artifact_qa.py", "CI SmolLM2 optional artifact QA wiring")
+    assert_contains(ci_text, "scripts/qwen25_optional_api_acceptance_artifact_qa.py", "CI Qwen2.5 optional artifact QA wiring")
     assert_contains(ci_text, expected, "CI public API contract QA run step")
     assert_contains(ci_text, "python3 scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA run step")
+    assert_contains(
+        ci_text,
+        "python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
+        "CI MiniLM optional artifact QA self-test run step",
+    )
+    assert_contains(
+        ci_text,
+        "python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py",
+        "CI SmolLM2 optional artifact QA self-test run step",
+    )
+    assert_contains(
+        ci_text,
+        "python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+        "CI Qwen2.5 optional artifact QA self-test run step",
+    )
     assert_contains(ci_text, "bash scripts/public_api_contract_smoke.sh", "CI public API contract smoke run step")
     assert_contains(ci_text, "bash -n scripts/public_api_contract_smoke.sh", "CI public API contract smoke syntax step")
     if re.search(r"cargo\s+test\b[^\n]*--features\s+[^\n]*onnx-embeddings-ort", ci_text):
