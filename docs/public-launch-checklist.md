@@ -19,10 +19,11 @@ Run these before treating docs/API contract changes as launch-ready:
 
 ```bash
 git diff --check
-python3 -m py_compile scripts/public_api_contract_qa.py scripts/public_contract_smoke_artifact_qa.py
+python3 -m py_compile scripts/backend_acceptance_artifact_qa.py scripts/public_api_contract_qa.py scripts/public_contract_smoke_artifact_qa.py
 python3 scripts/ci_static_policy.py
 python3 scripts/public_api_contract_qa.py
 python3 scripts/public_contract_smoke_artifact_qa.py
+python3 scripts/backend_acceptance_artifact_qa.py
 python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py
 python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py
 python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py

@@ -162,6 +162,7 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
+    assert_contains(launch_text, "scripts/backend_acceptance_artifact_qa.py", "launch checklist backend acceptance artifact QA")
     assert_contains(launch_text, "scripts/backend_acceptance_smoke.sh", "launch checklist optional acceptance smoke")
     assert_contains(launch_text, "public-launch-evidence.md", "launch checklist evidence link")
     assert_contains(launch_text, "What this launch does not prove", "launch checklist boundaries")
@@ -290,11 +291,13 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
     assert_contains(ci_text, "scripts/public_api_contract_qa.py", "CI public API contract QA wiring")
     assert_contains(ci_text, "scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA wiring")
+    assert_contains(ci_text, "scripts/backend_acceptance_artifact_qa.py", "CI backend acceptance artifact QA wiring")
     assert_contains(ci_text, "scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py", "CI MiniLM optional artifact QA wiring")
     assert_contains(ci_text, "scripts/smollm2_optional_api_acceptance_artifact_qa.py", "CI SmolLM2 optional artifact QA wiring")
     assert_contains(ci_text, "scripts/qwen25_optional_api_acceptance_artifact_qa.py", "CI Qwen2.5 optional artifact QA wiring")
     assert_contains(ci_text, expected, "CI public API contract QA run step")
     assert_contains(ci_text, "python3 scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA run step")
+    assert_contains(ci_text, "python3 scripts/backend_acceptance_artifact_qa.py", "CI backend acceptance artifact QA run step")
     assert_contains(
         ci_text,
         "python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
