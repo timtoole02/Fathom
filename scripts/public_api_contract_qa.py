@@ -168,7 +168,7 @@ def assert_boundary_docs() -> None:
 
     evidence_text = read(LAUNCH_EVIDENCE)
     assert_contains(evidence_text, "a32505eadac6539865d224a8b4195656003a0032", "launch evidence commit")
-    assert_contains(evidence_text, "662cf050c12e7fb2dde1a32756e55a10acfa9234", "launch evidence PyTorch refusal commit")
+    assert_contains(evidence_text, "2600c41d8999bcde552a5082fefa95a739256261", "launch evidence latest no-download refusal commit")
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "What this evidence does not prove", "launch evidence caveats")
     assert_contains(evidence_text, "external_proxy_not_implemented", "launch evidence external placeholder refusal")
