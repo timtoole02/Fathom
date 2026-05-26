@@ -239,6 +239,7 @@ def verify_manifest_coverage():
         "embedding models in /v1/models",
         "PyTorch .bin execution",
         "unsupported ONNX chat or general ONNX model execution",
+        "unverified SafeTensors/Hugging Face model execution",
         "missing chat model",
         "unknown embedding model",
     }
@@ -457,6 +458,52 @@ try:
     assert "No fake inference" in onnx_message, onnx_chat
     record_boundary("unsupported ONNX chat or general ONNX model execution", "synthetic-local-onnx-registration-and-chat-refusal", 501, "not_implemented")
 
+    safetensors_fixture = run_dir / "unverified-safetensors-hf-fixture"
+    safetensors_fixture.mkdir(parents=True, exist_ok=True)
+    (safetensors_fixture / "config.json").write_text(
+        json.dumps({"model_type": "llama", "architectures": ["LlamaForCausalLM"]}),
+        encoding="utf-8",
+    )
+    (safetensors_fixture / "tokenizer.json").write_text("{}", encoding="utf-8")
+    (safetensors_fixture / "model.safetensors").write_bytes(b"synthetic safetensors bytes; do not load")
+    status, safetensors_model = request(
+        "POST",
+        "/api/models/register",
+        {
+            "id": "unverified-safetensors-hf-smoke",
+            "name": "Unverified SafeTensors HF smoke fixture",
+            "model_path": str(safetensors_fixture),
+        },
+    )
+    assert status == 200, (status, safetensors_model)
+    assert safetensors_model.get("capability_status") == "planned", safetensors_model
+    assert safetensors_model.get("format") == "SafeTensors", safetensors_model
+    assert "safetensors-hf" in safetensors_model.get("backend_lanes", []), safetensors_model
+    combined_safetensors_text = " ".join(
+        str(safetensors_model.get(key, "")) for key in ("install_error", "capability_summary")
+    ).lower()
+    assert "safetensors" in combined_safetensors_text, safetensors_model
+    assert "not runnable" in combined_safetensors_text, safetensors_model
+
+    status, models_after_safetensors = request("GET", "/v1/models")
+    assert status == 200, (status, models_after_safetensors)
+    assert not any(
+        model.get("id") == "unverified-safetensors-hf-smoke"
+        for model in models_after_safetensors.get("data", [])
+    ), models_after_safetensors
+
+    status, safetensors_chat = request(
+        "POST",
+        "/v1/chat/completions",
+        {"model": "unverified-safetensors-hf-smoke", "messages": [{"role": "user", "content": "hello"}]},
+    )
+    assert status == 501, (status, safetensors_chat)
+    assert_error(safetensors_chat, "not_implemented")
+    assert_no_chat_success(safetensors_chat)
+    safetensors_message = safetensors_chat["error"]["message"]
+    assert "No fake inference" in safetensors_message, safetensors_chat
+    record_boundary("unverified SafeTensors/Hugging Face model execution", "synthetic-local-unverified-safetensors-hf-registration-and-chat-refusal", 501, "not_implemented")
+
     verify_manifest_coverage()
     write_summary(True)
 except Exception:
@@ -470,5 +517,5 @@ except Exception:
     finally:
         raise
 
-print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, capabilities external metadata-only guard")
+print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, synthetic unverified SafeTensors/HF refusal, capabilities external metadata-only guard")
 PY

@@ -176,6 +176,8 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "without deserializing pickle bytes or faking inference", "launch evidence PyTorch refusal boundary")
     assert_contains(evidence_text, "unsupported ONNX chat/general public-contract refusal smoke", "launch evidence ONNX refusal scope")
     assert_contains(evidence_text, "without enabling ONNX Runtime, loading the graph, or faking inference", "launch evidence ONNX refusal boundary")
+    assert_contains(evidence_text, "unverified SafeTensors/Hugging Face public-contract refusal smoke", "launch evidence SafeTensors/HF refusal scope")
+    assert_contains(evidence_text, "without loading weights or faking inference", "launch evidence SafeTensors/HF refusal boundary")
 
     matrix_text = read(REFUSAL_MATRIX)
     matrix_required_phrases = (

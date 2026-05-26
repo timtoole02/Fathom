@@ -41,6 +41,7 @@ REQUIRED_NO_DOWNLOAD_BOUNDARIES = {
     "external placeholder chat or activation",
     "PyTorch .bin execution",
     "unsupported ONNX chat or general ONNX model execution",
+    "unverified SafeTensors/Hugging Face model execution",
 }
 REFUSAL_ONLY_BOUNDARY = "external placeholder chat or activation"
 REFUSAL_ONLY_CODE = "external_proxy_not_implemented"
@@ -73,7 +74,7 @@ OVERCLAIM_PATTERNS = [
     re.compile(r"\b(proxy|proxies|proxied|forwards?|calls?)\b[^\n.]{0,80}\b(external|provider)\b", re.IGNORECASE),
     re.compile(r"\b(GGUF|ONNX|PyTorch|\.bin|SafeTensors|Hugging Face)\b[^\n.]{0,100}\b(runtime|execution|generation|loading|support)\b[^\n.]{0,80}\b(pass|passed|verified|proven|works|ready|enabled)\b", re.IGNORECASE),
 ]
-SAFE_CAVEAT = re.compile(r"\b(no|not|does not|do not|without|unsupported|refused|excluded|metadata placeholders? only|not implemented|not claimed|deferred)\b", re.IGNORECASE)
+SAFE_CAVEAT = re.compile(r"\b(no|not|does not|do not|without|unsupported|refused|refusal|excluded|metadata placeholders? only|not implemented|not claimed|deferred)\b", re.IGNORECASE)
 
 
 def load_manifest() -> dict[str, Any]:
@@ -282,7 +283,7 @@ def passed_sample() -> dict[str, Any]:
     ]
     boundary_checks = []
     for boundary in sorted(REQUIRED_NO_DOWNLOAD_BOUNDARIES):
-        item: dict[str, Any] = {"boundary": boundary, "check": "synthetic-check", "passed": True}
+        item: dict[str, Any] = {"boundary": boundary, "check": "synthetic-refusal-check", "passed": True}
         if boundary == "streaming chat completions":
             item.update({"status": 501, "code": "not_implemented"})
         elif boundary == "base64 embeddings":
@@ -296,6 +297,8 @@ def passed_sample() -> dict[str, Any]:
         elif boundary == "PyTorch .bin execution":
             item.update({"status": 501, "code": "not_implemented"})
         elif boundary == "unsupported ONNX chat or general ONNX model execution":
+            item.update({"status": 501, "code": "not_implemented"})
+        elif boundary == "unverified SafeTensors/Hugging Face model execution":
             item.update({"status": 501, "code": "not_implemented"})
         boundary_checks.append(item)
     return {
