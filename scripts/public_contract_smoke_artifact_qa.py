@@ -24,6 +24,7 @@ SUMMARY_JSON = "public-contract-smoke-summary.json"
 SUMMARY_MD = "public-contract-smoke-summary.md"
 SCHEMA = "fathom.public_contract_smoke.summary.v1"
 GENERATED_AT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$")
+COMMIT_RE = re.compile(r"^(?:[0-9a-f]{7,40}|unknown)$")
 SCOPE_PHRASES = [
     "no-download",
     "routing/refusal",
@@ -220,8 +221,8 @@ def validate_summary_dir(directory: Path) -> None:
     if not isinstance(summary.get("passed"), bool):
         raise AssertionError("summary.passed must be a boolean")
     commit = summary.get("commit")
-    if not isinstance(commit, str) or not commit:
-        raise AssertionError("summary.commit must be a non-empty string")
+    if not isinstance(commit, str) or not COMMIT_RE.fullmatch(commit):
+        raise AssertionError("summary.commit must be a 7-40 character hex git SHA or unknown")
     manifest = summary.get("manifest")
     if not isinstance(manifest, dict):
         raise AssertionError("summary.manifest must be an object")
@@ -383,7 +384,7 @@ def passed_sample() -> dict[str, Any]:
     return {
         "schema": SCHEMA,
         "generated_at": "2026-04-27T00:00:00Z",
-        "commit": "sample",
+        "commit": "abcdef1",
         "manifest": {"path": "docs/api/public-contract.json", "name": manifest.get("name"), "status": manifest.get("status")},
         "passed": True,
         "proof_scope": "No-download real-backend routing/refusal smoke only. Does not prove model downloads, generation quality, embedding quality, performance, external proxying, a GGUF runtime, tokenizer execution, or generation claim, or broad model support.",
@@ -521,7 +522,7 @@ def run_self_check() -> None:
         bad_markdown = root / "bad-markdown"
         write_sample(bad_markdown, passed_sample())
         (bad_markdown / SUMMARY_MD).write_text(
-            (bad_markdown / SUMMARY_MD).read_text(encoding="utf-8").replace("Commit: `sample`", "Commit: `stale`"),
+            (bad_markdown / SUMMARY_MD).read_text(encoding="utf-8").replace("Commit: `abcdef1`", "Commit: `stale`"),
             encoding="utf-8",
         )
         try:
@@ -531,6 +532,18 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("markdown/JSON consistency self-check did not fail")
+
+        bad_commit = root / "bad-commit"
+        mutated = passed_sample()
+        mutated["commit"] = "not-a-sha"
+        write_sample(bad_commit, mutated)
+        try:
+            validate_summary_dir(bad_commit)
+        except AssertionError as exc:
+            if "summary.commit" not in str(exc):
+                raise
+        else:
+            raise AssertionError("commit shape self-check did not fail")
 
         bad_generated_at = root / "bad-generated-at"
         mutated = passed_sample()
