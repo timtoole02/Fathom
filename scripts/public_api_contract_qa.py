@@ -137,6 +137,7 @@ def assert_manifest_shape(manifest: dict[str, Any]) -> None:
             assert_non_empty_string(code, f"manifest.expected_boundary_errors[{index}].code")
             if code not in REQUIRED_ERROR_CODES:
                 raise AssertionError(f"manifest boundary code {code!r} is not in the documented public error-code set")
+            assert_non_empty_string(boundary.get("request_hint"), f"manifest.expected_boundary_errors[{index}].request_hint")
         if has_expected_behavior:
             assert_non_empty_string(
                 boundary.get("expected_behavior"),
@@ -144,7 +145,7 @@ def assert_manifest_shape(manifest: dict[str, Any]) -> None:
             )
         if not has_status and not has_expected_behavior:
             raise AssertionError(f"manifest boundary must include status/code or expected_behavior: {boundary!r}")
-        if "request_hint" in boundary:
+        if "request_hint" in boundary and not has_status:
             assert_non_empty_string(boundary.get("request_hint"), f"manifest.expected_boundary_errors[{index}].request_hint")
 
     allowed = manifest.get("non_contract_surfaces_allowed_in_examples")

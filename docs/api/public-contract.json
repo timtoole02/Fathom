@@ -65,6 +65,7 @@
     },
     {
       "boundary": "external placeholder chat or activation",
+      "request_hint": "external placeholder activation or chat model id",
       "status": 501,
       "code": "external_proxy_not_implemented"
     },
@@ -74,21 +75,25 @@
     },
     {
       "boundary": "GGUF metadata-only chat attempts",
+      "request_hint": "metadata-only GGUF model id in /v1/chat/completions",
       "status": 501,
       "code": "not_implemented"
     },
     {
       "boundary": "PyTorch .bin execution",
+      "request_hint": "PyTorch .bin model id in /v1/chat/completions",
       "status": 501,
       "code": "not_implemented"
     },
     {
       "boundary": "unsupported ONNX chat or general ONNX model execution",
+      "request_hint": "unsupported ONNX model id in /v1/chat/completions",
       "status": 501,
       "code": "not_implemented"
     },
     {
       "boundary": "unverified SafeTensors/Hugging Face model execution",
+      "request_hint": "unverified SafeTensors/Hugging Face model id in /v1/chat/completions",
       "status": 501,
       "code": "not_implemented"
     },
