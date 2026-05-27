@@ -99,6 +99,11 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError(f"check name must be non-empty text: {check!r}")
         if not isinstance(artifact, str) or not artifact:
             raise AssertionError(f"check artifact must be non-empty text: {check!r}")
+        artifact_path = Path(artifact)
+        if artifact_path.is_absolute() or ".." in artifact_path.parts:
+            raise AssertionError(f"check artifact must be a relative artifact path: {artifact!r}")
+        if not (directory / artifact_path).is_file():
+            raise AssertionError(f"check artifact is missing from artifact directory: {artifact!r}")
         if name in seen_check_names:
             raise AssertionError(f"duplicate check name: {name!r}")
         if artifact in seen_check_artifacts:
@@ -214,6 +219,11 @@ def write_sample(directory: Path, *, passed: bool) -> None:
         (directory / "failure-model-dir-snapshot.json").write_text(
             json.dumps({"model_dir_snapshot": []}, indent=2) + "\n", encoding="utf-8"
         )
+    for check in checks:
+        (directory / check["artifact"]).write_text(
+            json.dumps({"sample_artifact": check["name"]}, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     (directory / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (directory / "summary.local.json").write_text(
         json.dumps(
@@ -322,6 +332,17 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("duplicate check self-check did not fail")
+
+        missing_artifact = root / "missing-check-artifact"
+        write_sample(missing_artifact, passed=True)
+        (missing_artifact / "05e-v1-chat-external-placeholder-refusal.json").unlink()
+        try:
+            validate_summary_dir(missing_artifact)
+        except AssertionError as exc:
+            if "check artifact is missing" not in str(exc):
+                raise
+        else:
+            raise AssertionError("missing check artifact self-check did not fail")
 
 
 def main() -> None:
