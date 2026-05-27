@@ -352,6 +352,10 @@ def validate_summary_dir(directory: Path) -> None:
         if not isinstance(reason, str) or "requires downloaded/registered model state" not in reason or "outside the no-download smoke" not in reason:
             raise AssertionError(f"deferred boundary reason must preserve no-download caveat: {item!r}")
 
+    checked_and_deferred = sorted(set(boundary_by_name) & seen_deferred_boundaries)
+    if checked_and_deferred:
+        raise AssertionError(f"boundary cannot be both checked and deferred: {checked_and_deferred}")
+
     if REFUSAL_ONLY_BOUNDARY in boundary_by_name:
         external = boundary_by_name[REFUSAL_ONLY_BOUNDARY]
         if external.get("status") != 501 or external.get("code") != REFUSAL_ONLY_CODE:
@@ -687,6 +691,25 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("unexpected deferred boundary self-check did not fail")
+
+        checked_deferred_overlap = root / "checked-deferred-overlap"
+        mutated = failed_sample()
+        checked_boundary = passed_sample()["boundary_checks"][0]
+        mutated["boundary_checks"] = [checked_boundary]
+        mutated["deferred_manifest_boundaries"] = [
+            {
+                "boundary": checked_boundary["boundary"],
+                "reason": "requires downloaded/registered model state or is a non-claim boundary outside the no-download smoke",
+            }
+        ]
+        write_sample(checked_deferred_overlap, mutated)
+        try:
+            validate_summary_dir(checked_deferred_overlap)
+        except AssertionError as exc:
+            if "both checked and deferred" not in str(exc):
+                raise
+        else:
+            raise AssertionError("checked/deferred boundary overlap self-check did not fail")
 
         duplicate_endpoint = root / "duplicate-endpoint"
         mutated = passed_sample()
