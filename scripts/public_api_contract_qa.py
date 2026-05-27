@@ -13,6 +13,7 @@ import argparse
 from datetime import date, datetime
 import json
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -41,6 +42,16 @@ DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST,
 OPTIONAL_DOC_PATHS = [MINILM_OPTIONAL_ACCEPTANCE, SMOLLM2_OPTIONAL_ACCEPTANCE, QWEN25_OPTIONAL_ACCEPTANCE]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
 TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [CI, API_CONTRACT_ISSUE_TEMPLATE]
+OFFLINE_QA_PYTHON_PATHS = (
+    "scripts/api_client_examples_regression.py",
+    "scripts/backend_acceptance_artifact_qa.py",
+    "scripts/ci_static_policy.py",
+    "scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
+    "scripts/public_api_contract_qa.py",
+    "scripts/public_contract_smoke_artifact_qa.py",
+    "scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+    "scripts/smollm2_optional_api_acceptance_artifact_qa.py",
+)
 OPTIONAL_ACCEPTANCE_DOCS = (
     (
         MINILM_OPTIONAL_ACCEPTANCE,
@@ -251,6 +262,36 @@ def assert_contains(text: str, needle: str, label: str) -> None:
         raise AssertionError(f"{label} missing {needle!r}")
 
 
+def py_compile_command_paths(text: str, label: str) -> set[str]:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if not line.strip().startswith("python3 -m py_compile"):
+            continue
+        command_lines = [line.strip()]
+        cursor = index
+        while command_lines[-1].endswith("\\"):
+            cursor += 1
+            if cursor >= len(lines):
+                raise AssertionError(f"{label} has an unterminated py_compile continuation")
+            command_lines.append(lines[cursor].strip())
+        command = " ".join(part.removesuffix("\\").strip() for part in command_lines)
+        try:
+            tokens = shlex.split(command)
+        except ValueError as exc:
+            raise AssertionError(f"{label} has an invalid py_compile command: {exc}") from exc
+        if tokens[:3] != ["python3", "-m", "py_compile"]:
+            raise AssertionError(f"{label} has an unexpected py_compile command shape")
+        return set(tokens[3:])
+    raise AssertionError(f"{label} is missing a python3 -m py_compile command")
+
+
+def assert_launch_checklist_python_syntax_gate() -> None:
+    paths = py_compile_command_paths(read(LAUNCH_CHECKLIST), "launch checklist")
+    missing = sorted(set(OFFLINE_QA_PYTHON_PATHS) - paths)
+    if missing:
+        raise AssertionError(f"launch checklist py_compile gate is missing offline QA helper(s): {missing}")
+
+
 def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
     try:
         output = subprocess.check_output(
@@ -383,6 +424,7 @@ def assert_boundary_docs() -> None:
     ]
     for gate in checklist_required_gates:
         assert_contains(launch_text, gate, "launch checklist no-download gates")
+    assert_launch_checklist_python_syntax_gate()
     assert_contains(read(BACKEND_QUICKSTART), "scripts/public_api_contract_smoke.sh", "backend quickstart public contract smoke")
     assert_contains(read(CONTRIBUTING), "scripts/public_api_contract_smoke.sh", "contributing public contract smoke")
     assert_contains(readme_text, "docs/public-launch-checklist.md", "README launch checklist link")
@@ -641,6 +683,8 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
+    for path in OFFLINE_QA_PYTHON_PATHS:
+        assert_contains(ci_text, path, "CI Python offline QA syntax step")
     assert_contains(ci_text, "scripts/public_api_contract_qa.py", "CI public API contract QA wiring")
     assert_contains(ci_text, "scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA wiring")
     assert_contains(ci_text, "scripts/backend_acceptance_artifact_qa.py", "CI backend acceptance artifact QA wiring")
