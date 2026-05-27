@@ -333,6 +333,8 @@ def assert_boundary_docs() -> None:
         "request hints for status/code refusal boundaries to be exposed in the refusal matrix",
         "launch evidence refusal request hint gate",
     )
+    assert_contains(evidence_text, "public overclaim scanner self-test coverage", "launch evidence overclaim self-test scope")
+    assert_contains(evidence_text, "synthetic refused/unsupported public overclaim examples", "launch evidence overclaim self-test proof")
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(
         evidence_text,
