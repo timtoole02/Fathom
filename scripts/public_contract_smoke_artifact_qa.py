@@ -437,6 +437,20 @@ def run_self_check() -> None:
         else:
             raise AssertionError("manifest status/code drift self-check did not fail")
 
+        missing_boundary = root / "missing-boundary"
+        mutated = passed_sample()
+        mutated["boundary_checks"] = [
+            item for item in mutated["boundary_checks"] if item["boundary"] != "GGUF metadata-only chat attempts"
+        ]
+        write_sample(missing_boundary, mutated)
+        try:
+            validate_summary_dir(missing_boundary)
+        except AssertionError as exc:
+            if "missing no-download boundary coverage" not in str(exc):
+                raise
+        else:
+            raise AssertionError("missing required no-download boundary self-check did not fail")
+
         bad_markdown = root / "bad-markdown"
         write_sample(bad_markdown, passed_sample())
         (bad_markdown / SUMMARY_MD).write_text(
