@@ -9,6 +9,7 @@ with docs/api/public-contract.json.
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import subprocess
@@ -464,13 +465,47 @@ def assert_examples_static(manifest: dict[str, Any]) -> None:
             raise AssertionError(f"{path.relative_to(ROOT)} uses endpoints outside public examples allow-list: {sorted(unexpected)}")
 
 
-def assert_no_positive_overclaims() -> None:
-    for path in TEXT_PATHS:
-        text = read(path)
+def positive_overclaim_failures(items: list[tuple[str, str]]) -> list[str]:
+    failures = []
+    for label_path, text in items:
         for line_no, line in enumerate(text.splitlines(), start=1):
             for label, pattern, caveat in DANGEROUS_POSITIVE_PATTERNS:
                 if pattern.search(line) and not caveat.search(line):
-                    raise AssertionError(f"{path.relative_to(ROOT)}:{line_no}: {label}: {line.strip()}")
+                    failures.append(f"{label_path}:{line_no}: {label}: {line.strip()}")
+    return failures
+
+
+def assert_no_positive_overclaims() -> None:
+    items = [(str(path.relative_to(ROOT)), read(path)) for path in TEXT_PATHS]
+    failures = positive_overclaim_failures(items)
+    if failures:
+        raise AssertionError(failures[0])
+
+
+def run_self_test() -> None:
+    bad_lines = [
+        ("docs/api/example.md", "Fathom supports streaming chat completions for clients."),
+        ("docs/api/example.md", "The API proxies external provider requests."),
+        ("README.md", "Fathom is a complete OpenAI compatible replacement."),
+        ("README.md", "Fathom supports arbitrary SafeTensors runtime execution."),
+        ("docs/api/example.md", "The embeddings endpoint supports base64 embeddings."),
+    ]
+    failures = positive_overclaim_failures(bad_lines)
+    if len(failures) != len(bad_lines):
+        raise AssertionError("public API contract QA self-test did not reject every unsafe overclaim example")
+
+    allowed_lines = [
+        ("docs/api/example.md", "Streaming chat completions are not supported."),
+        ("docs/api/example.md", "External entries are metadata placeholders only and are not proxied."),
+        ("README.md", "Fathom is not full OpenAI API parity."),
+        ("README.md", "Arbitrary SafeTensors execution is refused."),
+        ("docs/api/example.md", "Base64 embeddings are unsupported."),
+    ]
+    allowed_failures = positive_overclaim_failures(allowed_lines)
+    if allowed_failures:
+        raise AssertionError(
+            "public API contract QA self-test rejected allowed caveated examples:\n" + "\n".join(allowed_failures)
+        )
 
 
 def assert_smoke_manifest_wiring() -> None:
@@ -494,6 +529,7 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     assert_contains(ci_text, "scripts/smollm2_optional_api_acceptance_artifact_qa.py", "CI SmolLM2 optional artifact QA wiring")
     assert_contains(ci_text, "scripts/qwen25_optional_api_acceptance_artifact_qa.py", "CI Qwen2.5 optional artifact QA wiring")
     assert_contains(ci_text, expected, "CI public API contract QA run step")
+    assert_contains(ci_text, "python3 scripts/public_api_contract_qa.py --self-test", "CI public API contract QA self-test run step")
     assert_contains(ci_text, "python3 scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA run step")
     assert_contains(ci_text, "python3 scripts/backend_acceptance_artifact_qa.py", "CI backend acceptance artifact QA run step")
     assert_contains(
@@ -521,6 +557,14 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Static QA for Fathom's public launch API contract")
+    parser.add_argument("--self-test", action="store_true", help="run synthetic public-overclaim scanner regression checks")
+    args = parser.parse_args()
+    if args.self_test:
+        run_self_test()
+        print("public API contract QA self-test passed")
+        return 0
+
     manifest = load_manifest()
     assert_manifest_shape(manifest)
     assert_endpoint_docs(manifest)
