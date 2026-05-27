@@ -24,6 +24,7 @@ def evaluate_ci_text(text: str) -> list[str]:
         failures.append("default CI must not run onnx-embeddings-ort feature tests")
 
     saw_public_contract_smoke = False
+    saw_ci_static_policy_self_test = False
     for line_number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
         if "scripts/backend_acceptance_smoke.sh" in line:
@@ -38,9 +39,13 @@ def evaluate_ci_text(text: str) -> list[str]:
                 failures.append(
                     f"default CI may only syntax-check or run public_api_contract_smoke.sh, line {line_number}: {stripped}"
                 )
+        if re.search(r"\bpython3\s+scripts/ci_static_policy\.py\s+--self-test\b", stripped):
+            saw_ci_static_policy_self_test = True
 
     if not saw_public_contract_smoke:
         failures.append("default CI must run the no-download public API contract smoke")
+    if not saw_ci_static_policy_self_test:
+        failures.append("default CI must run the CI static policy self-test")
 
     if re.search(r"FATHOM_ACCEPTANCE_KEEP_ARTIFACTS|FATHOM_ACCEPTANCE_PORT|backend_acceptance_smoke\.sh\s*$", text):
         failures.append("default CI must not invoke networked backend acceptance smoke")
@@ -73,10 +78,11 @@ jobs:
       run: bash scripts/public_api_contract_smoke.sh
   static-safety:
     steps:
-      run: |
-        bash -n scripts/public_api_contract_smoke.sh
-        bash -n scripts/backend_acceptance_smoke.sh
-      run: echo done
+      - run: |
+          bash -n scripts/public_api_contract_smoke.sh
+          bash -n scripts/backend_acceptance_smoke.sh
+      - run: python3 scripts/ci_static_policy.py --self-test
+      - run: echo done
 """
     assert_policy_passes(valid)
 
@@ -89,6 +95,7 @@ jobs:
         "cache action": "uses: actions/cache@v4\nrun: bash scripts/public_api_contract_smoke.sh",
         "broad target cache": "target:\n  path: target\nrun: bash scripts/public_api_contract_smoke.sh",
         "missing public smoke": "run: cargo test -q",
+        "missing static policy self-test": "run: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py",
     }
     for label, text in cases.items():
         if not evaluate_ci_text(text):

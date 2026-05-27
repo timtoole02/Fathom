@@ -93,6 +93,8 @@ jobs:
           python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py
       - name: Run CI static policy
         run: python3 scripts/ci_static_policy.py
+      - name: Run CI static policy self-test
+        run: python3 scripts/ci_static_policy.py --self-test
       - name: Run public risk scan self-test
         run: bash scripts/public_risk_scan.sh --self-test
       - name: Run public risk scan
