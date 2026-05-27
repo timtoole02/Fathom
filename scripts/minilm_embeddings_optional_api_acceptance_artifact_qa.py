@@ -24,6 +24,26 @@ EXPECTED_FILES={
 }
 EXPECTED_TOTAL_BYTES=91_336_236
 REQUIRED={'01-v1-health.json','02-install-minilm.json','03-api-embedding-models.json','04-v1-models-exclude-minilm.json','05-v1-embeddings-float.json','06-v1-embeddings-base64-refusal.json','07-chat-embedding-model-refusal.json','summary.json','summary.md'}
+REQUIRED_CAVEAT_PHRASES=(
+    'Optional local',
+    'embedding quality',
+    'retrieval quality',
+    'latency',
+    'throughput',
+    'production readiness',
+    'legal suitability',
+    'arbitrary Hugging Face',
+    'ONNX '+'chat',
+    'streaming',
+    'external proxying',
+    'full OpenAI API parity',
+    'GGUF tokenizer execution',
+    'GGUF '+'runtime',
+    'weight loading',
+    'generation',
+    'dequantization',
+    'inference',
+)
 LOCAL_PATH_PATTERNS=[re.compile('/'+'Users'+'/',re.I),re.compile('/'+'private'+'/'+'tmp',re.I),re.compile('/'+'opt'+'/'+'homebrew',re.I)]
 OVERCLAIMS=re.compile(r'(quality\s+proved|production\s+ready|legal\s+(approved|review)|full\s+OpenAI\s+parity|arbitrary\s+(Hugging\s+Face|SafeTensors)|GGUF\s+(runtime|generation|inference|tokenizer\s+execution)|ONNX\s+chat\s+(works|supported)|external\s+provider\s+(proxy|call)\s+(works|succeeded|enabled))',re.I)
 
@@ -39,6 +59,11 @@ def assert_share_safe(path:Path)->None:
     for line in text.splitlines():
         if OVERCLAIMS.search(line) and not re.search(r'\b(no|not|does not|without|doesn\'t)\b',line,re.I):
             raise AssertionError(f'{path.name} contains an overclaim')
+
+def assert_required_caveats(text:str,label:str)->None:
+    lowered=text.lower()
+    missing=[phrase for phrase in REQUIRED_CAVEAT_PHRASES if phrase.lower() not in lowered]
+    if missing: raise AssertionError(f'{label} missing caveat phrase(s): {missing}')
 
 def validate_install(install:dict[str,Any])->None:
     if install.get('id')!=MODEL_ID or install.get('task')!='text_embedding': raise AssertionError('install identity/task mismatch')
@@ -76,8 +101,8 @@ def validate_summary(directory:Path)->None:
         if not isinstance(v,str) or v.startswith('/'): raise AssertionError(f'summary.{k} not share-safe')
     if summary.get('model_id')!=MODEL_ID or summary.get('repo_id')!=REPO_ID or summary.get('revision')!=REVISION: raise AssertionError('summary model identity mismatch')
     caveats='\n'.join(str(x) for x in summary.get('caveats') or [])
-    for phrase in ('Optional local','Does not prove embedding quality','arbitrary Hugging Face','GGUF'):
-        if phrase not in caveats: raise AssertionError(f'missing caveat {phrase}')
+    assert_required_caveats(caveats,'summary.json caveats')
+    assert_required_caveats((directory/'summary.md').read_text(),'summary.md')
     validate_install(load_json(directory/'02-install-minilm.json'))
     emb_models=load_json(directory/'03-api-embedding-models.json')
     if MODEL_ID not in [i.get('id') for i in emb_models.get('items',[])]: raise AssertionError('embedding models missing MiniLM')
@@ -102,9 +127,9 @@ def write_sample(d:Path)->None:
     (d/'06-v1-embeddings-base64-refusal.json').write_text(json.dumps({'error':{'code':'invalid_request','type':'invalid_request','message':'base64 unsupported','param':None}},indent=2)+'\n')
     (d/'07-chat-embedding-model-refusal.json').write_text(json.dumps({'error':{'code':'not_implemented','type':'not_implemented','message':'not chat','param':None}},indent=2)+'\n')
     checks=[{'name':n,'artifact':a,'description':n,'expected_http_status':200,'http_status':200,'status':'passed'} for n,a in [('health','01-v1-health.json'),('install_minilm','02-install-minilm.json'),('embedding_models_include_minilm','03-api-embedding-models.json'),('v1_models_exclude_minilm','04-v1-models-exclude-minilm.json'),('v1_embeddings_float','05-v1-embeddings-float.json'),('base64_refusal','06-v1-embeddings-base64-refusal.json'),('chat_embedding_refusal','07-chat-embedding-model-refusal.json')]]
-    summary={'schema':'fathom.minilm_embeddings_optional_api_acceptance.summary.v1','passed':True,'repo_commit':'sample','started_at':'2026-04-29T00:00:00Z','finished_at':'2026-04-29T00:00:01Z','base_url':'http://127.0.0.1:18187','artifact_dir':'.','model_dir':'models/','state_dir':'state/','log_dir':'logs/','model_id':MODEL_ID,'repo_id':REPO_ID,'revision':REVISION,'checks':checks,'caveats':['Optional local embedding evidence only; not default CI.','Does not prove embedding quality, arbitrary Hugging Face execution, ONNX chat, streaming, external proxying, or full OpenAI API parity.','Does not claim GGUF tokenizer execution, GGUF runtime, generation, or inference.']}
+    summary={'schema':'fathom.minilm_embeddings_optional_api_acceptance.summary.v1','passed':True,'repo_commit':'sample','started_at':'2026-04-29T00:00:00Z','finished_at':'2026-04-29T00:00:01Z','base_url':'http://127.0.0.1:18187','artifact_dir':'.','model_dir':'models/','state_dir':'state/','log_dir':'logs/','model_id':MODEL_ID,'repo_id':REPO_ID,'revision':REVISION,'checks':checks,'caveats':['Optional local embedding evidence only; not default CI.','Does not prove embedding quality, retrieval quality, latency, throughput, production readiness, legal suitability, arbitrary Hugging Face execution, ONNX chat, streaming, external proxying, or full OpenAI API parity.','Does not claim GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference.']}
     (d/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
-    (d/'summary.md').write_text('# MiniLM embeddings optional API acceptance artifacts\n\n- Result: `passed`\n- Artifact directory: `.`\n- State directory: `state/`\n- Model directory: `models/`\n- Server log: `logs/server.log`\n\n## What this does not prove\n\nNo embedding quality, arbitrary Hugging Face execution, ONNX chat, external proxying, full OpenAI API parity, or GGUF runtime claim.\n')
+    (d/'summary.md').write_text('# MiniLM embeddings optional API acceptance artifacts\n\n- Result: `passed`\n- Scope: optional local embedding API evidence only; not default CI.\n- Artifact directory: `.`\n- State directory: `state/`\n- Model directory: `models/`\n- Server log: `logs/server.log`\n\n## What this does not prove\n\n- No embedding quality, retrieval quality, latency, throughput, production readiness, legal suitability, arbitrary Hugging Face execution, ONNX chat/general execution, streaming, external proxying, or full OpenAI API parity claim.\n- No public/runtime GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference claim.\n')
 
 def main():
     import sys
@@ -112,6 +137,16 @@ def main():
     if not dirs:
         with tempfile.TemporaryDirectory() as tmp:
             d=Path(tmp)/'sample'; write_sample(d); validate_summary(d)
+            bad=Path(tmp)/'missing-caveat'; write_sample(bad)
+            summary=load_json(bad/'summary.json')
+            summary['caveats']=[str(item).replace('retrieval quality, ','') for item in summary['caveats']]
+            (bad/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+            try:
+                validate_summary(bad)
+            except AssertionError as exc:
+                if 'retrieval quality' not in str(exc): raise
+            else:
+                raise AssertionError('missing caveat self-check did not fail')
         print('MiniLM embeddings optional API acceptance artifact QA self-test passed'); return
     for d in dirs: validate_summary(d)
     print('MiniLM embeddings optional API acceptance artifact QA passed')
