@@ -47,6 +47,25 @@ OVERCLAIMS = re.compile(
     r"external\s+provider\s+(proxy|call)\s+(works|succeeded|enabled))",
     re.IGNORECASE,
 )
+REQUIRED_CAVEAT_PHRASES = (
+    "Optional local",
+    "generation quality",
+    "latency",
+    "throughput",
+    "production readiness",
+    "legal suitability",
+    "broad SmolLM2/Llama-style compatibility",
+    "arbitrary Hugging Face",
+    "streaming",
+    "external proxying",
+    "full OpenAI API parity",
+    "GGUF tokenizer execution",
+    "GGUF " + "runtime",
+    "weight loading",
+    "generation",
+    "dequantization",
+    "inference",
+)
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -69,6 +88,13 @@ def assert_share_safe(path: Path) -> None:
     for line in text.splitlines():
         if OVERCLAIMS.search(line) and not re.search(r"\b(no|not|does not|without|doesn't)\b", line, re.IGNORECASE):
             raise AssertionError(f"{path.name} contains an overclaim")
+
+
+def assert_required_caveats(text: str, label: str) -> None:
+    lowered = text.lower()
+    missing = [phrase for phrase in REQUIRED_CAVEAT_PHRASES if phrase.lower() not in lowered]
+    if missing:
+        raise AssertionError(f"{label} missing caveat phrase(s): {missing}")
 
 
 def error_code(payload: dict[str, Any]) -> str | None:
@@ -160,13 +186,11 @@ def validate_summary(directory: Path) -> None:
     if summary.get("model_id") != MODEL_ID or summary.get("repo_id") != REPO_ID or summary.get("revision") != REVISION:
         raise AssertionError("summary model identity mismatch")
     caveats = "\n".join(str(item) for item in summary.get("caveats") or [])
-    required_caveats = ["Optional local", "Does not prove generation quality", "arbitrary Hugging Face", "GGUF"]
-    for phrase in required_caveats:
-        if phrase not in caveats:
-            raise AssertionError(f"summary caveats missing {phrase!r}")
+    assert_required_caveats(caveats, "summary.json caveats")
     md = (directory / "summary.md").read_text(encoding="utf-8")
     if "Result: `passed`" not in md or "What this does not prove" not in md:
         raise AssertionError("summary.md must clearly mark pass and caveats")
+    assert_required_caveats(md, "summary.md")
 
     checks = summary.get("checks")
     if not isinstance(checks, list) or len(checks) < 6:
@@ -271,20 +295,22 @@ def write_sample(directory: Path) -> None:
         "checks": checks,
         "caveats": [
             "Optional local larger-demo evidence only; not default CI.",
-            "Does not prove generation quality, arbitrary Hugging Face execution, streaming, external proxying, or full OpenAI API parity.",
-            "Does not claim GGUF tokenizer execution, GGUF runtime, generation, or inference.",
+            "Does not prove generation quality, latency, throughput, production readiness, legal suitability, broad SmolLM2/Llama-style compatibility, arbitrary Hugging Face execution, streaming, external proxying, or full OpenAI API parity.",
+            "Does not claim GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference.",
         ],
     }
     (directory / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (directory / "summary.md").write_text(
         "# SmolLM2 optional API acceptance artifacts\n\n"
         "- Result: `passed`\n"
+        "- Scope: Optional local larger-demo API evidence only; not default CI.\n"
         "- Artifact directory: `.`\n"
         "- State directory: `state/`\n"
         "- Model directory: `models/`\n"
         "- Server log: `logs/server.log`\n\n"
         "## What this does not prove\n\n"
-        "No generation quality, production readiness, arbitrary Hugging Face execution, streaming, external proxying, full OpenAI API parity, or GGUF runtime claim.\n",
+        "No generation quality, latency, throughput, production readiness, legal suitability, broad SmolLM2/Llama-style compatibility, arbitrary Hugging Face execution, streaming, external proxying, or full OpenAI API parity claim.\n"
+        "No public/runtime GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference claim.\n",
         encoding="utf-8",
     )
 
@@ -298,6 +324,18 @@ def main() -> None:
             sample = Path(tmp) / "sample"
             write_sample(sample)
             validate_summary(sample)
+            bad = Path(tmp) / "missing-caveat"
+            write_sample(bad)
+            summary = load_json(bad / "summary.json")
+            summary["caveats"] = [str(item).replace("latency, ", "") for item in summary["caveats"]]
+            (bad / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            try:
+                validate_summary(bad)
+            except AssertionError as exc:
+                if "latency" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("missing caveat self-check did not fail")
         print("SmolLM2 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:
