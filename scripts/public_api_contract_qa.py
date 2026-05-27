@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,7 @@ EXAMPLES_DIR = ROOT / "examples" / "api"
 DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, REFUSAL_MATRIX, README]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
 TEXT_PATHS = DOC_PATHS + EXAMPLE_PATHS + [CI]
+PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = r"^(Harden public .+ QA|Expose refusal request hints in matrix)$"
 
 REQUIRED_ERROR_CODES = {
     "invalid_request",
@@ -205,6 +207,51 @@ def assert_contains(text: str, needle: str, label: str) -> None:
         raise AssertionError(f"{label} missing {needle!r}")
 
 
+def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
+    try:
+        output = subprocess.check_output(
+            [
+                "git",
+                "log",
+                "-1",
+                f"--grep={PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN}",
+                "--extended-regexp",
+                "--format=%H%x00%s",
+                "--",
+                "docs/api/refusal-boundary-matrix.md",
+                "scripts/public_api_contract_qa.py",
+                "scripts/public_contract_smoke_artifact_qa.py",
+            ],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+    except subprocess.CalledProcessError as exc:
+        raise AssertionError("could not resolve latest public-contract QA hardening commit from local git history") from exc
+
+    if not output:
+        raise AssertionError("local git history has no recognized public-contract QA hardening commit")
+    commit, subject = output.split("\0", 1)
+    return commit, subject
+
+
+def assert_latest_public_contract_qa_hardening_evidence(evidence_text: str) -> None:
+    match = re.search(
+        r"^- Latest public-contract QA hardening commit: `([0-9a-f]{40})` \(`([^`]+)`\)$",
+        evidence_text,
+        re.MULTILINE,
+    )
+    if not match:
+        raise AssertionError("launch evidence latest public-contract QA hardening commit line is missing or malformed")
+
+    evidence_commit, evidence_subject = match.groups()
+    latest_commit, latest_subject = latest_public_contract_qa_hardening_commit()
+    if evidence_commit != latest_commit or evidence_subject != latest_subject:
+        raise AssertionError(
+            "launch evidence public-contract QA hardening commit is stale: "
+            f"expected `{latest_commit}` (`{latest_subject}`), found `{evidence_commit}` (`{evidence_subject}`)"
+        )
+
+
 def assert_endpoint_docs(manifest: dict[str, Any]) -> None:
     v1_text = read(V1_CONTRACT)
     for endpoint in manifest.get("supported_endpoints", []):
@@ -269,7 +316,7 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "a32505eadac6539865d224a8b4195656003a0032", "launch evidence commit")
     assert_contains(evidence_text, "687aaebc27fdaa00588dd889d9ae3226f5b26000", "launch evidence latest no-download refusal commit")
     assert_contains(evidence_text, "e9195bc7462999284960f5631d3a74aa5391bffc", "launch evidence optional artifact QA CI commit")
-    assert_contains(evidence_text, "fbd23440075a85ec92c632a89aad838004344dd6", "launch evidence public-contract QA hardening commit")
+    assert_latest_public_contract_qa_hardening_evidence(evidence_text)
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")
     assert_contains(evidence_text, "manifest-to-`/v1` docs boundary coverage", "launch evidence manifest docs boundary gate")
