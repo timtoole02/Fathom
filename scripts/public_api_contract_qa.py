@@ -33,6 +33,7 @@ QWEN25_OPTIONAL_ACCEPTANCE = ROOT / "docs" / "api" / "qwen25-optional-acceptance
 ROADMAP = ROOT / "roadmap.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
+SECURITY = ROOT / "SECURITY.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contract.yml"
 SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
@@ -307,6 +308,50 @@ def assert_launch_checklist_artifact_qa_run_gates() -> None:
         assert_contains(checklist_text, f"python3 {path}", "launch checklist artifact QA run gates")
 
 
+def assert_public_security_docs() -> None:
+    requirements = {
+        SECURITY: (
+            "no built-in authentication",
+            "Do not expose Fathom directly to the public internet or an untrusted LAN",
+            "proxy, tunnel",
+        ),
+        README: (
+            "no built-in authentication",
+            "loopback development",
+            "not direct internet or untrusted-LAN exposure",
+            "SECURITY.md",
+        ),
+        BACKEND_QUICKSTART: (
+            "no built-in authentication",
+            "loopback development",
+            "internet or an untrusted LAN",
+            "../../SECURITY.md",
+        ),
+        V1_CONTRACT: (
+            "no built-in authentication",
+            "loopback development",
+            "not direct internet exposure",
+            "../../SECURITY.md",
+        ),
+        LAUNCH_CHECKLIST: (
+            "no built-in authentication",
+            "loopback development",
+            "internet or an untrusted LAN",
+            "SECURITY.md",
+        ),
+        LAUNCH_EVIDENCE: (
+            "local API no-auth/loopback security-note coverage",
+            "internet/untrusted-LAN exposure",
+            "`SECURITY.md` review warnings",
+        ),
+    }
+    for path, phrases in requirements.items():
+        text = read(path)
+        label = f"{path.relative_to(ROOT)} local API security note"
+        for phrase in phrases:
+            assert_contains(text, phrase, label)
+
+
 def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
     try:
         output = subprocess.check_output(
@@ -446,6 +491,7 @@ def assert_boundary_docs() -> None:
     assert_contains(readme_text, "docs/public-launch-checklist.md", "README launch checklist link")
     assert_contains(read(BACKEND_QUICKSTART), "../public-launch-checklist.md", "backend quickstart launch checklist link")
     assert_contains(read(CONTRIBUTING), "docs/public-launch-checklist.md", "contributing launch checklist link")
+    assert_public_security_docs()
     assert_contains(v1_text, "public-contract.json", "v1 contract manifest link")
     assert_contains(launch_text, "api/public-contract.json", "launch checklist manifest link")
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
