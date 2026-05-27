@@ -47,6 +47,9 @@ REQUIRED_NO_DOWNLOAD_BOUNDARIES = {
     "unverified SafeTensors/Hugging Face model execution",
     "GGUF metadata-only chat attempts",
 }
+REQUIRED_EXPECTED_BEHAVIOR_NO_DOWNLOAD_BOUNDARIES = {
+    "embedding models in /v1/models",
+}
 REFUSAL_ONLY_BOUNDARY = "external placeholder chat or activation"
 REFUSAL_ONLY_CODE = "external_proxy_not_implemented"
 
@@ -100,6 +103,24 @@ def manifest_expected_boundaries(manifest: dict[str, Any]) -> dict[str, dict[str
             raise AssertionError(f"manifest duplicate boundary entry: {boundary}")
         expected[boundary] = item
     return expected
+
+
+def assert_no_download_boundary_policy(manifest: dict[str, Any]) -> None:
+    """Keep the artifact QA coverage set aligned with public-contract.json."""
+    expected = manifest_expected_boundaries(manifest)
+    status_code_boundaries = {
+        boundary
+        for boundary, item in expected.items()
+        if "status" in item or "code" in item
+    }
+    expected_required = status_code_boundaries | REQUIRED_EXPECTED_BEHAVIOR_NO_DOWNLOAD_BOUNDARIES
+    if REQUIRED_NO_DOWNLOAD_BOUNDARIES != expected_required:
+        raise AssertionError(
+            "REQUIRED_NO_DOWNLOAD_BOUNDARIES must match public-contract.json status/code boundaries "
+            "plus explicit no-download expected-behavior boundaries: "
+            f"missing={sorted(expected_required - REQUIRED_NO_DOWNLOAD_BOUNDARIES)} "
+            f"unexpected={sorted(REQUIRED_NO_DOWNLOAD_BOUNDARIES - expected_required)}"
+        )
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -210,6 +231,7 @@ def validate_summary_dir(directory: Path) -> None:
     if manifest["path"] != "docs/api/public-contract.json":
         raise AssertionError("summary.manifest.path must be docs/api/public-contract.json")
     manifest_data = load_manifest()
+    assert_no_download_boundary_policy(manifest_data)
     for key in ("name", "status"):
         if manifest[key] != manifest_data.get(key):
             raise AssertionError(f"summary.manifest.{key} must match docs/api/public-contract.json")
