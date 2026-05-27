@@ -72,6 +72,19 @@ DANGEROUS_POSITIVE_PATTERNS = [
         re.compile(r"\bbase64\b[^\n.]{0,80}\b(embedding|embeddings)\b", re.I),
         re.compile(r"\b(not supported|unsupported|rejected|refused|invalid_request|only float|float only|do not|don't|no)\b", re.I),
     ),
+    (
+        "production readiness appears claimed",
+        re.compile(r"\b(production[- ]ready|production readiness|ready for production|production deployment)\b", re.I),
+        re.compile(r"\b(not|no|does not|do not|without|doesn't|does not prove|not prove|unproven|overclaim)\b", re.I),
+    ),
+    (
+        "legal/license suitability appears claimed",
+        re.compile(
+            r"\b(legal|license|licensing)\b[^\n.]{0,80}\b(safe|approved|compliant|suitable|cleared|ready|verified|proven)\b",
+            re.I,
+        ),
+        re.compile(r"\b(not|no|does not|do not|without|doesn't|advice|review before|does not prove|not prove)\b", re.I),
+    ),
 ]
 
 
@@ -370,6 +383,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(evidence_text, "public overclaim scanner self-test coverage", "launch evidence overclaim self-test scope")
     assert_contains(evidence_text, "synthetic refused/unsupported public overclaim examples", "launch evidence overclaim self-test proof")
+    assert_contains(
+        evidence_text,
+        "production-readiness/legal-license public overclaim examples",
+        "launch evidence production/legal overclaim self-test proof",
+    )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(
         evidence_text,
@@ -526,6 +544,8 @@ def run_self_test() -> None:
         ("README.md", "Fathom is a complete OpenAI compatible replacement."),
         ("README.md", "Fathom supports arbitrary SafeTensors runtime execution."),
         ("docs/api/example.md", "The embeddings endpoint supports base64 embeddings."),
+        ("docs/public-launch-checklist.md", "Fathom is production-ready for deployment."),
+        ("docs/public-launch-evidence.md", "Fathom license suitability is verified for public launch."),
     ]
     failures = positive_overclaim_failures(bad_lines)
     if len(failures) != len(bad_lines):
@@ -537,6 +557,8 @@ def run_self_test() -> None:
         ("README.md", "Fathom is not full OpenAI API parity."),
         ("README.md", "Arbitrary SafeTensors execution is refused."),
         ("docs/api/example.md", "Base64 embeddings are unsupported."),
+        ("docs/public-launch-checklist.md", "Fathom does not prove production readiness."),
+        ("docs/public-launch-evidence.md", "This evidence does not prove legal/license suitability."),
     ]
     allowed_failures = positive_overclaim_failures(allowed_lines)
     if allowed_failures:
