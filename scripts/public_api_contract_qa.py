@@ -26,6 +26,9 @@ BACKEND_QUICKSTART = ROOT / "docs" / "api" / "backend-only-quickstart.md"
 LAUNCH_CHECKLIST = ROOT / "docs" / "public-launch-checklist.md"
 LAUNCH_EVIDENCE = ROOT / "docs" / "public-launch-evidence.md"
 REFUSAL_MATRIX = ROOT / "docs" / "api" / "refusal-boundary-matrix.md"
+MINILM_OPTIONAL_ACCEPTANCE = ROOT / "docs" / "api" / "minilm-embeddings-optional-acceptance.md"
+SMOLLM2_OPTIONAL_ACCEPTANCE = ROOT / "docs" / "api" / "smollm2-optional-acceptance.md"
+QWEN25_OPTIONAL_ACCEPTANCE = ROOT / "docs" / "api" / "qwen25-optional-acceptance.md"
 ROADMAP = ROOT / "roadmap.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
@@ -34,8 +37,32 @@ SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
 DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, REFUSAL_MATRIX, README]
+OPTIONAL_DOC_PATHS = [MINILM_OPTIONAL_ACCEPTANCE, SMOLLM2_OPTIONAL_ACCEPTANCE, QWEN25_OPTIONAL_ACCEPTANCE]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
-TEXT_PATHS = DOC_PATHS + EXAMPLE_PATHS + [CI]
+TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [CI]
+OPTIONAL_ACCEPTANCE_DOCS = (
+    (
+        MINILM_OPTIONAL_ACCEPTANCE,
+        "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE=1",
+        "scripts/minilm_embeddings_optional_api_acceptance_smoke.sh",
+        "scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
+        "embedding quality",
+    ),
+    (
+        SMOLLM2_OPTIONAL_ACCEPTANCE,
+        "FATHOM_SMOLLM2_ACCEPTANCE=1",
+        "scripts/smollm2_optional_api_acceptance_smoke.sh",
+        "scripts/smollm2_optional_api_acceptance_artifact_qa.py",
+        "larger-demo evidence only",
+    ),
+    (
+        QWEN25_OPTIONAL_ACCEPTANCE,
+        "FATHOM_QWEN25_ACCEPTANCE=1",
+        "scripts/qwen25_optional_api_acceptance_smoke.sh",
+        "scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+        "larger-demo evidence only",
+    ),
+)
 PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = r"^(Harden public .+ QA|Expose refusal request hints in matrix)$"
 
 REQUIRED_ERROR_CODES = {
@@ -586,6 +613,29 @@ def assert_smoke_manifest_wiring() -> None:
     assert_contains(smoke_text, "partial diagnostic evidence", "public contract smoke failed artifact caveat")
 
 
+def assert_optional_acceptance_docs() -> None:
+    required_boundaries = [
+        "Do not add this flow to default CI",
+        "downloads or reuses",
+        "It is intentionally not part of default CI",
+        "With no arguments, the artifact QA runs a dependency-free synthetic self-test",
+        "Run `bash scripts/public_risk_scan.sh`",
+        "external provider proxying",
+        "arbitrary SafeTensors/HF execution",
+        "streaming",
+        "full OpenAI API parity",
+    ]
+    for path, opt_in_env, smoke_script, artifact_qa_script, evidence_scope in OPTIONAL_ACCEPTANCE_DOCS:
+        text = read(path)
+        label = str(path.relative_to(ROOT))
+        for phrase in required_boundaries:
+            assert_contains(text, phrase, label)
+        assert_contains(text, opt_in_env, label)
+        assert_contains(text, smoke_script, label)
+        assert_contains(text, artifact_qa_script, label)
+        assert_contains(text, evidence_scope, label)
+
+
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
@@ -641,6 +691,7 @@ def main() -> int:
     assert_examples_static(manifest)
     assert_no_positive_overclaims()
     assert_smoke_manifest_wiring()
+    assert_optional_acceptance_docs()
     assert_ci_wiring(manifest)
     print("public API contract QA passed")
     return 0
