@@ -322,6 +322,16 @@ def assert_boundary_docs() -> None:
         if expected is None:
             raise AssertionError(f"docs/api/public-contract.json boundary {name!r} is missing a refusal matrix alias")
         assert_contains(matrix_text, expected, "refusal boundary matrix manifest coverage")
+        matrix_line = next((line for line in matrix_text.splitlines() if expected in line), "")
+        if not matrix_line:
+            raise AssertionError(f"refusal boundary matrix missing row for manifest boundary {name!r}")
+        if "status" in boundary and "code" in boundary:
+            expected_status_code = f"`{boundary['status']} {boundary['code']}`"
+            assert_contains(matrix_line, expected_status_code, f"refusal boundary matrix row for {name!r}")
+        elif name == "embedding models in /v1/models":
+            assert_contains(matrix_line.lower(), "excluded", f"refusal boundary matrix row for {name!r}")
+        elif name == "full OpenAI API parity":
+            assert_contains(matrix_line.lower(), "not claimed", f"refusal boundary matrix row for {name!r}")
 
     v1_aliases = {
         "streaming chat completions": "Streaming chat completions.",
