@@ -85,12 +85,26 @@ def validate_summary_dir(directory: Path) -> None:
     checks = summary.get("checks")
     if not isinstance(checks, list) or not checks:
         raise AssertionError("summary.checks must be a non-empty list")
+    seen_check_names: set[str] = set()
+    seen_check_artifacts: set[str] = set()
     for check in checks:
         if not isinstance(check, dict):
             raise AssertionError("each check must be an object")
         for key in ("name", "artifact", "description", "status", "http_status"):
             if key not in check:
                 raise AssertionError(f"check missing {key}: {check!r}")
+        name = check["name"]
+        artifact = check["artifact"]
+        if not isinstance(name, str) or not name:
+            raise AssertionError(f"check name must be non-empty text: {check!r}")
+        if not isinstance(artifact, str) or not artifact:
+            raise AssertionError(f"check artifact must be non-empty text: {check!r}")
+        if name in seen_check_names:
+            raise AssertionError(f"duplicate check name: {name!r}")
+        if artifact in seen_check_artifacts:
+            raise AssertionError(f"duplicate check artifact: {artifact!r}")
+        seen_check_names.add(name)
+        seen_check_artifacts.add(artifact)
         if check["status"] not in {"passed", "failed"}:
             raise AssertionError(f"check status must be passed/failed: {check!r}")
 
@@ -274,6 +288,40 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("external-provider proxy overclaim self-check did not fail")
+
+        missing_external_check = root / "missing-external-placeholder-check"
+        write_sample(missing_external_check, passed=True)
+        summary = load_json(missing_external_check / "summary.json")
+        summary["checks"] = [
+            check
+            for check in summary["checks"]
+            if check.get("name") != "external_placeholder_v1_chat_refusal"
+        ]
+        (missing_external_check / "summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        try:
+            validate_summary_dir(missing_external_check)
+        except AssertionError as exc:
+            if "external-placeholder evidence is incomplete" not in str(exc):
+                raise
+        else:
+            raise AssertionError("missing external-placeholder check self-check did not fail")
+
+        duplicate_check = root / "duplicate-check-artifact"
+        write_sample(duplicate_check, passed=True)
+        summary = load_json(duplicate_check / "summary.json")
+        summary["checks"].append(dict(summary["checks"][0]))
+        (duplicate_check / "summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        try:
+            validate_summary_dir(duplicate_check)
+        except AssertionError as exc:
+            if "duplicate check name" not in str(exc):
+                raise
+        else:
+            raise AssertionError("duplicate check self-check did not fail")
 
 
 def main() -> None:
