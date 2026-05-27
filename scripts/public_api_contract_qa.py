@@ -33,13 +33,14 @@ ROADMAP = ROOT / "roadmap.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
+API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contract.yml"
 SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
 DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, REFUSAL_MATRIX, README]
 OPTIONAL_DOC_PATHS = [MINILM_OPTIONAL_ACCEPTANCE, SMOLLM2_OPTIONAL_ACCEPTANCE, QWEN25_OPTIONAL_ACCEPTANCE]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
-TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [CI]
+TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [CI, API_CONTRACT_ISSUE_TEMPLATE]
 OPTIONAL_ACCEPTANCE_DOCS = (
     (
         MINILM_OPTIONAL_ACCEPTANCE,
@@ -674,6 +675,27 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
             raise AssertionError(f"default CI must only syntax-check backend acceptance smoke, line {line_no}")
 
 
+def assert_api_contract_issue_template(manifest: dict[str, Any]) -> None:
+    template_text = read(API_CONTRACT_ISSUE_TEMPLATE)
+    label = ".github/ISSUE_TEMPLATE/api_contract.yml"
+    required_phrases = [
+        "docs/api/v1-contract.md",
+        "docs/api/public-contract.json",
+        "docs/api/refusal-boundary-matrix.md",
+        "not full OpenAI API parity",
+        "synthetic prompts only",
+    ]
+    for phrase in required_phrases:
+        assert_contains(template_text, phrase, label)
+
+    for endpoint in manifest.get("supported_endpoints", []):
+        method = endpoint.get("method")
+        path = endpoint.get("path")
+        assert_non_empty_string(method, f"manifest endpoint method for {label}")
+        assert_non_empty_string(path, f"manifest endpoint path for {label}")
+        assert_contains(template_text, f"{method} {path}", f"{label} endpoint placeholder")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Static QA for Fathom's public launch API contract")
     parser.add_argument("--self-test", action="store_true", help="run synthetic public-overclaim scanner regression checks")
@@ -693,6 +715,7 @@ def main() -> int:
     assert_smoke_manifest_wiring()
     assert_optional_acceptance_docs()
     assert_ci_wiring(manifest)
+    assert_api_contract_issue_template(manifest)
     print("public API contract QA passed")
     return 0
 

@@ -6,12 +6,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        Fathom's `/v1` surface is intentionally small and not full OpenAI API parity. Check `docs/api/v1-contract.md` before filing.
+        Fathom's `/v1` surface is intentionally small and not full OpenAI API parity. Check `docs/api/v1-contract.md`, `docs/api/public-contract.json`, and `docs/api/refusal-boundary-matrix.md` before filing.
   - type: input
     id: endpoint
     attributes:
       label: Endpoint
-      placeholder: "GET /v1/models, POST /v1/chat/completions"
+      placeholder: "GET /v1/health, GET /v1/models, POST /v1/chat/completions, POST /v1/embeddings"
     validations:
       required: true
   - type: textarea
