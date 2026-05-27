@@ -113,6 +113,11 @@ except Exception:
 
 endpoint_results = {}
 boundary_results = {}
+manifest_boundaries = {
+    item.get("boundary"): item
+    for item in manifest.get("expected_boundary_errors", [])
+    if isinstance(item, dict)
+}
 
 
 def write_summary(passed):
@@ -128,10 +133,12 @@ def write_summary(passed):
         f"- {item['method']} {item['path']}: {'pass' if item['passed'] else 'fail'} ({', '.join(item['checks'])})"
         for item in summary["endpoint_checks"]
     ]
-    boundary_lines = [
-        f"- {item['boundary']}: {'pass' if item.get('passed') else 'fail'} ({item.get('check')})"
-        for item in summary["boundary_checks"]
-    ]
+    boundary_lines = []
+    for item in summary["boundary_checks"]:
+        hint = f"; hint `{item['request_hint']}`" if item.get("request_hint") else ""
+        boundary_lines.append(
+            f"- {item['boundary']}: {'pass' if item.get('passed') else 'fail'} ({item.get('check')}{hint})"
+        )
     deferred_lines = [
         f"- {item['boundary']}: {item['reason']}"
         for item in summary["deferred_manifest_boundaries"]
@@ -170,13 +177,17 @@ def record_endpoint(method, path, check_id):
 
 
 def record_boundary(boundary, check_id, status=None, code=None):
-    boundary_results[boundary] = {
+    result = {
         "boundary": boundary,
         "check": check_id,
         "status": status,
         "code": code,
         "passed": True,
     }
+    request_hint = manifest_boundaries.get(boundary, {}).get("request_hint")
+    if request_hint:
+        result["request_hint"] = request_hint
+    boundary_results[boundary] = result
 
 
 def request(method, path, body=None):

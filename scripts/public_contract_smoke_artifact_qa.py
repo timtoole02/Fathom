@@ -291,6 +291,11 @@ def validate_summary_dir(directory: Path) -> None:
                 raise AssertionError(
                     f"passed summary boundary {boundary!r} code {result.get('code')!r} does not match public-contract.json {expected['code']!r}"
                 )
+            if "request_hint" in expected and result.get("request_hint") != expected["request_hint"]:
+                raise AssertionError(
+                    f"passed summary boundary {boundary!r} request_hint {result.get('request_hint')!r} "
+                    f"does not match public-contract.json {expected['request_hint']!r}"
+                )
         deferred_names = {item.get("boundary") for item in deferred}
         expected_names = set(expected_by_name)
         expected_deferred_names = expected_names - REQUIRED_NO_DOWNLOAD_BOUNDARIES
@@ -328,6 +333,9 @@ def passed_sample() -> dict[str, Any]:
             item.update({"status": 501, "code": "not_implemented"})
         elif boundary == "GGUF metadata-only chat attempts":
             item.update({"status": 501, "code": "not_implemented"})
+        request_hint = manifest_expected_boundaries(manifest).get(boundary, {}).get("request_hint")
+        if request_hint:
+            item["request_hint"] = request_hint
         boundary_checks.append(item)
     return {
         "schema": SCHEMA,
@@ -365,9 +373,11 @@ def write_sample(directory: Path, summary: dict[str, Any]) -> None:
     endpoints = [
         f"- {item['method']} {item['path']}: pass ({', '.join(item['checks'])})" for item in summary["endpoint_checks"]
     ] or ["- none completed before failure"]
-    boundaries = [
-        f"- {item['boundary']}: pass ({item['check']})" for item in summary["boundary_checks"]
-    ] or ["- none completed before failure"]
+    boundaries = []
+    for item in summary["boundary_checks"]:
+        hint = f"; hint `{item['request_hint']}`" if item.get("request_hint") else ""
+        boundaries.append(f"- {item['boundary']}: pass ({item['check']}{hint})")
+    boundaries = boundaries or ["- none completed before failure"]
     deferred = [
         f"- {item['boundary']}: {item['reason']}" for item in summary["deferred_manifest_boundaries"]
     ] or ["- none"]
@@ -436,6 +446,20 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("manifest status/code drift self-check did not fail")
+
+        bad_request_hint = root / "bad-request-hint"
+        mutated = passed_sample()
+        for item in mutated["boundary_checks"]:
+            if item["boundary"] == "base64 embeddings":
+                item["request_hint"] = "encoding_format: float"
+        write_sample(bad_request_hint, mutated)
+        try:
+            validate_summary_dir(bad_request_hint)
+        except AssertionError as exc:
+            if "request_hint" not in str(exc):
+                raise
+        else:
+            raise AssertionError("manifest request_hint drift self-check did not fail")
 
         missing_boundary = root / "missing-boundary"
         mutated = passed_sample()
