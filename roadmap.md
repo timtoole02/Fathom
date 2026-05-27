@@ -1,6 +1,6 @@
 # Fathom Roadmap
 
-_Last updated: 2026-04-27_
+_Last updated: 2026-05-27_
 
 Fathom's current wedge: **Drop in a model. Fathom tells you what it is, what can run it, what cannot, why, and gives you one clean API to use it.**
 

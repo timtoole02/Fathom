@@ -10,6 +10,7 @@ with docs/api/public-contract.json.
 from __future__ import annotations
 
 import argparse
+from datetime import date, datetime
 import json
 import re
 import subprocess
@@ -25,6 +26,7 @@ BACKEND_QUICKSTART = ROOT / "docs" / "api" / "backend-only-quickstart.md"
 LAUNCH_CHECKLIST = ROOT / "docs" / "public-launch-checklist.md"
 LAUNCH_EVIDENCE = ROOT / "docs" / "public-launch-evidence.md"
 REFUSAL_MATRIX = ROOT / "docs" / "api" / "refusal-boundary-matrix.md"
+ROADMAP = ROOT / "roadmap.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
@@ -251,6 +253,39 @@ def assert_latest_public_contract_qa_hardening_evidence(evidence_text: str) -> N
             "launch evidence public-contract QA hardening commit is stale: "
             f"expected `{latest_commit}` (`{latest_subject}`), found `{evidence_commit}` (`{evidence_subject}`)"
         )
+
+
+def latest_commit_date_for_path(path: Path) -> date:
+    rel_path = str(path.relative_to(ROOT))
+    try:
+        output = subprocess.check_output(
+            ["git", "log", "-1", "--format=%cs", "--", rel_path],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+    except subprocess.CalledProcessError as exc:
+        raise AssertionError(f"could not resolve latest commit date for {rel_path}") from exc
+
+    if not output:
+        raise AssertionError(f"local git history has no commits for {rel_path}")
+    return datetime.strptime(output, "%Y-%m-%d").date()
+
+
+def assert_roadmap_last_updated_freshness() -> None:
+    roadmap_text = read(ROADMAP)
+    match = re.search(r"^_Last updated: (\d{4}-\d{2}-\d{2})_$", roadmap_text, re.MULTILINE)
+    if not match:
+        raise AssertionError("roadmap last-updated line is missing or malformed")
+
+    stated_date = datetime.strptime(match.group(1), "%Y-%m-%d").date()
+    latest_roadmap_commit_date = latest_commit_date_for_path(ROADMAP)
+    if stated_date < latest_roadmap_commit_date:
+        raise AssertionError(
+            "roadmap last-updated date is stale: "
+            f"expected at least {latest_roadmap_commit_date.isoformat()}, found {stated_date.isoformat()}"
+        )
+    if stated_date > date.today():
+        raise AssertionError(f"roadmap last-updated date is in the future: {stated_date.isoformat()}")
 
 
 def assert_endpoint_docs(manifest: dict[str, Any]) -> None:
@@ -570,6 +605,7 @@ def main() -> int:
     manifest = load_manifest()
     assert_manifest_shape(manifest)
     assert_endpoint_docs(manifest)
+    assert_roadmap_last_updated_freshness()
     assert_boundary_docs()
     assert_examples_static(manifest)
     assert_no_positive_overclaims()
