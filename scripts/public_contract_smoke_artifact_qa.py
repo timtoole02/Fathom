@@ -205,9 +205,52 @@ def assert_markdown(summary: dict[str, Any], markdown_path: Path) -> str:
     return md
 
 
+def assert_markdown_rows_match_summary(summary: dict[str, Any], md: str, markdown_path: Path) -> None:
+    """Keep the shareable Markdown summary aligned with the JSON evidence rows."""
+    label = markdown_path.name
+    endpoint_checks = summary.get("endpoint_checks")
+    boundary_checks = summary.get("boundary_checks")
+    deferred = summary.get("deferred_manifest_boundaries")
+    if not isinstance(endpoint_checks, list) or not isinstance(boundary_checks, list) or not isinstance(deferred, list):
+        return
+
+    for item in endpoint_checks:
+        if not isinstance(item, dict):
+            continue
+        method = item.get("method")
+        path = item.get("path")
+        if isinstance(method, str) and method and isinstance(path, str) and path:
+            expected = f"- {method} {path}: pass"
+            if expected not in md:
+                raise AssertionError(f"{label} missing endpoint row matching summary JSON: {method} {path}")
+
+    for item in boundary_checks:
+        if not isinstance(item, dict):
+            continue
+        boundary = item.get("boundary")
+        if isinstance(boundary, str) and boundary:
+            expected = f"- {boundary}: pass"
+            if expected not in md:
+                raise AssertionError(f"{label} missing boundary row matching summary JSON: {boundary}")
+            request_hint = item.get("request_hint")
+            if isinstance(request_hint, str) and request_hint and f"hint `{request_hint}`" not in md:
+                raise AssertionError(f"{label} missing boundary request hint matching summary JSON: {boundary}")
+
+    for item in deferred:
+        if not isinstance(item, dict):
+            continue
+        boundary = item.get("boundary")
+        reason = item.get("reason")
+        if isinstance(boundary, str) and boundary and isinstance(reason, str) and reason:
+            expected = f"- {boundary}: {reason}"
+            if expected not in md:
+                raise AssertionError(f"{label} missing deferred boundary row matching summary JSON: {boundary}")
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary = load_json(directory / SUMMARY_JSON)
     md = assert_markdown(summary, directory / SUMMARY_MD)
+    assert_markdown_rows_match_summary(summary, md, directory / SUMMARY_MD)
     assert_share_safe(SUMMARY_JSON, json.dumps(summary, sort_keys=True))
 
     if summary.get("schema") != SCHEMA:
@@ -532,6 +575,25 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("markdown/JSON consistency self-check did not fail")
+
+        missing_markdown_boundary = root / "missing-markdown-boundary"
+        write_sample(missing_markdown_boundary, passed_sample())
+        (missing_markdown_boundary / SUMMARY_MD).write_text(
+            (missing_markdown_boundary / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace(
+                "- GGUF metadata-only chat attempts: pass (synthetic-refusal-check; hint `metadata-only GGUF model id in /v1/chat/completions`)\n",
+                "",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(missing_markdown_boundary)
+        except AssertionError as exc:
+            if "missing boundary row" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown summary row consistency self-check did not fail")
 
         bad_commit = root / "bad-commit"
         mutated = passed_sample()
