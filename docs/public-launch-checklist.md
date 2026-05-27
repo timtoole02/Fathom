@@ -79,7 +79,7 @@ Review `summary.md` first, then `summary.json` and the named JSON artifacts. Kee
 
 - The documented no-download public `/v1` contract routes and refusal envelopes work against the real backend process.
 - Default CI stays offline with respect to model downloads, networked acceptance smoke, and non-default ONNX feature tests.
-- Offline artifact QA covers optional public-contract smoke summaries plus MiniLM, SmolLM2, and Qwen2.5 optional API acceptance artifact schemas; the optional backend acceptance smoke can produce share-safe success/failure summaries for the current pinned fixture path when networked downloads succeed.
+- Offline artifact QA covers optional public-contract smoke summaries, backend acceptance smoke success/failure summaries, and MiniLM, SmolLM2, and Qwen2.5 optional API acceptance artifact schemas; the optional backend acceptance smoke itself remains networked and only produces current pinned-fixture evidence when downloads succeed.
 - The current launch evidence snapshot is recorded in [`public-launch-evidence.md`](public-launch-evidence.md).
 
 ## What this launch does not prove

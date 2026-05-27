@@ -308,6 +308,12 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
     assert_contains(launch_text, "scripts/backend_acceptance_artifact_qa.py", "launch checklist backend acceptance artifact QA")
+    assert_contains(launch_text, "backend acceptance smoke success/failure summaries", "launch checklist backend acceptance artifact QA scope")
+    assert_contains(
+        launch_text,
+        "optional backend acceptance smoke itself remains networked",
+        "launch checklist backend acceptance artifact QA non-runtime caveat",
+    )
     assert_contains(launch_text, "scripts/backend_acceptance_smoke.sh", "launch checklist optional acceptance smoke")
     assert_contains(launch_text, "public-launch-evidence.md", "launch checklist evidence link")
     assert_contains(launch_text, "What this launch does not prove", "launch checklist boundaries")
@@ -318,6 +324,7 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "e9195bc7462999284960f5631d3a74aa5391bffc", "launch evidence optional artifact QA CI commit")
     assert_latest_public_contract_qa_hardening_evidence(evidence_text)
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
+    assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")
     assert_contains(evidence_text, "manifest-to-`/v1` docs boundary coverage", "launch evidence manifest docs boundary gate")
     assert_contains(
@@ -326,6 +333,11 @@ def assert_boundary_docs() -> None:
         "launch evidence refusal request hint gate",
     )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
+    assert_contains(
+        evidence_text,
+        "Backend acceptance artifact QA and optional MiniLM, SmolLM2, and Qwen2.5 API acceptance artifact QA self-tests run offline",
+        "launch evidence backend acceptance artifact QA non-runtime scope",
+    )
     assert_contains(evidence_text, "they do not download models, start the backend, or add runtime proof", "launch evidence optional artifact QA non-runtime caveat")
     assert_contains(evidence_text, "What this evidence does not prove", "launch evidence caveats")
     assert_contains(evidence_text, "external_proxy_not_implemented", "launch evidence external placeholder refusal")
