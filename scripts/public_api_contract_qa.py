@@ -269,11 +269,15 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "a32505eadac6539865d224a8b4195656003a0032", "launch evidence commit")
     assert_contains(evidence_text, "687aaebc27fdaa00588dd889d9ae3226f5b26000", "launch evidence latest no-download refusal commit")
     assert_contains(evidence_text, "e9195bc7462999284960f5631d3a74aa5391bffc", "launch evidence optional artifact QA CI commit")
-    assert_contains(evidence_text, "c16d80b8eba87da3fd6ea81b25328acf5a855257", "launch evidence public-contract QA hardening commit")
+    assert_contains(evidence_text, "fbd23440075a85ec92c632a89aad838004344dd6", "launch evidence public-contract QA hardening commit")
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")
     assert_contains(evidence_text, "manifest-to-`/v1` docs boundary coverage", "launch evidence manifest docs boundary gate")
-    assert_contains(evidence_text, "request hints for status/code refusal boundaries", "launch evidence refusal request hint gate")
+    assert_contains(
+        evidence_text,
+        "request hints for status/code refusal boundaries to be exposed in the refusal matrix",
+        "launch evidence refusal request hint gate",
+    )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(evidence_text, "they do not download models, start the backend, or add runtime proof", "launch evidence optional artifact QA non-runtime caveat")
     assert_contains(evidence_text, "What this evidence does not prove", "launch evidence caveats")

@@ -8,7 +8,7 @@ This snapshot records the current public launch verification state for Fathom. I
 - Latest no-download refusal evidence commit: `687aaebc27fdaa00588dd889d9ae3226f5b26000` (`Promote GGUF refusal to public smoke`)
 - Latest optional API evidence commit: `0655fc073af296f7687a04708053a30b9570fcdf` (`Record MiniLM embeddings API acceptance evidence`)
 - Latest optional artifact QA CI wiring commit: `e9195bc7462999284960f5631d3a74aa5391bffc` (`Wire optional artifact QA into CI`)
-- Latest public-contract QA hardening commit: `c16d80b8eba87da3fd6ea81b25328acf5a855257` (`Require public refusal request hints`)
+- Latest public-contract QA hardening commit: `fbd23440075a85ec92c632a89aad838004344dd6` (`Expose refusal request hints in matrix`)
 - Scope: no-download public `/v1` contract, public launch checklist/evidence snapshot, manifest-driven smoke, sanitized public-contract smoke artifacts, synthetic PyTorch `.bin` public-contract refusal smoke, unsupported ONNX chat/general public-contract refusal smoke, unverified SafeTensors/Hugging Face public-contract refusal smoke, metadata-only GGUF public-contract refusal smoke, offline public-contract artifact QA, manifest shape validation, manifest-to-`/v1` docs boundary coverage, public refusal boundary status/code/request-hint coverage, offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests, CI/static policy wiring, and Phase 16 narrow catalog-backed optional API/runtime evidence for MiniLM embeddings, SmolLM2 135M Instruct, and Qwen2.5 0.5B Instruct.
 - Fresh-clone QA: passed for the launch baseline and earlier evidence commits. For `128550a`, focused fresh-clone QA passed after reducing cold-build pressure with `CARGO_BUILD_JOBS=1` and shared local target artifacts. Later optional API evidence, optional artifact-QA CI wiring, and public-contract QA hardening commits are covered by focused static/public-risk/artifact QA gates and preserved opt-in local artifact QA, not a new full fresh-clone run.
 
@@ -32,7 +32,7 @@ The referenced fresh-clone QA gates verified:
 
 - The documented no-download public `/v1` routing/refusal contract works against the real backend process in isolated empty state.
 - Public-contract smoke summary artifacts have an offline QA gate for schema, pass/fail semantics, coverage, caveats, and share-safety.
-- The offline public API contract QA gate validates manifest shape, keeps manifest boundary names covered by the `/v1` docs and refusal matrix, and requires request hints for status/code refusal boundaries.
+- The offline public API contract QA gate validates manifest shape, keeps manifest boundary names covered by the `/v1` docs and refusal matrix, and requires request hints for status/code refusal boundaries to be exposed in the refusal matrix.
 - Optional MiniLM, SmolLM2, and Qwen2.5 API acceptance artifact QA self-tests run offline in default CI as schema/caveat checks only; they do not download models, start the backend, or add runtime proof.
 - External OpenAI-compatible entries remain metadata placeholders; activation and `/v1/chat/completions` refuse with `external_proxy_not_implemented` and no provider call.
 - PyTorch `.bin` artifacts remain blocked: the no-download public contract smoke registers a tiny synthetic local `.bin` artifact, confirms it is excluded from `/v1/models`, and confirms chat refuses with `501 not_implemented` without deserializing pickle bytes or faking inference.
