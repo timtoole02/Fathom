@@ -52,6 +52,13 @@ OFFLINE_QA_PYTHON_PATHS = (
     "scripts/qwen25_optional_api_acceptance_artifact_qa.py",
     "scripts/smollm2_optional_api_acceptance_artifact_qa.py",
 )
+OFFLINE_ARTIFACT_QA_RUN_PATHS = (
+    "scripts/public_contract_smoke_artifact_qa.py",
+    "scripts/backend_acceptance_artifact_qa.py",
+    "scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
+    "scripts/smollm2_optional_api_acceptance_artifact_qa.py",
+    "scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+)
 OPTIONAL_ACCEPTANCE_DOCS = (
     (
         MINILM_OPTIONAL_ACCEPTANCE,
@@ -292,6 +299,12 @@ def assert_launch_checklist_python_syntax_gate() -> None:
         raise AssertionError(f"launch checklist py_compile gate is missing offline QA helper(s): {missing}")
 
 
+def assert_launch_checklist_artifact_qa_run_gates() -> None:
+    checklist_text = read(LAUNCH_CHECKLIST)
+    for path in OFFLINE_ARTIFACT_QA_RUN_PATHS:
+        assert_contains(checklist_text, f"python3 {path}", "launch checklist artifact QA run gates")
+
+
 def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
     try:
         output = subprocess.check_output(
@@ -425,6 +438,7 @@ def assert_boundary_docs() -> None:
     for gate in checklist_required_gates:
         assert_contains(launch_text, gate, "launch checklist no-download gates")
     assert_launch_checklist_python_syntax_gate()
+    assert_launch_checklist_artifact_qa_run_gates()
     assert_contains(read(BACKEND_QUICKSTART), "scripts/public_api_contract_smoke.sh", "backend quickstart public contract smoke")
     assert_contains(read(CONTRIBUTING), "scripts/public_api_contract_smoke.sh", "contributing public contract smoke")
     assert_contains(readme_text, "docs/public-launch-checklist.md", "README launch checklist link")
