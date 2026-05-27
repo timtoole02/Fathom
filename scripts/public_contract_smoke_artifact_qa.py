@@ -228,12 +228,23 @@ def validate_summary_dir(directory: Path) -> None:
     if not isinstance(deferred, list):
         raise AssertionError("summary.deferred_manifest_boundaries must be a list")
 
+    seen_endpoint_checks: set[tuple[str, str]] = set()
     for item in endpoint_checks:
         if not isinstance(item, dict):
             raise AssertionError("endpoint check entries must be objects")
         for key in ("method", "path", "checks", "passed"):
             if key not in item:
                 raise AssertionError(f"endpoint check missing {key}: {item!r}")
+        method = item.get("method")
+        path = item.get("path")
+        if not isinstance(method, str) or not method:
+            raise AssertionError(f"endpoint check method must be a non-empty string: {item!r}")
+        if not isinstance(path, str) or not path:
+            raise AssertionError(f"endpoint check path must be a non-empty string: {item!r}")
+        endpoint_key = (method, path)
+        if endpoint_key in seen_endpoint_checks:
+            raise AssertionError(f"duplicate endpoint check entry: {item!r}")
+        seen_endpoint_checks.add(endpoint_key)
         if item["passed"] is not True:
             raise AssertionError(f"recorded endpoint checks must be completed passes: {item!r}")
         if not isinstance(item["checks"], list) or not item["checks"]:
@@ -246,18 +257,25 @@ def validate_summary_dir(directory: Path) -> None:
         boundary = item.get("boundary")
         if not isinstance(boundary, str) or not boundary:
             raise AssertionError(f"boundary check missing boundary name: {item!r}")
+        if boundary in boundary_by_name:
+            raise AssertionError(f"duplicate boundary check entry: {boundary!r}")
         if item.get("passed") is not True:
             raise AssertionError(f"recorded boundary checks must be completed passes: {item!r}")
         if not isinstance(item.get("check"), str) or not item["check"]:
             raise AssertionError(f"boundary check must name a check id: {item!r}")
         boundary_by_name[boundary] = item
 
+    seen_deferred_boundaries: set[str] = set()
     for item in deferred:
         if not isinstance(item, dict):
             raise AssertionError("deferred boundary entries must be objects")
         reason = item.get("reason")
         if not isinstance(item.get("boundary"), str) or not item["boundary"]:
             raise AssertionError(f"deferred boundary missing boundary name: {item!r}")
+        boundary = item["boundary"]
+        if boundary in seen_deferred_boundaries:
+            raise AssertionError(f"duplicate deferred boundary entry: {boundary!r}")
+        seen_deferred_boundaries.add(boundary)
         if not isinstance(reason, str) or "requires downloaded/registered model state" not in reason or "outside the no-download smoke" not in reason:
             raise AssertionError(f"deferred boundary reason must preserve no-download caveat: {item!r}")
 
@@ -529,6 +547,44 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("unexpected deferred boundary self-check did not fail")
+
+        duplicate_endpoint = root / "duplicate-endpoint"
+        mutated = passed_sample()
+        mutated["endpoint_checks"].append(dict(mutated["endpoint_checks"][0]))
+        write_sample(duplicate_endpoint, mutated)
+        try:
+            validate_summary_dir(duplicate_endpoint)
+        except AssertionError as exc:
+            if "duplicate endpoint check entry" not in str(exc):
+                raise
+        else:
+            raise AssertionError("duplicate endpoint self-check did not fail")
+
+        duplicate_boundary = root / "duplicate-boundary"
+        mutated = passed_sample()
+        mutated["boundary_checks"].append(dict(mutated["boundary_checks"][0]))
+        write_sample(duplicate_boundary, mutated)
+        try:
+            validate_summary_dir(duplicate_boundary)
+        except AssertionError as exc:
+            if "duplicate boundary check entry" not in str(exc):
+                raise
+        else:
+            raise AssertionError("duplicate boundary self-check did not fail")
+
+        duplicate_deferred = root / "duplicate-deferred"
+        mutated = passed_sample()
+        if len(mutated["deferred_manifest_boundaries"]) < 1:
+            raise AssertionError("duplicate deferred self-check needs a deferred sample boundary")
+        mutated["deferred_manifest_boundaries"].append(dict(mutated["deferred_manifest_boundaries"][0]))
+        write_sample(duplicate_deferred, mutated)
+        try:
+            validate_summary_dir(duplicate_deferred)
+        except AssertionError as exc:
+            if "duplicate deferred boundary entry" not in str(exc):
+                raise
+        else:
+            raise AssertionError("duplicate deferred self-check did not fail")
 
 
 def main() -> None:
