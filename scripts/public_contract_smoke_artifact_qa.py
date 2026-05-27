@@ -316,6 +316,9 @@ def validate_summary_dir(directory: Path) -> None:
         missing_endpoints = sorted(manifest_endpoints - checked_endpoints)
         if missing_endpoints:
             raise AssertionError(f"passed summary missing endpoint coverage: {missing_endpoints}")
+        unexpected_endpoints = sorted(checked_endpoints - manifest_endpoints)
+        if unexpected_endpoints:
+            raise AssertionError(f"passed summary has endpoint checks not present in public-contract.json: {unexpected_endpoints}")
         missing_boundaries = sorted(REQUIRED_NO_DOWNLOAD_BOUNDARIES - set(boundary_by_name))
         if missing_boundaries:
             raise AssertionError(f"passed summary missing no-download boundary coverage: {missing_boundaries}")
@@ -581,6 +584,20 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("duplicate endpoint self-check did not fail")
+
+        unexpected_endpoint = root / "unexpected-endpoint"
+        mutated = passed_sample()
+        mutated["endpoint_checks"].append(
+            {"method": "GET", "path": "/v1/files", "checks": ["synthetic-check"], "passed": True}
+        )
+        write_sample(unexpected_endpoint, mutated)
+        try:
+            validate_summary_dir(unexpected_endpoint)
+        except AssertionError as exc:
+            if "endpoint checks not present in public-contract.json" not in str(exc):
+                raise
+        else:
+            raise AssertionError("unexpected endpoint self-check did not fail")
 
         duplicate_boundary = root / "duplicate-boundary"
         mutated = passed_sample()
