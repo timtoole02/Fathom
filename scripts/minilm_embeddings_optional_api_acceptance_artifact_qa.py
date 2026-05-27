@@ -116,7 +116,10 @@ def validate_summary(directory:Path)->None:
     assert_checks_cover_required_artifacts(summary.get('checks'))
     caveats='\n'.join(str(x) for x in summary.get('caveats') or [])
     assert_required_caveats(caveats,'summary.json caveats')
-    assert_required_caveats((directory/'summary.md').read_text(),'summary.md')
+    md=(directory/'summary.md').read_text()
+    if 'Result: `passed`' not in md or 'What this does not prove' not in md:
+        raise AssertionError('summary.md must clearly mark pass and caveats')
+    assert_required_caveats(md,'summary.md')
     validate_install(load_json(directory/'02-install-minilm.json'))
     emb_models=load_json(directory/'03-api-embedding-models.json')
     if MODEL_ID not in [i.get('id') for i in emb_models.get('items',[])]: raise AssertionError('embedding models missing MiniLM')
@@ -171,6 +174,14 @@ def main():
                 if 'summary.checks artifact index mismatch' not in str(exc): raise
             else:
                 raise AssertionError('missing check artifact self-check did not fail')
+            bad_md=Path(tmp)/'missing-pass-marker'; write_sample(bad_md)
+            (bad_md/'summary.md').write_text((bad_md/'summary.md').read_text().replace('- Result: `passed`\n',''))
+            try:
+                validate_summary(bad_md)
+            except AssertionError as exc:
+                if 'summary.md must clearly mark pass and caveats' not in str(exc): raise
+            else:
+                raise AssertionError('missing summary.md pass marker self-check did not fail')
         print('MiniLM embeddings optional API acceptance artifact QA self-test passed'); return
     for d in dirs: validate_summary(d)
     print('MiniLM embeddings optional API acceptance artifact QA passed')
