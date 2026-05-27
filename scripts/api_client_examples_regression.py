@@ -295,6 +295,8 @@ def assert_json_request(request: RecordedRequest, label: str) -> None:
 
 
 def static_checks() -> None:
+    manifest = load_public_contract()
+
     required_loopback_warning_terms = {
         "README.md": ("no built-in authentication", "loopback"),
         "docs/api/v1-contract.md": ("no built-in authentication", "loopback", "SECURITY.md"),
@@ -343,6 +345,37 @@ def static_checks() -> None:
             "examples/api/fathom.http",
         )
     )
+    for endpoint in manifest.get("supported_endpoints", []):
+        method = endpoint.get("method")
+        path = endpoint.get("path")
+        assert_true(
+            isinstance(method, str) and isinstance(path, str),
+            "manifest supported endpoints must include method/path",
+        )
+        assert_true(
+            path in executable_text,
+            f"examples/api missing manifest-supported endpoint {method} {path}",
+        )
+
+    allowed_non_contract = manifest.get("non_contract_surfaces_allowed_in_examples", [])
+    assert_true(
+        isinstance(allowed_non_contract, list),
+        "manifest non-contract example allow-list must be a list",
+    )
+    for item in allowed_non_contract:
+        assert_true(
+            isinstance(item, str),
+            "manifest non-contract example allow-list entries must be strings",
+        )
+    assert_true(
+        "POST /api/models/catalog/install" in allowed_non_contract,
+        "manifest must explicitly allow the catalog install surface used by client examples",
+    )
+    assert_true(
+        "/api/models/catalog/install" in executable_text,
+        "examples/api missing manifest-allowed catalog install surface",
+    )
+
     forbidden_endpoints = (
         "/v1/responses",
         "/v1/files",
