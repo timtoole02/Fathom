@@ -11,6 +11,7 @@ or more directories it validates real artifacts produced by
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 import re
 import tempfile
@@ -22,6 +23,7 @@ MANIFEST = ROOT / "docs" / "api" / "public-contract.json"
 SUMMARY_JSON = "public-contract-smoke-summary.json"
 SUMMARY_MD = "public-contract-smoke-summary.md"
 SCHEMA = "fathom.public_contract_smoke.summary.v1"
+GENERATED_AT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$")
 SCOPE_PHRASES = [
     "no-download",
     "routing/refusal",
@@ -188,6 +190,12 @@ def validate_summary_dir(directory: Path) -> None:
 
     if summary.get("schema") != SCHEMA:
         raise AssertionError(f"summary.schema must be {SCHEMA!r}")
+    generated_at = summary.get("generated_at")
+    if not isinstance(generated_at, str) or not GENERATED_AT_RE.fullmatch(generated_at):
+        raise AssertionError("summary.generated_at must be an RFC3339 UTC timestamp ending in Z")
+    parsed_generated_at = datetime.fromisoformat(generated_at.removesuffix("Z") + "+00:00")
+    if parsed_generated_at.tzinfo != timezone.utc:
+        raise AssertionError("summary.generated_at must use UTC")
     if not isinstance(summary.get("passed"), bool):
         raise AssertionError("summary.passed must be a boolean")
     commit = summary.get("commit")
@@ -201,6 +209,10 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError(f"summary.manifest.{key} must be a non-empty string")
     if manifest["path"] != "docs/api/public-contract.json":
         raise AssertionError("summary.manifest.path must be docs/api/public-contract.json")
+    manifest_data = load_manifest()
+    for key in ("name", "status"):
+        if manifest[key] != manifest_data.get(key):
+            raise AssertionError(f"summary.manifest.{key} must match docs/api/public-contract.json")
     proof_scope = summary.get("proof_scope")
     if not isinstance(proof_scope, str) or not proof_scope:
         raise AssertionError("summary.proof_scope must be a non-empty string")
@@ -257,7 +269,6 @@ def validate_summary_dir(directory: Path) -> None:
         if REFUSAL_ONLY_CODE not in external_text or "refusal" not in external_text.lower():
             raise AssertionError("external placeholder wording must be refusal-only")
 
-    manifest_data = load_manifest()
     expected_by_name = manifest_expected_boundaries(manifest_data)
     if summary["passed"] is True:
         manifest_endpoints = {(item["method"], item["path"]) for item in manifest_data.get("supported_endpoints", [])}
@@ -439,6 +450,30 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("markdown/JSON consistency self-check did not fail")
+
+        bad_generated_at = root / "bad-generated-at"
+        mutated = passed_sample()
+        mutated["generated_at"] = "2026-04-27 00:00:00"
+        write_sample(bad_generated_at, mutated)
+        try:
+            validate_summary_dir(bad_generated_at)
+        except AssertionError as exc:
+            if "summary.generated_at" not in str(exc):
+                raise
+        else:
+            raise AssertionError("generated_at timestamp self-check did not fail")
+
+        stale_manifest = root / "stale-manifest"
+        mutated = passed_sample()
+        mutated["manifest"]["status"] = "stale-status"
+        write_sample(stale_manifest, mutated)
+        try:
+            validate_summary_dir(stale_manifest)
+        except AssertionError as exc:
+            if "summary.manifest.status" not in str(exc):
+                raise
+        else:
+            raise AssertionError("manifest metadata drift self-check did not fail")
 
         bad_deferred = root / "bad-deferred"
         mutated = passed_sample()
