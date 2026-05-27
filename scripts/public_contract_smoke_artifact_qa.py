@@ -197,6 +197,9 @@ def assert_markdown(summary: dict[str, Any], markdown_path: Path) -> str:
             raise AssertionError(f"{markdown_path.name} manifest line must match summary.manifest.name")
         if isinstance(manifest_status, str) and manifest_status and manifest_status not in md:
             raise AssertionError(f"{markdown_path.name} manifest line must match summary.manifest.status")
+    proof_scope = summary.get("proof_scope")
+    if isinstance(proof_scope, str) and proof_scope and f"- Scope: {proof_scope}" not in md:
+        raise AssertionError(f"{markdown_path.name} scope line must match summary.proof_scope")
     assert_scope(md, markdown_path.name)
     if summary.get("passed") is False:
         lowered = md.lower()
@@ -485,7 +488,7 @@ def write_sample(directory: Path, summary: dict[str, Any]) -> None:
             "",
             f"- Commit: `{summary['commit']}`",
             f"- Manifest: `docs/api/public-contract.json` / `{summary['manifest']['name']}` (`{summary['manifest']['status']}`)",
-            "- Scope: no-download real-backend routing/refusal smoke only; does not prove model downloads, generation quality, embedding quality, performance, external proxying, a GGUF runtime, tokenizer execution, or generation claim, or broad model support.",
+            f"- Scope: {summary['proof_scope']}",
             *failure_note,
             "",
             "## Endpoint checks",
@@ -580,6 +583,22 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("markdown/JSON consistency self-check did not fail")
+
+        bad_markdown_scope = root / "bad-markdown-scope"
+        write_sample(bad_markdown_scope, passed_sample())
+        (bad_markdown_scope / SUMMARY_MD).write_text(
+            (bad_markdown_scope / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace("No-download real-backend routing/refusal smoke only.", "Narrow local smoke only."),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(bad_markdown_scope)
+        except AssertionError as exc:
+            if "summary.proof_scope" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown/proof-scope consistency self-check did not fail")
 
         missing_markdown_boundary = root / "missing-markdown-boundary"
         write_sample(missing_markdown_boundary, passed_sample())

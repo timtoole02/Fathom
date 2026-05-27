@@ -515,7 +515,7 @@ def assert_boundary_docs() -> None:
     assert_latest_public_contract_qa_hardening_evidence(evidence_text)
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
-    assert_contains(evidence_text, "public-contract smoke Markdown/status row consistency", "launch evidence public smoke row QA scope")
+    assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")
     assert_contains(evidence_text, "manifest-to-`/v1` docs boundary coverage", "launch evidence manifest docs boundary gate")
     assert_contains(

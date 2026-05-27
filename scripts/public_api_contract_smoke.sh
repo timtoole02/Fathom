@@ -156,7 +156,7 @@ def write_summary(passed):
             "",
             f"- Commit: `{summary['commit']}`",
             f"- Manifest: `{summary['manifest']['path']}` / `{summary['manifest']['name']}` (`{summary['manifest']['status']}`)",
-            "- Scope: no-download real-backend routing/refusal smoke only; does not prove model downloads, generation quality, embedding quality, performance, external proxying, a GGUF runtime, tokenizer execution, or generation claim, or broad model support.",
+            f"- Scope: {summary['proof_scope']}",
             *failure_note,
             "",
             "## Endpoint checks",
