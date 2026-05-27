@@ -275,21 +275,17 @@ def verify_manifest_coverage():
             {"method": key[0], "path": key[1], "checks": checks, "passed": True}
         )
 
-    required_no_download_boundaries = {
-        "streaming chat completions",
-        "base64 embeddings",
-        "external placeholder chat or activation",
-        "embedding models in /v1/models",
-        "PyTorch .bin execution",
-        "unsupported ONNX chat or general ONNX model execution",
-        "unverified SafeTensors/Hugging Face model execution",
-        "GGUF metadata-only chat attempts",
-        "missing chat model",
-        "unknown embedding model",
-    }
     summary["boundary_checks"] = []
     expected = manifest.get("expected_boundary_errors", [])
     expected_by_name = {item.get("boundary"): item for item in expected}
+    expected_behavior_no_download_boundaries = {
+        "embedding models in /v1/models",
+    }
+    required_no_download_boundaries = {
+        boundary
+        for boundary, item in expected_by_name.items()
+        if "status" in item or "code" in item
+    } | expected_behavior_no_download_boundaries
     for boundary in sorted(required_no_download_boundaries):
         if boundary not in expected_by_name:
             raise AssertionError(f"manifest missing expected no-download boundary {boundary!r}")

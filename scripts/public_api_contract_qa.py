@@ -714,6 +714,7 @@ def assert_smoke_manifest_wiring() -> None:
     assert_contains(smoke_text, "docs/api/public-contract.json", "public contract smoke manifest load")
     assert_contains(smoke_text, "supported_endpoints", "public contract smoke endpoint coverage")
     assert_contains(smoke_text, "expected_boundary_errors", "public contract smoke boundary coverage")
+    assert_contains(smoke_text, "expected_behavior_no_download_boundaries", "public contract smoke manifest-derived boundary coverage")
     assert_contains(smoke_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "public contract smoke artifact env")
     assert_contains(smoke_text, "fathom.public_contract_smoke.summary.v1", "public contract smoke artifact schema")
     assert_contains(smoke_text, "partial diagnostic evidence", "public contract smoke failed artifact caveat")
