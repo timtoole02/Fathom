@@ -48,8 +48,8 @@ def evaluate_ci_text(text: str) -> list[str]:
     if "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR" in text:
         failures.append("default CI must not persist public contract smoke artifacts")
 
-    if re.search(r"actions/(upload-artifact|cache)@", text):
-        failures.append("default CI must not upload or cache QA/model artifacts")
+    if re.search(r"actions/(upload-artifact|download-artifact|cache)@", text):
+        failures.append("default CI must not upload/download or cache QA/model artifacts")
 
     if re.search(r"(models|artifacts|target)\s*:", text, re.IGNORECASE):
         failures.append("default CI must not define broad model/artifact/target caches")
@@ -85,6 +85,7 @@ jobs:
         "networked acceptance": "run: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/backend_acceptance_smoke.sh",
         "public contract artifacts": "run: bash scripts/public_api_contract_smoke.sh\nenv:\n  FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR: artifacts",
         "upload artifact": "uses: actions/upload-artifact@v4\nrun: bash scripts/public_api_contract_smoke.sh",
+        "download artifact": "uses: actions/download-artifact@v4\nrun: bash scripts/public_api_contract_smoke.sh",
         "cache action": "uses: actions/cache@v4\nrun: bash scripts/public_api_contract_smoke.sh",
         "broad target cache": "target:\n  path: target\nrun: bash scripts/public_api_contract_smoke.sh",
         "missing public smoke": "run: cargo test -q",
