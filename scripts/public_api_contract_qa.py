@@ -86,6 +86,10 @@ OPTIONAL_ACCEPTANCE_DOCS = (
 PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"^(Harden public .+ QA|Expose refusal request hints in matrix|Guard public .+ artifact .+)$"
 )
+ALLOWED_EXTRA_REFUSAL_MATRIX_ROWS = {
+    "Production readiness, performance, quality, legal/license suitability",
+    "Real external provider proxying",
+}
 
 REQUIRED_ERROR_CODES = {
     "invalid_request",
@@ -579,6 +583,7 @@ def assert_boundary_docs() -> None:
         "unverified SafeTensors/Hugging Face model execution": "Unverified SafeTensors/Hugging Face model execution",
         "full OpenAI API parity": "Full OpenAI API parity",
     }
+    assert_refusal_matrix_row_set(matrix_text, manifest, matrix_aliases)
     for boundary in manifest.get("expected_boundary_errors", []):
         name = boundary.get("boundary")
         expected = matrix_aliases.get(name)
@@ -628,6 +633,53 @@ def assert_boundary_docs() -> None:
     assert_contains(quickstart_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "backend quickstart public contract artifact env")
     assert_contains(contributing_text, "public-contract.json", "contributing manifest-driven public contract smoke")
     assert_contains(contributing_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "contributing public contract artifact env")
+
+
+def markdown_table_first_cells(markdown: str) -> list[str]:
+    rows: list[str] = []
+    for line in markdown.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|") or not stripped.endswith("|"):
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if not cells or cells[0] == "Boundary" or set(cells[0]) <= {"-", ":"}:
+            continue
+        rows.append(cells[0])
+    return rows
+
+
+def assert_refusal_matrix_row_set(
+    matrix_text: str,
+    manifest: dict[str, Any],
+    matrix_aliases: dict[str, str],
+) -> None:
+    expected_rows: set[str] = set(ALLOWED_EXTRA_REFUSAL_MATRIX_ROWS)
+    for boundary in manifest.get("expected_boundary_errors", []):
+        name = boundary.get("boundary")
+        if not isinstance(name, str):
+            raise AssertionError(f"manifest boundary entry missing boundary name: {boundary!r}")
+        expected = matrix_aliases.get(name)
+        if expected is None:
+            raise AssertionError(f"docs/api/public-contract.json boundary {name!r} is missing a refusal matrix alias")
+        expected_rows.add(expected)
+
+    rows = markdown_table_first_cells(matrix_text)
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+    for row in rows:
+        if row in seen:
+            duplicates.add(row)
+        seen.add(row)
+    if duplicates:
+        raise AssertionError(f"refusal boundary matrix has duplicate boundary rows: {sorted(duplicates)}")
+
+    unexpected = seen - expected_rows
+    if unexpected:
+        raise AssertionError(f"refusal boundary matrix has non-manifest boundary rows without allow-list coverage: {sorted(unexpected)}")
+
+    missing = expected_rows - seen
+    if missing:
+        raise AssertionError(f"refusal boundary matrix is missing expected boundary rows: {sorted(missing)}")
 
 
 def assert_examples_static(manifest: dict[str, Any]) -> None:
@@ -707,6 +759,38 @@ def run_self_test() -> None:
         raise AssertionError(
             "public API contract QA self-test rejected allowed caveated examples:\n" + "\n".join(allowed_failures)
         )
+
+    manifest = {
+        "expected_boundary_errors": [
+            {"boundary": "streaming chat completions", "status": 501, "code": "not_implemented"},
+            {"boundary": "full OpenAI API parity", "expected_behavior": "not claimed"},
+        ]
+    }
+    aliases = {
+        "streaming chat completions": "Streamed chat-completion requests",
+        "full OpenAI API parity": "Full OpenAI API parity",
+    }
+    allowed_matrix = """
+| Boundary | Request hint | Expected behavior | Evidence |
+| --- | --- | --- | --- |
+| Streamed chat-completion requests | `stream: true` | `501 not_implemented`, no `choices` | public contract smoke |
+| Full OpenAI API parity | n/a; non-claim boundary | not claimed | docs/static contract QA |
+| Production readiness, performance, quality, legal/license suitability | n/a; non-claim boundary | not claimed | public launch checklist and evidence caveats |
+| Real external provider proxying | external placeholder activation or chat model id | not implemented | public contract smoke and docs/static QA |
+"""
+    assert_refusal_matrix_row_set(allowed_matrix, manifest, aliases)
+
+    unexpected_matrix = allowed_matrix.replace(
+        "| Full OpenAI API parity |",
+        "| Full OpenAI API parity |\n| Unreviewed runtime expansion |",
+    )
+    try:
+        assert_refusal_matrix_row_set(unexpected_matrix, manifest, aliases)
+    except AssertionError as exc:
+        if "non-manifest boundary rows without allow-list coverage" not in str(exc):
+            raise AssertionError("refusal matrix row-set self-test failed for the wrong reason") from exc
+    else:
+        raise AssertionError("refusal matrix row-set self-test did not reject an unexpected boundary row")
 
 
 def assert_smoke_manifest_wiring() -> None:
