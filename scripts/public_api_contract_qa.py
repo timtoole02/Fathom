@@ -330,6 +330,9 @@ def assert_boundary_docs() -> None:
         if "status" in boundary and "code" in boundary:
             expected_status_code = f"`{boundary['status']} {boundary['code']}`"
             assert_contains(matrix_line, expected_status_code, f"refusal boundary matrix row for {name!r}")
+            request_hint = boundary.get("request_hint")
+            assert_non_empty_string(request_hint, f"manifest boundary {name!r}.request_hint")
+            assert_contains(matrix_line, request_hint, f"refusal boundary matrix request hint for {name!r}")
         elif name == "embedding models in /v1/models":
             assert_contains(matrix_line.lower(), "excluded", f"refusal boundary matrix row for {name!r}")
         elif name == "full OpenAI API parity":

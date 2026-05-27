@@ -8,18 +8,18 @@ It is not a runtime expansion plan. It keeps these areas refused or unclaimed: s
 
 These boundaries are exercised by `scripts/public_api_contract_smoke.sh` against a real isolated backend and summarized by `scripts/public_contract_smoke_artifact_qa.py`.
 
-| Boundary | Expected behavior | Evidence |
-| --- | --- | --- |
-| Streamed chat-completion requests | `501 not_implemented`, no `choices` | public contract smoke |
-| Base64 embeddings | `400 invalid_request`, no embedding `data` | public contract smoke |
-| Missing chat model | `400 model_not_found`, no `choices` | public contract smoke |
-| Unknown embedding model | `404 embedding_model_not_found`, no embedding `data` | public contract smoke |
-| External placeholder chat or activation | `501 external_proxy_not_implemented`, no provider call, no fake response | public contract smoke and server tests |
-| Embedding models in `/v1/models` | excluded from chat/generation model listing | public contract smoke empty-state exclusion |
-| PyTorch `.bin` execution | `501 not_implemented`; blocked because pickle artifacts can execute code, no fake response | public contract smoke with a tiny synthetic local artifact and server tests |
-| Unsupported ONNX chat or general ONNX model execution | `501 not_implemented`; ONNX embeddings remain separate and narrow, no fake response | public contract smoke with a tiny synthetic local artifact and server tests |
-| Unverified SafeTensors/Hugging Face model execution | `501 not_implemented`; only explicitly verified local lanes are runnable, no fake response | public contract smoke with a tiny synthetic local HF-style SafeTensors package |
-| GGUF metadata-only chat attempts | `501 not_implemented`; metadata/readiness only, no public/runtime tokenizer execution, no runtime weight loading, no dequantization/kernels, and no generation | public contract smoke with a tiny synthetic metadata-only local GGUF file, plus optional backend acceptance smoke |
+| Boundary | Request hint | Expected behavior | Evidence |
+| --- | --- | --- | --- |
+| Streamed chat-completion requests | `stream: true` | `501 not_implemented`, no `choices` | public contract smoke |
+| Base64 embeddings | `encoding_format: base64` | `400 invalid_request`, no embedding `data` | public contract smoke |
+| Missing chat model | unknown local chat model id | `400 model_not_found`, no `choices` | public contract smoke |
+| Unknown embedding model | unknown local embedding model id | `404 embedding_model_not_found`, no embedding `data` | public contract smoke |
+| External placeholder chat or activation | external placeholder activation or chat model id | `501 external_proxy_not_implemented`, no provider call, no fake response | public contract smoke and server tests |
+| Embedding models in `/v1/models` | n/a; exclusion boundary | excluded from chat/generation model listing | public contract smoke empty-state exclusion |
+| PyTorch `.bin` execution | PyTorch .bin model id in /v1/chat/completions | `501 not_implemented`; blocked because pickle artifacts can execute code, no fake response | public contract smoke with a tiny synthetic local artifact and server tests |
+| Unsupported ONNX chat or general ONNX model execution | unsupported ONNX model id in /v1/chat/completions | `501 not_implemented`; ONNX embeddings remain separate and narrow, no fake response | public contract smoke with a tiny synthetic local artifact and server tests |
+| Unverified SafeTensors/Hugging Face model execution | unverified SafeTensors/Hugging Face model id in /v1/chat/completions | `501 not_implemented`; only explicitly verified local lanes are runnable, no fake response | public contract smoke with a tiny synthetic local HF-style SafeTensors package |
+| GGUF metadata-only chat attempts | metadata-only GGUF model id in /v1/chat/completions | `501 not_implemented`; metadata/readiness only, no public/runtime tokenizer execution, no runtime weight loading, no dequantization/kernels, and no generation | public contract smoke with a tiny synthetic metadata-only local GGUF file, plus optional backend acceptance smoke |
 
 ## Optional fixture/networked evidence boundaries
 
@@ -27,11 +27,11 @@ No manifest boundaries currently require optional fixture/networked evidence. Op
 
 ## Non-claim boundaries
 
-| Boundary | Expected behavior | Evidence |
-| --- | --- | --- |
-| Full OpenAI API parity | not claimed | docs/static contract QA |
-| Production readiness, performance, quality, legal/license suitability | not claimed | public launch checklist and evidence caveats |
-| Real external provider proxying | not implemented; external entries are metadata placeholders | public contract smoke and docs/static QA |
+| Boundary | Request hint | Expected behavior | Evidence |
+| --- | --- | --- | --- |
+| Full OpenAI API parity | n/a; non-claim boundary | not claimed | docs/static contract QA |
+| Production readiness, performance, quality, legal/license suitability | n/a; non-claim boundary | not claimed | public launch checklist and evidence caveats |
+| Real external provider proxying | external placeholder activation or chat model id | not implemented; external entries are metadata placeholders | public contract smoke and docs/static QA |
 
 ## Updating this matrix
 
