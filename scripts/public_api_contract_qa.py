@@ -346,6 +346,15 @@ def assert_boundary_docs() -> None:
     assert_contains(readme_text, "public launch API contract", "README API section")
     assert_contains(readme_text, "scripts/public_api_contract_smoke.sh", "README public contract smoke")
     launch_text = read(LAUNCH_CHECKLIST)
+    checklist_required_gates = [
+        "git diff --check",
+        "scripts/api_client_examples_regression.py",
+        "scripts/ci_static_policy.py --self-test",
+        "scripts/public_api_contract_qa.py --self-test",
+        "scripts/public_risk_scan.sh --self-test",
+    ]
+    for gate in checklist_required_gates:
+        assert_contains(launch_text, gate, "launch checklist no-download gates")
     assert_contains(read(BACKEND_QUICKSTART), "scripts/public_api_contract_smoke.sh", "backend quickstart public contract smoke")
     assert_contains(read(CONTRIBUTING), "scripts/public_api_contract_smoke.sh", "contributing public contract smoke")
     assert_contains(readme_text, "docs/public-launch-checklist.md", "README launch checklist link")

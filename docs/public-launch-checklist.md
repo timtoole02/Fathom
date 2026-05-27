@@ -19,9 +19,12 @@ Run these before treating docs/API contract changes as launch-ready:
 
 ```bash
 git diff --check
-python3 -m py_compile scripts/backend_acceptance_artifact_qa.py scripts/public_api_contract_qa.py scripts/public_contract_smoke_artifact_qa.py
+python3 -m py_compile scripts/api_client_examples_regression.py scripts/backend_acceptance_artifact_qa.py scripts/ci_static_policy.py scripts/public_api_contract_qa.py scripts/public_contract_smoke_artifact_qa.py
 python3 scripts/ci_static_policy.py
+python3 scripts/ci_static_policy.py --self-test
+python3 scripts/api_client_examples_regression.py
 python3 scripts/public_api_contract_qa.py
+python3 scripts/public_api_contract_qa.py --self-test
 python3 scripts/public_contract_smoke_artifact_qa.py
 python3 scripts/backend_acceptance_artifact_qa.py
 python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py
@@ -29,6 +32,7 @@ python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py
 python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py
 bash -n scripts/public_api_contract_smoke.sh
 bash -n scripts/backend_acceptance_smoke.sh
+bash scripts/public_risk_scan.sh --self-test
 bash scripts/public_risk_scan.sh
 npm --prefix frontend run qa:copy
 ```
