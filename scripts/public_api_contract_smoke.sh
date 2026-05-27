@@ -135,9 +135,10 @@ def write_summary(passed):
     ]
     boundary_lines = []
     for item in summary["boundary_checks"]:
+        status_code = f"; `{item['status']} {item['code']}`" if item.get("status") and item.get("code") else ""
         hint = f"; hint `{item['request_hint']}`" if item.get("request_hint") else ""
         boundary_lines.append(
-            f"- {item['boundary']}: {'pass' if item.get('passed') else 'fail'} ({item.get('check')}{hint})"
+            f"- {item['boundary']}: {'pass' if item.get('passed') else 'fail'} ({item.get('check')}{status_code}{hint})"
         )
     deferred_lines = [
         f"- {item['boundary']}: {item['reason']}"

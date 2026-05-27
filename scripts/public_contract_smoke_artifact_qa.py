@@ -235,6 +235,10 @@ def assert_markdown_rows_match_summary(summary: dict[str, Any], md: str, markdow
             request_hint = item.get("request_hint")
             if isinstance(request_hint, str) and request_hint and f"hint `{request_hint}`" not in md:
                 raise AssertionError(f"{label} missing boundary request hint matching summary JSON: {boundary}")
+            status = item.get("status")
+            code = item.get("code")
+            if isinstance(status, int) and isinstance(code, str) and code and f"`{status} {code}`" not in md:
+                raise AssertionError(f"{label} missing boundary status/code matching summary JSON: {boundary}")
 
     for item in deferred:
         if not isinstance(item, dict):
@@ -462,8 +466,9 @@ def write_sample(directory: Path, summary: dict[str, Any]) -> None:
     ] or ["- none completed before failure"]
     boundaries = []
     for item in summary["boundary_checks"]:
+        status_code = f"; `{item['status']} {item['code']}`" if item.get("status") and item.get("code") else ""
         hint = f"; hint `{item['request_hint']}`" if item.get("request_hint") else ""
-        boundaries.append(f"- {item['boundary']}: pass ({item['check']}{hint})")
+        boundaries.append(f"- {item['boundary']}: pass ({item['check']}{status_code}{hint})")
     boundaries = boundaries or ["- none completed before failure"]
     deferred = [
         f"- {item['boundary']}: {item['reason']}" for item in summary["deferred_manifest_boundaries"]
@@ -582,7 +587,7 @@ def run_self_check() -> None:
             (missing_markdown_boundary / SUMMARY_MD)
             .read_text(encoding="utf-8")
             .replace(
-                "- GGUF metadata-only chat attempts: pass (synthetic-refusal-check; hint `metadata-only GGUF model id in /v1/chat/completions`)\n",
+                "- GGUF metadata-only chat attempts: pass (synthetic-refusal-check; `501 not_implemented`; hint `metadata-only GGUF model id in /v1/chat/completions`)\n",
                 "",
             ),
             encoding="utf-8",
@@ -594,6 +599,22 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("markdown summary row consistency self-check did not fail")
+
+        missing_markdown_status_code = root / "missing-markdown-status-code"
+        write_sample(missing_markdown_status_code, passed_sample())
+        (missing_markdown_status_code / SUMMARY_MD).write_text(
+            (missing_markdown_status_code / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace("; `400 invalid_request`; hint `encoding_format: base64`", "; hint `encoding_format: base64`"),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(missing_markdown_status_code)
+        except AssertionError as exc:
+            if "status/code" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown summary status/code consistency self-check did not fail")
 
         bad_commit = root / "bad-commit"
         mutated = passed_sample()
