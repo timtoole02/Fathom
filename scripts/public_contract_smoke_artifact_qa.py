@@ -162,6 +162,17 @@ def assert_markdown(summary: dict[str, Any], markdown_path: Path) -> str:
             raise AssertionError(f"{markdown_path.name} missing {needle!r}")
     if "docs/api/public-contract.json" not in md:
         raise AssertionError(f"{markdown_path.name} must include the manifest path")
+    commit = summary.get("commit")
+    if isinstance(commit, str) and commit and f"Commit: `{commit}`" not in md:
+        raise AssertionError(f"{markdown_path.name} commit line must match summary.commit")
+    manifest = summary.get("manifest")
+    if isinstance(manifest, dict):
+        manifest_name = manifest.get("name")
+        manifest_status = manifest.get("status")
+        if isinstance(manifest_name, str) and manifest_name and manifest_name not in md:
+            raise AssertionError(f"{markdown_path.name} manifest line must match summary.manifest.name")
+        if isinstance(manifest_status, str) and manifest_status and manifest_status not in md:
+            raise AssertionError(f"{markdown_path.name} manifest line must match summary.manifest.status")
     assert_scope(md, markdown_path.name)
     if summary.get("passed") is False:
         lowered = md.lower()
@@ -414,6 +425,20 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("manifest status/code drift self-check did not fail")
+
+        bad_markdown = root / "bad-markdown"
+        write_sample(bad_markdown, passed_sample())
+        (bad_markdown / SUMMARY_MD).write_text(
+            (bad_markdown / SUMMARY_MD).read_text(encoding="utf-8").replace("Commit: `sample`", "Commit: `stale`"),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(bad_markdown)
+        except AssertionError as exc:
+            if "commit line" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown/JSON consistency self-check did not fail")
 
         bad_deferred = root / "bad-deferred"
         mutated = passed_sample()
