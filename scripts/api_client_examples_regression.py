@@ -246,6 +246,8 @@ def assert_public_contract(requests: list[RecordedRequest], *, embeddings: bool,
 
     install_requests = [r for r in requests if r.method == "POST" and r.path == "/api/models/catalog/install"]
     assert_true(len(install_requests) == (2 if embeddings else 1), f"{label}: unexpected install request count")
+    expected_install_repos = [CHAT_REPO_ID] + ([EMBEDDING_REPO_ID] if embeddings else [])
+    actual_install_repos: list[str] = []
     for request in install_requests:
         assert_json_request(request, label)
         assert_true(isinstance(request.body, dict), f"{label}: install body must be a JSON object")
@@ -253,16 +255,22 @@ def assert_public_contract(requests: list[RecordedRequest], *, embeddings: bool,
         filename = request.body.get("filename")
         assert_true(isinstance(repo_id, str) and re.fullmatch(r"[^/\s]+/[^\s]+", repo_id) is not None, f"{label}: invalid catalog repo_id {repo_id!r}")
         assert_true(isinstance(filename, str) and filename.endswith(".safetensors"), f"{label}: invalid catalog filename {filename!r}")
+        actual_install_repos.append(repo_id)
         assert_true(
             request.body.get("accept_license") in (None, False) and request.body.get("accepted_license") in (None, False),
             f"{label}: default permissive catalog examples should not require a license acknowledgement field",
         )
+    assert_true(
+        actual_install_repos == expected_install_repos,
+        f"{label}: expected install repo order {expected_install_repos}, got {actual_install_repos}",
+    )
 
     chat_requests = [r for r in requests if r.method == "POST" and r.path == "/v1/chat/completions"]
     assert_true(len(chat_requests) == 1, f"{label}: expected exactly one chat request")
     chat = chat_requests[0]
     assert_json_request(chat, label)
     assert_true(isinstance(chat.body, dict), f"{label}: chat body must be a JSON object")
+    assert_true(chat.body.get("model") == CHAT_MODEL_ID, f"{label}: chat model id drifted from fake /v1/models fixture")
     assert_true(chat.body.get("stream") in (None, False), f"{label}: examples must use non-streaming chat")
     assert_true(isinstance(chat.body.get("messages"), list) and chat.body["messages"], f"{label}: chat messages missing")
 
@@ -272,6 +280,10 @@ def assert_public_contract(requests: list[RecordedRequest], *, embeddings: bool,
         embedding = embedding_requests[0]
         assert_json_request(embedding, label)
         assert_true(isinstance(embedding.body, dict), f"{label}: embeddings body must be a JSON object")
+        assert_true(
+            embedding.body.get("model") == EMBEDDING_MODEL_ID,
+            f"{label}: embeddings model id drifted from fake install response",
+        )
         assert_true(embedding.body.get("encoding_format") == "float", f"{label}: embeddings must request float encoding")
     else:
         assert_true(not embedding_requests, f"{label}: embeddings request must be opt-in only")
