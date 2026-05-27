@@ -24,6 +24,7 @@ EXPECTED_FILES={
 }
 EXPECTED_TOTAL_BYTES=91_336_236
 REQUIRED={'01-v1-health.json','02-install-minilm.json','03-api-embedding-models.json','04-v1-models-exclude-minilm.json','05-v1-embeddings-float.json','06-v1-embeddings-base64-refusal.json','07-chat-embedding-model-refusal.json','summary.json','summary.md'}
+EXPECTED_CHECK_ARTIFACTS=REQUIRED-{'summary.json','summary.md'}
 REQUIRED_CAVEAT_PHRASES=(
     'Optional local',
     'embedding quality',
@@ -65,6 +66,18 @@ def assert_required_caveats(text:str,label:str)->None:
     missing=[phrase for phrase in REQUIRED_CAVEAT_PHRASES if phrase.lower() not in lowered]
     if missing: raise AssertionError(f'{label} missing caveat phrase(s): {missing}')
 
+def assert_checks_cover_required_artifacts(checks:Any)->None:
+    if not isinstance(checks,list): raise AssertionError('summary.checks must be a list')
+    artifacts=[check.get('artifact') for check in checks if isinstance(check,dict)]
+    missing=sorted(EXPECTED_CHECK_ARTIFACTS-set(artifacts))
+    unexpected=sorted(set(artifacts)-EXPECTED_CHECK_ARTIFACTS)
+    duplicates=sorted({artifact for artifact in artifacts if artifact and artifacts.count(artifact)>1})
+    if missing or unexpected or duplicates:
+        raise AssertionError(f'summary.checks artifact index mismatch: missing={missing} unexpected={unexpected} duplicates={duplicates}')
+    for check in checks:
+        if not isinstance(check,dict): raise AssertionError('summary.checks entries must be objects')
+        if check.get('status')!='passed': raise AssertionError(f'summary check failed: {check}')
+
 def validate_install(install:dict[str,Any])->None:
     if install.get('id')!=MODEL_ID or install.get('task')!='text_embedding': raise AssertionError('install identity/task mismatch')
     manifest=install.get('download_manifest') or {}
@@ -100,6 +113,7 @@ def validate_summary(directory:Path)->None:
         v=summary.get(k)
         if not isinstance(v,str) or v.startswith('/'): raise AssertionError(f'summary.{k} not share-safe')
     if summary.get('model_id')!=MODEL_ID or summary.get('repo_id')!=REPO_ID or summary.get('revision')!=REVISION: raise AssertionError('summary model identity mismatch')
+    assert_checks_cover_required_artifacts(summary.get('checks'))
     caveats='\n'.join(str(x) for x in summary.get('caveats') or [])
     assert_required_caveats(caveats,'summary.json caveats')
     assert_required_caveats((directory/'summary.md').read_text(),'summary.md')
@@ -147,6 +161,16 @@ def main():
                 if 'retrieval quality' not in str(exc): raise
             else:
                 raise AssertionError('missing caveat self-check did not fail')
+            bad_index=Path(tmp)/'missing-check-index'; write_sample(bad_index)
+            summary=load_json(bad_index/'summary.json')
+            summary['checks']=[check for check in summary['checks'] if check.get('artifact')!='07-chat-embedding-model-refusal.json']
+            (bad_index/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+            try:
+                validate_summary(bad_index)
+            except AssertionError as exc:
+                if 'summary.checks artifact index mismatch' not in str(exc): raise
+            else:
+                raise AssertionError('missing check artifact self-check did not fail')
         print('MiniLM embeddings optional API acceptance artifact QA self-test passed'); return
     for d in dirs: validate_summary(d)
     print('MiniLM embeddings optional API acceptance artifact QA passed')

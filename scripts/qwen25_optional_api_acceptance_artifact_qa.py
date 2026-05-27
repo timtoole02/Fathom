@@ -38,6 +38,7 @@ REQUIRED_ARTIFACTS = {
     "summary.json",
     "summary.md",
 }
+EXPECTED_CHECK_ARTIFACTS = REQUIRED_ARTIFACTS - {"summary.json", "summary.md"}
 LOCAL_PATH_PATTERNS = [
     re.compile("/" + "Users" + "/", re.IGNORECASE),
     re.compile("/" + "private" + "/" + "tmp", re.IGNORECASE),
@@ -97,6 +98,25 @@ def assert_required_caveats(text: str, label: str) -> None:
     missing = [phrase for phrase in REQUIRED_CAVEAT_PHRASES if phrase.lower() not in lowered]
     if missing:
         raise AssertionError(f"{label} missing caveat phrase(s): {missing}")
+
+
+def assert_checks_cover_required_artifacts(checks: Any) -> None:
+    if not isinstance(checks, list):
+        raise AssertionError("summary.checks must be a list")
+    artifacts = [check.get("artifact") for check in checks if isinstance(check, dict)]
+    missing = sorted(EXPECTED_CHECK_ARTIFACTS - set(artifacts))
+    unexpected = sorted(set(artifacts) - EXPECTED_CHECK_ARTIFACTS)
+    duplicates = sorted({artifact for artifact in artifacts if artifact and artifacts.count(artifact) > 1})
+    if missing or unexpected or duplicates:
+        raise AssertionError(
+            "summary.checks artifact index mismatch: "
+            f"missing={missing} unexpected={unexpected} duplicates={duplicates}"
+        )
+    for check in checks:
+        if not isinstance(check, dict):
+            raise AssertionError("summary.checks entries must be objects")
+        if check.get("status") != "passed":
+            raise AssertionError(f"summary check failed: {check}")
 
 
 def error_code(payload: dict[str, Any]) -> str | None:
@@ -194,12 +214,7 @@ def validate_summary(directory: Path) -> None:
         raise AssertionError("summary.md must clearly mark pass and caveats")
     assert_required_caveats(md, "summary.md")
 
-    checks = summary.get("checks")
-    if not isinstance(checks, list) or len(checks) < 6:
-        raise AssertionError("summary.checks must include all smoke checks")
-    for check in checks:
-        if check.get("status") != "passed":
-            raise AssertionError(f"summary check failed: {check}")
+    assert_checks_cover_required_artifacts(summary.get("checks"))
 
     validate_install(load_json(directory / "02-install-qwen25.json"))
     validate_models(load_json(directory / "03-v1-models-after-qwen25.json"))
@@ -338,6 +353,20 @@ def main() -> None:
                     raise
             else:
                 raise AssertionError("missing caveat self-check did not fail")
+            bad_index = Path(tmp) / "missing-check-index"
+            write_sample(bad_index)
+            summary = load_json(bad_index / "summary.json")
+            summary["checks"] = [
+                check for check in summary["checks"] if check.get("artifact") != "06-chat-stream-refusal.json"
+            ]
+            (bad_index / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            try:
+                validate_summary(bad_index)
+            except AssertionError as exc:
+                if "summary.checks artifact index mismatch" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("missing check artifact self-check did not fail")
         print("Qwen2.5 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:
