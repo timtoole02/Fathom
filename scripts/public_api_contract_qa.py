@@ -86,7 +86,7 @@ OPTIONAL_ACCEPTANCE_DOCS = (
 PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"^(Harden public .+ QA|Expose refusal request hints in matrix|Guard public .+ artifact .+|"
     r"Track public smoke artifact QA evidence|Derive public smoke boundaries from manifest|"
-    r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke boundary drift)$"
+    r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift)$"
 )
 ALLOWED_EXTRA_REFUSAL_MATRIX_ROWS = {
     "Production readiness, performance, quality, legal/license suitability",
