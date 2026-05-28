@@ -20,6 +20,8 @@ Run these before treating docs/API contract changes as launch-ready:
 ```bash
 git diff --check
 python3 -m py_compile \
+  examples/api/openai-sdk.py \
+  examples/api/python-no-deps.py \
   scripts/api_client_examples_regression.py \
   scripts/backend_acceptance_artifact_qa.py \
   scripts/ci_static_policy.py \
@@ -38,6 +40,7 @@ python3 scripts/backend_acceptance_artifact_qa.py
 python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py
 python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py
 python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py
+bash -n examples/api/curl-quickstart.sh
 bash -n scripts/public_api_contract_smoke.sh
 bash -n scripts/backend_acceptance_smoke.sh
 bash scripts/public_risk_scan.sh --self-test

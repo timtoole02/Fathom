@@ -53,6 +53,13 @@ OFFLINE_QA_PYTHON_PATHS = (
     "scripts/qwen25_optional_api_acceptance_artifact_qa.py",
     "scripts/smollm2_optional_api_acceptance_artifact_qa.py",
 )
+OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS = (
+    "examples/api/openai-sdk.py",
+    "examples/api/python-no-deps.py",
+)
+OFFLINE_CLIENT_EXAMPLE_SHELL_PATHS = (
+    "examples/api/curl-quickstart.sh",
+)
 OFFLINE_ARTIFACT_QA_RUN_PATHS = (
     "scripts/public_contract_smoke_artifact_qa.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -303,9 +310,16 @@ def py_compile_command_paths(text: str, label: str) -> set[str]:
 
 def assert_launch_checklist_python_syntax_gate() -> None:
     paths = py_compile_command_paths(read(LAUNCH_CHECKLIST), "launch checklist")
-    missing = sorted(set(OFFLINE_QA_PYTHON_PATHS) - paths)
+    required = set(OFFLINE_QA_PYTHON_PATHS) | set(OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS)
+    missing = sorted(required - paths)
     if missing:
-        raise AssertionError(f"launch checklist py_compile gate is missing offline QA helper(s): {missing}")
+        raise AssertionError(f"launch checklist py_compile gate is missing offline Python gate(s): {missing}")
+
+
+def assert_launch_checklist_client_example_syntax_gates() -> None:
+    checklist_text = read(LAUNCH_CHECKLIST)
+    for path in OFFLINE_CLIENT_EXAMPLE_SHELL_PATHS:
+        assert_contains(checklist_text, f"bash -n {path}", "launch checklist client example shell syntax gate")
 
 
 def assert_launch_checklist_artifact_qa_run_gates() -> None:
@@ -491,6 +505,7 @@ def assert_boundary_docs() -> None:
     for gate in checklist_required_gates:
         assert_contains(launch_text, gate, "launch checklist no-download gates")
     assert_launch_checklist_python_syntax_gate()
+    assert_launch_checklist_client_example_syntax_gates()
     assert_launch_checklist_artifact_qa_run_gates()
     assert_contains(read(BACKEND_QUICKSTART), "scripts/public_api_contract_smoke.sh", "backend quickstart public contract smoke")
     assert_contains(read(CONTRIBUTING), "scripts/public_api_contract_smoke.sh", "contributing public contract smoke")
@@ -833,8 +848,10 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
-    for path in OFFLINE_QA_PYTHON_PATHS:
+    for path in (*OFFLINE_QA_PYTHON_PATHS, *OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS):
         assert_contains(ci_text, path, "CI Python offline QA syntax step")
+    for path in OFFLINE_CLIENT_EXAMPLE_SHELL_PATHS:
+        assert_contains(ci_text, f"bash -n {path}", "CI client example shell syntax step")
     assert_contains(ci_text, "scripts/public_api_contract_qa.py", "CI public API contract QA wiring")
     assert_contains(ci_text, "scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA wiring")
     assert_contains(ci_text, "scripts/backend_acceptance_artifact_qa.py", "CI backend acceptance artifact QA wiring")
