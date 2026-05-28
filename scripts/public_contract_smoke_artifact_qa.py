@@ -393,15 +393,16 @@ def validate_summary_dir(directory: Path) -> None:
     for boundary, result in boundary_by_name.items():
         assert_boundary_result_matches_manifest(boundary, result, expected_by_name)
 
+    manifest_endpoints = {(item["method"], item["path"]) for item in manifest_data.get("supported_endpoints", [])}
+    checked_endpoints = {(item.get("method"), item.get("path")) for item in endpoint_checks}
+    unexpected_endpoints = sorted(checked_endpoints - manifest_endpoints)
+    if unexpected_endpoints:
+        raise AssertionError(f"summary has endpoint checks not present in public-contract.json: {unexpected_endpoints}")
+
     if summary["passed"] is True:
-        manifest_endpoints = {(item["method"], item["path"]) for item in manifest_data.get("supported_endpoints", [])}
-        checked_endpoints = {(item.get("method"), item.get("path")) for item in endpoint_checks}
         missing_endpoints = sorted(manifest_endpoints - checked_endpoints)
         if missing_endpoints:
             raise AssertionError(f"passed summary missing endpoint coverage: {missing_endpoints}")
-        unexpected_endpoints = sorted(checked_endpoints - manifest_endpoints)
-        if unexpected_endpoints:
-            raise AssertionError(f"passed summary has endpoint checks not present in public-contract.json: {unexpected_endpoints}")
         missing_boundaries = sorted(REQUIRED_NO_DOWNLOAD_BOUNDARIES - set(boundary_by_name))
         if missing_boundaries:
             raise AssertionError(f"passed summary missing no-download boundary coverage: {missing_boundaries}")
@@ -736,6 +737,20 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("failed summary boundary manifest drift self-check did not fail")
+
+        failed_endpoint_drift = root / "failed-endpoint-drift"
+        mutated = failed_sample()
+        mutated["endpoint_checks"] = [
+            {"method": "GET", "path": "/v1/files", "checks": ["synthetic-check"], "passed": True}
+        ]
+        write_sample(failed_endpoint_drift, mutated)
+        try:
+            validate_summary_dir(failed_endpoint_drift)
+        except AssertionError as exc:
+            if "endpoint checks not present in public-contract.json" not in str(exc):
+                raise
+        else:
+            raise AssertionError("failed summary endpoint manifest drift self-check did not fail")
 
         duplicate_endpoint = root / "duplicate-endpoint"
         mutated = passed_sample()
