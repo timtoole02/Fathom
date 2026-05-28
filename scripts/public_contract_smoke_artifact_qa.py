@@ -254,6 +254,31 @@ def assert_markdown_rows_match_summary(summary: dict[str, Any], md: str, markdow
                 raise AssertionError(f"{label} missing deferred boundary row matching summary JSON: {boundary}")
 
 
+def assert_boundary_result_matches_manifest(
+    boundary: str,
+    result: dict[str, Any],
+    expected_by_name: dict[str, dict[str, Any]],
+) -> None:
+    expected = expected_by_name.get(boundary)
+    if expected is None:
+        raise AssertionError(f"summary has boundary not present in public-contract.json: {boundary!r}")
+    if "status" in expected and result.get("status") != expected["status"]:
+        raise AssertionError(
+            f"summary boundary {boundary!r} status {result.get('status')!r} "
+            f"does not match public-contract.json {expected['status']!r}"
+        )
+    if "code" in expected and result.get("code") != expected["code"]:
+        raise AssertionError(
+            f"summary boundary {boundary!r} code {result.get('code')!r} "
+            f"does not match public-contract.json {expected['code']!r}"
+        )
+    if "request_hint" in expected and result.get("request_hint") != expected["request_hint"]:
+        raise AssertionError(
+            f"summary boundary {boundary!r} request_hint {result.get('request_hint')!r} "
+            f"does not match public-contract.json {expected['request_hint']!r}"
+        )
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary = load_json(directory / SUMMARY_JSON)
     md = assert_markdown(summary, directory / SUMMARY_MD)
@@ -365,6 +390,9 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError("external placeholder wording must be refusal-only")
 
     expected_by_name = manifest_expected_boundaries(manifest_data)
+    for boundary, result in boundary_by_name.items():
+        assert_boundary_result_matches_manifest(boundary, result, expected_by_name)
+
     if summary["passed"] is True:
         manifest_endpoints = {(item["method"], item["path"]) for item in manifest_data.get("supported_endpoints", [])}
         checked_endpoints = {(item.get("method"), item.get("path")) for item in endpoint_checks}
@@ -377,23 +405,6 @@ def validate_summary_dir(directory: Path) -> None:
         missing_boundaries = sorted(REQUIRED_NO_DOWNLOAD_BOUNDARIES - set(boundary_by_name))
         if missing_boundaries:
             raise AssertionError(f"passed summary missing no-download boundary coverage: {missing_boundaries}")
-        for boundary, result in boundary_by_name.items():
-            expected = expected_by_name.get(boundary)
-            if expected is None:
-                raise AssertionError(f"passed summary has boundary not present in public-contract.json: {boundary!r}")
-            if "status" in expected and result.get("status") != expected["status"]:
-                raise AssertionError(
-                    f"passed summary boundary {boundary!r} status {result.get('status')!r} does not match public-contract.json {expected['status']!r}"
-                )
-            if "code" in expected and result.get("code") != expected["code"]:
-                raise AssertionError(
-                    f"passed summary boundary {boundary!r} code {result.get('code')!r} does not match public-contract.json {expected['code']!r}"
-                )
-            if "request_hint" in expected and result.get("request_hint") != expected["request_hint"]:
-                raise AssertionError(
-                    f"passed summary boundary {boundary!r} request_hint {result.get('request_hint')!r} "
-                    f"does not match public-contract.json {expected['request_hint']!r}"
-                )
         deferred_names = {item.get("boundary") for item in deferred}
         expected_names = set(expected_by_name)
         expected_deferred_names = expected_names - REQUIRED_NO_DOWNLOAD_BOUNDARIES
@@ -710,6 +721,21 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("checked/deferred boundary overlap self-check did not fail")
+
+        failed_boundary_drift = root / "failed-boundary-drift"
+        mutated = failed_sample()
+        drifted_boundary = dict(passed_sample()["boundary_checks"][0])
+        drifted_boundary["status"] = 400
+        drifted_boundary["code"] = "invalid_request"
+        mutated["boundary_checks"] = [drifted_boundary]
+        write_sample(failed_boundary_drift, mutated)
+        try:
+            validate_summary_dir(failed_boundary_drift)
+        except AssertionError as exc:
+            if "public-contract.json" not in str(exc):
+                raise
+        else:
+            raise AssertionError("failed summary boundary manifest drift self-check did not fail")
 
         duplicate_endpoint = root / "duplicate-endpoint"
         mutated = passed_sample()
