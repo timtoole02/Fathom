@@ -24,6 +24,7 @@ python3 -m py_compile \
   examples/api/python-no-deps.py \
   scripts/api_client_examples_regression.py \
   scripts/backend_acceptance_artifact_qa.py \
+  scripts/bench_backend.py \
   scripts/ci_static_policy.py \
   scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py \
   scripts/public_api_contract_qa.py \
