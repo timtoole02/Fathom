@@ -367,6 +367,20 @@ try:
     record_endpoint("POST", "/v1/embeddings", "unknown-embedding-model-refusal")
     record_boundary("unknown embedding model", "unknown-embedding-model-refusal", status, "embedding_model_not_found")
 
+    status, unsupported_endpoint = request("POST", "/v1/responses", {"input": "hello"})
+    assert status == 404, (status, unsupported_endpoint)
+    assert_error(unsupported_endpoint, "not_found")
+    assert_no_chat_success(unsupported_endpoint)
+    assert_no_embedding_success(unsupported_endpoint)
+    record_boundary("unsupported /v1 endpoint", "unsupported-v1-endpoint-json-refusal", status, "not_found")
+
+    status, unsupported_method = request("GET", "/v1/chat/completions")
+    assert status == 405, (status, unsupported_method)
+    assert_error(unsupported_method, "method_not_allowed")
+    assert_no_chat_success(unsupported_method)
+    assert_no_embedding_success(unsupported_method)
+    record_boundary("unsupported /v1 method", "unsupported-v1-method-json-refusal", status, "method_not_allowed")
+
     external_body = {
         "id": "external-placeholder-smoke",
         "name": "External placeholder smoke",
@@ -605,5 +619,5 @@ except Exception:
     finally:
         raise
 
-print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, synthetic unverified SafeTensors/HF refusal, synthetic GGUF metadata-only refusal, capabilities external metadata-only guard")
+print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, unsupported /v1 route/method JSON refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, synthetic unverified SafeTensors/HF refusal, synthetic GGUF metadata-only refusal, capabilities external metadata-only guard")
 PY

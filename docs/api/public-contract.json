@@ -98,6 +98,18 @@
       "code": "not_implemented"
     },
     {
+      "boundary": "unsupported /v1 endpoint",
+      "request_hint": "POST /v1/responses",
+      "status": 404,
+      "code": "not_found"
+    },
+    {
+      "boundary": "unsupported /v1 method",
+      "request_hint": "GET /v1/chat/completions",
+      "status": 405,
+      "code": "method_not_allowed"
+    },
+    {
       "boundary": "full OpenAI API parity",
       "expected_behavior": "not claimed"
     }

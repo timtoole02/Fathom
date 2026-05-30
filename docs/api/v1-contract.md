@@ -28,7 +28,9 @@ Common status/code pairs include:
 
 - `400 invalid_request` for malformed or unsupported request values.
 - `400 model_not_found` when a required model id is missing, or when chat completion cannot resolve a requested/local active model.
+- `404 not_found` when a `/v1/*` path is outside the narrow public contract.
 - `404 embedding_model_not_found` when `/v1/embeddings` names a model Fathom does not know.
+- `405 method_not_allowed` when a known `/v1` path is called with an unsupported HTTP method.
 - `400 invalid_model` when a runnable model record is inconsistent.
 - `501 not_implemented` when the requested feature or model family is intentionally not runnable.
 - `501 external_proxy_not_implemented` when a saved external API entry is only a metadata placeholder and Fathom refuses to proxy chat or activation.
@@ -223,6 +225,8 @@ Fathom intentionally does not support these OpenAI API features today:
 - Tools, function calling, or structured tool invocation.
 - Image, audio, or multimodal inputs/outputs.
 - Fine-tuning, files, batches, assistants, responses API, or arbitrary model execution.
+- Unsupported `/v1/*` paths, such as `POST /v1/responses`, return `404 not_found` in the standard error envelope instead of a plain-text 404.
+- Unsupported methods on known `/v1` paths, such as `GET /v1/chat/completions`, return `405 method_not_allowed` in the standard error envelope instead of a plain-text 405.
 - Full OpenAI API parity is not supported or claimed.
 - Turning embedding models into chat/generation models or listing them in `/v1/models`.
 - No native GGUF chat/inference, no ONNX chat/LLM generation, no PyTorch `.bin` execution, and no arbitrary SafeTensors/Hugging Face execution.

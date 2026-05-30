@@ -105,6 +105,8 @@ REQUIRED_ERROR_CODES = {
     "invalid_request",
     "model_not_found",
     "embedding_model_not_found",
+    "not_found",
+    "method_not_allowed",
     "not_implemented",
     "external_proxy_not_implemented",
 }
@@ -485,6 +487,10 @@ def assert_boundary_docs() -> None:
         "PyTorch `.bin`",
         "No ONNX chat/LLM runtime yet",
         "no arbitrary SafeTensors/Hugging Face execution",
+        "POST /v1/responses",
+        "404 not_found",
+        "GET /v1/chat/completions",
+        "405 method_not_allowed",
         "not full OpenAI API parity",
     ]
     for phrase in required_phrases:
@@ -599,6 +605,8 @@ def assert_boundary_docs() -> None:
         "PyTorch .bin execution": "PyTorch `.bin` execution",
         "unsupported ONNX chat or general ONNX model execution": "Unsupported ONNX chat or general ONNX model execution",
         "unverified SafeTensors/Hugging Face model execution": "Unverified SafeTensors/Hugging Face model execution",
+        "unsupported /v1 endpoint": "Unsupported `/v1` endpoint",
+        "unsupported /v1 method": "Unsupported `/v1` method",
         "full OpenAI API parity": "Full OpenAI API parity",
     }
     assert_refusal_matrix_row_set(matrix_text, manifest, matrix_aliases)
@@ -633,6 +641,8 @@ def assert_boundary_docs() -> None:
         "PyTorch .bin execution": "no PyTorch `.bin` execution",
         "unsupported ONNX chat or general ONNX model execution": "no ONNX chat/LLM generation",
         "unverified SafeTensors/Hugging Face model execution": "no arbitrary SafeTensors/Hugging Face execution",
+        "unsupported /v1 endpoint": "`404 not_found`",
+        "unsupported /v1 method": "`405 method_not_allowed`",
         "full OpenAI API parity": "not full OpenAI API parity",
     }
     for boundary in manifest.get("expected_boundary_errors", []):

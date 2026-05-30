@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, State},
-    http::StatusCode,
+    http::{Method, StatusCode, Uri},
     routing::{get, patch, post},
     Json, Router,
 };
@@ -463,7 +463,34 @@ async fn main() -> anyhow::Result<()> {
         })),
         model_state_path,
     };
-    let app = Router::new()
+    let app = app_router(state);
+
+    let port = std::env::var("FATHOM_PORT")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(8180);
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    tracing::info!(%addr, "Fathom server listening");
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+
+fn app_router(state: AppState) -> Router {
+    let v1_router = Router::new()
+        .route("/models", get(v1_models).fallback(v1_method_not_allowed))
+        .route("/health", get(v1_health).fallback(v1_method_not_allowed))
+        .route(
+            "/chat/completions",
+            post(v1_chat_completions).fallback(v1_method_not_allowed),
+        )
+        .route(
+            "/embeddings",
+            post(v1_embeddings).fallback(v1_method_not_allowed),
+        )
+        .fallback(v1_not_found);
+
+    Router::new()
         .route("/api/runtime", get(runtime_state))
         .route("/api/dashboard", get(dashboard))
         .route("/api/capabilities", get(capabilities))
@@ -506,27 +533,14 @@ async fn main() -> anyhow::Result<()> {
         )
         .route("/api/models/:id/activate", post(activate_model))
         .route("/api/models/:id/cancel", post(cancel_model_download))
-        .route("/v1/models", get(v1_models))
-        .route("/v1/health", get(v1_health))
-        .route("/v1/chat/completions", post(v1_chat_completions))
-        .route("/v1/embeddings", post(v1_embeddings))
+        .nest("/v1", v1_router)
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
                 .allow_methods(Any)
                 .allow_headers(Any),
         )
-        .with_state(state);
-
-    let port = std::env::var("FATHOM_PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(8180);
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
-    tracing::info!(%addr, "Fathom server listening");
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
-    Ok(())
+        .with_state(state)
 }
 
 async fn runtime_state(State(state): State<AppState>) -> Json<serde_json::Value> {
@@ -2016,6 +2030,29 @@ fn error_json(
                 "param": null
             }
         })),
+    )
+}
+
+async fn v1_not_found(uri: Uri) -> ApiError {
+    error_json(
+        StatusCode::NOT_FOUND,
+        &format!(
+            "{} is not part of Fathom's narrow /v1 public contract.",
+            uri.path()
+        ),
+        "not_found",
+    )
+}
+
+async fn v1_method_not_allowed(method: Method, uri: Uri) -> ApiError {
+    error_json(
+        StatusCode::METHOD_NOT_ALLOWED,
+        &format!(
+            "{} {} is not part of Fathom's narrow /v1 public contract.",
+            method,
+            uri.path()
+        ),
+        "method_not_allowed",
     )
 }
 
@@ -5158,6 +5195,33 @@ mod catalog_tests {
             assert_v1_error_envelope(&body, "model_not_found");
             assert_no_fake_chat_success(&body);
         }
+    }
+
+    #[tokio::test]
+    async fn v1_unknown_endpoint_returns_standard_error_envelope() {
+        let (status, Json(body)) = v1_not_found(Uri::from_static("/v1/responses")).await;
+
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert_v1_error_envelope(&body, "not_found");
+        assert!(body["error"]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("/v1/responses")));
+        assert_no_fake_chat_success(&body);
+        assert_no_fake_embedding_success(&body);
+    }
+
+    #[tokio::test]
+    async fn v1_wrong_method_returns_standard_error_envelope() {
+        let (status, Json(body)) =
+            v1_method_not_allowed(Method::GET, Uri::from_static("/v1/chat/completions")).await;
+
+        assert_eq!(status, StatusCode::METHOD_NOT_ALLOWED);
+        assert_v1_error_envelope(&body, "method_not_allowed");
+        assert!(body["error"]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("GET /v1/chat/completions")));
+        assert_no_fake_chat_success(&body);
+        assert_no_fake_embedding_success(&body);
     }
 
     #[tokio::test]

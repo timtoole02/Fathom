@@ -20,6 +20,8 @@ These boundaries are exercised by `scripts/public_api_contract_smoke.sh` against
 | Unsupported ONNX chat or general ONNX model execution | unsupported ONNX model id in /v1/chat/completions | `501 not_implemented`; ONNX embeddings remain separate and narrow, no fake response | public contract smoke with a tiny synthetic local artifact and server tests |
 | Unverified SafeTensors/Hugging Face model execution | unverified SafeTensors/Hugging Face model id in /v1/chat/completions | `501 not_implemented`; only explicitly verified local lanes are runnable, no fake response | public contract smoke with a tiny synthetic local HF-style SafeTensors package |
 | GGUF metadata-only chat attempts | metadata-only GGUF model id in /v1/chat/completions | `501 not_implemented`; metadata/readiness only, no public/runtime tokenizer execution, no runtime weight loading, no dequantization/kernels, and no generation | public contract smoke with a tiny synthetic metadata-only local GGUF file, plus optional backend acceptance smoke |
+| Unsupported `/v1` endpoint | POST /v1/responses | `404 not_found`; unsupported OpenAI-style endpoints stay outside the narrow public contract but still return the standard JSON error envelope | public contract smoke and server tests |
+| Unsupported `/v1` method | GET /v1/chat/completions | `405 method_not_allowed`; known `/v1` paths reject unsupported HTTP methods with the standard JSON error envelope | public contract smoke and server tests |
 
 ## Optional fixture/networked evidence boundaries
 

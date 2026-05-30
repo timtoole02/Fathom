@@ -47,6 +47,8 @@ REQUIRED_NO_DOWNLOAD_BOUNDARIES = {
     "unsupported ONNX chat or general ONNX model execution",
     "unverified SafeTensors/Hugging Face model execution",
     "GGUF metadata-only chat attempts",
+    "unsupported /v1 endpoint",
+    "unsupported /v1 method",
 }
 REQUIRED_EXPECTED_BEHAVIOR_NO_DOWNLOAD_BOUNDARIES = {
     "embedding models in /v1/models",
@@ -443,6 +445,10 @@ def passed_sample() -> dict[str, Any]:
             item.update({"status": 501, "code": "not_implemented"})
         elif boundary == "GGUF metadata-only chat attempts":
             item.update({"status": 501, "code": "not_implemented"})
+        elif boundary == "unsupported /v1 endpoint":
+            item.update({"status": 404, "code": "not_found"})
+        elif boundary == "unsupported /v1 method":
+            item.update({"status": 405, "code": "method_not_allowed"})
         request_hint = manifest_expected_boundaries(manifest).get(boundary, {}).get("request_hint")
         if request_hint:
             item["request_hint"] = request_hint
