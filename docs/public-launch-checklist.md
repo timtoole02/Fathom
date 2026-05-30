@@ -55,7 +55,7 @@ For the real backend no-download contract check, run:
 bash scripts/public_api_contract_smoke.sh
 ```
 
-That smoke starts `fathom-server` with isolated temporary state/model/log directories and checks the public `/v1` routing/refusal boundary from [`docs/api/public-contract.json`](api/public-contract.json) and [`docs/api/v1-contract.md`](api/v1-contract.md). It does not install catalog models, download fixtures, enable ONNX features, call providers, or prove model quality.
+That smoke starts `fathom-server` with isolated temporary state/model/log directories and checks the public `/v1` routing/refusal boundary from [`docs/api/public-contract.json`](api/public-contract.json) and [`docs/api/v1-contract.md`](api/v1-contract.md), including JSON refusals for unsupported `/v1` routes and methods. It does not install catalog models, download fixtures, enable ONNX features, call providers, or prove model quality.
 
 To keep a share-safe pass/fail summary for release handoff, set `FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR` to a directory you control:
 

@@ -94,7 +94,8 @@ OPTIONAL_ACCEPTANCE_DOCS = (
 PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"^(Harden public .+ QA|Expose refusal request hints in matrix|Guard public .+ artifact .+|"
     r"Track public smoke artifact QA evidence|Derive public smoke boundaries from manifest|"
-    r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift)$"
+    r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
+    r"Standardize v1 unsupported endpoint refusals)$"
 )
 ALLOWED_EXTRA_REFUSAL_MATRIX_ROWS = {
     "Production readiness, performance, quality, legal/license suitability",
@@ -575,6 +576,8 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "without loading weights or faking inference", "launch evidence SafeTensors/HF refusal boundary")
     assert_contains(evidence_text, "metadata-only GGUF public-contract refusal smoke", "launch evidence GGUF refusal scope")
     assert_contains(evidence_text, "without making a GGUF runtime, tokenizer execution, or generation claim", "launch evidence GGUF refusal boundary")
+    assert_contains(evidence_text, "unsupported `/v1` route/method public-contract refusal smoke", "launch evidence unsupported v1 routing scope")
+    assert_contains(evidence_text, "standard JSON error envelopes for unsupported `/v1` routes and methods", "launch evidence unsupported v1 routing boundary")
 
     matrix_text = read(REFUSAL_MATRIX)
     matrix_required_phrases = (
