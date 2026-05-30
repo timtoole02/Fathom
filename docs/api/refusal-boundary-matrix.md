@@ -13,6 +13,7 @@ These boundaries are exercised by `scripts/public_api_contract_smoke.sh` against
 | Streamed chat-completion requests | `stream: true` | `501 not_implemented`, no `choices` | public contract smoke |
 | Base64 embeddings | `encoding_format: base64` | `400 invalid_request`, no embedding `data` | public contract smoke |
 | Missing chat model | unknown local chat model id | `400 model_not_found`, no `choices` | public contract smoke |
+| Malformed `/v1` JSON request body | malformed JSON body on /v1/chat/completions or /v1/embeddings | `400 invalid_request`, standard JSON error envelope, no `choices` or embedding `data` | public contract smoke |
 | Unknown embedding model | unknown local embedding model id | `404 embedding_model_not_found`, no embedding `data` | public contract smoke |
 | External placeholder chat or activation | external placeholder activation or chat model id | `501 external_proxy_not_implemented`, no provider call, no fake response | public contract smoke and server tests |
 | Embedding models in `/v1/models` | n/a; exclusion boundary | excluded from chat/generation model listing | public contract smoke empty-state exclusion |

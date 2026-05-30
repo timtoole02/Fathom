@@ -578,6 +578,8 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "without making a GGUF runtime, tokenizer execution, or generation claim", "launch evidence GGUF refusal boundary")
     assert_contains(evidence_text, "unsupported `/v1` route/method public-contract refusal smoke", "launch evidence unsupported v1 routing scope")
     assert_contains(evidence_text, "standard JSON error envelopes for unsupported `/v1` routes and methods", "launch evidence unsupported v1 routing boundary")
+    assert_contains(evidence_text, "malformed `/v1` JSON request body refusal smoke", "launch evidence malformed v1 JSON scope")
+    assert_contains(evidence_text, "malformed JSON on `POST /v1/chat/completions` returns `400 invalid_request`", "launch evidence malformed v1 JSON boundary")
 
     matrix_text = read(REFUSAL_MATRIX)
     matrix_required_phrases = (
@@ -601,6 +603,7 @@ def assert_boundary_docs() -> None:
         "streaming chat completions": "Streamed chat-completion requests",
         "base64 embeddings": "Base64 embeddings",
         "missing chat model": "Missing chat model",
+        "malformed /v1 JSON request body": "Malformed `/v1` JSON request body",
         "unknown embedding model": "Unknown embedding model",
         "external placeholder chat or activation": "External placeholder chat or activation",
         "embedding models in /v1/models": "Embedding models in `/v1/models`",
@@ -637,6 +640,7 @@ def assert_boundary_docs() -> None:
         "streaming chat completions": "Streaming chat completions.",
         "base64 embeddings": "Base64 embeddings are not supported.",
         "missing chat model": "`400 model_not_found`",
+        "malformed /v1 JSON request body": "Malformed JSON bodies on `/v1/chat/completions` or `/v1/embeddings` return `400 invalid_request`",
         "unknown embedding model": "`404 embedding_model_not_found`",
         "external placeholder chat or activation": "`501 external_proxy_not_implemented`",
         "embedding models in /v1/models": "Embedding-only models are excluded from `/v1/models`",

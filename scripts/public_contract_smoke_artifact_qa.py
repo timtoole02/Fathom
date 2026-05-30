@@ -40,6 +40,7 @@ REQUIRED_NO_DOWNLOAD_BOUNDARIES = {
     "streaming chat completions",
     "base64 embeddings",
     "missing chat model",
+    "malformed /v1 JSON request body",
     "unknown embedding model",
     "embedding models in /v1/models",
     "external placeholder chat or activation",
@@ -237,12 +238,13 @@ def assert_markdown_rows_match_summary(summary: dict[str, Any], md: str, markdow
             expected = f"- {boundary}: pass"
             if expected not in md:
                 raise AssertionError(f"{label} missing boundary row matching summary JSON: {boundary}")
+            boundary_line = next((line for line in md.splitlines() if line.startswith(expected)), "")
             request_hint = item.get("request_hint")
-            if isinstance(request_hint, str) and request_hint and f"hint `{request_hint}`" not in md:
+            if isinstance(request_hint, str) and request_hint and f"hint `{request_hint}`" not in boundary_line:
                 raise AssertionError(f"{label} missing boundary request hint matching summary JSON: {boundary}")
             status = item.get("status")
             code = item.get("code")
-            if isinstance(status, int) and isinstance(code, str) and code and f"`{status} {code}`" not in md:
+            if isinstance(status, int) and isinstance(code, str) and code and f"`{status} {code}`" not in boundary_line:
                 raise AssertionError(f"{label} missing boundary status/code matching summary JSON: {boundary}")
 
     for item in deferred:
@@ -433,6 +435,8 @@ def passed_sample() -> dict[str, Any]:
             item.update({"status": 400, "code": "invalid_request"})
         elif boundary == "missing chat model":
             item.update({"status": 400, "code": "model_not_found"})
+        elif boundary == "malformed /v1 JSON request body":
+            item.update({"status": 400, "code": "invalid_request"})
         elif boundary == "unknown embedding model":
             item.update({"status": 404, "code": "embedding_model_not_found"})
         elif boundary == REFUSAL_ONLY_BOUNDARY:
@@ -646,7 +650,7 @@ def run_self_check() -> None:
         (missing_markdown_status_code / SUMMARY_MD).write_text(
             (missing_markdown_status_code / SUMMARY_MD)
             .read_text(encoding="utf-8")
-            .replace("; `400 invalid_request`; hint `encoding_format: base64`", "; hint `encoding_format: base64`"),
+            .replace("; `501 not_implemented`; hint `stream: true`", "; hint `stream: true`"),
             encoding="utf-8",
         )
         try:

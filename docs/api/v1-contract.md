@@ -27,6 +27,7 @@ All `/v1` application errors use this JSON shape:
 Common status/code pairs include:
 
 - `400 invalid_request` for malformed or unsupported request values.
+- Malformed JSON bodies on `/v1/chat/completions` or `/v1/embeddings` return `400 invalid_request` in the standard error envelope.
 - `400 model_not_found` when a required model id is missing, or when chat completion cannot resolve a requested/local active model.
 - `404 not_found` when a `/v1/*` path is outside the narrow public contract.
 - `404 embedding_model_not_found` when `/v1/embeddings` names a model Fathom does not know.

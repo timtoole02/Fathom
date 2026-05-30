@@ -211,6 +211,27 @@ def request(method, path, body=None):
         return exc.code, payload
 
 
+def request_raw(method, path, raw_body, content_type="application/json"):
+    headers = {"Accept": "application/json", "Content-Type": content_type}
+    req = urllib.request.Request(
+        base + path,
+        data=raw_body.encode("utf-8"),
+        method=method,
+        headers=headers,
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            raw = response.read().decode("utf-8")
+            return response.status, json.loads(raw) if raw else None
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8")
+        try:
+            payload = json.loads(raw) if raw else None
+        except json.JSONDecodeError as error:
+            raise AssertionError(f"{method} {path} returned non-JSON error body") from error
+        return exc.code, payload
+
+
 def assert_error(payload, code):
     assert isinstance(payload, dict), payload
     error = payload.get("error")
@@ -346,6 +367,13 @@ try:
     assert_no_chat_success(missing_chat)
     record_endpoint("POST", "/v1/chat/completions", "missing-model-refusal")
     record_boundary("missing chat model", "missing-chat-model-refusal", status, "model_not_found")
+
+    status, malformed_chat = request_raw("POST", "/v1/chat/completions", '{"model":')
+    assert status == 400, (status, malformed_chat)
+    assert_error(malformed_chat, "invalid_request")
+    assert_no_chat_success(malformed_chat)
+    assert_no_embedding_success(malformed_chat)
+    record_boundary("malformed /v1 JSON request body", "malformed-v1-chat-json-refusal", status, "invalid_request")
 
     embedding_body = {
         "model": "missing-embedding-model",
@@ -619,5 +647,5 @@ except Exception:
     finally:
         raise
 
-print("public API contract smoke passed: manifest-driven health, models, chat refusals, embeddings refusals, unsupported /v1 route/method JSON refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, synthetic unverified SafeTensors/HF refusal, synthetic GGUF metadata-only refusal, capabilities external metadata-only guard")
+print("public API contract smoke passed: manifest-driven health, models, chat refusals, malformed JSON refusal, embeddings refusals, unsupported /v1 route/method JSON refusals, external placeholder boundary, synthetic PyTorch .bin refusal, synthetic ONNX chat/general refusal, synthetic unverified SafeTensors/HF refusal, synthetic GGUF metadata-only refusal, capabilities external metadata-only guard")
 PY

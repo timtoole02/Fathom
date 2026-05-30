@@ -58,6 +58,12 @@
       "code": "model_not_found"
     },
     {
+      "boundary": "malformed /v1 JSON request body",
+      "request_hint": "malformed JSON body on /v1/chat/completions or /v1/embeddings",
+      "status": 400,
+      "code": "invalid_request"
+    },
+    {
       "boundary": "unknown embedding model",
       "request_hint": "unknown local embedding model id",
       "status": 404,

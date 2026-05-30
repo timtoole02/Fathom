@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, State},
+    extract::{rejection::JsonRejection, Path, State},
     http::{Method, StatusCode, Uri},
     routing::{get, patch, post},
     Json, Router,
@@ -482,11 +482,11 @@ fn app_router(state: AppState) -> Router {
         .route("/health", get(v1_health).fallback(v1_method_not_allowed))
         .route(
             "/chat/completions",
-            post(v1_chat_completions).fallback(v1_method_not_allowed),
+            post(v1_chat_completions_route).fallback(v1_method_not_allowed),
         )
         .route(
             "/embeddings",
-            post(v1_embeddings).fallback(v1_method_not_allowed),
+            post(v1_embeddings_route).fallback(v1_method_not_allowed),
         )
         .fallback(v1_not_found);
 
@@ -1608,6 +1608,16 @@ async fn v1_models(State(state): State<AppState>) -> Json<serde_json::Value> {
     }))
 }
 
+async fn v1_embeddings_route(
+    State(state): State<AppState>,
+    req: Result<Json<V1EmbeddingsRequest>, JsonRejection>,
+) -> (StatusCode, Json<serde_json::Value>) {
+    match req {
+        Ok(req) => v1_embeddings(State(state), req).await,
+        Err(rejection) => v1_json_rejection_error(rejection),
+    }
+}
+
 async fn v1_embeddings(
     State(state): State<AppState>,
     Json(req): Json<V1EmbeddingsRequest>,
@@ -1814,6 +1824,16 @@ fn resolve_retrieval_for_chat(
         hits,
         max_context_chars,
     ))
+}
+
+async fn v1_chat_completions_route(
+    State(state): State<AppState>,
+    req: Result<Json<V1ChatCompletionRequest>, JsonRejection>,
+) -> (StatusCode, Json<serde_json::Value>) {
+    match req {
+        Ok(req) => v1_chat_completions(State(state), req).await,
+        Err(rejection) => v1_json_rejection_error(rejection),
+    }
 }
 
 async fn v1_chat_completions(
@@ -2030,6 +2050,16 @@ fn error_json(
                 "param": null
             }
         })),
+    )
+}
+
+fn v1_json_rejection_error(rejection: JsonRejection) -> (StatusCode, Json<serde_json::Value>) {
+    error_json(
+        StatusCode::BAD_REQUEST,
+        &format!(
+            "Malformed JSON request body for Fathom's narrow /v1 public contract: {rejection}"
+        ),
+        "invalid_request",
     )
 }
 
