@@ -65,7 +65,8 @@ def assert_no_public_path_leaks(path: Path) -> None:
 
 
 def validate_summary_dir(directory: Path) -> None:
-    summary = load_json(directory / "summary.json")
+    summary_path = directory / "summary.json"
+    summary = load_json(summary_path)
     summary_md = directory / "summary.md"
     summary_local = directory / "summary.local.json"
     if not summary_md.exists():
@@ -73,6 +74,7 @@ def validate_summary_dir(directory: Path) -> None:
     if not summary_local.exists():
         raise AssertionError("missing summary.local.json")
 
+    assert_no_public_path_leaks(summary_path)
     assert_no_public_path_leaks(summary_md)
 
     if summary.get("local_paths_file") != "summary.local.json":
@@ -298,6 +300,21 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("external-provider proxy overclaim self-check did not fail")
+
+        json_leak = root / "summary-json-leak"
+        write_sample(json_leak, passed=True)
+        summary = load_json(json_leak / "summary.json")
+        summary["debug_note"] = "/" + "Users" + "/example/private-run"
+        (json_leak / "summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        try:
+            validate_summary_dir(json_leak)
+        except AssertionError as exc:
+            if "summary.json contains a local path-like leak" not in str(exc):
+                raise
+        else:
+            raise AssertionError("summary.json share-safety self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)
