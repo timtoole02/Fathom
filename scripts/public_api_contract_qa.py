@@ -348,12 +348,45 @@ def py_compile_command_paths(text: str, label: str) -> set[str]:
     raise AssertionError(f"{label} is missing a python3 -m py_compile command")
 
 
-def assert_launch_checklist_python_syntax_gate() -> None:
-    paths = py_compile_command_paths(read(LAUNCH_CHECKLIST), "launch checklist")
-    required = set(OFFLINE_QA_PYTHON_PATHS) | set(OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS)
+def bash_syntax_command_paths(text: str) -> set[str]:
+    paths: set[str] = set()
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("bash -n "):
+            continue
+        try:
+            tokens = shlex.split(stripped)
+        except ValueError as exc:
+            raise AssertionError(f"invalid bash -n command: {exc}") from exc
+        if len(tokens) != 3 or tokens[:2] != ["bash", "-n"]:
+            raise AssertionError(f"unexpected bash -n command shape: {stripped}")
+        paths.add(tokens[2])
+    return paths
+
+
+def assert_python_syntax_paths(text: str, label: str, required: set[str]) -> None:
+    paths = py_compile_command_paths(text, label)
     missing = sorted(required - paths)
     if missing:
-        raise AssertionError(f"launch checklist py_compile gate is missing offline Python gate(s): {missing}")
+        raise AssertionError(f"{label} py_compile gate is missing offline Python gate(s): {missing}")
+    unexpected = sorted(paths - required)
+    if unexpected:
+        raise AssertionError(f"{label} py_compile gate includes unexpected Python path(s): {unexpected}")
+
+
+def assert_shell_syntax_paths(text: str, label: str, required: set[str]) -> None:
+    paths = bash_syntax_command_paths(text)
+    missing = sorted(required - paths)
+    if missing:
+        raise AssertionError(f"{label} bash -n gate is missing offline shell gate(s): {missing}")
+    unexpected = sorted(paths - required)
+    if unexpected:
+        raise AssertionError(f"{label} bash -n gate includes unexpected shell path(s): {unexpected}")
+
+
+def assert_launch_checklist_python_syntax_gate() -> None:
+    required = set(OFFLINE_QA_PYTHON_PATHS) | set(OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS)
+    assert_python_syntax_paths(read(LAUNCH_CHECKLIST), "launch checklist", required)
 
 
 def tracked_python_paths() -> set[str]:
@@ -393,9 +426,7 @@ def assert_tracked_shell_syntax_coverage() -> None:
 
 
 def assert_launch_checklist_client_example_syntax_gates() -> None:
-    checklist_text = read(LAUNCH_CHECKLIST)
-    for path in OFFLINE_SHELL_SYNTAX_PATHS:
-        assert_contains(checklist_text, f"bash -n {path}", "launch checklist shell syntax gate")
+    assert_shell_syntax_paths(read(LAUNCH_CHECKLIST), "launch checklist", set(OFFLINE_SHELL_SYNTAX_PATHS))
 
 
 def assert_launch_checklist_artifact_qa_run_gates() -> None:
@@ -1009,6 +1040,53 @@ POST {{base}}/v1/chat/completions
     else:
         raise AssertionError("refusal matrix row-set self-test did not reject an unexpected boundary row")
 
+    required_python = {"scripts/public_api_contract_qa.py", "examples/api/python-no-deps.py"}
+    valid_python_gate = "python3 -m py_compile scripts/public_api_contract_qa.py examples/api/python-no-deps.py\n"
+    assert_python_syntax_paths(valid_python_gate, "synthetic Python syntax gate", required_python)
+    for text, expected in (
+        ("# scripts/public_api_contract_qa.py is mentioned only in prose\n", "missing a python3 -m py_compile command"),
+        (
+            valid_python_gate.replace("examples/api/python-no-deps.py", "scripts/untracked_helper.py"),
+            "missing offline Python gate",
+        ),
+        (
+            "python3 -m py_compile scripts/public_api_contract_qa.py examples/api/python-no-deps.py scripts/untracked_helper.py\n",
+            "unexpected Python path",
+        ),
+    ):
+        try:
+            assert_python_syntax_paths(text, "synthetic bad Python syntax gate", required_python)
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("Python syntax gate self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("Python syntax gate self-test did not reject command drift")
+
+    required_shell = {"scripts/public_risk_scan.sh", "scripts/public_api_contract_smoke.sh"}
+    valid_shell_gate = """
+bash -n scripts/public_risk_scan.sh
+bash -n scripts/public_api_contract_smoke.sh
+"""
+    assert_shell_syntax_paths(valid_shell_gate, "synthetic shell syntax gate", required_shell)
+    for text, expected in (
+        ("# bash -n scripts/public_risk_scan.sh\n", "missing offline shell gate"),
+        (
+            valid_shell_gate.replace("scripts/public_api_contract_smoke.sh", "scripts/deleted_smoke.sh"),
+            "missing offline shell gate",
+        ),
+        (
+            valid_shell_gate + "bash -n scripts/deleted_smoke.sh\n",
+            "unexpected shell path",
+        ),
+    ):
+        try:
+            assert_shell_syntax_paths(text, "synthetic bad shell syntax gate", required_shell)
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("shell syntax gate self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("shell syntax gate self-test did not reject command drift")
+
 
 def assert_smoke_manifest_wiring() -> None:
     smoke_text = read(SMOKE)
@@ -1048,10 +1126,12 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
-    for path in (*OFFLINE_QA_PYTHON_PATHS, *OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS):
-        assert_contains(ci_text, path, "CI Python offline QA syntax step")
-    for path in OFFLINE_CLIENT_EXAMPLE_SHELL_PATHS:
-        assert_contains(ci_text, f"bash -n {path}", "CI client example shell syntax step")
+    assert_python_syntax_paths(
+        ci_text,
+        "CI",
+        set(OFFLINE_QA_PYTHON_PATHS) | set(OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS),
+    )
+    assert_shell_syntax_paths(ci_text, "CI", set(OFFLINE_SHELL_SYNTAX_PATHS))
     assert_contains(ci_text, "scripts/public_api_contract_qa.py", "CI public API contract QA wiring")
     assert_contains(ci_text, "scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA wiring")
     assert_contains(ci_text, "scripts/backend_acceptance_artifact_qa.py", "CI backend acceptance artifact QA wiring")
@@ -1085,8 +1165,6 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
         "CI Qwen2.5 optional artifact QA self-test run step",
     )
     assert_contains(ci_text, "bash scripts/public_api_contract_smoke.sh", "CI public API contract smoke run step")
-    for path in OFFLINE_SHELL_SYNTAX_PATHS:
-        assert_contains(ci_text, f"bash -n {path}", "CI shell syntax step")
     if re.search(r"cargo\s+test\b[^\n]*--features\s+[^\n]*onnx-embeddings-ort", ci_text):
         raise AssertionError("default CI must not enable onnx-embeddings-ort")
     for line_no, line in enumerate(ci_text.splitlines(), start=1):
