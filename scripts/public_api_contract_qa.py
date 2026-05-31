@@ -37,13 +37,19 @@ SECURITY = ROOT / "SECURITY.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contract.yml"
 MODEL_RUNTIME_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "model_runtime_request.yml"
+PR_TEMPLATE = ROOT / ".github" / "pull_request_template.md"
 SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
 DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, REFUSAL_MATRIX, README]
 OPTIONAL_DOC_PATHS = [MINILM_OPTIONAL_ACCEPTANCE, SMOLLM2_OPTIONAL_ACCEPTANCE, QWEN25_OPTIONAL_ACCEPTANCE]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
-TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [CI, API_CONTRACT_ISSUE_TEMPLATE, MODEL_RUNTIME_ISSUE_TEMPLATE]
+TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [
+    CI,
+    API_CONTRACT_ISSUE_TEMPLATE,
+    MODEL_RUNTIME_ISSUE_TEMPLATE,
+    PR_TEMPLATE,
+]
 OFFLINE_QA_PYTHON_PATHS = (
     "scripts/api_client_examples_regression.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -110,7 +116,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Track public smoke artifact QA evidence|Derive public smoke boundaries from manifest|"
     r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
-    r"Harden API contract issue privacy checks)$"
+    r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -408,6 +414,7 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 "--",
                 "docs/api/refusal-boundary-matrix.md",
                 ".github/ISSUE_TEMPLATE/api_contract.yml",
+                ".github/pull_request_template.md",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
             ],
@@ -1027,6 +1034,43 @@ def assert_model_runtime_issue_template() -> None:
         assert_contains(template_text, phrase, label)
 
 
+def assert_pull_request_template() -> None:
+    template_text = read(PR_TEMPLATE)
+    label = ".github/pull_request_template.md"
+    required_phrases = [
+        "does not fake inference, embeddings, installs, downloads, readiness, benchmark results, or runtime availability",
+        "format, family, task, feature flag, fixture, endpoint, and known blockers",
+        " ".join(("broad GGUF", "runtime/tokenizer/generation support")),
+        " ".join(("ONNX", "chat/general ONNX support")),
+        "PyTorch `.bin` loading",
+        "arbitrary SafeTensors execution",
+        "streaming/full OpenAI parity",
+        "GPU support",
+        "batching",
+        "performance claims",
+        "private prompts",
+        "credentials",
+        "usernames",
+        "hostnames",
+        "absolute local paths",
+        "model-store details",
+        "synthetic/share-safe prompts",
+        "bash scripts/public_risk_scan.sh",
+        "README, CONTRIBUTING, SECURITY, API docs, UI copy, and tests",
+        "runnable, planned, blocked, metadata-only, and unavailable states",
+        "git diff --check",
+        "cargo fmt --all --check",
+        "cargo test -q",
+        "npm --prefix frontend run build",
+        "npm --prefix frontend run qa:copy",
+        "FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh",
+        "cargo test -q --features onnx-embeddings-ort",
+        "exact evidence and caveats",
+    ]
+    for phrase in required_phrases:
+        assert_contains(template_text, phrase, label)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Static QA for Fathom's public launch API contract")
     parser.add_argument("--self-test", action="store_true", help="run synthetic public-overclaim scanner regression checks")
@@ -1048,6 +1092,7 @@ def main() -> int:
     assert_ci_wiring(manifest)
     assert_api_contract_issue_template(manifest)
     assert_model_runtime_issue_template()
+    assert_pull_request_template()
     print("public API contract QA passed")
     return 0
 
