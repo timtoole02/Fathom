@@ -109,7 +109,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"^(Harden public .+ QA|Expose refusal request hints in matrix|Guard public .+ artifact .+|"
     r"Track public smoke artifact QA evidence|Derive public smoke boundaries from manifest|"
     r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
-    r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals)$"
+    r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
+    r"Harden API contract issue privacy checks)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -406,6 +407,7 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 "--format=%H%x00%s",
                 "--",
                 "docs/api/refusal-boundary-matrix.md",
+                ".github/ISSUE_TEMPLATE/api_contract.yml",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
             ],
