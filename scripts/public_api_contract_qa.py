@@ -97,6 +97,10 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals)$"
 )
+NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
+    r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
+    r"Standardize v1 malformed JSON refusals|Prove embeddings malformed JSON refusal)$"
+)
 ALLOWED_EXTRA_REFUSAL_MATRIX_ROWS = {
     "Production readiness, performance, quality, legal/license suitability",
     "Real external provider proxying",
@@ -421,6 +425,50 @@ def assert_latest_public_contract_qa_hardening_evidence(evidence_text: str) -> N
         )
 
 
+def latest_no_download_refusal_evidence_commit() -> tuple[str, str]:
+    try:
+        output = subprocess.check_output(
+            [
+                "git",
+                "log",
+                "-1",
+                f"--grep={NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN}",
+                "--extended-regexp",
+                "--format=%H%x00%s",
+                "--",
+                "docs/public-launch-evidence.md",
+                "scripts/public_api_contract_smoke.sh",
+            ],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+    except subprocess.CalledProcessError as exc:
+        raise AssertionError("could not resolve latest no-download refusal evidence commit from local git history") from exc
+
+    if not output:
+        raise AssertionError("local git history has no recognized no-download refusal evidence commit")
+    commit, subject = output.split("\0", 1)
+    return commit, subject
+
+
+def assert_latest_no_download_refusal_evidence(evidence_text: str) -> None:
+    match = re.search(
+        r"^- Latest no-download refusal evidence commit: `([0-9a-f]{40})` \(`([^`]+)`\)$",
+        evidence_text,
+        re.MULTILINE,
+    )
+    if not match:
+        raise AssertionError("launch evidence latest no-download refusal evidence commit line is missing or malformed")
+
+    evidence_commit, evidence_subject = match.groups()
+    latest_commit, latest_subject = latest_no_download_refusal_evidence_commit()
+    if evidence_commit != latest_commit or evidence_subject != latest_subject:
+        raise AssertionError(
+            "launch evidence no-download refusal evidence commit is stale: "
+            f"expected `{latest_commit}` (`{latest_subject}`), found `{evidence_commit}` (`{evidence_subject}`)"
+        )
+
+
 def latest_commit_date_for_path(path: Path) -> date:
     rel_path = str(path.relative_to(ROOT))
     try:
@@ -539,8 +587,8 @@ def assert_boundary_docs() -> None:
 
     evidence_text = read(LAUNCH_EVIDENCE)
     assert_contains(evidence_text, "a32505eadac6539865d224a8b4195656003a0032", "launch evidence commit")
-    assert_contains(evidence_text, "687aaebc27fdaa00588dd889d9ae3226f5b26000", "launch evidence latest no-download refusal commit")
     assert_contains(evidence_text, "e9195bc7462999284960f5631d3a74aa5391bffc", "launch evidence optional artifact QA CI commit")
+    assert_latest_no_download_refusal_evidence(evidence_text)
     assert_latest_public_contract_qa_hardening_evidence(evidence_text)
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
