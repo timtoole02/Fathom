@@ -93,6 +93,22 @@ blocked_tracked_workspace_filenames = {
     "TOOLS.md",
     "USER.md",
 }
+blocked_tracked_runtime_artifact_filenames = {
+    "server.log",
+    "summary.local.json",
+}
+blocked_tracked_runtime_artifact_suffixes = {
+    ".db",
+    ".db-journal",
+    ".db-shm",
+    ".db-wal",
+    ".log",
+    ".sqlite",
+    ".sqlite-journal",
+    ".sqlite-shm",
+    ".sqlite-wal",
+    ".sqlite3",
+}
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -189,6 +205,22 @@ def tracked_workspace_context_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if path.name in blocked_tracked_workspace_filenames or rel.startswith("memory/"):
             failures.append(f"{rel}: workspace/personal agent context files must not be tracked for public launch")
+    return failures
+
+def tracked_runtime_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] == ".fathom":
+            failures.append(f"{rel}: local Fathom runtime state must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_runtime_artifact_filenames:
+            failures.append(f"{rel}: local runtime/artifact detail files must not be tracked for public launch")
+            continue
+        if any(rel.endswith(suffix) for suffix in blocked_tracked_runtime_artifact_suffixes):
+            failures.append(f"{rel}: local runtime/artifact detail files must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -303,6 +335,25 @@ def self_test():
         "memory/2026-05-31.md: workspace/personal agent context files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked workspace/personal agent context files")
+    runtime_artifact_failures = tracked_runtime_artifact_file_failures(
+        tracked_paths=[
+            ".fathom/state/registry.json",
+            "docs/api/public-contract.json",
+            "logs/server.log",
+            "public-contract-artifacts/summary.local.json",
+            "state/fathom.sqlite",
+            "state/fathom.sqlite-wal",
+            "frontend/package-lock.json",
+        ],
+    )
+    if runtime_artifact_failures != [
+        ".fathom/state/registry.json: local Fathom runtime state must not be tracked for public launch",
+        "logs/server.log: local runtime/artifact detail files must not be tracked for public launch",
+        "public-contract-artifacts/summary.local.json: local runtime/artifact detail files must not be tracked for public launch",
+        "state/fathom.sqlite: local runtime/artifact detail files must not be tracked for public launch",
+        "state/fathom.sqlite-wal: local runtime/artifact detail files must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local runtime/artifact files")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -335,6 +386,7 @@ failures.extend(tracked_large_file_failures())
 failures.extend(tracked_blocked_file_failures())
 failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
+failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

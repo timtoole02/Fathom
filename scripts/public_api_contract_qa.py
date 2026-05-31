@@ -129,7 +129,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard REST Client example headers|Guard API example regression self-test|"
     r"Guard CI frontend launch gates|Guard public risk scan .+|Guard tracked credential config files|"
-    r"Guard tracked workspace instruction files)$"
+    r"Guard tracked workspace instruction files|Guard tracked local runtime artifacts)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -768,6 +768,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "workspace/personal agent context-file guard",
         "launch evidence workspace context risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local runtime/artifact detail-file guard",
+        "launch evidence runtime artifact risk-scan scope",
     )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(
