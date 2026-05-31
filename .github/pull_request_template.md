@@ -23,11 +23,23 @@
 ## Gates run
 
 - [ ] `git diff --check`
+- [ ] `python3 scripts/api_client_examples_regression.py`
+- [ ] `python3 scripts/api_client_examples_regression.py --self-test`
+- [ ] `python3 scripts/public_api_contract_qa.py`
+- [ ] `python3 scripts/public_api_contract_qa.py --self-test`
+- [ ] `python3 scripts/public_contract_smoke_artifact_qa.py`
+- [ ] `python3 scripts/backend_acceptance_artifact_qa.py`
+- [ ] `python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py`
+- [ ] `python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py`
+- [ ] `python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py`
+- [ ] `python3 scripts/ci_static_policy.py`
+- [ ] `python3 scripts/ci_static_policy.py --self-test`
 - [ ] `cargo fmt --all --check`
 - [ ] `cargo test -q`
 - [ ] `npm --prefix frontend run build`
 - [ ] `npm --prefix frontend run qa:copy`
 - [ ] `bash -n scripts/public_risk_scan.sh`
+- [ ] `bash scripts/public_risk_scan.sh --self-test`
 - [ ] `bash scripts/public_risk_scan.sh`
 - [ ] Not applicable / explained below
 
