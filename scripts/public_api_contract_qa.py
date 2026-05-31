@@ -848,6 +848,33 @@ def assert_refusal_matrix_row_set(
         raise AssertionError(f"refusal boundary matrix is missing expected boundary rows: {sorted(missing)}")
 
 
+def example_endpoints_from_text(text: str) -> set[str]:
+    endpoints = set()
+    for method in ("GET", "POST"):
+        for match in re.finditer(rf"\b{method}\b[^\n\"']*(/(?:v1|api)/[A-Za-z0-9_./{{}}:-]+)", text):
+            endpoint = match.group(1).replace("{{base}}", "").split("?", 1)[0]
+            endpoint = endpoint.replace("$BASE", "").replace("base_url", "")
+            endpoint = re.sub(r"/\$\{?EMBED_MODEL_ID\}?/embed", "/:id/embed", endpoint)
+            if "/api/embedding-models" in endpoint:
+                # Older embedding endpoint is documented by the backend quickstart, but the launch
+                # OpenAI-style contract only covers /v1/embeddings.
+                continue
+            if endpoint.startswith("/v1/") or endpoint.startswith("/api/models/catalog"):
+                endpoints.add(f"{method} {endpoint}")
+    return endpoints
+
+
+def assert_example_text_contract(text: str, allowed_endpoints: set[str], label: str) -> None:
+    if re.search(r"['\"]?stream['\"]?\s*[:=]\s*(true|True)", text):
+        raise AssertionError(f"{label} must not send streaming chat requests")
+    if re.search(r"['\"]?encoding_format['\"]?\s*[:=]\s*['\"]base64['\"]", text):
+        raise AssertionError(f"{label} must not request base64 embeddings")
+
+    unexpected = {item for item in example_endpoints_from_text(text) if item not in allowed_endpoints}
+    if unexpected:
+        raise AssertionError(f"{label} uses endpoints outside public examples allow-list: {sorted(unexpected)}")
+
+
 def assert_examples_static(manifest: dict[str, Any]) -> None:
     allowed_endpoints = allowed_example_endpoints(manifest)
     example_text = "\n".join(read(path) for path in EXAMPLE_PATHS)
@@ -856,28 +883,10 @@ def assert_examples_static(manifest: dict[str, Any]) -> None:
     assert_contains(example_text, "/v1/chat/completions", "examples/api")
     assert_contains(example_text, "/v1/embeddings", "examples/api")
     assert_contains(example_text, "encoding_format", "examples/api embeddings")
-    if re.search(r"stream\s*[:=]\s*(true|True)", example_text):
-        raise AssertionError("examples/api must not send streaming chat requests")
-    if re.search(r"encoding_format\s*[:=]\s*['\"]base64['\"]", example_text):
-        raise AssertionError("examples/api must not request base64 embeddings")
+    assert_example_text_contract(example_text, allowed_endpoints, "examples/api")
 
     for path in EXAMPLE_PATHS:
-        text = read(path)
-        endpoints = set()
-        for method in ("GET", "POST"):
-            for match in re.finditer(rf"\b{method}\b[^\n\"']*(/(?:v1|api)/[A-Za-z0-9_./{{}}:-]+)", text):
-                endpoint = match.group(1).replace("{{base}}", "").split("?", 1)[0]
-                endpoint = endpoint.replace("$BASE", "").replace("base_url", "")
-                endpoint = re.sub(r"/\$\{?EMBED_MODEL_ID\}?/embed", "/:id/embed", endpoint)
-                if "/api/embedding-models" in endpoint:
-                    # Older embedding endpoint is documented by the backend quickstart, but the launch
-                    # OpenAI-style contract only covers /v1/embeddings.
-                    continue
-                if endpoint.startswith("/v1/") or endpoint.startswith("/api/models/catalog"):
-                    endpoints.add(f"{method} {endpoint}")
-        unexpected = {item for item in endpoints if item not in allowed_endpoints}
-        if unexpected:
-            raise AssertionError(f"{path.relative_to(ROOT)} uses endpoints outside public examples allow-list: {sorted(unexpected)}")
+        assert_example_text_contract(read(path), allowed_endpoints, str(path.relative_to(ROOT)))
 
 
 def positive_overclaim_failures(items: list[tuple[str, str]]) -> list[str]:
@@ -898,6 +907,31 @@ def assert_no_positive_overclaims() -> None:
 
 
 def run_self_test() -> None:
+    repo_manifest = load_manifest()
+    allowed_endpoints = allowed_example_endpoints(repo_manifest)
+    good_example = """
+GET {{base}}/v1/health
+POST {{base}}/api/models/catalog/install
+POST {{base}}/v1/chat/completions
+{
+  "stream": false,
+  "encoding_format": "float"
+}
+"""
+    assert_example_text_contract(good_example, allowed_endpoints, "synthetic good example")
+    for text, expected in (
+        ("POST {{base}}/v1/responses\n", "outside public examples allow-list"),
+        ('POST {{base}}/v1/chat/completions\n{"stream": true}\n', "streaming chat requests"),
+        ('POST {{base}}/v1/embeddings\n{"encoding_format": "base64"}\n', "base64 embeddings"),
+    ):
+        try:
+            assert_example_text_contract(text, allowed_endpoints, "synthetic bad example")
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise
+        else:
+            raise AssertionError("examples/api static self-test did not reject unsafe example drift")
+
     bad_lines = [
         ("docs/api/example.md", "Fathom supports streaming chat completions for clients."),
         ("docs/api/example.md", "The API proxies external provider requests."),
