@@ -18,7 +18,7 @@ body:
     id: request
     attributes:
       label: Request shape
-      description: Minimal request, query, or headers. Use synthetic prompts only.
+      description: Minimal request, query, or headers. Use synthetic prompts only, and redact credentials, local paths, hostnames, raw logs/artifacts, and private model-store details.
       render: json
     validations:
       required: true
@@ -26,9 +26,23 @@ body:
     id: response
     attributes:
       label: Expected or actual response shape
+      description: Share only the smallest public-safe response shape. Redact credentials, local paths, hostnames, raw logs/artifacts, and private model-store details.
       render: json
     validations:
       required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy and artifact check
+      options:
+        - label: I used synthetic prompts only and removed private prompts or documents.
+          required: true
+        - label: I removed credentials, auth headers, tokens, and secrets.
+          required: true
+        - label: I removed absolute local paths, hostnames, usernames, and model-store details.
+          required: true
+        - label: I reviewed attached logs/artifacts/screenshots for sensitive data and ran a risk scan when applicable.
+          required: true
   - type: input
     id: client
     attributes:

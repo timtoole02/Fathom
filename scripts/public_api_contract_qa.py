@@ -979,6 +979,12 @@ def assert_api_contract_issue_template(manifest: dict[str, Any]) -> None:
         "docs/api/refusal-boundary-matrix.md",
         "not full OpenAI API parity",
         "synthetic prompts only",
+        "credentials",
+        "auth headers",
+        "local paths",
+        "hostnames",
+        "logs/artifacts",
+        "model-store details",
     ]
     for phrase in required_phrases:
         assert_contains(template_text, phrase, label)
