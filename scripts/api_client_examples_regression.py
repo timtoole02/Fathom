@@ -19,7 +19,7 @@ import threading
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 ROOT = Path(__file__).resolve().parents[1]
 CHAT_MODEL_ID = "echarlaix-tiny-random-phiforcausallm-model-safetensors"
@@ -202,6 +202,7 @@ def run_example(
     embeddings: bool,
     extra_env: dict[str, str] | None = None,
     contract: str = "quickstart",
+    stdout_checker: Callable[[str], None] | None = None,
 ) -> list[RecordedRequest]:
     recorder = Recorder()
     server = ThreadingHTTPServer(("127.0.0.1", 0), FakeFathomHandler)
@@ -228,7 +229,9 @@ def run_example(
     else:
         env.pop("FATHOM_RUN_EMBEDDINGS", None)
     try:
-        subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=True, timeout=30)
+        completed = subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=True, timeout=30)
+        if stdout_checker is not None:
+            stdout_checker(completed.stdout)
         requests = recorder.snapshot()
         if contract == "sdk":
             assert_openai_sdk_contract(requests, embeddings=embeddings, label=" ".join(command))
@@ -305,6 +308,7 @@ def _post_json(url, body):
             embeddings=embeddings,
             extra_env={"PYTHONPATH": prepend_pythonpath(tmpdir, os.environ.get("PYTHONPATH"))},
             contract="sdk",
+            stdout_checker=lambda stdout: assert_openai_sdk_stdout(stdout, embeddings=embeddings),
         )
 
 
@@ -412,6 +416,70 @@ def assert_openai_sdk_contract(requests: list[RecordedRequest], *, embeddings: b
     else:
         assert_true(not install_requests, f"{label}: SDK embedding install must be opt-in only")
         assert_true(not embedding_requests, f"{label}: SDK embeddings request must be opt-in only")
+
+
+def assert_openai_sdk_stdout(stdout: str, *, embeddings: bool) -> None:
+    values = parse_json_stdout_values(stdout)
+    expected_count = 3 if embeddings else 1
+    assert_true(
+        len(values) == expected_count,
+        f"openai-sdk.py expected {expected_count} JSON stdout payloads, got {len(values)}",
+    )
+    chat = values[0]
+    assert_true(isinstance(chat, dict), "openai-sdk.py chat stdout payload must be a JSON object")
+    assert_true(chat.get("object") == "chat.completion", "openai-sdk.py chat stdout object drifted")
+    assert_true(chat.get("model") == CHAT_MODEL_ID, "openai-sdk.py chat stdout model drifted")
+    choices = chat.get("choices")
+    assert_true(isinstance(choices, list) and choices, "openai-sdk.py chat stdout choices missing")
+    first_choice = choices[0]
+    assert_true(isinstance(first_choice, dict), "openai-sdk.py chat stdout choice must be an object")
+    message = first_choice.get("message")
+    assert_true(isinstance(message, dict), "openai-sdk.py chat stdout message missing")
+    assert_true(message.get("role") == "assistant", "openai-sdk.py chat stdout assistant role drifted")
+
+    if not embeddings:
+        return
+
+    install = values[1]
+    assert_true(isinstance(install, dict), "openai-sdk.py embedding install stdout payload must be a JSON object")
+    assert_true(install.get("ok") is True, "openai-sdk.py embedding install stdout ok flag drifted")
+    install_model = install.get("model")
+    assert_true(isinstance(install_model, dict), "openai-sdk.py embedding install stdout model missing")
+    assert_true(
+        install_model.get("id") == EMBEDDING_MODEL_ID,
+        "openai-sdk.py embedding install stdout model id drifted",
+    )
+
+    embeddings_payload = values[2]
+    assert_true(isinstance(embeddings_payload, dict), "openai-sdk.py embeddings stdout payload must be a JSON object")
+    assert_true(embeddings_payload.get("object") == "list", "openai-sdk.py embeddings stdout object drifted")
+    assert_true(embeddings_payload.get("model") == EMBEDDING_MODEL_ID, "openai-sdk.py embeddings stdout model drifted")
+    data = embeddings_payload.get("data")
+    assert_true(isinstance(data, list) and data, "openai-sdk.py embeddings stdout data missing")
+    first_embedding = data[0]
+    assert_true(isinstance(first_embedding, dict), "openai-sdk.py embeddings stdout item must be an object")
+    vector = first_embedding.get("embedding")
+    assert_true(
+        isinstance(vector, list) and vector and all(isinstance(item, float) for item in vector),
+        "openai-sdk.py embeddings stdout vector must be a non-empty float list",
+    )
+
+
+def parse_json_stdout_values(stdout: str) -> list[Any]:
+    decoder = json.JSONDecoder()
+    values: list[Any] = []
+    index = 0
+    while index < len(stdout):
+        while index < len(stdout) and stdout[index].isspace():
+            index += 1
+        if index >= len(stdout):
+            break
+        try:
+            value, index = decoder.raw_decode(stdout, index)
+        except json.JSONDecodeError as exc:
+            raise AssertionError(f"stdout contains non-JSON data at byte {index}: {exc}") from exc
+        values.append(value)
+    return values
 
 
 def assert_json_request(request: RecordedRequest, label: str) -> None:
