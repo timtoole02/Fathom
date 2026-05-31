@@ -404,6 +404,7 @@ def assert_launch_checklist_artifact_qa_run_gates() -> None:
 
 
 def assert_public_security_docs() -> None:
+    risk_scan_caveat = "not a complete privacy audit"
     requirements = {
         SECURITY: (
             "no built-in authentication",
@@ -414,18 +415,21 @@ def assert_public_security_docs() -> None:
             "sensitive artifact details",
             "model-store details",
             "reproduction steps",
+            risk_scan_caveat,
         ),
         README: (
             "no built-in authentication",
             "loopback development",
             "not direct internet or untrusted-LAN exposure",
             "SECURITY.md",
+            risk_scan_caveat,
         ),
         BACKEND_QUICKSTART: (
             "no built-in authentication",
             "loopback development",
             "internet or an untrusted LAN",
             "../../SECURITY.md",
+            risk_scan_caveat,
         ),
         V1_CONTRACT: (
             "no built-in authentication",
@@ -438,11 +442,13 @@ def assert_public_security_docs() -> None:
             "loopback development",
             "internet or an untrusted LAN",
             "SECURITY.md",
+            risk_scan_caveat,
         ),
         LAUNCH_EVIDENCE: (
             "local API no-auth/loopback security-note coverage",
             "internet/untrusted-LAN exposure",
             "`SECURITY.md` review warnings",
+            risk_scan_caveat,
         ),
     }
     for path, phrases in requirements.items():
@@ -1209,6 +1215,7 @@ def assert_pull_request_template() -> None:
         "model-store details",
         "synthetic/share-safe prompts",
         "bash scripts/public_risk_scan.sh",
+        "not a complete privacy audit",
         "README, CONTRIBUTING, SECURITY, API docs, UI copy, and tests",
         "runnable, planned, blocked, metadata-only, and unavailable states",
         "git diff --check",

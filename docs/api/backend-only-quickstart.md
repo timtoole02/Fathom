@@ -70,7 +70,7 @@ Useful evidence files:
 - `13-retrieval-search.json` and `14-chat-with-retrieval.json` show explicit-vector retrieval and retrieval-context chat metadata.
 - `15-install-gguf-metadata-only.json`, `16-v1-models-after-gguf.json`, and `17-chat-gguf-refusal.json` show pinned GGUF metadata-only registration, `/v1/models` exclusion, and chat refusal.
 
-If artifacts were created in the script's default temp directory, they are rebuildable and safe to remove after you have copied anything you need. Be more careful with custom `FATHOM_ACCEPTANCE_MODELS_DIR`, `FATHOM_ACCEPTANCE_STATE_DIR`, or `FATHOM_ACCEPTANCE_ARTIFACT_DIR` values: delete only the acceptance-run directories you intentionally created, not a shared/user model store or source-of-truth state. Run `bash scripts/public_risk_scan.sh` before public handoff to catch tracked-file privacy regressions and uncaveated support claims.
+If artifacts were created in the script's default temp directory, they are rebuildable and safe to remove after you have copied anything you need. Be more careful with custom `FATHOM_ACCEPTANCE_MODELS_DIR`, `FATHOM_ACCEPTANCE_STATE_DIR`, or `FATHOM_ACCEPTANCE_ARTIFACT_DIR` values: delete only the acceptance-run directories you intentionally created, not a shared/user model store or source-of-truth state. Run `bash scripts/public_risk_scan.sh` before public handoff to catch tracked-file privacy regressions and uncaveated support claims; it is a guardrail, not a complete privacy audit.
 
 ## Health and runtime discovery
 

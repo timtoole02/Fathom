@@ -98,7 +98,7 @@ When you need fuller backend evidence and network access is available:
 FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh
 ```
 
-Review `summary.md` first, then `summary.json` and the named JSON artifacts. Keep `summary.local.json` private unless you have reviewed it; local paths and runner-specific details belong there. Before sharing artifacts publicly, run `bash scripts/public_risk_scan.sh` and manually inspect logs/full payloads for local paths or request text.
+Review `summary.md` first, then `summary.json` and the named JSON artifacts. Keep `summary.local.json` private unless you have reviewed it; local paths and runner-specific details belong there. Before sharing artifacts publicly, run `bash scripts/public_risk_scan.sh` and manually inspect logs/full payloads for local paths or request text. The scanner is a tracked-file guardrail, not a complete privacy audit.
 
 ## What this launch currently proves
 

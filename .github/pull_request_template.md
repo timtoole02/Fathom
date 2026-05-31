@@ -12,7 +12,7 @@
 
 - [ ] Public text, logs, screenshots, fixtures, and generated artifacts were reviewed for private prompts, credentials, usernames, hostnames, absolute local paths, and model-store details.
 - [ ] Attached evidence uses synthetic/share-safe prompts and minimal local context.
-- [ ] `bash scripts/public_risk_scan.sh` was run when public-facing text or artifacts changed.
+- [ ] `bash scripts/public_risk_scan.sh` was run when public-facing text or artifacts changed; this is a guardrail, not a complete privacy audit.
 
 ## Docs, UI, and API consistency
 
