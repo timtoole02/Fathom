@@ -24,9 +24,6 @@ PROMPTS = [
     },
 ]
 
-DEFAULT_MODEL = Path("/Volumes/SSK Drive/Camelid/models/Meta-Llama-3-8B-Instruct-Q8_0.gguf")
-
-
 def parse_ids(output: str) -> list[int]:
     value = json.loads(output.strip())
     if not isinstance(value, list) or not all(isinstance(item, int) for item in value):
@@ -53,7 +50,7 @@ def run_tokenize(binary: Path, model: Path, prompt: str, *, no_bos_no_special: b
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--llama-tokenize", required=True, type=Path, help="Path to llama.cpp llama-tokenize binary")
-    parser.add_argument("--model", default=DEFAULT_MODEL, type=Path, help="Path to Llama 3 GGUF")
+    parser.add_argument("--model", required=True, type=Path, help="Path to local Llama 3 GGUF")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON")
     args = parser.parse_args()
 

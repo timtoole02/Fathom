@@ -10020,12 +10020,6 @@ mod tests {
         std::env::var("FATHOM_GGUF_LLAMA3_FIXTURE")
             .ok()
             .map(PathBuf::from)
-            .or_else(|| {
-                let path = PathBuf::from(
-                    "/Volumes/SSK Drive/Camelid/models/Meta-Llama-3-8B-Instruct-Q8_0.gguf",
-                );
-                path.exists().then_some(path)
-            })
     }
 
     fn gguf_tokenizer_assert_llama3_fixture_for_tests(path: &Path) {
@@ -10040,7 +10034,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires FATHOM_GGUF_LLAMA3_FIXTURE or the local Camelid Llama 3 GGUF"]
+    #[ignore = "requires FATHOM_GGUF_LLAMA3_FIXTURE"]
     fn gguf_tokenizer_llama3_fixture_retains_exact_128k_bpe_metadata_before_runtime_use() {
         let Some(fixture_path) = gguf_tokenizer_llama3_fixture_for_tests() else {
             return;

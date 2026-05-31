@@ -36,6 +36,7 @@ def privacy_patterns():
         ("personal home path", re.compile(r"/Users/[^\s`'\"]+")),
         ("private macOS temp path", re.compile(private_temp_pattern, re.IGNORECASE)),
         ("machine-local Homebrew path", re.compile(re.escape(homebrew_pattern), re.IGNORECASE)),
+        ("machine-local volume path", re.compile(re.escape(volume_root_pattern), re.IGNORECASE)),
         ("private workspace path", re.compile(r"\.openclaw", re.IGNORECASE)),
     ]
 
@@ -105,6 +106,7 @@ def self_test():
         ("docs/api/example.md", "Workspace cache: .openclaw/workspace/artifacts"),
         ("docs/benchmarks/example.md", "Reference repo: /Users/example/.openclaw/workspace/projects/llama.cpp"),
         ("docs/benchmarks/example.md", "Model: /Volumes/External/models/model.gguf"),
+        ("scripts/example.py", "DEFAULT_MODEL = Path('/Volumes/External/models/model.gguf')"),
         ("docs/api/example.md", "Artifact: /tmp/private-output.json"),
         ("docs/public-launch-evidence.md", "Binary: /path/then/model-store under /Users/example"),
         ("docs/api/example.md", "Fathom includes a GGUF runtime for local inference."),
