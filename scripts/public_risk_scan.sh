@@ -70,6 +70,7 @@ skip_suffixes = {".lock"}
 skip_paths = {"scripts/public_risk_scan.sh", "frontend/scripts/ui-copy-qa.mjs"}
 max_tracked_file_bytes = 1024 * 1024
 blocked_tracked_filenames = {".DS_Store", "Thumbs.db", "desktop.ini"}
+tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
     "docs/api/",
@@ -107,6 +108,8 @@ def tracked_items():
         if rel in skip_paths or pathlib.Path(rel).suffix in skip_suffixes:
             continue
         path = pathlib.Path(rel)
+        if path.is_symlink():
+            continue
         try:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
@@ -121,6 +124,8 @@ def tracked_large_file_failures(tracked_paths=None, sizes=None):
     for rel in tracked_paths:
         path = pathlib.Path(rel)
         try:
+            if path.is_symlink():
+                continue
             size = sizes[rel] if sizes is not None else path.stat().st_size
         except (FileNotFoundError, KeyError):
             continue
@@ -135,6 +140,31 @@ def tracked_blocked_file_failures(tracked_paths=None):
     for rel in tracked_paths:
         if pathlib.PurePosixPath(rel).name in blocked_tracked_filenames:
             failures.append(f"{rel}: OS/editor metadata files must not be tracked for public launch")
+    return failures
+
+def tracked_index_entries():
+    entries = []
+    for line in subprocess.check_output(["git", "ls-files", "-s"], text=True).splitlines():
+        metadata, rel = line.split("\t", 1)
+        mode, _blob_sha, _stage = metadata.split()
+        entries.append((mode, rel))
+    return entries
+
+def tracked_symlink_failures(tracked_entries=None, targets=None):
+    if tracked_entries is None:
+        tracked_entries = tracked_index_entries()
+    failures = []
+    for mode, rel in tracked_entries:
+        if mode != tracked_symlink_mode:
+            continue
+        try:
+            target = targets[rel] if targets is not None else pathlib.Path(rel).readlink().as_posix()
+        except (FileNotFoundError, KeyError, OSError):
+            failures.append(f"{rel}: tracked symlink target could not be inspected")
+            continue
+        target_path = pathlib.PurePosixPath(target)
+        if target.startswith("~") or target_path.is_absolute() or ".." in target_path.parts:
+            failures.append(f"{rel}: tracked symlink must use a relative in-repository target, found {target}")
     return failures
 
 def self_test():
@@ -187,6 +217,27 @@ def self_test():
         "desktop.ini: OS/editor metadata files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked OS/editor metadata files")
+    symlink_failures = tracked_symlink_failures(
+        tracked_entries=[
+            ("100644", "README.md"),
+            (tracked_symlink_mode, "docs/internal-home"),
+            (tracked_symlink_mode, "docs/private-temp"),
+            (tracked_symlink_mode, "docs/parent"),
+            (tracked_symlink_mode, "docs/public-contract-link"),
+        ],
+        targets={
+            "docs/internal-home": "/Users/example/private-notes.md",
+            "docs/private-temp": "~/private-output.json",
+            "docs/parent": "../outside-repo.md",
+            "docs/public-contract-link": "api/public-contract.json",
+        },
+    )
+    if symlink_failures != [
+        "docs/internal-home: tracked symlink must use a relative in-repository target, found /Users/example/private-notes.md",
+        "docs/private-temp: tracked symlink must use a relative in-repository target, found ~/private-output.json",
+        "docs/parent: tracked symlink must use a relative in-repository target, found ../outside-repo.md",
+    ]:
+        raise AssertionError("public risk self-test did not reject symlinks escaping the repository")
     print("public risk scan self-test passed")
 
 if "--self-test" in sys.argv[1:]:
@@ -196,6 +247,7 @@ if "--self-test" in sys.argv[1:]:
 failures = scan_items(tracked_items())
 failures.extend(tracked_large_file_failures())
 failures.extend(tracked_blocked_file_failures())
+failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
     print("\n".join(failures), file=sys.stderr)
