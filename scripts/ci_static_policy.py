@@ -20,10 +20,49 @@ OPTIONAL_ACCEPTANCE_SMOKE_SCRIPTS = (
     "scripts/smollm2_optional_api_acceptance_smoke.sh",
     "scripts/qwen25_optional_api_acceptance_smoke.sh",
 )
+WRITE_TOKEN_PERMISSION_PATTERN = re.compile(
+    r"^\s*(?:"
+    r"actions|attestations|checks|contents|deployments|discussions|id-token|"
+    r"issues|models|packages|pages|pull-requests|security-events|statuses"
+    r")\s*:\s*write\s*(?:#.*)?$"
+)
+
+
+def top_level_permissions_block(text: str) -> list[str] | None:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if re.match(r"^permissions:\s*(?:#.*)?$", line):
+            block: list[str] = []
+            for child in lines[index + 1 :]:
+                if child and not child.startswith((" ", "\t")):
+                    break
+                if child.strip():
+                    block.append(child)
+            return block
+        if re.match(r"^permissions:\s*(?:read-all|write-all)\s*(?:#.*)?$", line):
+            return [line]
+    return None
 
 
 def evaluate_ci_text(text: str) -> list[str]:
     failures: list[str] = []
+
+    permissions_block = top_level_permissions_block(text)
+    if permissions_block is None:
+        failures.append("default CI must set top-level permissions: contents: read")
+    else:
+        permissions_text = "\n".join(permissions_block)
+        if re.search(r"^\s*permissions:\s*write-all\s*(?:#.*)?$", permissions_text, re.MULTILINE):
+            failures.append("default CI must not grant write-all token permissions")
+        if re.search(r"^\s*permissions:\s*read-all\s*(?:#.*)?$", permissions_text, re.MULTILINE):
+            failures.append("default CI must not grant read-all token permissions")
+        if not re.search(r"^\s*contents:\s*read\s*(?:#.*)?$", permissions_text, re.MULTILINE):
+            failures.append("default CI token permissions must include contents: read")
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            if WRITE_TOKEN_PERMISSION_PATTERN.match(line):
+                failures.append(
+                    f"default CI must not grant write token permissions, line {line_number}: {line.strip()}"
+                )
 
     if re.search(r"cargo\s+test\b[^\n]*--features\s+[^\n]*onnx-embeddings-ort", text):
         failures.append("default CI must not run onnx-embeddings-ort feature tests")
@@ -81,6 +120,8 @@ def assert_policy_passes(text: str) -> None:
 def run_self_test() -> None:
     valid = """
 name: CI
+permissions:
+  contents: read
 jobs:
   rust:
     steps:
@@ -97,16 +138,21 @@ jobs:
     assert_policy_passes(valid)
 
     cases = {
-        "onnx feature": "run: cargo test -q --features onnx-embeddings-ort\nrun: bash scripts/public_api_contract_smoke.sh",
-        "networked acceptance": "run: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/backend_acceptance_smoke.sh",
-        "public contract artifacts": "run: bash scripts/public_api_contract_smoke.sh\nenv:\n  FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR: artifacts",
-        "optional acceptance smoke run": "run: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/qwen25_optional_api_acceptance_smoke.sh",
-        "upload artifact": "uses: actions/upload-artifact@v4\nrun: bash scripts/public_api_contract_smoke.sh",
-        "download artifact": "uses: actions/download-artifact@v4\nrun: bash scripts/public_api_contract_smoke.sh",
-        "cache action": "uses: actions/cache@v4\nrun: bash scripts/public_api_contract_smoke.sh",
-        "broad target cache": "target:\n  path: target\nrun: bash scripts/public_api_contract_smoke.sh",
+        "missing token permissions": "run: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "write-all token permissions": "permissions: write-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "read-all token permissions": "permissions: read-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "contents write token permission": "permissions:\n  contents: write\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "id-token write token permission": "permissions:\n  contents: read\n  id-token: write\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "onnx feature": "permissions:\n  contents: read\nrun: cargo test -q --features onnx-embeddings-ort\nrun: bash scripts/public_api_contract_smoke.sh",
+        "networked acceptance": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/backend_acceptance_smoke.sh",
+        "public contract artifacts": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nenv:\n  FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR: artifacts",
+        "optional acceptance smoke run": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/qwen25_optional_api_acceptance_smoke.sh",
+        "upload artifact": "permissions:\n  contents: read\nuses: actions/upload-artifact@v4\nrun: bash scripts/public_api_contract_smoke.sh",
+        "download artifact": "permissions:\n  contents: read\nuses: actions/download-artifact@v4\nrun: bash scripts/public_api_contract_smoke.sh",
+        "cache action": "permissions:\n  contents: read\nuses: actions/cache@v4\nrun: bash scripts/public_api_contract_smoke.sh",
+        "broad target cache": "permissions:\n  contents: read\ntarget:\n  path: target\nrun: bash scripts/public_api_contract_smoke.sh",
         "missing public smoke": "run: cargo test -q",
-        "missing static policy self-test": "run: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py",
+        "missing static policy self-test": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py",
     }
     for label, text in cases.items():
         if not evaluate_ci_text(text):
