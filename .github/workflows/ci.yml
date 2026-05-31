@@ -75,6 +75,7 @@ jobs:
             scripts/public_api_contract_qa.py \
             scripts/public_contract_smoke_artifact_qa.py \
             scripts/qwen25_optional_api_acceptance_artifact_qa.py \
+            scripts/reference_llama3_tokenizer_ids.py \
             scripts/smollm2_optional_api_acceptance_artifact_qa.py \
             examples/api/python-no-deps.py \
             examples/api/openai-sdk.py \

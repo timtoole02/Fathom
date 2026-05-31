@@ -65,6 +65,7 @@ OFFLINE_QA_PYTHON_PATHS = (
     "scripts/public_api_contract_qa.py",
     "scripts/public_contract_smoke_artifact_qa.py",
     "scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+    "scripts/reference_llama3_tokenizer_ids.py",
     "scripts/smollm2_optional_api_acceptance_artifact_qa.py",
 )
 OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS = (
@@ -124,7 +125,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
     r"Guard public issue template privacy checks|Guard issue template config privacy checks|"
-    r"Guard OpenAI SDK example regression|Guard CI token permissions)$"
+    r"Guard OpenAI SDK example regression|Guard CI token permissions|"
+    r"Guard offline Python syntax coverage)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -351,6 +353,24 @@ def assert_launch_checklist_python_syntax_gate() -> None:
     missing = sorted(required - paths)
     if missing:
         raise AssertionError(f"launch checklist py_compile gate is missing offline Python gate(s): {missing}")
+
+
+def tracked_python_paths() -> set[str]:
+    completed = subprocess.run(
+        ["git", "ls-files", "*.py"],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return set(completed.stdout.splitlines())
+
+
+def assert_tracked_python_syntax_coverage() -> None:
+    covered = set(OFFLINE_QA_PYTHON_PATHS) | set(OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS)
+    missing = sorted(tracked_python_paths() - covered)
+    if missing:
+        raise AssertionError(f"tracked Python files missing from offline syntax coverage: {missing}")
 
 
 def assert_launch_checklist_client_example_syntax_gates() -> None:
@@ -1163,6 +1183,7 @@ def main() -> int:
     assert_manifest_shape(manifest)
     assert_endpoint_docs(manifest)
     assert_roadmap_last_updated_freshness()
+    assert_tracked_python_syntax_coverage()
     assert_boundary_docs()
     assert_examples_static(manifest)
     assert_no_positive_overclaims()

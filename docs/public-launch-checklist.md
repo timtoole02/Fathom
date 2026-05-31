@@ -30,6 +30,7 @@ python3 -m py_compile \
   scripts/public_api_contract_qa.py \
   scripts/public_contract_smoke_artifact_qa.py \
   scripts/qwen25_optional_api_acceptance_artifact_qa.py \
+  scripts/reference_llama3_tokenizer_ids.py \
   scripts/smollm2_optional_api_acceptance_artifact_qa.py
 python3 scripts/ci_static_policy.py
 python3 scripts/ci_static_policy.py --self-test
