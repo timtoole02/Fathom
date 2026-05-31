@@ -99,15 +99,22 @@ def tracked_items():
 
 def self_test():
     bad_lines = [
+        ("README.md", "Maintainer: " + "Ti" + "m Too" + "le"),
+        ("README.md", "Local maintainer user: " + personal_user),
+        ("docs/api/example.md", "Tool path: " + homebrew_pattern + "/bin/fathom-helper"),
+        ("docs/api/example.md", "Workspace cache: .openclaw/workspace/artifacts"),
         ("docs/benchmarks/example.md", "Reference repo: /Users/example/.openclaw/workspace/projects/llama.cpp"),
         ("docs/benchmarks/example.md", "Model: /Volumes/External/models/model.gguf"),
         ("docs/api/example.md", "Artifact: /tmp/private-output.json"),
         ("docs/public-launch-evidence.md", "Binary: /path/then/model-store under /Users/example"),
+        ("docs/api/example.md", "Fathom includes a GGUF runtime for local inference."),
+        ("docs/api/example.md", "Fathom uses torch.load to inspect PyTorch weights."),
     ]
     allowed_lines = [
         ("docs/benchmarks/example.md", "Reference repo: local llama.cpp checkout"),
         ("docs/benchmarks/example.md", "Binary: /path/to/llama.cpp/build/bin/llama-tokenize"),
         ("README.md", "Canonical repo: https://github.com/" + personal_owner + "/Fathom/"),
+        ("docs/api/example.md", "No GGUF runtime, tokenizer execution, or generation claim is made."),
     ]
     failures = scan_items(bad_lines)
     if len(failures) < len(bad_lines):
