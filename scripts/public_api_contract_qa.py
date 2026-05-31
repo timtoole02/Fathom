@@ -121,7 +121,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
-    r"Guard public issue template privacy checks)$"
+    r"Guard public issue template privacy checks|Guard OpenAI SDK example regression)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -422,6 +422,7 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 ".github/ISSUE_TEMPLATE/bug_report.yml",
                 ".github/ISSUE_TEMPLATE/security_or_privacy.yml",
                 ".github/pull_request_template.md",
+                "scripts/api_client_examples_regression.py",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
             ],
