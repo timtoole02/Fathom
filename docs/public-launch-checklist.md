@@ -55,6 +55,7 @@ bash -n scripts/start.sh
 bash -n scripts/stop.sh
 bash scripts/public_risk_scan.sh --self-test
 bash scripts/public_risk_scan.sh
+npm --prefix frontend run build
 npm --prefix frontend run qa:copy
 ```
 

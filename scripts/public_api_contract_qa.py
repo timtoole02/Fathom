@@ -403,6 +403,15 @@ def assert_launch_checklist_artifact_qa_run_gates() -> None:
         assert_contains(checklist_text, f"python3 {path}", "launch checklist artifact QA run gates")
 
 
+def assert_launch_checklist_frontend_gates() -> None:
+    checklist_text = read(LAUNCH_CHECKLIST)
+    for command in (
+        "npm --prefix frontend run build",
+        "npm --prefix frontend run qa:copy",
+    ):
+        assert_contains(checklist_text, command, "launch checklist frontend gate")
+
+
 def assert_public_security_docs() -> None:
     risk_scan_caveat = "not a complete privacy audit"
     requirements = {
@@ -1248,6 +1257,7 @@ def main() -> int:
     assert_tracked_shell_syntax_coverage()
     assert_boundary_docs()
     assert_examples_static(manifest)
+    assert_launch_checklist_frontend_gates()
     assert_no_positive_overclaims()
     assert_smoke_manifest_wiring()
     assert_optional_acceptance_docs()
