@@ -119,6 +119,27 @@ blocked_tracked_python_artifact_suffixes = {
     ".pyc",
     ".pyo",
 }
+blocked_tracked_frontend_artifact_dirs = {
+    ".next",
+    ".parcel-cache",
+    ".turbo",
+    ".vite",
+    "coverage",
+    "node_modules",
+}
+blocked_tracked_frontend_build_dirs = {
+    "build",
+    "dist",
+}
+blocked_tracked_frontend_artifact_filenames = {
+    "npm-debug.log",
+    "pnpm-debug.log",
+    "yarn-debug.log",
+    "yarn-error.log",
+}
+blocked_tracked_frontend_artifact_suffixes = {
+    ".tsbuildinfo",
+}
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -244,6 +265,25 @@ def tracked_python_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_python_artifact_suffixes:
             failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_frontend_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_frontend_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
+        if path.parts and path.parts[0] == "frontend" and any(part in blocked_tracked_frontend_build_dirs for part in path.parts[1:]):
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_frontend_artifact_filenames:
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_frontend_artifact_suffixes:
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -392,6 +432,43 @@ def self_test():
         ".ruff_cache/0.12.0/file: Python cache/build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Python cache/build artifacts")
+    frontend_artifact_failures = tracked_frontend_artifact_file_failures(
+        tracked_paths=[
+            "frontend/node_modules/.package-lock.json",
+            "frontend/dist/index.html",
+            "frontend/build/assets/app.js",
+            "frontend/coverage/lcov.info",
+            "frontend/.next/server/app.js",
+            "frontend/.vite/deps/react.js",
+            ".turbo/cache/build.log",
+            ".parcel-cache/data.mdb",
+            "frontend/src/tsconfig.tsbuildinfo",
+            "npm-debug.log",
+            "yarn-error.log",
+            "pnpm-debug.log",
+            "frontend/package-lock.json",
+            "frontend/yarn.lock",
+            "frontend/pnpm-lock.yaml",
+            "frontend/package.json",
+            "frontend/vite.config.js",
+            "frontend/src/App.jsx",
+        ],
+    )
+    if frontend_artifact_failures != [
+        "frontend/node_modules/.package-lock.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/build/assets/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/coverage/lcov.info: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.vite/deps/react.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".turbo/cache/build.log: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".parcel-cache/data.mdb: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/src/tsconfig.tsbuildinfo: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "npm-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "yarn-error.log: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "pnpm-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked frontend/Node cache/build artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -426,6 +503,7 @@ failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
+failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

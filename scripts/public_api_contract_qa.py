@@ -779,6 +779,11 @@ def assert_boundary_docs() -> None:
         "Python cache/build artifact guard",
         "launch evidence Python artifact risk-scan scope",
     )
+    assert_contains(
+        evidence_text,
+        "frontend/Node cache/build artifact guard",
+        "launch evidence frontend artifact risk-scan scope",
+    )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(
         evidence_text,
