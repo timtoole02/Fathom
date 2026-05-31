@@ -13,6 +13,8 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
+import textwrap
 import threading
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -194,7 +196,13 @@ def assert_true(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
-def run_example(command: list[str], *, embeddings: bool) -> list[RecordedRequest]:
+def run_example(
+    command: list[str],
+    *,
+    embeddings: bool,
+    extra_env: dict[str, str] | None = None,
+    contract: str = "quickstart",
+) -> list[RecordedRequest]:
     recorder = Recorder()
     server = ThreadingHTTPServer(("127.0.0.1", 0), FakeFathomHandler)
     server.recorder = recorder  # type: ignore[attr-defined]
@@ -213,6 +221,8 @@ def run_example(command: list[str], *, embeddings: bool) -> list[RecordedRequest
             "FATHOM_EMBEDDING_FILENAME": "model.safetensors",
         }
     )
+    if extra_env:
+        env.update(extra_env)
     if embeddings:
         env["FATHOM_RUN_EMBEDDINGS"] = "1"
     else:
@@ -220,12 +230,88 @@ def run_example(command: list[str], *, embeddings: bool) -> list[RecordedRequest
     try:
         subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=True, timeout=30)
         requests = recorder.snapshot()
-        assert_public_contract(requests, embeddings=embeddings, label=" ".join(command))
+        if contract == "sdk":
+            assert_openai_sdk_contract(requests, embeddings=embeddings, label=" ".join(command))
+        else:
+            assert_public_contract(requests, embeddings=embeddings, label=" ".join(command))
         return requests
     finally:
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
+
+
+def run_openai_sdk_example_with_stub(*, embeddings: bool) -> list[RecordedRequest]:
+    """Run the OpenAI SDK example through a tiny local openai module stub."""
+
+    stub_source = r'''
+import json
+import urllib.request
+
+
+class _Response:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def model_dump_json(self, indent=None):
+        return json.dumps(self._payload, indent=indent)
+
+
+class _ChatCompletions:
+    def __init__(self, base_url):
+        self._base_url = base_url
+
+    def create(self, **kwargs):
+        return _Response(_post_json(f"{self._base_url}/chat/completions", kwargs))
+
+
+class _Chat:
+    def __init__(self, base_url):
+        self.completions = _ChatCompletions(base_url)
+
+
+class _Embeddings:
+    def __init__(self, base_url):
+        self._base_url = base_url
+
+    def create(self, **kwargs):
+        return _Response(_post_json(f"{self._base_url}/embeddings", kwargs))
+
+
+class OpenAI:
+    def __init__(self, *, base_url, api_key):
+        del api_key
+        self._base_url = str(base_url).rstrip("/")
+        self.chat = _Chat(self._base_url)
+        self.embeddings = _Embeddings(self._base_url)
+
+
+def _post_json(url, body):
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.loads(response.read().decode("utf-8"))
+'''
+    with tempfile.TemporaryDirectory(prefix="fathom-openai-sdk-stub-") as tmpdir:
+        package = Path(tmpdir) / "openai"
+        package.mkdir()
+        (package / "__init__.py").write_text(textwrap.dedent(stub_source).lstrip(), encoding="utf-8")
+        return run_example(
+            ["python3", "examples/api/openai-sdk.py"],
+            embeddings=embeddings,
+            extra_env={"PYTHONPATH": prepend_pythonpath(tmpdir, os.environ.get("PYTHONPATH"))},
+            contract="sdk",
+        )
+
+
+def prepend_pythonpath(path: str, existing: str | None) -> str:
+    if existing:
+        return os.pathsep.join((path, existing))
+    return path
 
 
 def assert_public_contract(requests: list[RecordedRequest], *, embeddings: bool, label: str) -> None:
@@ -287,6 +373,45 @@ def assert_public_contract(requests: list[RecordedRequest], *, embeddings: bool,
         assert_true(embedding.body.get("encoding_format") == "float", f"{label}: embeddings must request float encoding")
     else:
         assert_true(not embedding_requests, f"{label}: embeddings request must be opt-in only")
+
+
+def assert_openai_sdk_contract(requests: list[RecordedRequest], *, embeddings: bool, label: str) -> None:
+    paths = [(request.method, request.path) for request in requests]
+    expected_paths = [("POST", "/v1/chat/completions")]
+    if embeddings:
+        expected_paths.extend([("POST", "/api/models/catalog/install"), ("POST", "/v1/embeddings")])
+    assert_true(paths == expected_paths, f"{label}: expected SDK endpoints {expected_paths}, got {paths}")
+
+    allowed_paths = allowed_example_endpoints()
+    unexpected_paths = [path for path in paths if path not in allowed_paths]
+    assert_true(not unexpected_paths, f"{label}: unexpected non-contract endpoints called: {unexpected_paths}")
+
+    chat = requests[0]
+    assert_json_request(chat, label)
+    assert_true(isinstance(chat.body, dict), f"{label}: SDK chat body must be a JSON object")
+    assert_true(chat.body.get("model") == CHAT_MODEL_ID, f"{label}: SDK chat model id drifted")
+    assert_true(chat.body.get("stream") in (None, False), f"{label}: SDK example must use non-streaming chat")
+    assert_true(isinstance(chat.body.get("messages"), list) and chat.body["messages"], f"{label}: SDK chat messages missing")
+
+    install_requests = [r for r in requests if r.method == "POST" and r.path == "/api/models/catalog/install"]
+    embedding_requests = [r for r in requests if r.method == "POST" and r.path == "/v1/embeddings"]
+    if embeddings:
+        assert_true(len(install_requests) == 1, f"{label}: SDK embeddings should install exactly one embedding fixture")
+        install = install_requests[0]
+        assert_json_request(install, label)
+        assert_true(isinstance(install.body, dict), f"{label}: SDK embedding install body must be a JSON object")
+        assert_true(install.body.get("repo_id") == EMBEDDING_REPO_ID, f"{label}: SDK embedding repo id drifted")
+        assert_true(install.body.get("filename") == "model.safetensors", f"{label}: SDK embedding filename drifted")
+
+        assert_true(len(embedding_requests) == 1, f"{label}: SDK expected one opt-in embeddings request")
+        embedding = embedding_requests[0]
+        assert_json_request(embedding, label)
+        assert_true(isinstance(embedding.body, dict), f"{label}: SDK embeddings body must be a JSON object")
+        assert_true(embedding.body.get("model") == EMBEDDING_MODEL_ID, f"{label}: SDK embeddings model id drifted")
+        assert_true(embedding.body.get("encoding_format") == "float", f"{label}: SDK embeddings must request float encoding")
+    else:
+        assert_true(not install_requests, f"{label}: SDK embedding install must be opt-in only")
+        assert_true(not embedding_requests, f"{label}: SDK embeddings request must be opt-in only")
 
 
 def assert_json_request(request: RecordedRequest, label: str) -> None:
@@ -393,8 +518,10 @@ def main() -> int:
     static_checks()
     run_example(["bash", "examples/api/curl-quickstart.sh"], embeddings=False)
     run_example(["python3", "examples/api/python-no-deps.py"], embeddings=False)
+    run_openai_sdk_example_with_stub(embeddings=False)
     run_example(["bash", "examples/api/curl-quickstart.sh"], embeddings=True)
     run_example(["python3", "examples/api/python-no-deps.py"], embeddings=True)
+    run_openai_sdk_example_with_stub(embeddings=True)
     print("API client examples regression passed")
     return 0
 
