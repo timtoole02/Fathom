@@ -37,6 +37,8 @@ SECURITY = ROOT / "SECURITY.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contract.yml"
 MODEL_RUNTIME_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "model_runtime_request.yml"
+BUG_REPORT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml"
+SECURITY_PRIVACY_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "security_or_privacy.yml"
 PR_TEMPLATE = ROOT / ".github" / "pull_request_template.md"
 SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
@@ -48,6 +50,8 @@ TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [
     CI,
     API_CONTRACT_ISSUE_TEMPLATE,
     MODEL_RUNTIME_ISSUE_TEMPLATE,
+    BUG_REPORT_ISSUE_TEMPLATE,
+    SECURITY_PRIVACY_ISSUE_TEMPLATE,
     PR_TEMPLATE,
 ]
 OFFLINE_QA_PYTHON_PATHS = (
@@ -116,7 +120,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Track public smoke artifact QA evidence|Derive public smoke boundaries from manifest|"
     r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
-    r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks)$"
+    r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
+    r"Guard public issue template privacy checks)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -414,6 +419,8 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 "--",
                 "docs/api/refusal-boundary-matrix.md",
                 ".github/ISSUE_TEMPLATE/api_contract.yml",
+                ".github/ISSUE_TEMPLATE/bug_report.yml",
+                ".github/ISSUE_TEMPLATE/security_or_privacy.yml",
                 ".github/pull_request_template.md",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
@@ -1034,6 +1041,57 @@ def assert_model_runtime_issue_template() -> None:
         assert_contains(template_text, phrase, label)
 
 
+def assert_bug_report_issue_template() -> None:
+    template_text = read(BUG_REPORT_ISSUE_TEMPLATE)
+    label = ".github/ISSUE_TEMPLATE/bug_report.yml"
+    required_phrases = [
+        "synthetic prompts",
+        "share-safe fixtures",
+        "private prompts",
+        "credentials",
+        "auth headers",
+        "private documents",
+        "local paths",
+        "hostnames",
+        "usernames",
+        "model-store details",
+        "raw logs/artifacts",
+        "bash scripts/public_risk_scan.sh",
+        "Privacy and artifact check",
+        "I removed private prompts, documents, and credentials.",
+        "I removed absolute local paths, hostnames, usernames, and model-store details.",
+        "I reviewed attached logs/artifacts/screenshots for sensitive data and ran a risk scan when applicable.",
+        "I used synthetic prompts/share-safe fixtures",
+    ]
+    for phrase in required_phrases:
+        assert_contains(template_text, phrase, label)
+
+
+def assert_security_privacy_issue_template() -> None:
+    template_text = read(SECURITY_PRIVACY_ISSUE_TEMPLATE)
+    label = ".github/ISSUE_TEMPLATE/security_or_privacy.yml"
+    required_phrases = [
+        "SECURITY.md",
+        "private channel",
+        "Do not include exploit details",
+        "reproduction steps",
+        "private prompts",
+        "credentials",
+        "sensitive local paths",
+        "hostnames",
+        "private documents",
+        "sensitive artifact details",
+        "model-store details",
+        "public-safe summary",
+        "Public disclosure check",
+        "I did not include exploit steps, private prompts, credentials, local paths, hostnames, or sensitive artifact details.",
+        "I read SECURITY.md and understand sensitive details should wait for a private channel.",
+        "I included only a public-safe summary",
+    ]
+    for phrase in required_phrases:
+        assert_contains(template_text, phrase, label)
+
+
 def assert_pull_request_template() -> None:
     template_text = read(PR_TEMPLATE)
     label = ".github/pull_request_template.md"
@@ -1092,6 +1150,8 @@ def main() -> int:
     assert_ci_wiring(manifest)
     assert_api_contract_issue_template(manifest)
     assert_model_runtime_issue_template()
+    assert_bug_report_issue_template()
+    assert_security_privacy_issue_template()
     assert_pull_request_template()
     print("public API contract QA passed")
     return 0

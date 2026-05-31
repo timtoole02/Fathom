@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Do not include exploit details, private prompts, credentials, sensitive local paths, hostnames, private documents, or model-store details in a public issue. Read `SECURITY.md` first. If no private contact is available, open a minimal issue asking for a private channel and include only enough public context to route it.
+        Do not include exploit details, reproduction steps, private prompts, credentials, sensitive local paths, hostnames, private documents, sensitive artifact details, or model-store details in a public issue. Read `SECURITY.md` first. If no private contact is available, open a minimal issue asking for a private channel and include only a public-safe summary with enough context to route it.
   - type: dropdown
     id: category
     attributes:
@@ -41,4 +41,6 @@ body:
         - label: I did not include exploit steps, private prompts, credentials, local paths, hostnames, or sensitive artifact details.
           required: true
         - label: I read SECURITY.md and understand sensitive details should wait for a private channel.
+          required: true
+        - label: I included only a public-safe summary and kept detailed reproduction material out of this public issue.
           required: true

@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for keeping reports small and public-safe. Remove private prompts, credentials, local paths, hostnames, and model-store details before posting.
+        Thanks for keeping reports small and public-safe. Use synthetic prompts and share-safe fixtures when possible. Remove private prompts, credentials, auth headers, private documents, local paths, hostnames, usernames, and model-store details before posting. Review raw logs/artifacts and run `bash scripts/public_risk_scan.sh` before sharing larger output.
   - type: input
     id: os
     attributes:
@@ -53,7 +53,7 @@ body:
     id: repro
     attributes:
       label: Smallest reproduction
-      description: Minimal steps or request shape. Use synthetic prompts and share-safe fixture/model identifiers when possible.
+      description: Minimal steps or request shape. Use synthetic prompts and share-safe fixture/model identifiers when possible; do not paste private documents or raw sensitive artifacts.
     validations:
       required: true
   - type: checkboxes
@@ -66,4 +66,6 @@ body:
         - label: I removed absolute local paths, hostnames, usernames, and model-store details.
           required: true
         - label: I reviewed attached logs/artifacts/screenshots for sensitive data and ran a risk scan when applicable.
+          required: true
+        - label: I used synthetic prompts/share-safe fixtures or explained why the reproduction cannot be reduced further.
           required: true
