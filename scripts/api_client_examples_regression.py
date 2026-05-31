@@ -487,6 +487,25 @@ def assert_json_request(request: RecordedRequest, label: str) -> None:
     assert_true(content_type.split(";", 1)[0].lower() == "application/json", f"{label}: {request.path} missing JSON content-type")
 
 
+def rest_client_request_blocks(text: str) -> list[tuple[str, str, str]]:
+    blocks: list[tuple[str, str, str]] = []
+    current_method: str | None = None
+    current_path: str | None = None
+    current_lines: list[str] = []
+    for line in text.splitlines():
+        match = re.match(r"^(GET|POST)\s+\{\{base\}\}(/(?:v1|api)/[^\s]+)\s*$", line)
+        if match:
+            if current_method is not None and current_path is not None:
+                blocks.append((current_method, current_path, "\n".join(current_lines)))
+            current_method, current_path = match.groups()
+            current_lines = []
+        elif current_method is not None:
+            current_lines.append(line)
+    if current_method is not None and current_path is not None:
+        blocks.append((current_method, current_path, "\n".join(current_lines)))
+    return blocks
+
+
 def static_checks() -> None:
     manifest = load_public_contract()
 
@@ -537,6 +556,26 @@ def static_checks() -> None:
     assert_true('"stream": true' not in chat_block, "fathom.http must not document streaming chat")
     embedding_block = http_text.split("POST {{base}}/v1/embeddings", 1)[1]
     assert_true('"encoding_format": "float"' in embedding_block, "fathom.http embeddings must request float encoding")
+    expected_http_request_order = [
+        ("GET", "/v1/health"),
+        ("POST", "/api/models/catalog/install"),
+        ("GET", "/v1/models"),
+        ("POST", "/v1/chat/completions"),
+        ("POST", "/api/models/catalog/install"),
+        ("POST", "/v1/embeddings"),
+    ]
+    http_blocks = rest_client_request_blocks(http_text)
+    actual_http_request_order = [(method, path) for method, path, _block in http_blocks]
+    assert_true(
+        actual_http_request_order == expected_http_request_order,
+        f"fathom.http request order drifted: expected {expected_http_request_order}, got {actual_http_request_order}",
+    )
+    for method, path, block in http_blocks:
+        if method == "POST":
+            assert_true(
+                "Content-Type: application/json" in block,
+                f"fathom.http POST {path} missing JSON Content-Type header",
+            )
 
     sdk_text = (ROOT / "examples/api/openai-sdk.py").read_text(encoding="utf-8")
     assert_true("client.chat.completions.create" in sdk_text, "openai-sdk.py missing chat completion call")

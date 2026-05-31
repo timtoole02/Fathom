@@ -126,7 +126,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
     r"Guard public issue template privacy checks|Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
-    r"Guard offline Python syntax coverage|Guard API example loopback defaults)$"
+    r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
+    r"Guard REST Client example headers)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
