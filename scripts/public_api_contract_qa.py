@@ -371,6 +371,11 @@ def assert_public_security_docs() -> None:
             "no built-in authentication",
             "Do not expose Fathom directly to the public internet or an untrusted LAN",
             "proxy, tunnel",
+            "hostnames",
+            "private documents",
+            "sensitive artifact details",
+            "model-store details",
+            "reproduction steps",
         ),
         README: (
             "no built-in authentication",

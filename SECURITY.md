@@ -28,7 +28,7 @@ Fathom runs locally, but generated artifacts can still contain sensitive data:
 - Logs may include local paths, state directories, request summaries, or errors from model parsing.
 - Acceptance-smoke artifacts include share-safe summaries where possible, but full JSON payloads and local logs still need human review before publication.
 
-Before sharing logs, benchmark output, acceptance artifacts, screenshots, or bug reports publicly, review them for local paths, personal identifiers, prompt text, private documents, credentials, and model-store details. Run:
+Before sharing logs, benchmark output, acceptance artifacts, screenshots, or bug reports publicly, review them for local paths, hostnames, personal identifiers, prompt text, private documents, credentials, sensitive artifact details, and model-store details. Run:
 
 ```bash
 bash scripts/public_risk_scan.sh
@@ -38,6 +38,6 @@ The scanner is a guardrail for tracked files, not a complete privacy audit.
 
 ## Reporting security issues
 
-Please do not post exploit details, private prompts, credentials, or sensitive local paths in a public issue.
+Please do not post exploit details, reproduction steps, private prompts, credentials, hostnames, private documents, sensitive artifact details, model-store details, or sensitive local paths in a public issue.
 
 If there is no private security contact available, open a minimal GitHub issue that says you have a security concern and request a private channel. Include only enough public detail to route the report, such as the affected area and impact category. Share reproduction steps and sensitive details only after a private channel is arranged.
