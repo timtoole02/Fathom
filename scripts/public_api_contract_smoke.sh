@@ -375,6 +375,13 @@ try:
     assert_no_embedding_success(malformed_chat)
     record_boundary("malformed /v1 JSON request body", "malformed-v1-chat-json-refusal", status, "invalid_request")
 
+    status, malformed_embeddings = request_raw("POST", "/v1/embeddings", '{"model":')
+    assert status == 400, (status, malformed_embeddings)
+    assert_error(malformed_embeddings, "invalid_request")
+    assert_no_chat_success(malformed_embeddings)
+    assert_no_embedding_success(malformed_embeddings)
+    record_boundary("malformed /v1 JSON request body", "malformed-v1-chat-and-embeddings-json-refusal", status, "invalid_request")
+
     embedding_body = {
         "model": "missing-embedding-model",
         "input": "hello",

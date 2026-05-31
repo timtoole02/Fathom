@@ -579,7 +579,11 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "unsupported `/v1` route/method public-contract refusal smoke", "launch evidence unsupported v1 routing scope")
     assert_contains(evidence_text, "standard JSON error envelopes for unsupported `/v1` routes and methods", "launch evidence unsupported v1 routing boundary")
     assert_contains(evidence_text, "malformed `/v1` JSON request body refusal smoke", "launch evidence malformed v1 JSON scope")
-    assert_contains(evidence_text, "malformed JSON on `POST /v1/chat/completions` returns `400 invalid_request`", "launch evidence malformed v1 JSON boundary")
+    assert_contains(
+        evidence_text,
+        "malformed JSON on `POST /v1/chat/completions` and `POST /v1/embeddings` return `400 invalid_request`",
+        "launch evidence malformed v1 JSON boundary",
+    )
 
     matrix_text = read(REFUSAL_MATRIX)
     matrix_required_phrases = (
