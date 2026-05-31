@@ -47,6 +47,16 @@ def docs_or_evidence_local_path_patterns():
         ("machine-local model/reference checkout path in public docs/evidence", re.compile(r"\b(llama\.cpp|model-store|models/)\b.*(/Users/|/Vol|/t" + "mp/|\.openclaw)", re.IGNORECASE)),
     ]
 
+def secret_value_patterns():
+    return [
+        ("OpenAI-style API key", re.compile(r"\bsk-[A-Za-z0-9_-]{12,}\b")),
+        ("GitHub token", re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}\b")),
+        ("GitHub fine-grained token", re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b")),
+        ("Hugging Face token", re.compile(r"\bhf_[A-Za-z0-9]{20,}\b")),
+        ("Slack token", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b")),
+        ("Bearer token value", re.compile(r"\bBearer\s+[A-Za-z0-9._~+/=-]{16,}\b", re.IGNORECASE)),
+    ]
+
 claim_patterns = [
     ("uncaveated GGUF runtime claim", re.compile(r"\bGGUF runtime\b(?!, tokenizer execution, or generation claim)", re.IGNORECASE)),
     ("uncaveated ONNX chat claim", re.compile(r"\bONNX chat\b(?! or general ONNX support claim)", re.IGNORECASE)),
@@ -71,6 +81,9 @@ def scan_items(items):
             for public_repo_url in public_repo_urls:
                 privacy_line = privacy_line.replace(public_repo_url, "")
             for label, pattern in privacy_patterns():
+                if pattern.search(privacy_line):
+                    failures.append(f"{rel}:{line_no}: {label}: {line.strip()}")
+            for label, pattern in secret_value_patterns():
                 if pattern.search(privacy_line):
                     failures.append(f"{rel}:{line_no}: {label}: {line.strip()}")
             if rel in docs_evidence_paths or rel.startswith(docs_evidence_prefixes):
@@ -109,6 +122,10 @@ def self_test():
         ("scripts/example.py", "DEFAULT_MODEL = Path('/Volumes/External/models/model.gguf')"),
         ("docs/api/example.md", "Artifact: /tmp/private-output.json"),
         ("docs/public-launch-evidence.md", "Binary: /path/then/model-store under /Users/example"),
+        ("docs/api/example.md", "Authorization: Bearer secret-token-value-123456"),
+        ("README.md", "OPENAI_API_KEY=sk-this-is-not-share-safe"),
+        ("docs/api/example.md", "Hugging Face token: hf_abcdefghijklmnopqrstuvwxyz"),
+        ("docs/api/example.md", "GitHub token: ghp_abcdefghijklmnopqrstuvwxyz"),
         ("docs/api/example.md", "Fathom includes a GGUF runtime for local inference."),
         ("docs/api/example.md", "Fathom uses torch.load to inspect PyTorch weights."),
     ]
@@ -116,6 +133,7 @@ def self_test():
         ("docs/benchmarks/example.md", "Reference repo: local llama.cpp checkout"),
         ("docs/benchmarks/example.md", "Binary: /path/to/llama.cpp/build/bin/llama-tokenize"),
         ("README.md", "Canonical repo: https://github.com/" + personal_owner + "/Fathom/"),
+        ("docs/api/example.md", "Use API key placeholders such as placeholder-key or fathom-local."),
         ("docs/api/example.md", "No GGUF runtime, tokenizer execution, or generation claim is made."),
     ]
     failures = scan_items(bad_lines)

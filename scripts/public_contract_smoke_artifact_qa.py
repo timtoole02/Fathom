@@ -542,7 +542,10 @@ def run_self_check() -> None:
         unsafe = root / "unsafe"
         write_sample(unsafe, passed_sample())
         (unsafe / SUMMARY_MD).write_text(
-            (unsafe / SUMMARY_MD).read_text(encoding="utf-8") + "\nUnsafe: provider call succeeded with api_key: sk-this-is-not-share-safe\n",
+            (unsafe / SUMMARY_MD).read_text(encoding="utf-8")
+            + "\nUnsafe: provider call succeeded with api_key: "
+            + "sk-"
+            + "this-is-not-share-safe\n",
             encoding="utf-8",
         )
         try:
