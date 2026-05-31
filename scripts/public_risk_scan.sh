@@ -109,6 +109,16 @@ blocked_tracked_runtime_artifact_suffixes = {
     ".sqlite-wal",
     ".sqlite3",
 }
+blocked_tracked_python_artifact_dirs = {
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+}
+blocked_tracked_python_artifact_suffixes = {
+    ".pyc",
+    ".pyo",
+}
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -221,6 +231,19 @@ def tracked_runtime_artifact_file_failures(tracked_paths=None):
             continue
         if any(rel.endswith(suffix) for suffix in blocked_tracked_runtime_artifact_suffixes):
             failures.append(f"{rel}: local runtime/artifact detail files must not be tracked for public launch")
+    return failures
+
+def tracked_python_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_python_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_python_artifact_suffixes:
+            failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -354,6 +377,21 @@ def self_test():
         "state/fathom.sqlite-wal: local runtime/artifact detail files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local runtime/artifact files")
+    python_artifact_failures = tracked_python_artifact_file_failures(
+        tracked_paths=[
+            "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc",
+            ".pytest_cache/v/cache/nodeids",
+            ".ruff_cache/0.12.0/file",
+            "docs/api/public-contract.json",
+            "scripts/public_api_contract_qa.py",
+        ],
+    )
+    if python_artifact_failures != [
+        "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc: Python cache/build artifacts must not be tracked for public launch",
+        ".pytest_cache/v/cache/nodeids: Python cache/build artifacts must not be tracked for public launch",
+        ".ruff_cache/0.12.0/file: Python cache/build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Python cache/build artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -387,6 +425,7 @@ failures.extend(tracked_blocked_file_failures())
 failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
+failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
