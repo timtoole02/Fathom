@@ -36,13 +36,14 @@ CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 SECURITY = ROOT / "SECURITY.md"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contract.yml"
+MODEL_RUNTIME_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "model_runtime_request.yml"
 SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
 
 DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, REFUSAL_MATRIX, README]
 OPTIONAL_DOC_PATHS = [MINILM_OPTIONAL_ACCEPTANCE, SMOLLM2_OPTIONAL_ACCEPTANCE, QWEN25_OPTIONAL_ACCEPTANCE]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
-TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [CI, API_CONTRACT_ISSUE_TEMPLATE]
+TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [CI, API_CONTRACT_ISSUE_TEMPLATE, MODEL_RUNTIME_ISSUE_TEMPLATE]
 OFFLINE_QA_PYTHON_PATHS = (
     "scripts/api_client_examples_regression.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -997,6 +998,33 @@ def assert_api_contract_issue_template(manifest: dict[str, Any]) -> None:
         assert_contains(template_text, f"{method} {path}", f"{label} endpoint placeholder")
 
 
+def assert_model_runtime_issue_template() -> None:
+    template_text = read(MODEL_RUNTIME_ISSUE_TEMPLATE)
+    label = ".github/ISSUE_TEMPLATE/model_runtime_request.yml"
+    required_phrases = [
+        "does not imply broad GGUF runtime/tokenizer/generation support",
+        "ONNX",
+        "chat or general",
+        "general ONNX support",
+        "PyTorch `.bin` loading",
+        "arbitrary SafeTensors execution",
+        "streaming or full OpenAI API parity",
+        "Do not include private prompts",
+        "credentials",
+        "local paths",
+        "hostnames",
+        "raw logs/artifacts",
+        "model-store details",
+        "Use public URLs or share-safe identifiers only",
+        "Privacy and artifact check",
+        "I removed private prompts, documents, and credentials.",
+        "I removed absolute local paths, hostnames, usernames, and model-store details.",
+        "I reviewed attached logs/artifacts/screenshots for sensitive data and ran a risk scan when applicable.",
+    ]
+    for phrase in required_phrases:
+        assert_contains(template_text, phrase, label)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Static QA for Fathom's public launch API contract")
     parser.add_argument("--self-test", action="store_true", help="run synthetic public-overclaim scanner regression checks")
@@ -1017,6 +1045,7 @@ def main() -> int:
     assert_optional_acceptance_docs()
     assert_ci_wiring(manifest)
     assert_api_contract_issue_template(manifest)
+    assert_model_runtime_issue_template()
     print("public API contract QA passed")
     return 0
 
