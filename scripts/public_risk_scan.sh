@@ -55,6 +55,7 @@ def secret_value_patterns():
         ("Hugging Face token", re.compile(r"\bhf_[A-Za-z0-9]{20,}\b")),
         ("Slack token", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b")),
         ("Bearer token value", re.compile(r"\bBearer\s+[A-Za-z0-9._~+/=-]{16,}\b", re.IGNORECASE)),
+        ("PEM private key block", re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----")),
     ]
 
 claim_patterns = [
@@ -126,6 +127,7 @@ def self_test():
         ("README.md", "OPENAI_API_KEY=sk-this-is-not-share-safe"),
         ("docs/api/example.md", "Hugging Face token: hf_abcdefghijklmnopqrstuvwxyz"),
         ("docs/api/example.md", "GitHub token: ghp_abcdefghijklmnopqrstuvwxyz"),
+        ("docs/api/example.md", "-----BEGIN OPENSSH PRIVATE KEY-----"),
         ("docs/api/example.md", "Fathom includes a GGUF runtime for local inference."),
         ("docs/api/example.md", "Fathom uses torch.load to inspect PyTorch weights."),
     ]
@@ -134,6 +136,7 @@ def self_test():
         ("docs/benchmarks/example.md", "Binary: /path/to/llama.cpp/build/bin/llama-tokenize"),
         ("README.md", "Canonical repo: https://github.com/" + personal_owner + "/Fathom/"),
         ("docs/api/example.md", "Use API key placeholders such as placeholder-key or fathom-local."),
+        ("docs/api/example.md", "-----BEGIN PUBLIC KEY-----"),
         ("docs/api/example.md", "No GGUF runtime, tokenizer execution, or generation claim is made."),
     ]
     failures = scan_items(bad_lines)
