@@ -69,6 +69,8 @@ def evaluate_ci_text(text: str) -> list[str]:
 
     saw_public_contract_smoke = False
     saw_ci_static_policy_self_test = False
+    saw_public_risk_scan_self_test = False
+    saw_public_risk_scan = False
     for line_number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
         if "scripts/backend_acceptance_smoke.sh" in line:
@@ -90,11 +92,27 @@ def evaluate_ci_text(text: str) -> list[str]:
                 )
         if re.search(r"\bpython3\s+scripts/ci_static_policy\.py\s+--self-test\b", stripped):
             saw_ci_static_policy_self_test = True
+        if stripped in {
+            "bash scripts/public_risk_scan.sh --self-test",
+            "run: bash scripts/public_risk_scan.sh --self-test",
+            "- run: bash scripts/public_risk_scan.sh --self-test",
+        }:
+            saw_public_risk_scan_self_test = True
+        if stripped in {
+            "bash scripts/public_risk_scan.sh",
+            "run: bash scripts/public_risk_scan.sh",
+            "- run: bash scripts/public_risk_scan.sh",
+        }:
+            saw_public_risk_scan = True
 
     if not saw_public_contract_smoke:
         failures.append("default CI must run the no-download public API contract smoke")
     if not saw_ci_static_policy_self_test:
         failures.append("default CI must run the CI static policy self-test")
+    if not saw_public_risk_scan_self_test:
+        failures.append("default CI must run the public risk scan self-test")
+    if not saw_public_risk_scan:
+        failures.append("default CI must run the public risk scan")
 
     if re.search(r"FATHOM_ACCEPTANCE_KEEP_ARTIFACTS|FATHOM_ACCEPTANCE_PORT|backend_acceptance_smoke\.sh\s*$", text):
         failures.append("default CI must not invoke networked backend acceptance smoke")
@@ -133,6 +151,8 @@ jobs:
           bash -n scripts/public_api_contract_smoke.sh
           bash -n scripts/backend_acceptance_smoke.sh
       - run: python3 scripts/ci_static_policy.py --self-test
+      - run: bash scripts/public_risk_scan.sh --self-test
+      - run: bash scripts/public_risk_scan.sh
       - run: echo done
 """
     assert_policy_passes(valid)
@@ -153,6 +173,8 @@ jobs:
         "broad target cache": "permissions:\n  contents: read\ntarget:\n  path: target\nrun: bash scripts/public_api_contract_smoke.sh",
         "missing public smoke": "run: cargo test -q",
         "missing static policy self-test": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py",
+        "missing public risk scan self-test": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh",
+        "missing public risk scan": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh --self-test",
     }
     for label, text in cases.items():
         if not evaluate_ci_text(text):

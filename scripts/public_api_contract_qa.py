@@ -1045,6 +1045,8 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     assert_contains(ci_text, "python3 scripts/public_api_contract_qa.py --self-test", "CI public API contract QA self-test run step")
     assert_contains(ci_text, "python3 scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA run step")
     assert_contains(ci_text, "python3 scripts/backend_acceptance_artifact_qa.py", "CI backend acceptance artifact QA run step")
+    assert_contains(ci_text, "bash scripts/public_risk_scan.sh --self-test", "CI public risk scan self-test run step")
+    assert_contains(ci_text, "bash scripts/public_risk_scan.sh", "CI public risk scan run step")
     assert_contains(
         ci_text,
         "python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
