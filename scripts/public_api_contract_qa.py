@@ -127,7 +127,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard public issue template privacy checks|Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
-    r"Guard REST Client example headers|Guard API example regression self-test)$"
+    r"Guard REST Client example headers|Guard API example regression self-test|"
+    r"Guard CI frontend launch gates)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -437,11 +438,15 @@ def assert_launch_checklist_artifact_qa_run_gates() -> None:
 
 def assert_launch_checklist_frontend_gates() -> None:
     checklist_text = read(LAUNCH_CHECKLIST)
+    assert_frontend_launch_gates(checklist_text, "launch checklist frontend gate")
+
+
+def assert_frontend_launch_gates(text: str, label: str) -> None:
     for command in (
         "npm --prefix frontend run build",
         "npm --prefix frontend run qa:copy",
     ):
-        assert_contains(checklist_text, command, "launch checklist frontend gate")
+        assert_contains(text, command, label)
 
 
 def assert_public_security_docs() -> None:
@@ -1087,6 +1092,27 @@ bash -n scripts/public_api_contract_smoke.sh
         else:
             raise AssertionError("shell syntax gate self-test did not reject command drift")
 
+    valid_frontend_gates = """
+npm --prefix frontend run build
+npm --prefix frontend run qa:copy
+"""
+    assert_frontend_launch_gates(valid_frontend_gates, "synthetic frontend launch gate")
+    for text, expected in (
+        ("npm --prefix frontend run build\n", "qa:copy"),
+        ("npm --prefix frontend run qa:copy\n", "run build"),
+        (
+            "npm --prefix frontend build\nnpm --prefix frontend run qa:copy\n",
+            "run build",
+        ),
+    ):
+        try:
+            assert_frontend_launch_gates(text, "synthetic bad frontend launch gate")
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("frontend launch gate self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("frontend launch gate self-test did not reject command drift")
+
 
 def assert_smoke_manifest_wiring() -> None:
     smoke_text = read(SMOKE)
@@ -1125,6 +1151,7 @@ def assert_optional_acceptance_docs() -> None:
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
+    assert_frontend_launch_gates(ci_text, "CI frontend launch gate")
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
     assert_python_syntax_paths(
         ci_text,
