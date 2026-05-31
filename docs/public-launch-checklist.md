@@ -35,6 +35,7 @@ python3 -m py_compile \
 python3 scripts/ci_static_policy.py
 python3 scripts/ci_static_policy.py --self-test
 python3 scripts/api_client_examples_regression.py
+python3 scripts/api_client_examples_regression.py --self-test
 python3 scripts/public_api_contract_qa.py
 python3 scripts/public_api_contract_qa.py --self-test
 python3 scripts/public_contract_smoke_artifact_qa.py

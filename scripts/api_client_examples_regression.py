@@ -8,6 +8,7 @@ send the expected narrow HTTP contract to Fathom-shaped endpoints.
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
@@ -506,6 +507,41 @@ def rest_client_request_blocks(text: str) -> list[tuple[str, str, str]]:
     return blocks
 
 
+def assert_rest_client_contract(http_text: str) -> None:
+    for endpoint in (
+        "GET {{base}}/v1/health",
+        "POST {{base}}/api/models/catalog/install",
+        "GET {{base}}/v1/models",
+        "POST {{base}}/v1/chat/completions",
+        "POST {{base}}/v1/embeddings",
+    ):
+        assert_true(endpoint in http_text, f"fathom.http missing endpoint: {endpoint}")
+    chat_block = http_text.split("POST {{base}}/v1/chat/completions", 1)[1].split("### Optional:", 1)[0]
+    assert_true('"stream": true' not in chat_block, "fathom.http must not document streaming chat")
+    embedding_block = http_text.split("POST {{base}}/v1/embeddings", 1)[1]
+    assert_true('"encoding_format": "float"' in embedding_block, "fathom.http embeddings must request float encoding")
+    expected_http_request_order = [
+        ("GET", "/v1/health"),
+        ("POST", "/api/models/catalog/install"),
+        ("GET", "/v1/models"),
+        ("POST", "/v1/chat/completions"),
+        ("POST", "/api/models/catalog/install"),
+        ("POST", "/v1/embeddings"),
+    ]
+    http_blocks = rest_client_request_blocks(http_text)
+    actual_http_request_order = [(method, path) for method, path, _block in http_blocks]
+    assert_true(
+        actual_http_request_order == expected_http_request_order,
+        f"fathom.http request order drifted: expected {expected_http_request_order}, got {actual_http_request_order}",
+    )
+    for method, path, block in http_blocks:
+        if method == "POST":
+            assert_true(
+                "Content-Type: application/json" in block,
+                f"fathom.http POST {path} missing JSON Content-Type header",
+            )
+
+
 def static_checks() -> None:
     manifest = load_public_contract()
 
@@ -544,38 +580,7 @@ def static_checks() -> None:
 
     http_path = ROOT / "examples/api/fathom.http"
     http_text = http_path.read_text(encoding="utf-8")
-    for endpoint in (
-        "GET {{base}}/v1/health",
-        "POST {{base}}/api/models/catalog/install",
-        "GET {{base}}/v1/models",
-        "POST {{base}}/v1/chat/completions",
-        "POST {{base}}/v1/embeddings",
-    ):
-        assert_true(endpoint in http_text, f"fathom.http missing endpoint: {endpoint}")
-    chat_block = http_text.split("POST {{base}}/v1/chat/completions", 1)[1].split("### Optional:", 1)[0]
-    assert_true('"stream": true' not in chat_block, "fathom.http must not document streaming chat")
-    embedding_block = http_text.split("POST {{base}}/v1/embeddings", 1)[1]
-    assert_true('"encoding_format": "float"' in embedding_block, "fathom.http embeddings must request float encoding")
-    expected_http_request_order = [
-        ("GET", "/v1/health"),
-        ("POST", "/api/models/catalog/install"),
-        ("GET", "/v1/models"),
-        ("POST", "/v1/chat/completions"),
-        ("POST", "/api/models/catalog/install"),
-        ("POST", "/v1/embeddings"),
-    ]
-    http_blocks = rest_client_request_blocks(http_text)
-    actual_http_request_order = [(method, path) for method, path, _block in http_blocks]
-    assert_true(
-        actual_http_request_order == expected_http_request_order,
-        f"fathom.http request order drifted: expected {expected_http_request_order}, got {actual_http_request_order}",
-    )
-    for method, path, block in http_blocks:
-        if method == "POST":
-            assert_true(
-                "Content-Type: application/json" in block,
-                f"fathom.http POST {path} missing JSON Content-Type header",
-            )
+    assert_rest_client_contract(http_text)
 
     sdk_text = (ROOT / "examples/api/openai-sdk.py").read_text(encoding="utf-8")
     assert_true("client.chat.completions.create" in sdk_text, "openai-sdk.py missing chat completion call")
@@ -635,7 +640,85 @@ def static_checks() -> None:
         assert_true(endpoint not in executable_text, f"examples must not mention non-contract endpoint {endpoint}")
 
 
+def run_self_test() -> None:
+    good_http = """
+@base = http://127.0.0.1:8180
+@model = echarlaix-tiny-random-phiforcausallm-model-safetensors
+@embedding_model = sentence-transformers-all-minilm-l6-v2-model-safetensors
+
+### Health
+GET {{base}}/v1/health
+
+### Install pinned tiny Phi SafeTensors fixture
+POST {{base}}/api/models/catalog/install
+Content-Type: application/json
+
+{"repo_id": "echarlaix/tiny-random-PhiForCausalLM", "filename": "model.safetensors"}
+
+### List runnable OpenAI-style chat models
+GET {{base}}/v1/models
+
+### Non-streaming chat completion
+POST {{base}}/v1/chat/completions
+Content-Type: application/json
+
+{"model": "{{model}}", "messages": [{"role": "user", "content": "hello"}]}
+
+### Optional: install pinned MiniLM SafeTensors embedding fixture
+POST {{base}}/api/models/catalog/install
+Content-Type: application/json
+
+{"repo_id": "sentence-transformers/all-MiniLM-L6-v2", "filename": "model.safetensors"}
+
+### Optional: OpenAI-style float embeddings from verified local MiniLM runtime
+POST {{base}}/v1/embeddings
+Content-Type: application/json
+
+{"model": "{{embedding_model}}", "input": "hello", "encoding_format": "float"}
+"""
+    assert_rest_client_contract(good_http)
+
+    bad_cases = (
+        (
+            good_http.replace("Content-Type: application/json\n\n{\"model\": \"{{model}}\"", '{"model": "{{model}}"'),
+            "missing JSON Content-Type header",
+        ),
+        (
+            good_http.replace(
+                "GET {{base}}/v1/models\n\n### Non-streaming chat completion\nPOST {{base}}/v1/chat/completions",
+                "POST {{base}}/v1/chat/completions\nContent-Type: application/json\n\n"
+                '{"model": "{{model}}", "messages": [{"role": "user", "content": "hello"}]}\n\n'
+                "### List runnable OpenAI-style chat models\nGET {{base}}/v1/models",
+            ),
+            "request order drifted",
+        ),
+        (
+            good_http.replace('"messages": [{"role": "user", "content": "hello"}]', '"messages": [{"role": "user", "content": "hello"}], "stream": true'),
+            "must not document streaming chat",
+        ),
+        (
+            good_http.replace('"encoding_format": "float"', '"encoding_format": "base64"'),
+            "embeddings must request float encoding",
+        ),
+    )
+    for text, expected in bad_cases:
+        try:
+            assert_rest_client_contract(text)
+        except AssertionError as exc:
+            assert_true(expected in str(exc), f"REST Client self-test failed for the wrong reason: {exc}")
+        else:
+            raise AssertionError(f"REST Client self-test did not reject drift: {expected}")
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Regression-test public API client examples")
+    parser.add_argument("--self-test", action="store_true", help="run synthetic static regression checks")
+    args = parser.parse_args()
+    if args.self_test:
+        run_self_test()
+        print("API client examples regression self-test passed")
+        return 0
+
     static_checks()
     run_example(["bash", "examples/api/curl-quickstart.sh"], embeddings=False)
     run_example(["python3", "examples/api/python-no-deps.py"], embeddings=False)

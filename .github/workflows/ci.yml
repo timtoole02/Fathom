@@ -82,6 +82,8 @@ jobs:
             scripts/bench_backend.py
       - name: Run API client example regression
         run: python3 scripts/api_client_examples_regression.py
+      - name: Run API client example regression self-test
+        run: python3 scripts/api_client_examples_regression.py --self-test
       - name: Run public API contract QA
         run: python3 scripts/public_api_contract_qa.py
       - name: Run public API contract QA self-test

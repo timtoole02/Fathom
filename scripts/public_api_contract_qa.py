@@ -127,7 +127,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard public issue template privacy checks|Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
-    r"Guard REST Client example headers)$"
+    r"Guard REST Client example headers|Guard API example regression self-test)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -649,6 +649,7 @@ def assert_boundary_docs() -> None:
     checklist_required_gates = [
         "git diff --check",
         "scripts/api_client_examples_regression.py",
+        "scripts/api_client_examples_regression.py --self-test",
         "scripts/ci_static_policy.py --self-test",
         "scripts/public_api_contract_qa.py --self-test",
         "scripts/public_risk_scan.sh --self-test",
@@ -1058,6 +1059,11 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     assert_contains(ci_text, "scripts/smollm2_optional_api_acceptance_artifact_qa.py", "CI SmolLM2 optional artifact QA wiring")
     assert_contains(ci_text, "scripts/qwen25_optional_api_acceptance_artifact_qa.py", "CI Qwen2.5 optional artifact QA wiring")
     assert_contains(ci_text, expected, "CI public API contract QA run step")
+    assert_contains(
+        ci_text,
+        "python3 scripts/api_client_examples_regression.py --self-test",
+        "CI API client example regression self-test run step",
+    )
     assert_contains(ci_text, "python3 scripts/public_api_contract_qa.py --self-test", "CI public API contract QA self-test run step")
     assert_contains(ci_text, "python3 scripts/public_contract_smoke_artifact_qa.py", "CI public contract smoke artifact QA run step")
     assert_contains(ci_text, "python3 scripts/backend_acceptance_artifact_qa.py", "CI backend acceptance artifact QA run step")
