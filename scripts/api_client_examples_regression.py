@@ -509,6 +509,20 @@ def static_checks() -> None:
             f"{relative_path} missing loopback/no-auth warning terms: {missing_terms}",
         )
 
+    expected_loopback_default = "http://127.0.0.1:8180"
+    default_base_patterns = {
+        "examples/api/curl-quickstart.sh": r'BASE="\$\{FATHOM_BASE_URL:-http://127\.0\.0\.1:8180\}"',
+        "examples/api/python-no-deps.py": r'BASE_URL = os\.environ\.get\("FATHOM_BASE_URL", "http://127\.0\.0\.1:8180"\)\.rstrip\("/"\)',
+        "examples/api/openai-sdk.py": r'ROOT_URL = os\.environ\.get\("FATHOM_BASE_URL", "http://127\.0\.0\.1:8180"\)\.rstrip\("/"\)',
+        "examples/api/fathom.http": r"(?m)^@base = http://127\.0\.0\.1:8180$",
+    }
+    for relative_path, pattern in default_base_patterns.items():
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert_true(
+            re.search(pattern, text) is not None,
+            f"{relative_path} must default to loopback {expected_loopback_default}",
+        )
+
     http_path = ROOT / "examples/api/fathom.http"
     http_text = http_path.read_text(encoding="utf-8")
     for endpoint in (
