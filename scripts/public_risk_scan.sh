@@ -140,6 +140,21 @@ blocked_tracked_frontend_artifact_filenames = {
 blocked_tracked_frontend_artifact_suffixes = {
     ".tsbuildinfo",
 }
+blocked_tracked_rust_artifact_dirs = {
+    "target",
+}
+blocked_tracked_rust_artifact_suffixes = {
+    ".a",
+    ".dll",
+    ".dylib",
+    ".o",
+    ".obj",
+    ".profdata",
+    ".profraw",
+    ".rlib",
+    ".rmeta",
+    ".so",
+}
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -284,6 +299,19 @@ def tracked_frontend_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_frontend_artifact_suffixes:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_rust_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_rust_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Rust/Cargo cache/build artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_rust_artifact_suffixes:
+            failures.append(f"{rel}: Rust/Cargo cache/build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -469,6 +497,39 @@ def self_test():
         "pnpm-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked frontend/Node cache/build artifacts")
+    rust_artifact_failures = tracked_rust_artifact_file_failures(
+        tracked_paths=[
+            "target/debug/fathom",
+            "crates/fathom-core/target/release/deps/libfathom_core.rlib",
+            "crates/fathom-core/target/release/deps/fathom_core.rmeta",
+            "crates/fathom-core/target/debug/incremental/state.o",
+            "crates/fathom-core/target/debug/incremental/state.obj",
+            "crates/fathom-server/target/debug/deps/libserver.so",
+            "crates/fathom-server/target/debug/deps/libserver.dylib",
+            "crates/fathom-server/target/debug/deps/server.dll",
+            "crates/fathom-core/target/debug/deps/libnative.a",
+            "coverage/default.profraw",
+            "coverage/merged.profdata",
+            "Cargo.lock",
+            "crates/fathom-core/Cargo.toml",
+            "docs/research/performance-strategy.md",
+            "src/main.rs",
+        ],
+    )
+    if rust_artifact_failures != [
+        "target/debug/fathom: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-core/target/release/deps/libfathom_core.rlib: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-core/target/release/deps/fathom_core.rmeta: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-core/target/debug/incremental/state.o: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-core/target/debug/incremental/state.obj: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-server/target/debug/deps/libserver.so: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-server/target/debug/deps/libserver.dylib: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-server/target/debug/deps/server.dll: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-core/target/debug/deps/libnative.a: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "coverage/default.profraw: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "coverage/merged.profdata: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Rust/Cargo cache/build artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -504,6 +565,7 @@ failures.extend(tracked_workspace_context_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
+failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
