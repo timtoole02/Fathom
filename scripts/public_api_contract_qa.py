@@ -128,7 +128,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard REST Client example headers|Guard API example regression self-test|"
-    r"Guard CI frontend launch gates|Guard public risk scan .+|Guard tracked credential config files)$"
+    r"Guard CI frontend launch gates|Guard public risk scan .+|Guard tracked credential config files|"
+    r"Guard tracked workspace instruction files)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -762,6 +763,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "production-readiness/legal-license public overclaim examples",
         "launch evidence production/legal overclaim self-test proof",
+    )
+    assert_contains(
+        evidence_text,
+        "workspace/personal agent context-file guard",
+        "launch evidence workspace context risk-scan scope",
     )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(

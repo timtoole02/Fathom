@@ -84,6 +84,15 @@ blocked_tracked_credential_suffixes = {
     ".pem",
     ".pfx",
 }
+blocked_tracked_workspace_filenames = {
+    "AGENTS.md",
+    "BOOTSTRAP.md",
+    "HEARTBEAT.md",
+    "MEMORY.md",
+    "SOUL.md",
+    "TOOLS.md",
+    "USER.md",
+}
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -170,6 +179,16 @@ def tracked_credential_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_credential_suffixes:
             failures.append(f"{rel}: credential/key files must not be tracked for public launch")
+    return failures
+
+def tracked_workspace_context_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.name in blocked_tracked_workspace_filenames or rel.startswith("memory/"):
+            failures.append(f"{rel}: workspace/personal agent context files must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -268,6 +287,22 @@ def self_test():
         "crates/fathom-server/credentials: credential/config files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked credential/config files")
+    workspace_context_failures = tracked_workspace_context_failures(
+        tracked_paths=[
+            "AGENTS.md",
+            "docs/AGENTS.md",
+            "MEMORY.md",
+            "memory/2026-05-31.md",
+            "docs/api/public-contract.json",
+        ],
+    )
+    if workspace_context_failures != [
+        "AGENTS.md: workspace/personal agent context files must not be tracked for public launch",
+        "docs/AGENTS.md: workspace/personal agent context files must not be tracked for public launch",
+        "MEMORY.md: workspace/personal agent context files must not be tracked for public launch",
+        "memory/2026-05-31.md: workspace/personal agent context files must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked workspace/personal agent context files")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -299,6 +334,7 @@ failures = scan_items(tracked_items())
 failures.extend(tracked_large_file_failures())
 failures.extend(tracked_blocked_file_failures())
 failures.extend(tracked_credential_file_failures())
+failures.extend(tracked_workspace_context_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
