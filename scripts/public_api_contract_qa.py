@@ -39,6 +39,7 @@ API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contrac
 MODEL_RUNTIME_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "model_runtime_request.yml"
 BUG_REPORT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml"
 SECURITY_PRIVACY_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "security_or_privacy.yml"
+ISSUE_TEMPLATE_CONFIG = ROOT / ".github" / "ISSUE_TEMPLATE" / "config.yml"
 PR_TEMPLATE = ROOT / ".github" / "pull_request_template.md"
 SMOKE = ROOT / "scripts" / "public_api_contract_smoke.sh"
 EXAMPLES_DIR = ROOT / "examples" / "api"
@@ -52,6 +53,7 @@ TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [
     MODEL_RUNTIME_ISSUE_TEMPLATE,
     BUG_REPORT_ISSUE_TEMPLATE,
     SECURITY_PRIVACY_ISSUE_TEMPLATE,
+    ISSUE_TEMPLATE_CONFIG,
     PR_TEMPLATE,
 ]
 OFFLINE_QA_PYTHON_PATHS = (
@@ -121,7 +123,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
-    r"Guard public issue template privacy checks|Guard OpenAI SDK example regression)$"
+    r"Guard public issue template privacy checks|Guard issue template config privacy checks|"
+    r"Guard OpenAI SDK example regression)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -420,6 +423,7 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 "docs/api/refusal-boundary-matrix.md",
                 ".github/ISSUE_TEMPLATE/api_contract.yml",
                 ".github/ISSUE_TEMPLATE/bug_report.yml",
+                ".github/ISSUE_TEMPLATE/config.yml",
                 ".github/ISSUE_TEMPLATE/security_or_privacy.yml",
                 ".github/pull_request_template.md",
                 "scripts/api_client_examples_regression.py",
@@ -1093,6 +1097,16 @@ def assert_security_privacy_issue_template() -> None:
         assert_contains(template_text, phrase, label)
 
 
+def assert_issue_template_config() -> None:
+    config_text = read(ISSUE_TEMPLATE_CONFIG)
+    label = ".github/ISSUE_TEMPLATE/config.yml"
+    blank_issue_settings = re.findall(r"(?m)^\s*blank_issues_enabled\s*:\s*(true|false)\s*(?:#.*)?$", config_text)
+    if blank_issue_settings != ["false"]:
+        raise AssertionError(f"{label} must set exactly one `blank_issues_enabled: false` entry")
+    if re.search(r"(?m)^\s*blank_issues_enabled\s*:\s*true\s*(?:#.*)?$", config_text):
+        raise AssertionError(f"{label} must not enable blank public issues")
+
+
 def assert_pull_request_template() -> None:
     template_text = read(PR_TEMPLATE)
     label = ".github/pull_request_template.md"
@@ -1153,6 +1167,7 @@ def main() -> int:
     assert_model_runtime_issue_template()
     assert_bug_report_issue_template()
     assert_security_privacy_issue_template()
+    assert_issue_template_config()
     assert_pull_request_template()
     print("public API contract QA passed")
     return 0
