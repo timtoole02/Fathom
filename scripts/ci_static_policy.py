@@ -15,6 +15,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CI = ROOT / ".github" / "workflows" / "ci.yml"
+OPTIONAL_ACCEPTANCE_SMOKE_SCRIPTS = (
+    "scripts/minilm_embeddings_optional_api_acceptance_smoke.sh",
+    "scripts/smollm2_optional_api_acceptance_smoke.sh",
+    "scripts/qwen25_optional_api_acceptance_smoke.sh",
+)
 
 
 def evaluate_ci_text(text: str) -> list[str]:
@@ -38,6 +43,11 @@ def evaluate_ci_text(text: str) -> list[str]:
             elif stripped not in {"bash -n scripts/public_api_contract_smoke.sh", "run: bash -n scripts/public_api_contract_smoke.sh"}:
                 failures.append(
                     f"default CI may only syntax-check or run public_api_contract_smoke.sh, line {line_number}: {stripped}"
+                )
+        for script in OPTIONAL_ACCEPTANCE_SMOKE_SCRIPTS:
+            if script in line and stripped not in {f"bash -n {script}", f"run: bash -n {script}"}:
+                failures.append(
+                    f"default CI must only syntax-check optional acceptance smoke {script}, line {line_number}: {stripped}"
                 )
         if re.search(r"\bpython3\s+scripts/ci_static_policy\.py\s+--self-test\b", stripped):
             saw_ci_static_policy_self_test = True
@@ -90,6 +100,7 @@ jobs:
         "onnx feature": "run: cargo test -q --features onnx-embeddings-ort\nrun: bash scripts/public_api_contract_smoke.sh",
         "networked acceptance": "run: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/backend_acceptance_smoke.sh",
         "public contract artifacts": "run: bash scripts/public_api_contract_smoke.sh\nenv:\n  FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR: artifacts",
+        "optional acceptance smoke run": "run: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/qwen25_optional_api_acceptance_smoke.sh",
         "upload artifact": "uses: actions/upload-artifact@v4\nrun: bash scripts/public_api_contract_smoke.sh",
         "download artifact": "uses: actions/download-artifact@v4\nrun: bash scripts/public_api_contract_smoke.sh",
         "cache action": "uses: actions/cache@v4\nrun: bash scripts/public_api_contract_smoke.sh",

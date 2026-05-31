@@ -328,6 +328,8 @@ def assert_launch_checklist_client_example_syntax_gates() -> None:
     checklist_text = read(LAUNCH_CHECKLIST)
     for path in OFFLINE_CLIENT_EXAMPLE_SHELL_PATHS:
         assert_contains(checklist_text, f"bash -n {path}", "launch checklist client example shell syntax gate")
+    for _, _, smoke_script, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
+        assert_contains(checklist_text, f"bash -n {smoke_script}", "launch checklist optional acceptance shell syntax gate")
 
 
 def assert_launch_checklist_artifact_qa_run_gates() -> None:
@@ -949,6 +951,8 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     )
     assert_contains(ci_text, "bash scripts/public_api_contract_smoke.sh", "CI public API contract smoke run step")
     assert_contains(ci_text, "bash -n scripts/public_api_contract_smoke.sh", "CI public API contract smoke syntax step")
+    for _, _, smoke_script, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
+        assert_contains(ci_text, f"bash -n {smoke_script}", "CI optional acceptance smoke shell syntax step")
     if re.search(r"cargo\s+test\b[^\n]*--features\s+[^\n]*onnx-embeddings-ort", ci_text):
         raise AssertionError("default CI must not enable onnx-embeddings-ort")
     for line_no, line in enumerate(ci_text.splitlines(), start=1):
