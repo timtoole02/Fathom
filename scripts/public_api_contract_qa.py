@@ -441,6 +441,28 @@ def assert_launch_checklist_frontend_gates() -> None:
     assert_frontend_launch_gates(checklist_text, "launch checklist frontend gate")
 
 
+def assert_contributing_common_gates() -> None:
+    contributing_text = read(CONTRIBUTING)
+    required_commands = (
+        "git diff --check",
+        "python3 scripts/api_client_examples_regression.py",
+        "python3 scripts/api_client_examples_regression.py --self-test",
+        "python3 scripts/public_api_contract_qa.py",
+        "python3 scripts/public_api_contract_qa.py --self-test",
+        "python3 scripts/public_contract_smoke_artifact_qa.py",
+        "python3 scripts/backend_acceptance_artifact_qa.py",
+        "python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
+        "python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py",
+        "python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+        "python3 scripts/ci_static_policy.py",
+        "python3 scripts/ci_static_policy.py --self-test",
+        "bash scripts/public_risk_scan.sh --self-test",
+        "bash scripts/public_risk_scan.sh",
+    )
+    for command in required_commands:
+        assert_contains(contributing_text, command, "contributing common gates")
+
+
 def assert_frontend_launch_gates(text: str, label: str) -> None:
     for command in (
         "npm --prefix frontend run build",
@@ -700,6 +722,7 @@ def assert_boundary_docs() -> None:
     assert_contains(readme_text, "docs/public-launch-checklist.md", "README launch checklist link")
     assert_contains(read(BACKEND_QUICKSTART), "../public-launch-checklist.md", "backend quickstart launch checklist link")
     assert_contains(read(CONTRIBUTING), "docs/public-launch-checklist.md", "contributing launch checklist link")
+    assert_contributing_common_gates()
     assert_public_security_docs()
     assert_contains(v1_text, "public-contract.json", "v1 contract manifest link")
     assert_contains(launch_text, "api/public-contract.json", "launch checklist manifest link")
