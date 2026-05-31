@@ -128,7 +128,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard REST Client example headers|Guard API example regression self-test|"
-    r"Guard CI frontend launch gates)$"
+    r"Guard CI frontend launch gates|Guard public risk scan .+|Guard tracked credential config files)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
@@ -547,6 +547,7 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 "scripts/ci_static_policy.py",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
+                "scripts/public_risk_scan.sh",
             ],
             cwd=ROOT,
             text=True,
