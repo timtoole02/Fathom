@@ -68,6 +68,7 @@ claim_patterns = [
 
 skip_suffixes = {".lock"}
 skip_paths = {"scripts/public_risk_scan.sh", "frontend/scripts/ui-copy-qa.mjs"}
+max_tracked_file_bytes = 1024 * 1024
 docs_evidence_prefixes = (
     "docs/benchmarks/",
     "docs/api/",
@@ -112,6 +113,20 @@ def tracked_items():
         items.append((rel, text))
     return items
 
+def tracked_large_file_failures(tracked_paths=None, sizes=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.Path(rel)
+        try:
+            size = sizes[rel] if sizes is not None else path.stat().st_size
+        except (FileNotFoundError, KeyError):
+            continue
+        if size > max_tracked_file_bytes:
+            failures.append(f"{rel}: tracked file is {size} bytes; public launch tracked files must stay <= {max_tracked_file_bytes} bytes")
+    return failures
+
 def self_test():
     bad_lines = [
         ("README.md", "Maintainer: " + "Ti" + "m Too" + "le"),
@@ -145,6 +160,14 @@ def self_test():
     allowed_failures = scan_items(allowed_lines)
     if allowed_failures:
         raise AssertionError("public risk self-test rejected allowed examples:\n" + "\n".join(allowed_failures))
+    large_file_failures = tracked_large_file_failures(
+        tracked_paths=["docs/api/small.md", "docs/api/large.bin"],
+        sizes={"docs/api/small.md": max_tracked_file_bytes, "docs/api/large.bin": max_tracked_file_bytes + 1},
+    )
+    if large_file_failures != [
+        f"docs/api/large.bin: tracked file is {max_tracked_file_bytes + 1} bytes; public launch tracked files must stay <= {max_tracked_file_bytes} bytes"
+    ]:
+        raise AssertionError("public risk self-test did not reject oversized tracked files")
     print("public risk scan self-test passed")
 
 if "--self-test" in sys.argv[1:]:
@@ -152,6 +175,7 @@ if "--self-test" in sys.argv[1:]:
     raise SystemExit(0)
 
 failures = scan_items(tracked_items())
+failures.extend(tracked_large_file_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
     print("\n".join(failures), file=sys.stderr)
