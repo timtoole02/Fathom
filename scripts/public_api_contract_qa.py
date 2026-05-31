@@ -61,6 +61,19 @@ OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS = (
 OFFLINE_CLIENT_EXAMPLE_SHELL_PATHS = (
     "examples/api/curl-quickstart.sh",
 )
+OFFLINE_SHELL_SYNTAX_PATHS = (
+    *OFFLINE_CLIENT_EXAMPLE_SHELL_PATHS,
+    "scripts/public_risk_scan.sh",
+    "scripts/public_api_contract_smoke.sh",
+    "scripts/backend_acceptance_smoke.sh",
+    "scripts/minilm_embeddings_optional_api_acceptance_smoke.sh",
+    "scripts/smollm2_optional_api_acceptance_smoke.sh",
+    "scripts/qwen25_optional_api_acceptance_smoke.sh",
+    "scripts/smoke.sh",
+    "scripts/start-backend.sh",
+    "scripts/start.sh",
+    "scripts/stop.sh",
+)
 OFFLINE_ARTIFACT_QA_RUN_PATHS = (
     "scripts/public_contract_smoke_artifact_qa.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -326,10 +339,8 @@ def assert_launch_checklist_python_syntax_gate() -> None:
 
 def assert_launch_checklist_client_example_syntax_gates() -> None:
     checklist_text = read(LAUNCH_CHECKLIST)
-    for path in OFFLINE_CLIENT_EXAMPLE_SHELL_PATHS:
-        assert_contains(checklist_text, f"bash -n {path}", "launch checklist client example shell syntax gate")
-    for _, _, smoke_script, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
-        assert_contains(checklist_text, f"bash -n {smoke_script}", "launch checklist optional acceptance shell syntax gate")
+    for path in OFFLINE_SHELL_SYNTAX_PATHS:
+        assert_contains(checklist_text, f"bash -n {path}", "launch checklist shell syntax gate")
 
 
 def assert_launch_checklist_artifact_qa_run_gates() -> None:
@@ -950,9 +961,8 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
         "CI Qwen2.5 optional artifact QA self-test run step",
     )
     assert_contains(ci_text, "bash scripts/public_api_contract_smoke.sh", "CI public API contract smoke run step")
-    assert_contains(ci_text, "bash -n scripts/public_api_contract_smoke.sh", "CI public API contract smoke syntax step")
-    for _, _, smoke_script, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
-        assert_contains(ci_text, f"bash -n {smoke_script}", "CI optional acceptance smoke shell syntax step")
+    for path in OFFLINE_SHELL_SYNTAX_PATHS:
+        assert_contains(ci_text, f"bash -n {path}", "CI shell syntax step")
     if re.search(r"cargo\s+test\b[^\n]*--features\s+[^\n]*onnx-embeddings-ort", ci_text):
         raise AssertionError("default CI must not enable onnx-embeddings-ort")
     for line_no, line in enumerate(ci_text.splitlines(), start=1):
