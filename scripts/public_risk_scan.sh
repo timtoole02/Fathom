@@ -69,6 +69,7 @@ claim_patterns = [
 skip_suffixes = {".lock"}
 skip_paths = {"scripts/public_risk_scan.sh", "frontend/scripts/ui-copy-qa.mjs"}
 max_tracked_file_bytes = 1024 * 1024
+blocked_tracked_filenames = {".DS_Store", "Thumbs.db", "desktop.ini"}
 docs_evidence_prefixes = (
     "docs/benchmarks/",
     "docs/api/",
@@ -127,6 +128,15 @@ def tracked_large_file_failures(tracked_paths=None, sizes=None):
             failures.append(f"{rel}: tracked file is {size} bytes; public launch tracked files must stay <= {max_tracked_file_bytes} bytes")
     return failures
 
+def tracked_blocked_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        if pathlib.PurePosixPath(rel).name in blocked_tracked_filenames:
+            failures.append(f"{rel}: OS/editor metadata files must not be tracked for public launch")
+    return failures
+
 def self_test():
     bad_lines = [
         ("README.md", "Maintainer: " + "Ti" + "m Too" + "le"),
@@ -168,6 +178,15 @@ def self_test():
         f"docs/api/large.bin: tracked file is {max_tracked_file_bytes + 1} bytes; public launch tracked files must stay <= {max_tracked_file_bytes} bytes"
     ]:
         raise AssertionError("public risk self-test did not reject oversized tracked files")
+    blocked_file_failures = tracked_blocked_file_failures(
+        tracked_paths=["docs/api/public-contract.json", "docs/.DS_Store", "frontend/Thumbs.db", "desktop.ini"],
+    )
+    if blocked_file_failures != [
+        "docs/.DS_Store: OS/editor metadata files must not be tracked for public launch",
+        "frontend/Thumbs.db: OS/editor metadata files must not be tracked for public launch",
+        "desktop.ini: OS/editor metadata files must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked OS/editor metadata files")
     print("public risk scan self-test passed")
 
 if "--self-test" in sys.argv[1:]:
@@ -176,6 +195,7 @@ if "--self-test" in sys.argv[1:]:
 
 failures = scan_items(tracked_items())
 failures.extend(tracked_large_file_failures())
+failures.extend(tracked_blocked_file_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
     print("\n".join(failures), file=sys.stderr)
