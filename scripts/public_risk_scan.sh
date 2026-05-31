@@ -70,6 +70,20 @@ skip_suffixes = {".lock"}
 skip_paths = {"scripts/public_risk_scan.sh", "frontend/scripts/ui-copy-qa.mjs"}
 max_tracked_file_bytes = 1024 * 1024
 blocked_tracked_filenames = {".DS_Store", "Thumbs.db", "desktop.ini"}
+allowed_tracked_credential_filenames = {".env.example"}
+blocked_tracked_credential_filenames = {
+    ".env",
+    ".netrc",
+    ".npmrc",
+    ".pypirc",
+    "credentials",
+}
+blocked_tracked_credential_suffixes = {
+    ".key",
+    ".p12",
+    ".pem",
+    ".pfx",
+}
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -140,6 +154,22 @@ def tracked_blocked_file_failures(tracked_paths=None):
     for rel in tracked_paths:
         if pathlib.PurePosixPath(rel).name in blocked_tracked_filenames:
             failures.append(f"{rel}: OS/editor metadata files must not be tracked for public launch")
+    return failures
+
+def tracked_credential_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        name = path.name
+        if name in allowed_tracked_credential_filenames:
+            continue
+        if name in blocked_tracked_credential_filenames or name.startswith(".env."):
+            failures.append(f"{rel}: credential/config files must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_credential_suffixes:
+            failures.append(f"{rel}: credential/key files must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -217,6 +247,27 @@ def self_test():
         "desktop.ini: OS/editor metadata files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked OS/editor metadata files")
+    credential_file_failures = tracked_credential_file_failures(
+        tracked_paths=[
+            ".env",
+            ".env.local",
+            ".env.example",
+            ".npmrc",
+            "docs/public.pem",
+            "docs/public-key.txt",
+            "frontend/.pypirc",
+            "crates/fathom-server/credentials",
+        ],
+    )
+    if credential_file_failures != [
+        ".env: credential/config files must not be tracked for public launch",
+        ".env.local: credential/config files must not be tracked for public launch",
+        ".npmrc: credential/config files must not be tracked for public launch",
+        "docs/public.pem: credential/key files must not be tracked for public launch",
+        "frontend/.pypirc: credential/config files must not be tracked for public launch",
+        "crates/fathom-server/credentials: credential/config files must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked credential/config files")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -247,6 +298,7 @@ if "--self-test" in sys.argv[1:]:
 failures = scan_items(tracked_items())
 failures.extend(tracked_large_file_failures())
 failures.extend(tracked_blocked_file_failures())
+failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

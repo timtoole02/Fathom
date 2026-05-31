@@ -12,3 +12,15 @@ dist/
 .fathom/
 *.log
 .DS_Store
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.netrc
+.npmrc
+.pypirc
