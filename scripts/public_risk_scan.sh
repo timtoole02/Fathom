@@ -102,6 +102,13 @@ blocked_tracked_credential_filenames = {
     ".npmrc",
     ".pypirc",
     "credentials",
+    "id_dsa",
+    "id_ecdsa",
+    "id_ed25519",
+    "id_rsa",
+}
+blocked_tracked_credential_dirs = {
+    ".ssh",
 }
 blocked_tracked_credential_suffixes = {
     ".key",
@@ -148,11 +155,16 @@ required_workspace_gitignore_patterns = {
 required_credential_gitignore_patterns = {
     ".env",
     ".env.*",
+    "/.ssh/",
     "!.env.example",
     "*.pem",
     "*.key",
     "*.p12",
     "*.pfx",
+    "id_dsa",
+    "id_ecdsa",
+    "id_ed25519",
+    "id_rsa",
     ".netrc",
     ".npmrc",
     ".pypirc",
@@ -607,6 +619,9 @@ def tracked_credential_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         name = path.name
         if name in allowed_tracked_credential_filenames:
+            continue
+        if any(part in blocked_tracked_credential_dirs for part in path.parts):
+            failures.append(f"{rel}: credential/config files must not be tracked for public launch")
             continue
         if name in blocked_tracked_credential_filenames or name.startswith(".env."):
             failures.append(f"{rel}: credential/config files must not be tracked for public launch")
@@ -1250,6 +1265,8 @@ def self_test():
             ".env.local",
             ".env.example",
             ".npmrc",
+            ".ssh/config",
+            "docs/id_ed25519",
             "docs/public.pem",
             "docs/public-key.txt",
             "frontend/.pypirc",
@@ -1260,6 +1277,8 @@ def self_test():
         ".env: credential/config files must not be tracked for public launch",
         ".env.local: credential/config files must not be tracked for public launch",
         ".npmrc: credential/config files must not be tracked for public launch",
+        ".ssh/config: credential/config files must not be tracked for public launch",
+        "docs/id_ed25519: credential/config files must not be tracked for public launch",
         "docs/public.pem: credential/key files must not be tracked for public launch",
         "frontend/.pypirc: credential/config files must not be tracked for public launch",
         "crates/fathom-server/credentials: credential/config files must not be tracked for public launch",
@@ -1306,8 +1325,8 @@ def self_test():
     allowed_credential_gitignore = "\n".join(sorted(required_credential_gitignore_patterns)) + "\n"
     if gitignore_credential_failures(allowed_credential_gitignore):
         raise AssertionError("public risk self-test rejected complete local credential/config ignore patterns")
-    credential_gitignore_failures = gitignore_credential_failures(allowed_credential_gitignore.replace(".npmrc\n", ""))
-    if credential_gitignore_failures != [".gitignore: missing local credential/config ignore patterns: .npmrc"]:
+    credential_gitignore_failures = gitignore_credential_failures(allowed_credential_gitignore.replace("/.ssh/\n", ""))
+    if credential_gitignore_failures != [".gitignore: missing local credential/config ignore patterns: /.ssh/"]:
         raise AssertionError("public risk self-test did not reject missing local credential/config ignore patterns")
     allowed_model_artifact_gitignore = "\n".join(sorted(required_model_artifact_gitignore_patterns)) + "\n"
     if gitignore_model_artifact_failures(allowed_model_artifact_gitignore):

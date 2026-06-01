@@ -865,13 +865,38 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "credential/config filename guard including SSH private-key filenames and `.ssh/` directories",
+        "launch evidence credential/config SSH risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local credential/config guard including SSH private-key filenames and `.ssh/`",
+        "launch evidence credential/config SSH ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
         "root `.gitignore` local credential/config guard",
         "launch evidence credential/config ignore risk-scan scope",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local credential/config files",
+        "SSH private-key filenames such as `id_rsa`, `id_ed25519`, `id_ecdsa`, and `id_dsa`",
+        "launch evidence credential/config SSH examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local credential/config files including `/.ssh/` and SSH private-key filenames",
         "launch evidence credential/config ignore examples",
+    )
+    assert_contains(
+        launch_text,
+        "tracked credential/config filenames including SSH private-key filenames and `.ssh/` directories",
+        "launch checklist credential/config SSH risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local credential/config files including SSH private-key filenames and `.ssh/`",
+        "launch checklist credential/config SSH ignore scope",
     )
     assert_contains(
         evidence_text,
