@@ -386,6 +386,19 @@ required_test_report_artifact_gitignore_patterns = {
 required_notebook_artifact_gitignore_patterns = {
     ".ipynb_checkpoints/",
 }
+required_runtime_artifact_gitignore_patterns = {
+    "*.db",
+    "*.db-journal",
+    "*.db-shm",
+    "*.db-wal",
+    "*.sqlite",
+    "*.sqlite-journal",
+    "*.sqlite-shm",
+    "*.sqlite-wal",
+    "*.sqlite3",
+    ".fathom/",
+    "summary.local.json",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -1056,6 +1069,22 @@ def gitignore_notebook_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local notebook artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_runtime_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local runtime/artifact detail-file ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_runtime_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local runtime/artifact detail-file ignore patterns: {', '.join(missing)}"]
+    return []
+
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -1593,6 +1622,16 @@ def self_test():
         "state/fathom.sqlite-wal: local runtime/artifact detail files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local runtime/artifact files")
+    allowed_runtime_artifact_gitignore = "\n".join(sorted(required_runtime_artifact_gitignore_patterns)) + "\n"
+    if gitignore_runtime_artifact_failures(allowed_runtime_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local runtime/artifact detail-file ignore patterns")
+    runtime_artifact_gitignore_failures = gitignore_runtime_artifact_failures(
+        allowed_runtime_artifact_gitignore.replace("*.sqlite-wal\n", "")
+    )
+    if runtime_artifact_gitignore_failures != [
+        ".gitignore: missing local runtime/artifact detail-file ignore patterns: *.sqlite-wal"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local runtime/artifact detail-file ignore patterns")
     allowed_diagnostic_artifact_gitignore = "\n".join(sorted(required_diagnostic_artifact_gitignore_patterns)) + "\n"
     if gitignore_diagnostic_artifact_failures(allowed_diagnostic_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local log/trace/profiling/debug-output artifact ignore patterns")
@@ -2121,6 +2160,7 @@ failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
 failures.extend(gitignore_notebook_artifact_failures())
+failures.extend(gitignore_runtime_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_diagnostic_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())

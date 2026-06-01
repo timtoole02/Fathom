@@ -39,6 +39,16 @@ yarn-error.log
 
 # Local runtime state
 .fathom/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3
+summary.local.json
 *.log
 /logs/
 /traces/
