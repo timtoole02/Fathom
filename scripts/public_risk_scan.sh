@@ -230,14 +230,26 @@ required_python_artifact_gitignore_patterns = {
     "*.pyo",
 }
 required_frontend_artifact_gitignore_patterns = {
+    ".npm/",
     ".parcel-cache/",
+    ".pnpm-store/",
     ".turbo/",
+    ".yarn/build-state.yml",
+    ".yarn/cache/",
+    ".yarn/install-state.gz",
+    ".yarn/unplugged/",
     "*.tsbuildinfo",
     "build/",
     "coverage/",
     "dist/",
     "frontend/.next/",
+    "frontend/.npm/",
+    "frontend/.pnpm-store/",
     "frontend/.vite/",
+    "frontend/.yarn/build-state.yml",
+    "frontend/.yarn/cache/",
+    "frontend/.yarn/install-state.gz",
+    "frontend/.yarn/unplugged/",
     "frontend/build/",
     "frontend/coverage/",
     "frontend/dist/",
@@ -284,12 +296,22 @@ blocked_tracked_python_artifact_suffixes = {
     ".pyo",
 }
 blocked_tracked_frontend_artifact_dirs = {
+    ".npm",
     ".next",
     ".parcel-cache",
+    ".pnpm-store",
     ".turbo",
     ".vite",
     "coverage",
     "node_modules",
+}
+blocked_tracked_frontend_yarn_artifact_dirs = {
+    "cache",
+    "unplugged",
+}
+blocked_tracked_frontend_yarn_artifact_filenames = {
+    "build-state.yml",
+    "install-state.gz",
 }
 blocked_tracked_frontend_build_dirs = {
     "build",
@@ -765,6 +787,12 @@ def tracked_frontend_artifact_file_failures(tracked_paths=None):
         if any(part in blocked_tracked_frontend_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
             continue
+        if ".yarn" in path.parts and any(part in blocked_tracked_frontend_yarn_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
+        if ".yarn" in path.parts and path.name in blocked_tracked_frontend_yarn_artifact_filenames:
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
         if path.parts and path.parts[0] in blocked_tracked_root_frontend_build_dirs:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
             continue
@@ -1137,6 +1165,18 @@ def self_test():
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
+            ".npm/_cacache/index-v5/00/cache-entry",
+            ".pnpm-store/v3/files/00/package",
+            ".yarn/cache/react-npm-18.2.0.zip",
+            ".yarn/unplugged/esbuild/package.json",
+            ".yarn/build-state.yml",
+            ".yarn/install-state.gz",
+            "frontend/.npm/_logs/install.log",
+            "frontend/.pnpm-store/v3/files/00/package",
+            "frontend/.yarn/cache/vite-npm-5.0.0.zip",
+            "frontend/.yarn/unplugged/rollup/package.json",
+            "frontend/.yarn/build-state.yml",
+            "frontend/.yarn/install-state.gz",
             "dist/index.html",
             "build/assets/app.js",
             "frontend/dist/index.html",
@@ -1160,6 +1200,18 @@ def self_test():
     )
     if frontend_artifact_failures != [
         "frontend/node_modules/.package-lock.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".npm/_cacache/index-v5/00/cache-entry: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".pnpm-store/v3/files/00/package: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".yarn/cache/react-npm-18.2.0.zip: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".yarn/unplugged/esbuild/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".yarn/build-state.yml: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".yarn/install-state.gz: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.npm/_logs/install.log: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.pnpm-store/v3/files/00/package: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.yarn/cache/vite-npm-5.0.0.zip: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.yarn/unplugged/rollup/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.yarn/build-state.yml: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.yarn/install-state.gz: frontend/Node cache/build artifacts must not be tracked for public launch",
         "dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "build/assets/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
