@@ -937,6 +937,26 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "tracked Kubernetes credential/config guard",
+        "launch evidence Kubernetes credential risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local Kubernetes credential/config guard",
+        "launch evidence Kubernetes credential ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked Kubernetes credential/config files such as `.kube/`, `kubeconfig`, `kubeconfig.yaml`, and `kubeconfig.yml`",
+        "launch evidence Kubernetes credential examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Kubernetes credential/config files",
+        "launch evidence Kubernetes credential ignore examples",
+    )
+    assert_contains(
+        evidence_text,
         "root `.gitignore` local credential/config guard",
         "launch evidence credential/config ignore risk-scan scope",
     )
@@ -969,6 +989,16 @@ def assert_boundary_docs() -> None:
         launch_text,
         "root `.gitignore` coverage for local cloud SDK credential/config files",
         "launch checklist cloud SDK credential ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "tracked Kubernetes credential/config files",
+        "launch checklist Kubernetes credential risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local Kubernetes credential/config files",
+        "launch checklist Kubernetes credential ignore scope",
     )
     assert_contains(
         evidence_text,

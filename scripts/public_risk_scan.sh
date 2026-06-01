@@ -132,6 +132,14 @@ blocked_tracked_cloud_credential_filenames = {
     "serviceAccountKey.json",
     "service_account.json",
 }
+blocked_tracked_kubernetes_credential_dirs = {
+    ".kube",
+}
+blocked_tracked_kubernetes_credential_filenames = {
+    "kubeconfig",
+    "kubeconfig.yaml",
+    "kubeconfig.yml",
+}
 blocked_tracked_workspace_filenames = {
     ".aider.chat.history.md",
     ".aider.input.history",
@@ -197,6 +205,12 @@ required_cloud_credential_gitignore_patterns = {
     "service-account.json",
     "serviceAccountKey.json",
     "service_account.json",
+}
+required_kubernetes_credential_gitignore_patterns = {
+    "/.kube/",
+    "kubeconfig",
+    "kubeconfig.yaml",
+    "kubeconfig.yml",
 }
 required_os_metadata_gitignore_patterns = {
     ".AppleDouble/",
@@ -695,6 +709,19 @@ def tracked_cloud_credential_file_failures(tracked_paths=None):
             failures.append(f"{rel}: cloud SDK credential/config files must not be tracked for public launch")
     return failures
 
+def tracked_kubernetes_credential_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_kubernetes_credential_dirs for part in path.parts):
+            failures.append(f"{rel}: Kubernetes credential/config files must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_kubernetes_credential_filenames:
+            failures.append(f"{rel}: Kubernetes credential/config files must not be tracked for public launch")
+    return failures
+
 def tracked_workspace_context_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -755,6 +782,22 @@ def gitignore_cloud_credential_failures(gitignore_text=None):
     missing = sorted(required_cloud_credential_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local cloud SDK credential/config ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_kubernetes_credential_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Kubernetes credential/config ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_kubernetes_credential_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Kubernetes credential/config ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_os_metadata_failures(gitignore_text=None):
@@ -1424,6 +1467,25 @@ def self_test():
         "firebase/serviceAccountKey.json: cloud SDK credential/config files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked cloud SDK credential/config files")
+    kubernetes_credential_file_failures = tracked_kubernetes_credential_file_failures(
+        tracked_paths=[
+            ".kube/config",
+            ".kube/cache/discovery/example.json",
+            "ops/kubeconfig",
+            "ops/kubeconfig.yaml",
+            "ops/kubeconfig.yml",
+            "docs/deployment/kubernetes.md",
+            "docs/api/public-contract.json",
+        ],
+    )
+    if kubernetes_credential_file_failures != [
+        ".kube/config: Kubernetes credential/config files must not be tracked for public launch",
+        ".kube/cache/discovery/example.json: Kubernetes credential/config files must not be tracked for public launch",
+        "ops/kubeconfig: Kubernetes credential/config files must not be tracked for public launch",
+        "ops/kubeconfig.yaml: Kubernetes credential/config files must not be tracked for public launch",
+        "ops/kubeconfig.yml: Kubernetes credential/config files must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Kubernetes credential/config files")
     workspace_context_failures = tracked_workspace_context_failures(
         tracked_paths=[
             "AGENTS.md",
@@ -1478,6 +1540,16 @@ def self_test():
         ".gitignore: missing local cloud SDK credential/config ignore patterns: /.config/gcloud/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local cloud SDK credential/config ignore patterns")
+    allowed_kubernetes_credential_gitignore = "\n".join(sorted(required_kubernetes_credential_gitignore_patterns)) + "\n"
+    if gitignore_kubernetes_credential_failures(allowed_kubernetes_credential_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Kubernetes credential/config ignore patterns")
+    kubernetes_credential_gitignore_failures = gitignore_kubernetes_credential_failures(
+        allowed_kubernetes_credential_gitignore.replace("/.kube/\n", "")
+    )
+    if kubernetes_credential_gitignore_failures != [
+        ".gitignore: missing local Kubernetes credential/config ignore patterns: /.kube/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Kubernetes credential/config ignore patterns")
     allowed_model_artifact_gitignore = "\n".join(sorted(required_model_artifact_gitignore_patterns)) + "\n"
     if gitignore_model_artifact_failures(allowed_model_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local model/checkpoint artifact ignore patterns")
@@ -2027,10 +2099,12 @@ failures.extend(tracked_large_file_failures())
 failures.extend(tracked_blocked_file_failures())
 failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_cloud_credential_file_failures())
+failures.extend(tracked_kubernetes_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
 failures.extend(gitignore_workspace_context_failures())
 failures.extend(gitignore_credential_failures())
 failures.extend(gitignore_cloud_credential_failures())
+failures.extend(gitignore_kubernetes_credential_failures())
 failures.extend(gitignore_os_metadata_failures())
 failures.extend(gitignore_editor_artifact_failures())
 failures.extend(gitignore_ide_artifact_failures())

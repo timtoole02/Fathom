@@ -195,6 +195,7 @@ xcuserdata/
 /.aws/
 /.azure/
 /.config/gcloud/
+/.kube/
 *.pem
 *.key
 *.p12
@@ -212,3 +213,6 @@ application_default_credentials.json
 service-account.json
 service_account.json
 serviceAccountKey.json
+kubeconfig
+kubeconfig.yaml
+kubeconfig.yml
