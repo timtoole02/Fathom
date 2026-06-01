@@ -213,6 +213,14 @@ required_package_artifact_gitignore_patterns = {
     "*.xz",
     "*.zip",
 }
+required_backup_artifact_gitignore_patterns = {
+    "/backups/",
+    "/dumps/",
+    "*.bak",
+    "*.backup",
+    "*.dump",
+    "*.sql",
+}
 required_python_artifact_gitignore_patterns = {
     "__pycache__/",
     ".pytest_cache/",
@@ -653,6 +661,22 @@ def gitignore_package_artifact_failures(gitignore_text=None):
     missing = sorted(required_package_artifact_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local release/package artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_backup_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local backup/dump artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_backup_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local backup/dump artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_python_artifact_failures(gitignore_text=None):
@@ -1285,6 +1309,16 @@ def self_test():
         ".gitignore: missing local release/package artifact ignore patterns: *.whl"
     ]:
         raise AssertionError("public risk self-test did not reject missing local release/package artifact ignore patterns")
+    allowed_backup_artifact_gitignore = "\n".join(sorted(required_backup_artifact_gitignore_patterns)) + "\n"
+    if gitignore_backup_artifact_failures(allowed_backup_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local backup/dump artifact ignore patterns")
+    backup_artifact_gitignore_failures = gitignore_backup_artifact_failures(
+        allowed_backup_artifact_gitignore.replace("*.sql\n", "")
+    )
+    if backup_artifact_gitignore_failures != [
+        ".gitignore: missing local backup/dump artifact ignore patterns: *.sql"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local backup/dump artifact ignore patterns")
     backup_artifact_failures = tracked_backup_artifact_file_failures(
         tracked_paths=[
             "backups/model-registry.json",
@@ -1464,6 +1498,7 @@ failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_rust_artifact_failures())
 failures.extend(gitignore_package_artifact_failures())
+failures.extend(gitignore_backup_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
