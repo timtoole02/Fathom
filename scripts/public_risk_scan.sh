@@ -656,11 +656,40 @@ blocked_tracked_notebook_artifact_dirs = {
     ".ipynb_checkpoints",
 }
 tracked_symlink_mode = "120000"
+dependency_lockfile_names = {
+    "Cargo.lock",
+    "Pipfile.lock",
+    "bun.lockb",
+    "npm-shrinkwrap.json",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "poetry.lock",
+    "uv.lock",
+    "yarn.lock",
+}
+dependency_lock_source_patterns = [
+    (
+        "local file dependency source in lockfile",
+        re.compile(r"\b(?:file|link):(?:\.\.?/|/|~)|\bpath\s*=\s*[\"'](?:\.\.?/|/|~)", re.IGNORECASE),
+    ),
+    (
+        "SSH dependency source in lockfile",
+        re.compile(r"\b(?:git\+)?ssh://|git@[A-Za-z0-9_.-]+:", re.IGNORECASE),
+    ),
+    (
+        "authenticated dependency URL in lockfile",
+        re.compile(r"https?://[^/\s:@]+:[^@\s]+@", re.IGNORECASE),
+    ),
+]
 docs_evidence_prefixes = (
     "docs/benchmarks/",
     "docs/api/",
 )
 docs_evidence_paths = {"docs/public-launch-evidence.md", "docs/public-launch-checklist.md"}
+
+def is_dependency_lockfile(rel):
+    path = pathlib.PurePosixPath(rel)
+    return path.name in dependency_lockfile_names or path.name.endswith(".lock")
 
 def scan_items(items):
     failures = []
@@ -703,6 +732,36 @@ def tracked_items():
             continue
         items.append((rel, text))
     return items
+
+def tracked_dependency_lock_source_failures(tracked_paths=None, texts=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        if not is_dependency_lockfile(rel):
+            continue
+        path = pathlib.Path(rel)
+        try:
+            if path.is_symlink():
+                continue
+            text = texts[rel] if texts is not None else path.read_text(encoding="utf-8")
+        except (FileNotFoundError, KeyError, OSError, UnicodeDecodeError):
+            continue
+
+        for line_no, line in enumerate(text.splitlines(), 1):
+            privacy_line = line
+            for public_repo_url in public_repo_urls:
+                privacy_line = privacy_line.replace(public_repo_url, "")
+            for label, pattern in privacy_patterns():
+                if pattern.search(privacy_line):
+                    failures.append(f"{rel}:{line_no}: {label} in dependency lockfile: {line.strip()}")
+            for label, pattern in secret_value_patterns():
+                if pattern.search(privacy_line):
+                    failures.append(f"{rel}:{line_no}: {label} in dependency lockfile: {line.strip()}")
+            for label, pattern in dependency_lock_source_patterns:
+                if pattern.search(privacy_line):
+                    failures.append(f"{rel}:{line_no}: {label}: {line.strip()}")
+    return failures
 
 def tracked_large_file_failures(tracked_paths=None, sizes=None):
     if tracked_paths is None:
@@ -2326,6 +2385,43 @@ def self_test():
         "docs/parent: tracked symlink must use a relative in-repository target, found ../outside-repo.md",
     ]:
         raise AssertionError("public risk self-test did not reject symlinks escaping the repository")
+    lockfile_failures = tracked_dependency_lock_source_failures(
+        tracked_paths=[
+            "Cargo.lock",
+            "package-lock.json",
+            "pnpm-lock.yaml",
+            "yarn.lock",
+            "docs/api/public-contract.json",
+        ],
+        texts={
+            "Cargo.lock": (
+                '[[package]]\n'
+                'name = "safe"\n'
+                'source = "registry+https://github.com/rust-lang/crates.io-index"\n'
+                '[[package]]\n'
+                'name = "local-helper"\n'
+                'path = "../private-helper"\n'
+                '[[package]]\n'
+                'name = "ssh-only"\n'
+                'source = "git+ssh://git@github.com/example/private#abc123"\n'
+            ),
+            "package-lock.json": (
+                '{"packages":{"node_modules/local":{"resolved":"file:../local.tgz"},'
+                '"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}'
+            ),
+            "pnpm-lock.yaml": "packages:\n  /private:\n    resolution: {tarball: /Users/example/private.tgz}\n",
+            "yarn.lock": '"safe@npm:^1.0.0":\n  resolution: "safe@npm:1.0.0"\n',
+            "docs/api/public-contract.json": '{"source":"file:../ignored.json"}\n',
+        },
+    )
+    if lockfile_failures != [
+        'Cargo.lock:6: local file dependency source in lockfile: path = "../private-helper"',
+        'Cargo.lock:9: SSH dependency source in lockfile: source = "git+ssh://git@github.com/example/private#abc123"',
+        'package-lock.json:1: local file dependency source in lockfile: {"packages":{"node_modules/local":{"resolved":"file:../local.tgz"},"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}',
+        'package-lock.json:1: authenticated dependency URL in lockfile: {"packages":{"node_modules/local":{"resolved":"file:../local.tgz"},"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}',
+        "pnpm-lock.yaml:3: personal home path in dependency lockfile: resolution: {tarball: /Users/example/private.tgz}",
+    ]:
+        raise AssertionError("public risk self-test did not reject local/private dependency lockfile sources")
     print("public risk scan self-test passed")
 
 if "--self-test" in sys.argv[1:]:
@@ -2333,6 +2429,7 @@ if "--self-test" in sys.argv[1:]:
     raise SystemExit(0)
 
 failures = scan_items(tracked_items())
+failures.extend(tracked_dependency_lock_source_failures())
 failures.extend(tracked_large_file_failures())
 failures.extend(tracked_blocked_file_failures())
 failures.extend(tracked_credential_file_failures())
