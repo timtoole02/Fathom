@@ -809,6 +809,51 @@ def assert_boundary_docs() -> None:
         "launch evidence IDE workspace/config risk-scan scope",
     )
     assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local OS/platform metadata files",
+        "launch checklist OS/platform metadata ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local editor backup/swap files",
+        "launch checklist editor backup/swap ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local IDE workspace/config artifacts",
+        "launch checklist IDE workspace/config ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local OS/platform metadata-file guard",
+        "launch evidence OS/platform metadata ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local OS/platform metadata files",
+        "launch evidence OS/platform metadata ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local editor backup/swap artifact guard",
+        "launch evidence editor backup/swap ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local editor backup/swap files",
+        "launch evidence editor backup/swap ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local IDE workspace/config artifact guard",
+        "launch evidence IDE workspace/config ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local IDE workspace/config artifacts",
+        "launch evidence IDE workspace/config ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "root `.gitignore` local credential/config guard",
         "launch evidence credential/config ignore risk-scan scope",

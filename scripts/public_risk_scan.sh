@@ -157,6 +157,28 @@ required_credential_gitignore_patterns = {
     ".npmrc",
     ".pypirc",
 }
+required_os_metadata_gitignore_patterns = {
+    ".AppleDouble/",
+    ".DS_Store",
+    ".LSOverride",
+    ".localized",
+    "._*",
+    "__MACOSX/",
+    "Thumbs.db",
+    "desktop.ini",
+}
+required_editor_artifact_gitignore_patterns = {
+    "*~",
+    "*.orig",
+    "*.rej",
+    "*.swo",
+    "*.swp",
+}
+required_ide_artifact_gitignore_patterns = {
+    "/.idea/",
+    "/.vscode/",
+    "*.code-workspace",
+}
 required_model_artifact_gitignore_patterns = {
     "/checkpoints/",
     "/model-store/",
@@ -637,6 +659,54 @@ def gitignore_credential_failures(gitignore_text=None):
     missing = sorted(required_credential_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local credential/config ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_os_metadata_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local OS/platform metadata ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_os_metadata_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local OS/platform metadata ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_editor_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local editor backup/swap ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_editor_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local editor backup/swap ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_ide_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local IDE workspace/config ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_ide_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local IDE workspace/config ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_model_artifact_failures(gitignore_text=None):
@@ -1154,6 +1224,26 @@ def self_test():
         "fathom.code-workspace: IDE workspace/config artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked OS/platform metadata, backup/swap, or IDE config files")
+    allowed_os_metadata_gitignore = "\n".join(sorted(required_os_metadata_gitignore_patterns)) + "\n"
+    if gitignore_os_metadata_failures(allowed_os_metadata_gitignore):
+        raise AssertionError("public risk self-test rejected complete local OS/platform metadata ignore patterns")
+    os_metadata_gitignore_failures = gitignore_os_metadata_failures(allowed_os_metadata_gitignore.replace(".DS_Store\n", ""))
+    if os_metadata_gitignore_failures != [".gitignore: missing local OS/platform metadata ignore patterns: .DS_Store"]:
+        raise AssertionError("public risk self-test did not reject missing local OS/platform metadata ignore patterns")
+    allowed_editor_artifact_gitignore = "\n".join(sorted(required_editor_artifact_gitignore_patterns)) + "\n"
+    if gitignore_editor_artifact_failures(allowed_editor_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local editor backup/swap ignore patterns")
+    editor_artifact_gitignore_failures = gitignore_editor_artifact_failures(
+        allowed_editor_artifact_gitignore.replace("*.swp\n", "")
+    )
+    if editor_artifact_gitignore_failures != [".gitignore: missing local editor backup/swap ignore patterns: *.swp"]:
+        raise AssertionError("public risk self-test did not reject missing local editor backup/swap ignore patterns")
+    allowed_ide_artifact_gitignore = "\n".join(sorted(required_ide_artifact_gitignore_patterns)) + "\n"
+    if gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local IDE workspace/config ignore patterns")
+    ide_artifact_gitignore_failures = gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore.replace("/.vscode/\n", ""))
+    if ide_artifact_gitignore_failures != [".gitignore: missing local IDE workspace/config ignore patterns: /.vscode/"]:
+        raise AssertionError("public risk self-test did not reject missing local IDE workspace/config ignore patterns")
     credential_file_failures = tracked_credential_file_failures(
         tracked_paths=[
             ".env",
@@ -1735,6 +1825,9 @@ failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
 failures.extend(gitignore_workspace_context_failures())
 failures.extend(gitignore_credential_failures())
+failures.extend(gitignore_os_metadata_failures())
+failures.extend(gitignore_editor_artifact_failures())
+failures.extend(gitignore_ide_artifact_failures())
 failures.extend(gitignore_model_artifact_failures())
 failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
