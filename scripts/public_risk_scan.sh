@@ -94,10 +94,23 @@ blocked_tracked_workspace_filenames = {
     "AGENTS.md",
     "BOOTSTRAP.md",
     "HEARTBEAT.md",
+    "IDENTITY.md",
     "MEMORY.md",
     "SOUL.md",
     "TOOLS.md",
     "USER.md",
+}
+required_workspace_gitignore_patterns = {
+    "/.openclaw/",
+    "/memory/",
+    "/AGENTS.md",
+    "/BOOTSTRAP.md",
+    "/HEARTBEAT.md",
+    "/IDENTITY.md",
+    "/MEMORY.md",
+    "/SOUL.md",
+    "/TOOLS.md",
+    "/USER.md",
 }
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
@@ -172,6 +185,8 @@ def scan_items(items):
     failures = []
     for rel, text in items:
         for line_no, line in enumerate(text.splitlines(), 1):
+            if rel == ".gitignore" and line.strip() in required_workspace_gitignore_patterns:
+                continue
             privacy_line = line
             for public_repo_url in public_repo_urls:
                 privacy_line = privacy_line.replace(public_repo_url, "")
@@ -259,9 +274,25 @@ def tracked_workspace_context_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
-        if path.name in blocked_tracked_workspace_filenames or rel.startswith("memory/"):
+        if path.name in blocked_tracked_workspace_filenames or rel.startswith(("memory/", ".openclaw/")):
             failures.append(f"{rel}: workspace/personal agent context files must not be tracked for public launch")
     return failures
+
+def gitignore_workspace_context_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing workspace/personal context ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_workspace_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing workspace/personal context ignore patterns: {', '.join(missing)}"]
+    return []
 
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
@@ -437,18 +468,28 @@ def self_test():
         tracked_paths=[
             "AGENTS.md",
             "docs/AGENTS.md",
+            "IDENTITY.md",
             "MEMORY.md",
             "memory/2026-05-31.md",
+            ".openclaw/session.json",
             "docs/api/public-contract.json",
         ],
     )
     if workspace_context_failures != [
         "AGENTS.md: workspace/personal agent context files must not be tracked for public launch",
         "docs/AGENTS.md: workspace/personal agent context files must not be tracked for public launch",
+        "IDENTITY.md: workspace/personal agent context files must not be tracked for public launch",
         "MEMORY.md: workspace/personal agent context files must not be tracked for public launch",
         "memory/2026-05-31.md: workspace/personal agent context files must not be tracked for public launch",
+        ".openclaw/session.json: workspace/personal agent context files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked workspace/personal agent context files")
+    allowed_gitignore = "\n".join(sorted(required_workspace_gitignore_patterns)) + "\n"
+    if gitignore_workspace_context_failures(allowed_gitignore):
+        raise AssertionError("public risk self-test rejected complete workspace/personal context ignore patterns")
+    gitignore_failures = gitignore_workspace_context_failures(allowed_gitignore.replace("/IDENTITY.md\n", ""))
+    if gitignore_failures != [".gitignore: missing workspace/personal context ignore patterns: /IDENTITY.md"]:
+        raise AssertionError("public risk self-test did not reject missing workspace/personal context ignore patterns")
     runtime_artifact_failures = tracked_runtime_artifact_file_failures(
         tracked_paths=[
             ".fathom/state/registry.json",
@@ -585,6 +626,7 @@ failures.extend(tracked_large_file_failures())
 failures.extend(tracked_blocked_file_failures())
 failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
+failures.extend(gitignore_workspace_context_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
