@@ -6,6 +6,7 @@ cd "$ROOT"
 
 python3 - "$@" <<'PY'
 import pathlib
+import json
 import re
 import subprocess
 import sys
@@ -281,6 +282,9 @@ required_test_report_artifact_gitignore_patterns = {
     "coverage.xml",
     "junit.xml",
 }
+required_notebook_artifact_gitignore_patterns = {
+    ".ipynb_checkpoints/",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -467,6 +471,9 @@ blocked_tracked_test_report_artifact_filenames = {
 }
 blocked_tracked_test_report_artifact_suffixes = {
     ".junit.xml",
+}
+blocked_tracked_notebook_artifact_dirs = {
+    ".ipynb_checkpoints",
 }
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
@@ -790,6 +797,22 @@ def gitignore_test_report_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local test report artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_notebook_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local notebook artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_notebook_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local notebook artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -985,6 +1008,28 @@ def tracked_test_report_artifact_file_failures(tracked_paths=None):
             continue
         if any(rel.endswith(suffix) for suffix in blocked_tracked_test_report_artifact_suffixes):
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_notebook_artifact_file_failures(tracked_paths=None, notebook_texts=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_notebook_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local notebook checkpoint artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() != ".ipynb":
+            continue
+        try:
+            text = notebook_texts[rel] if notebook_texts is not None else pathlib.Path(rel).read_text(encoding="utf-8")
+            notebook = json.loads(text)
+        except (FileNotFoundError, KeyError, OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        for cell in notebook.get("cells", []):
+            if cell.get("execution_count") is not None or cell.get("outputs"):
+                failures.append(f"{rel}: notebook execution outputs must not be tracked for public launch")
+                break
     return failures
 
 def tracked_index_entries():
@@ -1357,6 +1402,35 @@ def self_test():
         "crates/fathom-core/test-output.junit.xml: local test report artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local test report artifacts")
+    allowed_notebook_artifact_gitignore = "\n".join(sorted(required_notebook_artifact_gitignore_patterns)) + "\n"
+    if gitignore_notebook_artifact_failures(allowed_notebook_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local notebook artifact ignore patterns")
+    notebook_artifact_gitignore_failures = gitignore_notebook_artifact_failures("")
+    if notebook_artifact_gitignore_failures != [
+        ".gitignore: missing local notebook artifact ignore patterns: .ipynb_checkpoints/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local notebook artifact ignore patterns")
+    notebook_artifact_failures = tracked_notebook_artifact_file_failures(
+        tracked_paths=[
+            "notebooks/.ipynb_checkpoints/demo-checkpoint.ipynb",
+            "notebooks/with-output.ipynb",
+            "notebooks/clean.ipynb",
+            "docs/api/public-contract.json",
+        ],
+        notebook_texts={
+            "notebooks/with-output.ipynb": json.dumps(
+                {"cells": [{"cell_type": "code", "execution_count": 1, "outputs": [{"output_type": "stream"}]}]}
+            ),
+            "notebooks/clean.ipynb": json.dumps(
+                {"cells": [{"cell_type": "code", "execution_count": None, "outputs": []}]}
+            ),
+        },
+    )
+    if notebook_artifact_failures != [
+        "notebooks/.ipynb_checkpoints/demo-checkpoint.ipynb: local notebook checkpoint artifacts must not be tracked for public launch",
+        "notebooks/with-output.ipynb: notebook execution outputs must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local notebook artifacts")
     rust_artifact_failures = tracked_rust_artifact_file_failures(
         tracked_paths=[
             "target/debug/fathom",
@@ -1642,6 +1716,7 @@ failures.extend(gitignore_diagnostic_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
+failures.extend(gitignore_notebook_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_diagnostic_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
@@ -1654,6 +1729,7 @@ failures.extend(tracked_container_artifact_file_failures())
 failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_test_report_artifact_file_failures())
+failures.extend(tracked_notebook_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

@@ -83,6 +83,9 @@ coverage.xml
 junit.xml
 *.junit.xml
 
+# Local notebook artifacts
+.ipynb_checkpoints/
+
 # Local release/package artifacts
 /artifacts/
 /release/

@@ -924,6 +924,31 @@ def assert_boundary_docs() -> None:
         "launch evidence backup/dump artifact ignore examples",
     )
     assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local notebook artifacts",
+        "launch checklist notebook artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local notebook checkpoint artifact guard",
+        "launch evidence notebook checkpoint artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked notebook execution-output guard",
+        "launch evidence notebook execution-output risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local notebook checkpoint artifacts such as `.ipynb_checkpoints/`",
+        "launch evidence notebook checkpoint artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local notebook artifacts",
+        "launch evidence notebook artifact ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "local model/checkpoint artifact guard",
         "launch evidence model/checkpoint artifact risk-scan scope",
