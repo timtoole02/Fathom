@@ -35,12 +35,34 @@ Common gates:
 
 ```bash
 git diff --check
-python3 -m py_compile scripts/public_api_contract_qa.py examples/api/python-no-deps.py
+python3 -m py_compile \
+  examples/api/openai-sdk.py \
+  examples/api/python-no-deps.py \
+  scripts/api_client_examples_regression.py \
+  scripts/backend_acceptance_artifact_qa.py \
+  scripts/bench_backend.py \
+  scripts/ci_static_policy.py \
+  scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py \
+  scripts/public_api_contract_qa.py \
+  scripts/public_contract_smoke_artifact_qa.py \
+  scripts/qwen25_optional_api_acceptance_artifact_qa.py \
+  scripts/reference_llama3_tokenizer_ids.py \
+  scripts/smollm2_optional_api_acceptance_artifact_qa.py
 cargo fmt --all --check
 cargo test -q
 npm --prefix frontend run build
 npm --prefix frontend run qa:copy
+bash -n examples/api/curl-quickstart.sh
 bash -n scripts/public_risk_scan.sh
+bash -n scripts/public_api_contract_smoke.sh
+bash -n scripts/backend_acceptance_smoke.sh
+bash -n scripts/minilm_embeddings_optional_api_acceptance_smoke.sh
+bash -n scripts/smollm2_optional_api_acceptance_smoke.sh
+bash -n scripts/qwen25_optional_api_acceptance_smoke.sh
+bash -n scripts/smoke.sh
+bash -n scripts/start-backend.sh
+bash -n scripts/start.sh
+bash -n scripts/stop.sh
 python3 scripts/api_client_examples_regression.py
 python3 scripts/api_client_examples_regression.py --self-test
 python3 scripts/public_api_contract_qa.py

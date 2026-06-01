@@ -129,6 +129,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard REST Client example headers|Guard API example regression self-test|"
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
+    r"Guard contributing syntax gate consistency|"
     r"Guard public risk scan .+|Guard tracked credential config files|"
     r"Guard tracked workspace instruction files|Guard tracked local runtime artifacts)$"
 )
@@ -445,6 +446,12 @@ def assert_launch_checklist_frontend_gates() -> None:
 
 def assert_contributing_common_gates() -> None:
     contributing_text = read(CONTRIBUTING)
+    assert_python_syntax_paths(
+        contributing_text,
+        "contributing",
+        set(OFFLINE_QA_PYTHON_PATHS) | set(OFFLINE_CLIENT_EXAMPLE_PYTHON_PATHS),
+    )
+    assert_shell_syntax_paths(contributing_text, "contributing", set(OFFLINE_SHELL_SYNTAX_PATHS))
     required_commands = (
         "git diff --check",
         "python3 -m py_compile",
