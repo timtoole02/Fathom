@@ -158,6 +158,17 @@ blocked_tracked_workspace_dirs = {
     ".codex",
     ".continue",
 }
+blocked_tracked_command_history_filenames = {
+    ".bash_history",
+    ".fish_history",
+    ".mysql_history",
+    ".node_repl_history",
+    ".psql_history",
+    ".python_history",
+    ".rediscli_history",
+    ".sqlite_history",
+    ".zsh_history",
+}
 required_workspace_gitignore_patterns = {
     "/.aider.chat.history.md",
     "/.aider.input.history",
@@ -175,6 +186,17 @@ required_workspace_gitignore_patterns = {
     "/SOUL.md",
     "/TOOLS.md",
     "/USER.md",
+}
+required_command_history_gitignore_patterns = {
+    ".bash_history",
+    ".fish_history",
+    ".mysql_history",
+    ".node_repl_history",
+    ".psql_history",
+    ".python_history",
+    ".rediscli_history",
+    ".sqlite_history",
+    ".zsh_history",
 }
 required_credential_gitignore_patterns = {
     "/.direnv/",
@@ -759,6 +781,16 @@ def tracked_workspace_context_failures(tracked_paths=None):
             failures.append(f"{rel}: workspace/personal agent context files must not be tracked for public launch")
     return failures
 
+def tracked_command_history_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.name in blocked_tracked_command_history_filenames:
+            failures.append(f"{rel}: local shell/REPL command history files must not be tracked for public launch")
+    return failures
+
 def gitignore_workspace_context_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -773,6 +805,22 @@ def gitignore_workspace_context_failures(gitignore_text=None):
     missing = sorted(required_workspace_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing workspace/personal context ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_command_history_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local shell/REPL command history ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_command_history_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local shell/REPL command history ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_credential_failures(gitignore_text=None):
@@ -1566,6 +1614,42 @@ def self_test():
     gitignore_failures = gitignore_workspace_context_failures(allowed_gitignore.replace("/.codex/\n", ""))
     if gitignore_failures != [".gitignore: missing workspace/personal context ignore patterns: /.codex/"]:
         raise AssertionError("public risk self-test did not reject missing workspace/personal context ignore patterns")
+    command_history_failures = tracked_command_history_file_failures(
+        tracked_paths=[
+            ".bash_history",
+            ".zsh_history",
+            "frontend/.node_repl_history",
+            "db/.psql_history",
+            "db/.sqlite_history",
+            "db/.mysql_history",
+            "cache/.rediscli_history",
+            "scripts/.python_history",
+            "docs/.fish_history",
+            "docs/api/public-contract.json",
+        ],
+    )
+    if command_history_failures != [
+        ".bash_history: local shell/REPL command history files must not be tracked for public launch",
+        ".zsh_history: local shell/REPL command history files must not be tracked for public launch",
+        "frontend/.node_repl_history: local shell/REPL command history files must not be tracked for public launch",
+        "db/.psql_history: local shell/REPL command history files must not be tracked for public launch",
+        "db/.sqlite_history: local shell/REPL command history files must not be tracked for public launch",
+        "db/.mysql_history: local shell/REPL command history files must not be tracked for public launch",
+        "cache/.rediscli_history: local shell/REPL command history files must not be tracked for public launch",
+        "scripts/.python_history: local shell/REPL command history files must not be tracked for public launch",
+        "docs/.fish_history: local shell/REPL command history files must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local shell/REPL command history files")
+    allowed_command_history_gitignore = "\n".join(sorted(required_command_history_gitignore_patterns)) + "\n"
+    if gitignore_command_history_failures(allowed_command_history_gitignore):
+        raise AssertionError("public risk self-test rejected complete local shell/REPL command history ignore patterns")
+    command_history_gitignore_failures = gitignore_command_history_failures(
+        allowed_command_history_gitignore.replace(".zsh_history\n", "")
+    )
+    if command_history_gitignore_failures != [
+        ".gitignore: missing local shell/REPL command history ignore patterns: .zsh_history"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local shell/REPL command history ignore patterns")
     allowed_credential_gitignore = "\n".join(sorted(required_credential_gitignore_patterns)) + "\n"
     if gitignore_credential_failures(allowed_credential_gitignore):
         raise AssertionError("public risk self-test rejected complete local credential/config ignore patterns")
@@ -2166,7 +2250,9 @@ failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_cloud_credential_file_failures())
 failures.extend(tracked_kubernetes_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
+failures.extend(tracked_command_history_file_failures())
 failures.extend(gitignore_workspace_context_failures())
+failures.extend(gitignore_command_history_failures())
 failures.extend(gitignore_credential_failures())
 failures.extend(gitignore_cloud_credential_failures())
 failures.extend(gitignore_kubernetes_credential_failures())

@@ -842,6 +842,31 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "local shell/REPL command history-file guard",
+        "launch evidence command history risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local shell/REPL command history files such as `.bash_history`, `.zsh_history`, `.python_history`, `.node_repl_history`, `.psql_history`, `.sqlite_history`, `.mysql_history`, `.rediscli_history`, and `.fish_history`",
+        "launch evidence command history examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local shell/REPL command history files",
+        "launch evidence command history ignore examples",
+    )
+    assert_contains(
+        launch_text,
+        "tracked local shell/REPL command history files",
+        "launch checklist command history risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local shell/REPL command history files",
+        "launch checklist command history ignore scope",
+    )
+    assert_contains(
+        evidence_text,
         "OS/platform metadata-file",
         "launch evidence OS/platform metadata risk-scan scope",
     )
