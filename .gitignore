@@ -224,6 +224,8 @@ Screen Recording *
 !.env.example
 /.direnv/
 /.ssh/
+/secrets/
+/private/
 /.aws/
 /.azure/
 /.config/gcloud/
@@ -232,6 +234,8 @@ Screen Recording *
 *.key
 *.p12
 *.pfx
+*.secret
+*.secrets
 id_rsa
 id_ed25519
 id_ecdsa
@@ -239,6 +243,9 @@ id_dsa
 .netrc
 .npmrc
 .pypirc
+secrets.json
+secrets.yaml
+secrets.yml
 .boto
 boto.cfg
 application_default_credentials.json
