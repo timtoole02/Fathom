@@ -178,7 +178,9 @@ xcuserdata/
 # Local secrets and credentials
 .env
 .env.*
+.envrc
 !.env.example
+/.direnv/
 /.ssh/
 *.pem
 *.key

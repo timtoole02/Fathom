@@ -98,6 +98,7 @@ blocked_tracked_ide_artifact_suffixes = {
 allowed_tracked_credential_filenames = {".env.example"}
 blocked_tracked_credential_filenames = {
     ".env",
+    ".envrc",
     ".netrc",
     ".npmrc",
     ".pypirc",
@@ -108,6 +109,7 @@ blocked_tracked_credential_filenames = {
     "id_rsa",
 }
 blocked_tracked_credential_dirs = {
+    ".direnv",
     ".ssh",
 }
 blocked_tracked_credential_suffixes = {
@@ -153,8 +155,10 @@ required_workspace_gitignore_patterns = {
     "/USER.md",
 }
 required_credential_gitignore_patterns = {
+    "/.direnv/",
     ".env",
     ".env.*",
+    ".envrc",
     "/.ssh/",
     "!.env.example",
     "*.pem",
@@ -1263,7 +1267,9 @@ def self_test():
         tracked_paths=[
             ".env",
             ".env.local",
+            ".envrc",
             ".env.example",
+            ".direnv/allow",
             ".npmrc",
             ".ssh/config",
             "docs/id_ed25519",
@@ -1276,6 +1282,8 @@ def self_test():
     if credential_file_failures != [
         ".env: credential/config files must not be tracked for public launch",
         ".env.local: credential/config files must not be tracked for public launch",
+        ".envrc: credential/config files must not be tracked for public launch",
+        ".direnv/allow: credential/config files must not be tracked for public launch",
         ".npmrc: credential/config files must not be tracked for public launch",
         ".ssh/config: credential/config files must not be tracked for public launch",
         "docs/id_ed25519: credential/config files must not be tracked for public launch",
