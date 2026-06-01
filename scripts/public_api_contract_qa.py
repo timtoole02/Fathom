@@ -128,7 +128,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
-    r"Guard public issue template privacy checks|Guard issue template config privacy checks|"
+    r"Guard public issue template privacy checks|Guard public issue template required fields|"
+    r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard REST Client example headers|Guard API example regression self-test|"
@@ -331,6 +332,55 @@ def read(path: Path) -> str:
 def assert_contains(text: str, needle: str, label: str) -> None:
     if needle not in text:
         raise AssertionError(f"{label} missing {needle!r}")
+
+
+def issue_template_field_block(template_text: str, field_id: str, label: str) -> str:
+    lines = template_text.splitlines()
+    matches = [
+        index
+        for index, line in enumerate(lines)
+        if re.match(rf"^\s+id:\s*{re.escape(field_id)}\s*(?:#.*)?$", line)
+    ]
+    if len(matches) != 1:
+        raise AssertionError(f"{label} must contain exactly one issue-template field id {field_id!r}")
+
+    start = matches[0]
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        if re.match(r"^  - type:\s+", lines[index]):
+            end = index
+            break
+    return "\n".join(lines[start:end])
+
+
+def assert_issue_template_required_field(template_text: str, label: str, field_id: str) -> None:
+    block = issue_template_field_block(template_text, field_id, label)
+    if "validations:" not in block or not re.search(r"(?m)^\s*required:\s*true\s*(?:#.*)?$", block):
+        raise AssertionError(f"{label} field {field_id!r} must remain required")
+
+
+def assert_issue_template_required_fields(template_text: str, label: str, field_ids: tuple[str, ...]) -> None:
+    for field_id in field_ids:
+        assert_issue_template_required_field(template_text, label, field_id)
+
+
+def assert_issue_template_required_checkbox_options(template_text: str, label: str, field_id: str) -> None:
+    block = issue_template_field_block(template_text, field_id, label)
+    lines = block.splitlines()
+    option_starts = [
+        index
+        for index, line in enumerate(lines)
+        if re.match(r"^\s+- label:\s+", line)
+    ]
+    if not option_starts:
+        raise AssertionError(f"{label} checkbox field {field_id!r} must contain checkbox options")
+
+    for position, start in enumerate(option_starts):
+        end = option_starts[position + 1] if position + 1 < len(option_starts) else len(lines)
+        option_block = "\n".join(lines[start:end])
+        if not re.search(r"(?m)^\s*required:\s*true\s*(?:#.*)?$", option_block):
+            option_label = lines[start].strip()
+            raise AssertionError(f"{label} checkbox option must remain required: {option_label}")
 
 
 def py_compile_command_paths(text: str, label: str) -> set[str]:
@@ -839,6 +889,11 @@ def assert_boundary_docs() -> None:
         "launch evidence refusal request hint gate",
     )
     assert_contains(evidence_text, "public overclaim scanner self-test coverage", "launch evidence overclaim self-test scope")
+    assert_contains(
+        evidence_text,
+        "required public issue-template field/privacy checkbox guard",
+        "launch evidence issue-template required-field scope",
+    )
     assert_contains(evidence_text, "synthetic refused/unsupported public overclaim examples", "launch evidence overclaim self-test proof")
     assert_contains(
         evidence_text,
@@ -1554,6 +1609,42 @@ POST {{base}}/v1/chat/completions
             "public API contract QA self-test rejected allowed caveated examples:\n" + "\n".join(allowed_failures)
         )
 
+    valid_issue_template = """
+body:
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy and artifact check
+      options:
+        - label: I removed credentials.
+          required: true
+        - label: I used synthetic prompts.
+          required: true
+"""
+    assert_issue_template_required_fields(valid_issue_template, "synthetic issue template", ("endpoint",))
+    assert_issue_template_required_checkbox_options(valid_issue_template, "synthetic issue template", "privacy")
+    for text, expected in (
+        (valid_issue_template.replace("    validations:\n      required: true\n", ""), "must remain required"),
+        (
+            valid_issue_template.replace("        - label: I used synthetic prompts.\n          required: true", "        - label: I used synthetic prompts."),
+            "checkbox option must remain required",
+        ),
+    ):
+        try:
+            assert_issue_template_required_fields(text, "synthetic bad issue template", ("endpoint",))
+            assert_issue_template_required_checkbox_options(text, "synthetic bad issue template", "privacy")
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("issue-template required-field self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("issue-template required-field self-test did not reject optional public intake fields")
+
     manifest = {
         "expected_boundary_errors": [
             {"boundary": "streaming chat completions", "status": 501, "code": "not_implemented"},
@@ -1773,6 +1864,9 @@ def assert_api_contract_issue_template(manifest: dict[str, Any]) -> None:
     for phrase in required_phrases:
         assert_contains(template_text, phrase, label)
 
+    assert_issue_template_required_fields(template_text, label, ("endpoint", "request", "response", "client", "notes"))
+    assert_issue_template_required_checkbox_options(template_text, label, "privacy")
+
     for endpoint in manifest.get("supported_endpoints", []):
         method = endpoint.get("method")
         path = endpoint.get("path")
@@ -1806,6 +1900,8 @@ def assert_model_runtime_issue_template() -> None:
     ]
     for phrase in required_phrases:
         assert_contains(template_text, phrase, label)
+    assert_issue_template_required_fields(template_text, label, ("format", "family", "task", "layout", "license", "provenance"))
+    assert_issue_template_required_checkbox_options(template_text, label, "privacy")
 
 
 def assert_bug_report_issue_template() -> None:
@@ -1832,6 +1928,8 @@ def assert_bug_report_issue_template() -> None:
     ]
     for phrase in required_phrases:
         assert_contains(template_text, phrase, label)
+    assert_issue_template_required_fields(template_text, label, ("os", "version", "command", "area", "expected", "actual", "repro"))
+    assert_issue_template_required_checkbox_options(template_text, label, "privacy")
 
 
 def assert_security_privacy_issue_template() -> None:
@@ -1857,6 +1955,8 @@ def assert_security_privacy_issue_template() -> None:
     ]
     for phrase in required_phrases:
         assert_contains(template_text, phrase, label)
+    assert_issue_template_required_fields(template_text, label, ("category", "area", "public_summary"))
+    assert_issue_template_required_checkbox_options(template_text, label, "safety")
 
 
 def assert_issue_template_config() -> None:
