@@ -814,6 +814,31 @@ def assert_boundary_docs() -> None:
         "launch evidence runtime artifact risk-scan scope",
     )
     assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local log/trace/profiling/debug-output artifacts",
+        "launch checklist diagnostic artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local log/trace/profiling/debug-output artifact guard",
+        "launch evidence diagnostic artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local log/trace/profiling/debug-output artifact guard",
+        "launch evidence diagnostic artifact ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local log/trace/profiling/debug-output artifacts such as top-level `logs/`, `traces/`, `profiles/`, `debug-output/`, `.trace`, `.cpuprofile`, `.heapsnapshot`, `.perf`, and `.prof` files",
+        "launch evidence diagnostic artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local log/trace/profiling/debug-output artifacts including `*.log`",
+        "launch evidence diagnostic artifact ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "Python cache/build artifact guard",
         "launch evidence Python artifact risk-scan scope",
