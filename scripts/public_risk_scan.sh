@@ -221,6 +221,18 @@ required_backup_artifact_gitignore_patterns = {
     "*.dump",
     "*.sql",
 }
+required_diagnostic_artifact_gitignore_patterns = {
+    "/debug-output/",
+    "/logs/",
+    "/profiles/",
+    "/traces/",
+    "*.cpuprofile",
+    "*.heapsnapshot",
+    "*.log",
+    "*.perf",
+    "*.prof",
+    "*.trace",
+}
 required_python_artifact_gitignore_patterns = {
     "__pycache__/",
     ".pytest_cache/",
@@ -284,6 +296,19 @@ blocked_tracked_runtime_artifact_suffixes = {
     ".sqlite-shm",
     ".sqlite-wal",
     ".sqlite3",
+}
+blocked_tracked_diagnostic_artifact_dirs = {
+    "debug-output",
+    "logs",
+    "profiles",
+    "traces",
+}
+blocked_tracked_diagnostic_artifact_suffixes = {
+    ".cpuprofile",
+    ".heapsnapshot",
+    ".perf",
+    ".prof",
+    ".trace",
 }
 blocked_tracked_python_artifact_dirs = {
     "__pycache__",
@@ -701,6 +726,22 @@ def gitignore_backup_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local backup/dump artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_diagnostic_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local log/trace/profiling/debug-output artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_diagnostic_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local log/trace/profiling/debug-output artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_python_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -763,6 +804,19 @@ def tracked_runtime_artifact_file_failures(tracked_paths=None):
             continue
         if any(rel.endswith(suffix) for suffix in blocked_tracked_runtime_artifact_suffixes):
             failures.append(f"{rel}: local runtime/artifact detail files must not be tracked for public launch")
+    return failures
+
+def tracked_diagnostic_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] in blocked_tracked_diagnostic_artifact_dirs:
+            failures.append(f"{rel}: local log/trace/profiling/debug-output artifacts must not be tracked for public launch")
+            continue
+        if any(rel.endswith(suffix) for suffix in blocked_tracked_diagnostic_artifact_suffixes):
+            failures.append(f"{rel}: local log/trace/profiling/debug-output artifacts must not be tracked for public launch")
     return failures
 
 def tracked_python_artifact_file_failures(tracked_paths=None):
@@ -1133,6 +1187,39 @@ def self_test():
         "state/fathom.sqlite-wal: local runtime/artifact detail files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local runtime/artifact files")
+    allowed_diagnostic_artifact_gitignore = "\n".join(sorted(required_diagnostic_artifact_gitignore_patterns)) + "\n"
+    if gitignore_diagnostic_artifact_failures(allowed_diagnostic_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local log/trace/profiling/debug-output artifact ignore patterns")
+    diagnostic_artifact_gitignore_failures = gitignore_diagnostic_artifact_failures(
+        allowed_diagnostic_artifact_gitignore.replace("*.cpuprofile\n", "")
+    )
+    if diagnostic_artifact_gitignore_failures != [
+        ".gitignore: missing local log/trace/profiling/debug-output artifact ignore patterns: *.cpuprofile"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local log/trace/profiling/debug-output artifact ignore patterns")
+    diagnostic_artifact_failures = tracked_diagnostic_artifact_file_failures(
+        tracked_paths=[
+            "logs/backend.trace",
+            "traces/public-contract.trace",
+            "profiles/backend.cpuprofile",
+            "debug-output/request-dump.json",
+            "crates/fathom-server/heap.heapsnapshot",
+            "crates/fathom-core/flame.perf",
+            "crates/fathom-core/flame.prof",
+            "docs/api/public-contract.json",
+            "docs/research/performance-strategy.md",
+        ],
+    )
+    if diagnostic_artifact_failures != [
+        "logs/backend.trace: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "traces/public-contract.trace: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "profiles/backend.cpuprofile: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "debug-output/request-dump.json: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "crates/fathom-server/heap.heapsnapshot: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "crates/fathom-core/flame.perf: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "crates/fathom-core/flame.prof: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local log/trace/profiling/debug-output artifacts")
     python_artifact_failures = tracked_python_artifact_file_failures(
         tracked_paths=[
             "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc",
@@ -1551,10 +1638,12 @@ failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_rust_artifact_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_backup_artifact_failures())
+failures.extend(gitignore_diagnostic_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
+failures.extend(tracked_diagnostic_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())

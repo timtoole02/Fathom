@@ -40,6 +40,15 @@ yarn-error.log
 # Local runtime state
 .fathom/
 *.log
+/logs/
+/traces/
+/profiles/
+/debug-output/
+*.trace
+*.cpuprofile
+*.heapsnapshot
+*.perf
+*.prof
 .DS_Store
 __MACOSX/
 ._*
