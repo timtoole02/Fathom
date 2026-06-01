@@ -779,6 +779,16 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact ignore scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "tracked Python virtualenv/dependency artifacts",
+        "launch checklist Python virtualenv/dependency artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local Python virtualenv/dependency artifacts",
+        "launch checklist Python virtualenv/dependency artifact ignore scope",
+    )
     assert_contains(launch_text, "root `.gitignore` coverage for local frontend/Node cache/build artifacts", "launch checklist frontend artifact ignore scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local Rust/Cargo cache/build artifacts", "launch checklist Rust/Cargo artifact ignore scope")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
@@ -1004,6 +1014,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Python cache/build artifacts",
         "launch evidence Python artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Python virtualenv/dependency artifact guard",
+        "launch evidence Python virtualenv/dependency artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local Python virtualenv/dependency artifact guard",
+        "launch evidence Python virtualenv/dependency artifact ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked Python virtualenv/dependency artifacts such as `.venv/`, `venv/`, `env/`, `.tox/`, `.nox/`, `wheelhouse/`, `pip-wheel-metadata/`, and `site-packages/`",
+        "launch evidence Python virtualenv/dependency artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Python virtualenv/dependency artifacts",
+        "launch evidence Python virtualenv/dependency artifact ignore examples",
     )
     assert_contains(
         evidence_text,

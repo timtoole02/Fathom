@@ -319,6 +319,16 @@ required_python_artifact_gitignore_patterns = {
     "*.pyc",
     "*.pyo",
 }
+required_python_env_artifact_gitignore_patterns = {
+    "/.nox/",
+    "/.tox/",
+    "/.venv/",
+    "/env/",
+    "/venv/",
+    "/wheelhouse/",
+    "pip-wheel-metadata/",
+    "site-packages/",
+}
 required_frontend_artifact_gitignore_patterns = {
     ".npm/",
     ".parcel-cache/",
@@ -400,6 +410,16 @@ blocked_tracked_python_artifact_dirs = {
 blocked_tracked_python_artifact_suffixes = {
     ".pyc",
     ".pyo",
+}
+blocked_tracked_python_env_artifact_dirs = {
+    ".nox",
+    ".tox",
+    ".venv",
+    "env",
+    "pip-wheel-metadata",
+    "site-packages",
+    "venv",
+    "wheelhouse",
 }
 blocked_tracked_frontend_artifact_dirs = {
     ".npm",
@@ -929,6 +949,22 @@ def gitignore_python_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Python cache/build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_python_env_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Python virtualenv/dependency artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_python_env_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Python virtualenv/dependency artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_frontend_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1017,6 +1053,16 @@ def tracked_python_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_python_artifact_suffixes:
             failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_python_env_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_python_env_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Python virtualenv/dependency artifacts must not be tracked for public launch")
     return failures
 
 def tracked_frontend_artifact_file_failures(tracked_paths=None):
@@ -1537,6 +1583,41 @@ def self_test():
         ".gitignore: missing local Python cache/build artifact ignore patterns: .mypy_cache/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Python cache/build artifact ignore patterns")
+    python_env_artifact_failures = tracked_python_env_artifact_file_failures(
+        tracked_paths=[
+            ".venv/bin/python",
+            "venv/lib/python3.12/site.py",
+            "env/pyvenv.cfg",
+            ".tox/py312/log/result.json",
+            ".nox/tests/tmp/output.json",
+            "wheelhouse/fathom-0.1.0-py3-none-any.whl",
+            "pip-wheel-metadata/fathom.json",
+            "python/site-packages/fathom/__init__.py",
+            "docs/api/public-contract.json",
+            "scripts/public_api_contract_qa.py",
+        ],
+    )
+    if python_env_artifact_failures != [
+        ".venv/bin/python: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "venv/lib/python3.12/site.py: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "env/pyvenv.cfg: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        ".tox/py312/log/result.json: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        ".nox/tests/tmp/output.json: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "wheelhouse/fathom-0.1.0-py3-none-any.whl: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "pip-wheel-metadata/fathom.json: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "python/site-packages/fathom/__init__.py: Python virtualenv/dependency artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Python virtualenv/dependency artifacts")
+    allowed_python_env_artifact_gitignore = "\n".join(sorted(required_python_env_artifact_gitignore_patterns)) + "\n"
+    if gitignore_python_env_artifact_failures(allowed_python_env_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Python virtualenv/dependency artifact ignore patterns")
+    python_env_artifact_gitignore_failures = gitignore_python_env_artifact_failures(
+        allowed_python_env_artifact_gitignore.replace("/.venv/\n", "")
+    )
+    if python_env_artifact_gitignore_failures != [
+        ".gitignore: missing local Python virtualenv/dependency artifact ignore patterns: /.venv/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Python virtualenv/dependency artifact ignore patterns")
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
@@ -1962,12 +2043,14 @@ failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_backup_artifact_failures())
 failures.extend(gitignore_diagnostic_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
+failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
 failures.extend(gitignore_notebook_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_diagnostic_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
+failures.extend(tracked_python_env_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
