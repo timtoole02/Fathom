@@ -133,7 +133,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard REST Client example headers|Guard API example regression self-test|"
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
-    r"Guard contributing syntax gate consistency|"
+    r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
     r"Guard public risk scan .+|Guard tracked credential config files|"
     r"Guard tracked workspace instruction files|Guard tracked local runtime artifacts)$"
 )
@@ -446,6 +446,24 @@ def assert_launch_checklist_artifact_qa_run_gates() -> None:
 def assert_launch_checklist_frontend_gates() -> None:
     checklist_text = read(LAUNCH_CHECKLIST)
     assert_frontend_launch_gates(checklist_text, "launch checklist frontend gate")
+
+
+def assert_clean_install_gate(text: str, label: str) -> None:
+    assert_contains(text, "npm --prefix frontend ci", label)
+    if re.search(r"\bnpm\s+--prefix\s+frontend\s+install\b", text):
+        raise AssertionError(f"{label} must use npm ci, not npm install")
+
+
+def assert_launch_checklist_clean_install_gate() -> None:
+    assert_clean_install_gate(read(LAUNCH_CHECKLIST), "launch checklist clean install gate")
+
+
+def assert_frontend_lockfile_evidence(evidence_text: str) -> None:
+    assert_contains(
+        evidence_text,
+        "lockfile-reproducible frontend clean install",
+        "launch evidence frontend clean-install QA scope",
+    )
 
 
 def assert_contributing_common_gates() -> None:
@@ -761,6 +779,7 @@ def assert_boundary_docs() -> None:
     assert_launch_checklist_python_syntax_gate()
     assert_launch_checklist_client_example_syntax_gates()
     assert_launch_checklist_artifact_qa_run_gates()
+    assert_launch_checklist_clean_install_gate()
     assert_contains(read(BACKEND_QUICKSTART), "scripts/public_api_contract_smoke.sh", "backend quickstart public contract smoke")
     assert_contains(read(CONTRIBUTING), "scripts/public_api_contract_smoke.sh", "contributing public contract smoke")
     assert_contains(readme_text, "docs/public-launch-checklist.md", "README launch checklist link")
@@ -808,6 +827,7 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "e9195bc7462999284960f5631d3a74aa5391bffc", "launch evidence optional artifact QA CI commit")
     assert_latest_no_download_refusal_evidence(evidence_text)
     assert_latest_public_contract_qa_hardening_evidence(evidence_text)
+    assert_frontend_lockfile_evidence(evidence_text)
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
     assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
@@ -1634,6 +1654,19 @@ npm --prefix frontend run qa:copy
         else:
             raise AssertionError("frontend launch gate self-test did not reject command drift")
 
+    assert_clean_install_gate("npm --prefix frontend ci\n", "synthetic clean install gate")
+    for text, expected in (
+        ("npm --prefix frontend install\n", "npm --prefix frontend ci"),
+        ("npm --prefix frontend ci\nnpm --prefix frontend install\n", "npm ci"),
+    ):
+        try:
+            assert_clean_install_gate(text, "synthetic bad clean install gate")
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("clean install gate self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("clean install gate self-test did not reject command drift")
+
 
 def assert_smoke_manifest_wiring() -> None:
     smoke_text = read(SMOKE)
@@ -1904,6 +1937,7 @@ def main() -> int:
     assert_license_metadata()
     assert_tracked_python_syntax_coverage()
     assert_tracked_shell_syntax_coverage()
+    assert_launch_checklist_clean_install_gate()
     assert_boundary_docs()
     assert_examples_static(manifest)
     assert_launch_checklist_frontend_gates()

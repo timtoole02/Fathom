@@ -7,11 +7,11 @@ Use this checklist when validating a clean public Fathom checkout or preparing a
 ```bash
 git clone https://github.com/timtoole02/Fathom/ fathom
 cd fathom
-npm --prefix frontend install
+npm --prefix frontend ci
 cargo test -q
 ```
 
-This confirms the ordinary Rust and frontend toolchains are present. It does not download catalog model fixtures or enable the non-default ONNX Runtime feature.
+This confirms the ordinary Rust and frontend toolchains are present, with frontend dependencies resolved from the checked-in lockfile. It does not download catalog model fixtures or enable the non-default ONNX Runtime feature.
 
 ## 2. No-download verification gates
 
