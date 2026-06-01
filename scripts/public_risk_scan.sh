@@ -142,6 +142,22 @@ required_credential_gitignore_patterns = {
     ".npmrc",
     ".pypirc",
 }
+required_model_artifact_gitignore_patterns = {
+    "/checkpoints/",
+    "/model-store/",
+    "/models/",
+    "/weights/",
+    "*.bin",
+    "*.ckpt",
+    "*.gguf",
+    "*.npy",
+    "*.npz",
+    "*.onnx",
+    "*.pt",
+    "*.pth",
+    "*.safetensors",
+    "*.tflite",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -236,6 +252,24 @@ blocked_tracked_backup_artifact_suffixes = {
     ".backup",
     ".dump",
     ".sql",
+}
+blocked_tracked_model_artifact_dirs = {
+    "checkpoints",
+    "model-store",
+    "models",
+    "weights",
+}
+blocked_tracked_model_artifact_suffixes = {
+    ".bin",
+    ".ckpt",
+    ".gguf",
+    ".npy",
+    ".npz",
+    ".onnx",
+    ".pt",
+    ".pth",
+    ".safetensors",
+    ".tflite",
 }
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
@@ -383,6 +417,22 @@ def gitignore_credential_failures(gitignore_text=None):
         return [f".gitignore: missing local credential/config ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_model_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local model/checkpoint artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_model_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local model/checkpoint artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -478,6 +528,19 @@ def tracked_backup_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_backup_artifact_suffixes:
             failures.append(f"{rel}: backup/dump artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_model_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] in blocked_tracked_model_artifact_dirs:
+            failures.append(f"{rel}: local model/checkpoint artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_model_artifact_suffixes:
+            failures.append(f"{rel}: local model/checkpoint artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -637,6 +700,12 @@ def self_test():
     credential_gitignore_failures = gitignore_credential_failures(allowed_credential_gitignore.replace(".npmrc\n", ""))
     if credential_gitignore_failures != [".gitignore: missing local credential/config ignore patterns: .npmrc"]:
         raise AssertionError("public risk self-test did not reject missing local credential/config ignore patterns")
+    allowed_model_artifact_gitignore = "\n".join(sorted(required_model_artifact_gitignore_patterns)) + "\n"
+    if gitignore_model_artifact_failures(allowed_model_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local model/checkpoint artifact ignore patterns")
+    model_artifact_gitignore_failures = gitignore_model_artifact_failures(allowed_model_artifact_gitignore.replace("*.gguf\n", ""))
+    if model_artifact_gitignore_failures != [".gitignore: missing local model/checkpoint artifact ignore patterns: *.gguf"]:
+        raise AssertionError("public risk self-test did not reject missing local model/checkpoint artifact ignore patterns")
     runtime_artifact_failures = tracked_runtime_artifact_file_failures(
         tracked_paths=[
             ".fathom/state/registry.json",
@@ -804,6 +873,36 @@ def self_test():
         "state/fathom.sql: backup/dump artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked backup/dump artifacts")
+    model_artifact_failures = tracked_model_artifact_file_failures(
+        tracked_paths=[
+            "models/tinystories/model.safetensors",
+            "model-store/qwen/model.gguf",
+            "weights/lora/adapter.bin",
+            "checkpoints/run-042/model.ckpt",
+            "fixtures/test.onnx",
+            "fixtures/embed.npy",
+            "fixtures/embed.npz",
+            "fixtures/model.pt",
+            "fixtures/model.pth",
+            "fixtures/model.tflite",
+            "docs/api/public-contract.json",
+            "docs/research/model-format-landscape.md",
+            "crates/fathom-server/src/main.rs",
+        ],
+    )
+    if model_artifact_failures != [
+        "models/tinystories/model.safetensors: local model/checkpoint artifacts must not be tracked for public launch",
+        "model-store/qwen/model.gguf: local model/checkpoint artifacts must not be tracked for public launch",
+        "weights/lora/adapter.bin: local model/checkpoint artifacts must not be tracked for public launch",
+        "checkpoints/run-042/model.ckpt: local model/checkpoint artifacts must not be tracked for public launch",
+        "fixtures/test.onnx: local model/checkpoint artifacts must not be tracked for public launch",
+        "fixtures/embed.npy: local model/checkpoint artifacts must not be tracked for public launch",
+        "fixtures/embed.npz: local model/checkpoint artifacts must not be tracked for public launch",
+        "fixtures/model.pt: local model/checkpoint artifacts must not be tracked for public launch",
+        "fixtures/model.pth: local model/checkpoint artifacts must not be tracked for public launch",
+        "fixtures/model.tflite: local model/checkpoint artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local model/checkpoint artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -838,12 +937,14 @@ failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
 failures.extend(gitignore_workspace_context_failures())
 failures.extend(gitignore_credential_failures())
+failures.extend(gitignore_model_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
+failures.extend(tracked_model_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

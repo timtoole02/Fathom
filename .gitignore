@@ -53,6 +53,22 @@ desktop.ini
 *.dump
 *.sql
 
+# Local model/checkpoint artifacts
+/models/
+/model-store/
+/weights/
+/checkpoints/
+*.safetensors
+*.gguf
+*.onnx
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.npz
+*.npy
+*.tflite
+
 # Personal workspace context
 /.openclaw/
 /memory/

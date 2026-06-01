@@ -730,6 +730,8 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "api/public-contract.json", "launch checklist manifest link")
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
+    assert_contains(launch_text, "tracked local model/checkpoint artifacts", "launch checklist model/checkpoint artifact risk-scan scope")
+    assert_contains(launch_text, "root `.gitignore` coverage for local model/checkpoint artifacts", "launch checklist model/checkpoint artifact ignore scope")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
     assert_contains(launch_text, "scripts/backend_acceptance_artifact_qa.py", "launch checklist backend acceptance artifact QA")
     assert_contains(launch_text, "backend acceptance smoke success/failure summaries", "launch checklist backend acceptance artifact QA scope")
@@ -828,6 +830,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "tracked backup/dump artifacts",
         "launch evidence backup/dump artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "local model/checkpoint artifact guard",
+        "launch evidence model/checkpoint artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local model/checkpoint artifacts such as top-level `models/`, `model-store/`, `weights/`, `checkpoints/`, `.safetensors`, `.gguf`, `.onnx`, `.bin`, `.pt`, `.pth`, `.ckpt`, `.npz`, `.npy`, and `.tflite` files",
+        "launch evidence model/checkpoint artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local model/checkpoint artifacts",
+        "launch evidence model/checkpoint artifact ignore examples",
     )
     assert_contains(
         evidence_text,
