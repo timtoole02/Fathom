@@ -1007,6 +1007,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "root `.gitignore` coverage for local runtime/artifact detail files",
+        "launch checklist runtime artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local runtime/artifact detail-file guard",
+        "launch evidence runtime artifact ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local runtime/artifact detail files",
+        "launch evidence runtime artifact ignore examples",
+    )
+    assert_contains(
+        launch_text,
         "root `.gitignore` coverage for local log/trace/profiling/debug-output artifacts",
         "launch checklist diagnostic artifact ignore scope",
     )
