@@ -130,6 +130,18 @@ required_workspace_gitignore_patterns = {
     "/TOOLS.md",
     "/USER.md",
 }
+required_credential_gitignore_patterns = {
+    ".env",
+    ".env.*",
+    "!.env.example",
+    "*.pem",
+    "*.key",
+    "*.p12",
+    "*.pfx",
+    ".netrc",
+    ".npmrc",
+    ".pypirc",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -353,6 +365,22 @@ def gitignore_workspace_context_failures(gitignore_text=None):
     missing = sorted(required_workspace_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing workspace/personal context ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_credential_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local credential/config ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_credential_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local credential/config ignore patterns: {', '.join(missing)}"]
     return []
 
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
@@ -603,6 +631,12 @@ def self_test():
     gitignore_failures = gitignore_workspace_context_failures(allowed_gitignore.replace("/IDENTITY.md\n", ""))
     if gitignore_failures != [".gitignore: missing workspace/personal context ignore patterns: /IDENTITY.md"]:
         raise AssertionError("public risk self-test did not reject missing workspace/personal context ignore patterns")
+    allowed_credential_gitignore = "\n".join(sorted(required_credential_gitignore_patterns)) + "\n"
+    if gitignore_credential_failures(allowed_credential_gitignore):
+        raise AssertionError("public risk self-test rejected complete local credential/config ignore patterns")
+    credential_gitignore_failures = gitignore_credential_failures(allowed_credential_gitignore.replace(".npmrc\n", ""))
+    if credential_gitignore_failures != [".gitignore: missing local credential/config ignore patterns: .npmrc"]:
+        raise AssertionError("public risk self-test did not reject missing local credential/config ignore patterns")
     runtime_artifact_failures = tracked_runtime_artifact_file_failures(
         tracked_paths=[
             ".fathom/state/registry.json",
@@ -803,6 +837,7 @@ failures.extend(tracked_blocked_file_failures())
 failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
 failures.extend(gitignore_workspace_context_failures())
+failures.extend(gitignore_credential_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
