@@ -176,6 +176,18 @@ required_infra_state_gitignore_patterns = {
     "*.tfvars",
     "*.tfvars.json",
 }
+required_mobile_build_gitignore_patterns = {
+    "/.gradle/",
+    "/DerivedData/",
+    "*.aab",
+    "*.apk",
+    "*.dSYM",
+    "*.ipa",
+    "*.xcresult",
+    "*.xcuserstate",
+    "local.properties",
+    "xcuserdata/",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -310,6 +322,22 @@ blocked_tracked_infra_state_suffixes = {
     ".tfplan",
     ".tfstate",
     ".tfvars",
+}
+blocked_tracked_mobile_build_dirs = {
+    ".gradle",
+    "DerivedData",
+    "xcuserdata",
+}
+blocked_tracked_mobile_build_filenames = {
+    "local.properties",
+}
+blocked_tracked_mobile_build_suffixes = {
+    ".aab",
+    ".apk",
+    ".dSYM",
+    ".ipa",
+    ".xcresult",
+    ".xcuserstate",
 }
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
@@ -505,6 +533,22 @@ def gitignore_infra_state_failures(gitignore_text=None):
         return [f".gitignore: missing local infrastructure state ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_mobile_build_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local mobile/Xcode/Android build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_mobile_build_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local mobile/Xcode/Android build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -646,6 +690,25 @@ def tracked_infra_state_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_infra_state_suffixes:
             failures.append(f"{rel}: local infrastructure state artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_mobile_build_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_mobile_build_dirs for part in path.parts):
+            failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_mobile_build_filenames:
+            failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
+            continue
+        if any(part.endswith((".dSYM", ".xcresult")) for part in path.parts):
+            failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
+            continue
+        if path.suffix in blocked_tracked_mobile_build_suffixes:
+            failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -1076,6 +1139,44 @@ def self_test():
         "infra/plan.tfplan: local infrastructure state artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local infrastructure state artifacts")
+    allowed_mobile_build_gitignore = "\n".join(sorted(required_mobile_build_gitignore_patterns)) + "\n"
+    if gitignore_mobile_build_failures(allowed_mobile_build_gitignore):
+        raise AssertionError("public risk self-test rejected complete local mobile/Xcode/Android build artifact ignore patterns")
+    mobile_build_gitignore_failures = gitignore_mobile_build_failures(
+        allowed_mobile_build_gitignore.replace("*.xcresult\n", "")
+    )
+    if mobile_build_gitignore_failures != [
+        ".gitignore: missing local mobile/Xcode/Android build artifact ignore patterns: *.xcresult"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local mobile/Xcode/Android build artifact ignore patterns")
+    mobile_build_failures = tracked_mobile_build_file_failures(
+        tracked_paths=[
+            "DerivedData/Fathom/Build/Products/Debug/Fathom.app",
+            ".gradle/caches/modules-2/files-2.1/metadata.bin",
+            "android/local.properties",
+            "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate",
+            "TestResults/Fathom.xcresult/Data/data.0~",
+            "builds/Fathom.ipa",
+            "android/app/release/app-release.apk",
+            "android/app/release/app-release.aab",
+            "Fathom.app.dSYM/Contents/Resources/DWARF/Fathom",
+            "ios/Fathom.xcodeproj/project.pbxproj",
+            "android/app/build.gradle",
+            "docs/mobile.md",
+        ],
+    )
+    if mobile_build_failures != [
+        "DerivedData/Fathom/Build/Products/Debug/Fathom.app: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        ".gradle/caches/modules-2/files-2.1/metadata.bin: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "android/local.properties: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "TestResults/Fathom.xcresult/Data/data.0~: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "builds/Fathom.ipa: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "android/app/release/app-release.apk: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "android/app/release/app-release.aab: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "Fathom.app.dSYM/Contents/Resources/DWARF/Fathom: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local mobile/Xcode/Android build artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -1113,6 +1214,7 @@ failures.extend(gitignore_credential_failures())
 failures.extend(gitignore_model_artifact_failures())
 failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
+failures.extend(gitignore_mobile_build_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
@@ -1122,6 +1224,7 @@ failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_model_artifact_file_failures())
 failures.extend(tracked_container_artifact_file_failures())
 failures.extend(tracked_infra_state_file_failures())
+failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

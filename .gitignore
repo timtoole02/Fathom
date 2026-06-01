@@ -87,6 +87,18 @@ compose.override.yaml
 *.tfvars.json
 *.tfplan
 
+# Local mobile/Xcode/Android build artifacts
+/DerivedData/
+/.gradle/
+local.properties
+xcuserdata/
+*.xcuserstate
+*.xcresult
+*.ipa
+*.apk
+*.aab
+*.dSYM
+
 # Personal workspace context
 /.openclaw/
 /memory/
