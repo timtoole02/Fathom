@@ -1,6 +1,10 @@
 # Rust
+/.cargo/
 /target/
+target/
 **/*.rs.bk
+*.profraw
+*.profdata
 
 # Node/frontend
 frontend/node_modules/

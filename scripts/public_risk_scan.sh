@@ -188,6 +188,14 @@ required_mobile_build_gitignore_patterns = {
     "local.properties",
     "xcuserdata/",
 }
+required_rust_artifact_gitignore_patterns = {
+    "/.cargo/",
+    "/target/",
+    "**/*.rs.bk",
+    "*.profdata",
+    "*.profraw",
+    "target/",
+}
 required_package_artifact_gitignore_patterns = {
     "/artifacts/",
     "/release/",
@@ -613,6 +621,22 @@ def gitignore_mobile_build_failures(gitignore_text=None):
     missing = sorted(required_mobile_build_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local mobile/Xcode/Android build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_rust_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Rust/Cargo cache/build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_rust_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Rust/Cargo cache/build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_package_artifact_failures(gitignore_text=None):
@@ -1203,6 +1227,16 @@ def self_test():
         "coverage/merged.profdata: Rust/Cargo cache/build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Rust/Cargo cache/build artifacts")
+    allowed_rust_artifact_gitignore = "\n".join(sorted(required_rust_artifact_gitignore_patterns)) + "\n"
+    if gitignore_rust_artifact_failures(allowed_rust_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Rust/Cargo cache/build artifact ignore patterns")
+    rust_artifact_gitignore_failures = gitignore_rust_artifact_failures(
+        allowed_rust_artifact_gitignore.replace("*.profraw\n", "")
+    )
+    if rust_artifact_gitignore_failures != [
+        ".gitignore: missing local Rust/Cargo cache/build artifact ignore patterns: *.profraw"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Rust/Cargo cache/build artifact ignore patterns")
     package_artifact_failures = tracked_package_artifact_file_failures(
         tracked_paths=[
             "artifacts/public-contract-smoke-summary.json",
@@ -1428,6 +1462,7 @@ failures.extend(gitignore_model_artifact_failures())
 failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_mobile_build_failures())
+failures.extend(gitignore_rust_artifact_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
