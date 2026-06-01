@@ -232,6 +232,15 @@ required_frontend_artifact_gitignore_patterns = {
     "yarn-debug.log",
     "yarn-error.log",
 }
+required_test_report_artifact_gitignore_patterns = {
+    "/htmlcov/",
+    "/reports/",
+    "/test-reports/",
+    "/test-results/",
+    "*.junit.xml",
+    "coverage.xml",
+    "junit.xml",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -382,6 +391,19 @@ blocked_tracked_mobile_build_suffixes = {
     ".ipa",
     ".xcresult",
     ".xcuserstate",
+}
+blocked_tracked_test_report_artifact_dirs = {
+    "htmlcov",
+    "reports",
+    "test-reports",
+    "test-results",
+}
+blocked_tracked_test_report_artifact_filenames = {
+    "coverage.xml",
+    "junit.xml",
+}
+blocked_tracked_test_report_artifact_suffixes = {
+    ".junit.xml",
 }
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
@@ -641,6 +663,22 @@ def gitignore_frontend_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local frontend/Node cache/build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_test_report_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local test report artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_test_report_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local test report artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -801,6 +839,22 @@ def tracked_mobile_build_file_failures(tracked_paths=None):
             continue
         if path.suffix in blocked_tracked_mobile_build_suffixes:
             failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_test_report_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] in blocked_tracked_test_report_artifact_dirs:
+            failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_test_report_artifact_filenames:
+            failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
+            continue
+        if any(rel.endswith(suffix) for suffix in blocked_tracked_test_report_artifact_suffixes):
+            failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -1083,6 +1137,39 @@ def self_test():
         ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: frontend/.vite/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local frontend/Node cache/build artifact ignore patterns")
+    allowed_test_report_artifact_gitignore = "\n".join(sorted(required_test_report_artifact_gitignore_patterns)) + "\n"
+    if gitignore_test_report_artifact_failures(allowed_test_report_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local test report artifact ignore patterns")
+    test_report_artifact_gitignore_failures = gitignore_test_report_artifact_failures(
+        allowed_test_report_artifact_gitignore.replace("coverage.xml\n", "")
+    )
+    if test_report_artifact_gitignore_failures != [
+        ".gitignore: missing local test report artifact ignore patterns: coverage.xml"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local test report artifact ignore patterns")
+    test_report_artifact_failures = tracked_test_report_artifact_file_failures(
+        tracked_paths=[
+            "test-results/junit.xml",
+            "test-reports/backend.xml",
+            "reports/public-risk/index.html",
+            "htmlcov/index.html",
+            "coverage.xml",
+            "junit.xml",
+            "crates/fathom-core/test-output.junit.xml",
+            "docs/api/public-contract.json",
+            "docs/research/runtime-safety-policy.md",
+        ],
+    )
+    if test_report_artifact_failures != [
+        "test-results/junit.xml: local test report artifacts must not be tracked for public launch",
+        "test-reports/backend.xml: local test report artifacts must not be tracked for public launch",
+        "reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",
+        "htmlcov/index.html: local test report artifacts must not be tracked for public launch",
+        "coverage.xml: local test report artifacts must not be tracked for public launch",
+        "junit.xml: local test report artifacts must not be tracked for public launch",
+        "crates/fathom-core/test-output.junit.xml: local test report artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local test report artifacts")
     rust_artifact_failures = tracked_rust_artifact_file_failures(
         tracked_paths=[
             "target/debug/fathom",
@@ -1344,6 +1431,7 @@ failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
+failures.extend(gitignore_test_report_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
@@ -1354,6 +1442,7 @@ failures.extend(tracked_model_artifact_file_failures())
 failures.extend(tracked_container_artifact_file_failures())
 failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_mobile_build_file_failures())
+failures.extend(tracked_test_report_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

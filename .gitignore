@@ -49,6 +49,15 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Local test report artifacts
+/test-results/
+/test-reports/
+/reports/
+/htmlcov/
+coverage.xml
+junit.xml
+*.junit.xml
+
 # Local release/package artifacts
 /artifacts/
 /release/
