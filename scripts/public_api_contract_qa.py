@@ -819,6 +819,16 @@ def assert_boundary_docs() -> None:
         "tracked backup/dump artifacts",
         "launch evidence backup/dump artifact examples",
     )
+    assert_contains(
+        evidence_text,
+        "symlink escape guards",
+        "launch evidence symlink risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked symlinks that escape the repository",
+        "launch evidence symlink risk-scan examples",
+    )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(
         evidence_text,
