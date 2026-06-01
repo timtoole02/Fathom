@@ -71,8 +71,11 @@ def evaluate_ci_text(text: str) -> list[str]:
     saw_ci_static_policy_self_test = False
     saw_public_risk_scan_self_test = False
     saw_public_risk_scan = False
+    saw_diff_check = False
     for line_number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
+        if stripped in {"git diff --check", "run: git diff --check", "- run: git diff --check"}:
+            saw_diff_check = True
         if "scripts/backend_acceptance_smoke.sh" in line:
             if stripped != "bash -n scripts/backend_acceptance_smoke.sh":
                 failures.append(
@@ -113,6 +116,8 @@ def evaluate_ci_text(text: str) -> list[str]:
         failures.append("default CI must run the public risk scan self-test")
     if not saw_public_risk_scan:
         failures.append("default CI must run the public risk scan")
+    if not saw_diff_check:
+        failures.append("default CI must run git diff --check")
 
     if re.search(r"FATHOM_ACCEPTANCE_KEEP_ARTIFACTS|FATHOM_ACCEPTANCE_PORT|backend_acceptance_smoke\.sh\s*$", text):
         failures.append("default CI must not invoke networked backend acceptance smoke")
@@ -151,6 +156,7 @@ jobs:
           bash -n scripts/public_api_contract_smoke.sh
           bash -n scripts/backend_acceptance_smoke.sh
       - run: python3 scripts/ci_static_policy.py --self-test
+      - run: git diff --check
       - run: bash scripts/public_risk_scan.sh --self-test
       - run: bash scripts/public_risk_scan.sh
       - run: echo done
@@ -175,6 +181,7 @@ jobs:
         "missing static policy self-test": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py",
         "missing public risk scan self-test": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh",
         "missing public risk scan": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh --self-test",
+        "missing diff check": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh --self-test\nrun: bash scripts/public_risk_scan.sh",
     }
     for label, text in cases.items():
         if not evaluate_ci_text(text):

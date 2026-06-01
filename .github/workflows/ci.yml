@@ -52,6 +52,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Check whitespace
+        run: git diff --check
       - name: Check shell script syntax
         run: |
           bash -n examples/api/curl-quickstart.sh
