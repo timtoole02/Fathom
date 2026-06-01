@@ -721,6 +721,7 @@ dependency_lock_source_patterns = [
         re.compile(r"https?://[^/\s:@]+:[^@\s]+@", re.IGNORECASE),
     ),
 ]
+git_lfs_pointer_version = "version https://git-lfs.github.com/spec/v1"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
     "docs/api/",
@@ -817,6 +818,28 @@ def tracked_large_file_failures(tracked_paths=None, sizes=None):
             continue
         if size > max_tracked_file_bytes:
             failures.append(f"{rel}: tracked file is {size} bytes; public launch tracked files must stay <= {max_tracked_file_bytes} bytes")
+    return failures
+
+def tracked_git_lfs_pointer_failures(tracked_paths=None, texts=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.Path(rel)
+        try:
+            if path.is_symlink():
+                continue
+            text = texts[rel] if texts is not None else path.read_text(encoding="utf-8")
+        except (FileNotFoundError, KeyError, OSError, UnicodeDecodeError):
+            continue
+        lines = text.splitlines()
+        if (
+            len(lines) >= 3
+            and lines[0].strip() == git_lfs_pointer_version
+            and re.fullmatch(r"oid sha256:[0-9a-f]{64}", lines[1].strip())
+            and re.fullmatch(r"size [1-9][0-9]*", lines[2].strip())
+        ):
+            failures.append(f"{rel}: Git LFS pointer files must not be tracked for public launch")
     return failures
 
 def tracked_blocked_file_failures(tracked_paths=None):
@@ -1621,6 +1644,24 @@ def self_test():
         f"docs/api/large.bin: tracked file is {max_tracked_file_bytes + 1} bytes; public launch tracked files must stay <= {max_tracked_file_bytes} bytes"
     ]:
         raise AssertionError("public risk self-test did not reject oversized tracked files")
+    git_lfs_pointer_failures = tracked_git_lfs_pointer_failures(
+        tracked_paths=["docs/api/public-contract.json", "weights/model.safetensors"],
+        texts={
+            "docs/api/public-contract.json": '{"version":"local"}\n',
+            "weights/model.safetensors": (
+                git_lfs_pointer_version
+                + "\n"
+                + "oid sha256:"
+                + ("a" * 64)
+                + "\n"
+                + "size 2048\n"
+            ),
+        },
+    )
+    if git_lfs_pointer_failures != [
+        "weights/model.safetensors: Git LFS pointer files must not be tracked for public launch"
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Git LFS pointer files")
     blocked_file_failures = tracked_blocked_file_failures(
         tracked_paths=[
             "docs/api/public-contract.json",
@@ -2553,6 +2594,7 @@ if "--self-test" in sys.argv[1:]:
 failures = scan_items(tracked_items())
 failures.extend(tracked_dependency_lock_source_failures())
 failures.extend(tracked_large_file_failures())
+failures.extend(tracked_git_lfs_pointer_failures())
 failures.extend(tracked_blocked_file_failures())
 failures.extend(tracked_credential_file_failures())
 failures.extend(tracked_cloud_credential_file_failures())

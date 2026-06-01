@@ -878,6 +878,11 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
     assert_contains(launch_text, "root `.gitattributes` text-normalization metadata", "launch checklist text-normalization metadata scope")
+    assert_contains(
+        launch_text,
+        "tracked Git LFS pointer files that can hide external artifact downloads",
+        "launch checklist Git LFS pointer risk-scan scope",
+    )
     assert_contains(launch_text, "tracked local model/checkpoint artifacts", "launch checklist model/checkpoint artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local model/checkpoint artifacts", "launch checklist model/checkpoint artifact ignore scope")
     assert_contains(launch_text, "tracked local Docker/container artifacts", "launch checklist Docker/container artifact risk-scan scope")
@@ -917,6 +922,12 @@ def assert_boundary_docs() -> None:
     assert_frontend_lockfile_evidence(evidence_text)
     assert_contains(evidence_text, "repository text-normalization metadata guard", "launch evidence text-normalization metadata scope")
     assert_contains(evidence_text, "root `.gitattributes` text-normalization metadata", "launch evidence text-normalization metadata proof")
+    assert_contains(evidence_text, "Git LFS pointer-file guard", "launch evidence Git LFS pointer risk-scan scope")
+    assert_contains(
+        evidence_text,
+        "tracked Git LFS pointer files that can hide external artifact downloads",
+        "launch evidence Git LFS pointer examples",
+    )
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
     assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
