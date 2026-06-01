@@ -771,6 +771,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "editor backup/swap artifact guard",
+        "launch evidence editor backup/swap risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
         "local runtime/artifact detail-file guard",
         "launch evidence runtime artifact risk-scan scope",
     )
