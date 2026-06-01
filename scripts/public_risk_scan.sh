@@ -81,8 +81,12 @@ blocked_tracked_os_metadata_filenames = {
     "Thumbs.db",
 }
 blocked_tracked_os_metadata_dirs = {
+    ".Spotlight-V100",
+    ".TemporaryItems",
     "__MACOSX",
     ".AppleDouble",
+    ".Trashes",
+    ".fseventsd",
 }
 blocked_tracked_editor_artifact_suffixes = {
     ".orig",
@@ -252,6 +256,10 @@ required_os_metadata_gitignore_patterns = {
     ".AppleDouble/",
     ".DS_Store",
     ".LSOverride",
+    ".Spotlight-V100/",
+    ".TemporaryItems/",
+    ".Trashes/",
+    ".fseventsd/",
     ".localized",
     "._*",
     "__MACOSX/",
@@ -1617,6 +1625,10 @@ def self_test():
         tracked_paths=[
             "docs/api/public-contract.json",
             "docs/.DS_Store",
+            "docs/.fseventsd/fseventsd-uuid",
+            "docs/.Spotlight-V100/Store-V2/index",
+            "docs/.TemporaryItems/folders.501/TemporaryItems",
+            "docs/.Trashes/501/deleted.md",
             "docs/__MACOSX/._public-launch-evidence.md",
             "docs/.AppleDouble/public-launch-checklist.md",
             "frontend/._vite.config.ts",
@@ -1635,6 +1647,10 @@ def self_test():
     )
     if blocked_file_failures != [
         "docs/.DS_Store: OS/platform metadata files must not be tracked for public launch",
+        "docs/.fseventsd/fseventsd-uuid: OS/platform metadata files must not be tracked for public launch",
+        "docs/.Spotlight-V100/Store-V2/index: OS/platform metadata files must not be tracked for public launch",
+        "docs/.TemporaryItems/folders.501/TemporaryItems: OS/platform metadata files must not be tracked for public launch",
+        "docs/.Trashes/501/deleted.md: OS/platform metadata files must not be tracked for public launch",
         "docs/__MACOSX/._public-launch-evidence.md: OS/platform metadata files must not be tracked for public launch",
         "docs/.AppleDouble/public-launch-checklist.md: OS/platform metadata files must not be tracked for public launch",
         "frontend/._vite.config.ts: OS/platform metadata files must not be tracked for public launch",

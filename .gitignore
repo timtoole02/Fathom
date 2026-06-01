@@ -69,6 +69,10 @@ summary.local.json
 __MACOSX/
 ._*
 .AppleDouble/
+.fseventsd/
+.Spotlight-V100/
+.TemporaryItems/
+.Trashes/
 .LSOverride
 .localized
 Thumbs.db

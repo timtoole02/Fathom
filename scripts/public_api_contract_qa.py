@@ -986,7 +986,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked OS/platform metadata files such as `.DS_Store`, `Thumbs.db`, `desktop.ini`, `__MACOSX/`, `._*`, `.AppleDouble`, `.LSOverride`, and `.localized`",
+        "tracked OS/platform metadata files such as `.DS_Store`, `Thumbs.db`, `desktop.ini`, `__MACOSX/`, `._*`, `.AppleDouble`, `.fseventsd/`, `.Spotlight-V100/`, `.TemporaryItems/`, `.Trashes/`, `.LSOverride`, and `.localized`",
         "launch evidence OS/platform metadata examples",
     )
     assert_contains(
