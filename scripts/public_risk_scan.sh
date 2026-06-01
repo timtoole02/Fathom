@@ -321,6 +321,21 @@ required_screen_capture_gitignore_patterns = {
     "Screen Shot *",
     "Screenshot *",
 }
+required_media_capture_gitignore_patterns = {
+    "Audio Recording *",
+    "Voice Memo *",
+    "*.aac",
+    "*.avi",
+    "*.flac",
+    "*.m4a",
+    "*.m4v",
+    "*.mkv",
+    "*.mov",
+    "*.mp3",
+    "*.mp4",
+    "*.wav",
+    "*.webm",
+}
 required_rust_artifact_gitignore_patterns = {
     "/.cargo/",
     "/target/",
@@ -639,6 +654,23 @@ blocked_tracked_screen_capture_prefixes = (
     "Screen Shot ",
     "Screenshot ",
 )
+blocked_tracked_media_capture_prefixes = (
+    "Audio Recording ",
+    "Voice Memo ",
+)
+blocked_tracked_media_capture_suffixes = {
+    ".aac",
+    ".avi",
+    ".flac",
+    ".m4a",
+    ".m4v",
+    ".mkv",
+    ".mov",
+    ".mp3",
+    ".mp4",
+    ".wav",
+    ".webm",
+}
 blocked_tracked_test_report_artifact_dirs = {
     "htmlcov",
     "reports",
@@ -1082,6 +1114,22 @@ def gitignore_screen_capture_failures(gitignore_text=None):
         return [f".gitignore: missing local screenshot/screen-recording ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_media_capture_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local audio/video capture/export ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_media_capture_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local audio/video capture/export ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_rust_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1444,6 +1492,19 @@ def tracked_screen_capture_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if path.name.startswith(blocked_tracked_screen_capture_prefixes):
             failures.append(f"{rel}: local screenshot/screen-recording artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_media_capture_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.name.startswith(blocked_tracked_media_capture_prefixes):
+            failures.append(f"{rel}: local audio/video capture/export artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_media_capture_suffixes:
+            failures.append(f"{rel}: local audio/video capture/export artifacts must not be tracked for public launch")
     return failures
 
 def tracked_test_report_artifact_file_failures(tracked_paths=None):
@@ -2321,6 +2382,16 @@ def self_test():
         ".gitignore: missing local screenshot/screen-recording ignore patterns: Screenshot *"
     ]:
         raise AssertionError("public risk self-test did not reject missing local screenshot/screen-recording ignore patterns")
+    allowed_media_capture_gitignore = "\n".join(sorted(required_media_capture_gitignore_patterns)) + "\n"
+    if gitignore_media_capture_failures(allowed_media_capture_gitignore):
+        raise AssertionError("public risk self-test rejected complete local audio/video capture/export ignore patterns")
+    media_capture_gitignore_failures = gitignore_media_capture_failures(
+        allowed_media_capture_gitignore.replace("*.mp4\n", "")
+    )
+    if media_capture_gitignore_failures != [
+        ".gitignore: missing local audio/video capture/export ignore patterns: *.mp4"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local audio/video capture/export ignore patterns")
     mobile_build_failures = tracked_mobile_build_file_failures(
         tracked_paths=[
             "DerivedData/Fathom/Build/Products/Debug/Fathom.app",
@@ -2364,6 +2435,41 @@ def self_test():
         "Screen Recording 2026-06-01 at 11.42.00 AM.mov: local screenshot/screen-recording artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local screenshot/screen-recording artifacts")
+    media_capture_failures = tracked_media_capture_file_failures(
+        tracked_paths=[
+            "captures/backend-demo.mp4",
+            "captures/public-contract.webm",
+            "captures/fathom-demo.mov",
+            "captures/model-output.m4v",
+            "captures/manual-pass.avi",
+            "captures/manual-pass.mkv",
+            "captures/launch-demo.wav",
+            "captures/launch-demo.m4a",
+            "captures/launch-demo.mp3",
+            "captures/launch-demo.aac",
+            "captures/launch-demo.flac",
+            "Audio Recording 2026-06-01 at 11.42.00 AM.m4a",
+            "Voice Memo 2026-06-01 at 11.42.00 AM.m4a",
+            "docs/api/public-contract.json",
+            "frontend/public/pacman-favicon.svg",
+        ],
+    )
+    if media_capture_failures != [
+        "captures/backend-demo.mp4: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/public-contract.webm: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/fathom-demo.mov: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/model-output.m4v: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/manual-pass.avi: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/manual-pass.mkv: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/launch-demo.wav: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/launch-demo.m4a: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/launch-demo.mp3: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/launch-demo.aac: local audio/video capture/export artifacts must not be tracked for public launch",
+        "captures/launch-demo.flac: local audio/video capture/export artifacts must not be tracked for public launch",
+        "Audio Recording 2026-06-01 at 11.42.00 AM.m4a: local audio/video capture/export artifacts must not be tracked for public launch",
+        "Voice Memo 2026-06-01 at 11.42.00 AM.m4a: local audio/video capture/export artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local audio/video capture/export artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -2450,6 +2556,7 @@ failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_screen_capture_failures())
+failures.extend(gitignore_media_capture_failures())
 failures.extend(gitignore_rust_artifact_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_backup_artifact_failures())
@@ -2473,6 +2580,7 @@ failures.extend(tracked_container_artifact_file_failures())
 failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_screen_capture_file_failures())
+failures.extend(tracked_media_capture_file_failures())
 failures.extend(tracked_test_report_artifact_file_failures())
 failures.extend(tracked_notebook_artifact_file_failures())
 failures.extend(tracked_symlink_failures())

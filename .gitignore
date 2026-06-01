@@ -188,6 +188,21 @@ Screenshot *
 Screen Shot *
 Screen Recording *
 
+# Local audio/video captures and exports
+Audio Recording *
+Voice Memo *
+*.aac
+*.avi
+*.flac
+*.m4a
+*.m4v
+*.mkv
+*.mov
+*.mp3
+*.mp4
+*.wav
+*.webm
+
 # Personal workspace context
 /.openclaw/
 /.codex/
