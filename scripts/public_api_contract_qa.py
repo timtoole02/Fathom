@@ -737,6 +737,7 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact ignore scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
+    assert_contains(launch_text, "root `.gitignore` coverage for local frontend/Node cache/build artifacts", "launch checklist frontend artifact ignore scope")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
     assert_contains(launch_text, "scripts/backend_acceptance_artifact_qa.py", "launch checklist backend acceptance artifact QA")
     assert_contains(launch_text, "backend acceptance smoke success/failure summaries", "launch checklist backend acceptance artifact QA scope")
@@ -830,6 +831,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "frontend/Node cache/build artifact guard",
         "launch evidence frontend artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local frontend/Node cache/build artifact guard",
+        "launch evidence frontend artifact ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local frontend/Node cache/build artifacts",
+        "launch evidence frontend artifact ignore examples",
     )
     assert_contains(
         evidence_text,
