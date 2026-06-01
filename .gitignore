@@ -183,6 +183,11 @@ xcuserdata/
 *.aab
 *.dSYM
 
+# Local screenshots/screen recordings
+Screenshot *
+Screen Shot *
+Screen Recording *
+
 # Personal workspace context
 /.openclaw/
 /.codex/
