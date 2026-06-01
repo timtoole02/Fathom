@@ -308,6 +308,10 @@ FATHOM_SMOKE_RUNNABLE_MODEL_DIR="$HOME/.fathom/models/vijaymohan-gpt2-tinystorie
 - `frontend`: local dashboard for chat, model catalog, runtime/capability status, memory/retrieval status, and API guidance.
 - `scripts`: start/stop/smoke helpers for local development.
 
+## License
+
+Fathom is distributed under the MIT License. See [`LICENSE`](LICENSE).
+
 ## Name
 
 **Fathom**: a runtime that can look into different model containers and understand what they are before deciding how to run them.

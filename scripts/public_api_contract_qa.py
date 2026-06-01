@@ -34,6 +34,10 @@ ROADMAP = ROOT / "roadmap.md"
 README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 SECURITY = ROOT / "SECURITY.md"
+LICENSE_FILE = ROOT / "LICENSE"
+ROOT_CARGO = ROOT / "Cargo.toml"
+SERVER_CARGO = ROOT / "crates" / "fathom-server" / "Cargo.toml"
+CORE_CARGO = ROOT / "crates" / "fathom-core" / "Cargo.toml"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contract.yml"
 MODEL_RUNTIME_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "model_runtime_request.yml"
@@ -535,6 +539,34 @@ def assert_public_security_docs() -> None:
         label = f"{path.relative_to(ROOT)} local API security note"
         for phrase in phrases:
             assert_contains(text, phrase, label)
+
+
+def assert_license_metadata() -> None:
+    license_text = read(LICENSE_FILE)
+    if not license_text.startswith("MIT License\n"):
+        raise AssertionError("LICENSE must keep the repository MIT license header")
+
+    root_cargo_text = read(ROOT_CARGO)
+    assert_contains(root_cargo_text, 'license = "MIT"', "workspace Cargo license metadata")
+    for path in (SERVER_CARGO, CORE_CARGO):
+        assert_contains(read(path), "license.workspace = true", f"{path.relative_to(ROOT)} license inheritance")
+
+    readme_text = read(README)
+    assert_contains(readme_text, "## License", "README license section")
+    assert_contains(readme_text, "MIT License", "README license section")
+    assert_contains(readme_text, "[`LICENSE`](LICENSE)", "README license section")
+
+    evidence_text = read(LAUNCH_EVIDENCE)
+    assert_contains(
+        evidence_text,
+        "repository-level MIT license metadata/docs consistency guard",
+        "launch evidence license metadata scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Cargo manifests, README, and `LICENSE`",
+        "launch evidence license metadata proof",
+    )
 
 
 def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
@@ -1734,6 +1766,7 @@ def main() -> int:
     assert_manifest_shape(manifest)
     assert_endpoint_docs(manifest)
     assert_roadmap_last_updated_freshness()
+    assert_license_metadata()
     assert_tracked_python_syntax_coverage()
     assert_tracked_shell_syntax_coverage()
     assert_boundary_docs()
