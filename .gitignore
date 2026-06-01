@@ -18,6 +18,23 @@ dist/
 *.swo
 *.swp
 
+# Local release/package artifacts
+/artifacts/
+/release/
+/releases/
+*.7z
+*.app
+*.bz2
+*.dmg
+*.egg
+*.gz
+*.pkg
+*.tar
+*.tgz
+*.whl
+*.xz
+*.zip
+
 # Personal workspace context
 /.openclaw/
 /memory/

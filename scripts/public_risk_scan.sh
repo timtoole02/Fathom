@@ -174,6 +174,25 @@ blocked_tracked_rust_artifact_suffixes = {
     ".rmeta",
     ".so",
 }
+blocked_tracked_package_artifact_suffixes = {
+    ".7z",
+    ".app",
+    ".bz2",
+    ".dmg",
+    ".egg",
+    ".gz",
+    ".pkg",
+    ".tar",
+    ".tgz",
+    ".whl",
+    ".xz",
+    ".zip",
+}
+blocked_tracked_package_artifact_dirs = {
+    "artifacts",
+    "release",
+    "releases",
+}
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -353,6 +372,26 @@ def tracked_rust_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_rust_artifact_suffixes:
             failures.append(f"{rel}: Rust/Cargo cache/build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_package_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        lower_name = path.name.lower()
+        if path.parts and path.parts[0] in blocked_tracked_package_artifact_dirs:
+            failures.append(f"{rel}: release/package artifacts must not be tracked for public launch")
+            continue
+        if any(part.lower().endswith((".app", ".egg")) for part in path.parts):
+            failures.append(f"{rel}: release/package artifacts must not be tracked for public launch")
+            continue
+        if lower_name.endswith(".tar.gz") or lower_name.endswith(".tar.bz2") or lower_name.endswith(".tar.xz"):
+            failures.append(f"{rel}: release/package artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_package_artifact_suffixes:
+            failures.append(f"{rel}: release/package artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -594,6 +633,44 @@ def self_test():
         "coverage/merged.profdata: Rust/Cargo cache/build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Rust/Cargo cache/build artifacts")
+    package_artifact_failures = tracked_package_artifact_file_failures(
+        tracked_paths=[
+            "artifacts/public-contract-smoke-summary.json",
+            "dist/fathom.zip",
+            "release/fathom",
+            "releases/fathom-macos.dmg",
+            "releases/fathom.pkg",
+            "python/fathom-0.1.0-py3-none-any.whl",
+            "python/fathom.egg",
+            "Fathom.app/Contents/Info.plist",
+            "snapshots/fathom.tar",
+            "snapshots/fathom.tar.gz",
+            "snapshots/fathom.tar.bz2",
+            "snapshots/fathom.tar.xz",
+            "snapshots/fathom.tgz",
+            "snapshots/fathom.7z",
+            "docs/api/public-contract.json",
+            "frontend/package-lock.json",
+            "Cargo.lock",
+        ],
+    )
+    if package_artifact_failures != [
+        "artifacts/public-contract-smoke-summary.json: release/package artifacts must not be tracked for public launch",
+        "dist/fathom.zip: release/package artifacts must not be tracked for public launch",
+        "release/fathom: release/package artifacts must not be tracked for public launch",
+        "releases/fathom-macos.dmg: release/package artifacts must not be tracked for public launch",
+        "releases/fathom.pkg: release/package artifacts must not be tracked for public launch",
+        "python/fathom-0.1.0-py3-none-any.whl: release/package artifacts must not be tracked for public launch",
+        "python/fathom.egg: release/package artifacts must not be tracked for public launch",
+        "Fathom.app/Contents/Info.plist: release/package artifacts must not be tracked for public launch",
+        "snapshots/fathom.tar: release/package artifacts must not be tracked for public launch",
+        "snapshots/fathom.tar.gz: release/package artifacts must not be tracked for public launch",
+        "snapshots/fathom.tar.bz2: release/package artifacts must not be tracked for public launch",
+        "snapshots/fathom.tar.xz: release/package artifacts must not be tracked for public launch",
+        "snapshots/fathom.tgz: release/package artifacts must not be tracked for public launch",
+        "snapshots/fathom.7z: release/package artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked release/package artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -631,6 +708,7 @@ failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
+failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
