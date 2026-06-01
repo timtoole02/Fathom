@@ -150,6 +150,10 @@ blocked_tracked_frontend_build_dirs = {
     "build",
     "dist",
 }
+blocked_tracked_root_frontend_build_dirs = {
+    "build",
+    "dist",
+}
 blocked_tracked_frontend_artifact_filenames = {
     "npm-debug.log",
     "pnpm-debug.log",
@@ -349,6 +353,9 @@ def tracked_frontend_artifact_file_failures(tracked_paths=None):
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_frontend_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
+        if path.parts and path.parts[0] in blocked_tracked_root_frontend_build_dirs:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
             continue
         if path.parts and path.parts[0] == "frontend" and any(part in blocked_tracked_frontend_build_dirs for part in path.parts[1:]):
@@ -566,6 +573,8 @@ def self_test():
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
+            "dist/index.html",
+            "build/assets/app.js",
             "frontend/dist/index.html",
             "frontend/build/assets/app.js",
             "frontend/coverage/lcov.info",
@@ -587,6 +596,8 @@ def self_test():
     )
     if frontend_artifact_failures != [
         "frontend/node_modules/.package-lock.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "build/assets/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/build/assets/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/coverage/lcov.info: frontend/Node cache/build artifacts must not be tracked for public launch",
