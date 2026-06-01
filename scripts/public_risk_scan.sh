@@ -205,6 +205,14 @@ required_package_artifact_gitignore_patterns = {
     "*.xz",
     "*.zip",
 }
+required_python_artifact_gitignore_patterns = {
+    "__pycache__/",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".ruff_cache/",
+    "*.pyc",
+    "*.pyo",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -582,6 +590,22 @@ def gitignore_package_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local release/package artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_python_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Python cache/build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_python_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Python cache/build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -948,7 +972,9 @@ def self_test():
         tracked_paths=[
             "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc",
             ".pytest_cache/v/cache/nodeids",
+            ".mypy_cache/3.12/scripts/public_api_contract_qa.data.json",
             ".ruff_cache/0.12.0/file",
+            "scripts/public_api_contract_qa.pyo",
             "docs/api/public-contract.json",
             "scripts/public_api_contract_qa.py",
         ],
@@ -956,9 +982,21 @@ def self_test():
     if python_artifact_failures != [
         "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc: Python cache/build artifacts must not be tracked for public launch",
         ".pytest_cache/v/cache/nodeids: Python cache/build artifacts must not be tracked for public launch",
+        ".mypy_cache/3.12/scripts/public_api_contract_qa.data.json: Python cache/build artifacts must not be tracked for public launch",
         ".ruff_cache/0.12.0/file: Python cache/build artifacts must not be tracked for public launch",
+        "scripts/public_api_contract_qa.pyo: Python cache/build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Python cache/build artifacts")
+    allowed_python_artifact_gitignore = "\n".join(sorted(required_python_artifact_gitignore_patterns)) + "\n"
+    if gitignore_python_artifact_failures(allowed_python_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Python cache/build artifact ignore patterns")
+    python_artifact_gitignore_failures = gitignore_python_artifact_failures(
+        allowed_python_artifact_gitignore.replace(".mypy_cache/\n", "")
+    )
+    if python_artifact_gitignore_failures != [
+        ".gitignore: missing local Python cache/build artifact ignore patterns: .mypy_cache/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Python cache/build artifact ignore patterns")
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
@@ -1259,6 +1297,7 @@ failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_package_artifact_failures())
+failures.extend(gitignore_python_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())

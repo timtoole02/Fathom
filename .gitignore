@@ -28,6 +28,14 @@ desktop.ini
 /.vscode/
 *.code-workspace
 
+# Local Python cache/build artifacts
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+*.pyo
+
 # Local release/package artifacts
 /artifacts/
 /release/
