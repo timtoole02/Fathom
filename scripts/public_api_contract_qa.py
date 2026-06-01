@@ -35,6 +35,7 @@ README = ROOT / "README.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 SECURITY = ROOT / "SECURITY.md"
 LICENSE_FILE = ROOT / "LICENSE"
+GITATTRIBUTES = ROOT / ".gitattributes"
 ROOT_CARGO = ROOT / "Cargo.toml"
 SERVER_CARGO = ROOT / "crates" / "fathom-server" / "Cargo.toml"
 CORE_CARGO = ROOT / "crates" / "fathom-core" / "Cargo.toml"
@@ -135,6 +136,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard REST Client example headers|Guard API example regression self-test|"
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
     r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
+    r"Guard launch text normalization metadata|"
     r"Guard public risk scan .+|Guard tracked credential config files|"
     r"Guard tracked workspace instruction files|Guard tracked local runtime artifacts)$"
 )
@@ -637,6 +639,40 @@ def assert_license_metadata() -> None:
     )
 
 
+def assert_gitattributes_text_normalization(text: str | None = None, label: str = ".gitattributes") -> None:
+    if text is None:
+        text = read(GITATTRIBUTES)
+    active_lines = {
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    required_lines = {
+        "* text=auto eol=lf",
+        "*.bin binary",
+        "*.gguf binary",
+        "*.gz binary",
+        "*.npy binary",
+        "*.npz binary",
+        "*.onnx binary",
+        "*.pdf binary",
+        "*.png binary",
+        "*.pt binary",
+        "*.pth binary",
+        "*.safetensors binary",
+        "*.tar binary",
+        "*.tgz binary",
+        "*.zip binary",
+    }
+    missing = sorted(required_lines - active_lines)
+    if missing:
+        raise AssertionError(f"{label} missing text-normalization metadata: {missing}")
+    if re.search(r"(?m)^\*\s+-text\b", text):
+        raise AssertionError(f"{label} must not disable text normalization for the whole repository")
+    if re.search(r"(?m)^\*\s+binary\b", text):
+        raise AssertionError(f"{label} must not mark the whole repository as binary")
+
+
 def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
     try:
         output = subprocess.check_output(
@@ -841,6 +877,7 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "api/public-contract.json", "launch checklist manifest link")
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
+    assert_contains(launch_text, "root `.gitattributes` text-normalization metadata", "launch checklist text-normalization metadata scope")
     assert_contains(launch_text, "tracked local model/checkpoint artifacts", "launch checklist model/checkpoint artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local model/checkpoint artifacts", "launch checklist model/checkpoint artifact ignore scope")
     assert_contains(launch_text, "tracked local Docker/container artifacts", "launch checklist Docker/container artifact risk-scan scope")
@@ -878,6 +915,8 @@ def assert_boundary_docs() -> None:
     assert_latest_no_download_refusal_evidence(evidence_text)
     assert_latest_public_contract_qa_hardening_evidence(evidence_text)
     assert_frontend_lockfile_evidence(evidence_text)
+    assert_contains(evidence_text, "repository text-normalization metadata guard", "launch evidence text-normalization metadata scope")
+    assert_contains(evidence_text, "root `.gitattributes` text-normalization metadata", "launch evidence text-normalization metadata proof")
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
     assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
@@ -1758,6 +1797,38 @@ npm --prefix frontend run qa:copy
         else:
             raise AssertionError("clean install gate self-test did not reject command drift")
 
+    valid_gitattributes = """
+* text=auto eol=lf
+*.bin binary
+*.gguf binary
+*.gz binary
+*.npy binary
+*.npz binary
+*.onnx binary
+*.pdf binary
+*.png binary
+*.pt binary
+*.pth binary
+*.safetensors binary
+*.tar binary
+*.tgz binary
+*.zip binary
+"""
+    assert_gitattributes_text_normalization(valid_gitattributes, "synthetic .gitattributes")
+    for text, expected in (
+        (valid_gitattributes.replace("* text=auto eol=lf\n", ""), "missing text-normalization metadata"),
+        (valid_gitattributes.replace("*.safetensors binary\n", ""), "missing text-normalization metadata"),
+        ("* binary\n" + valid_gitattributes, "must not mark the whole repository as binary"),
+        ("* -text\n" + valid_gitattributes, "must not disable text normalization"),
+    ):
+        try:
+            assert_gitattributes_text_normalization(text, "synthetic bad .gitattributes")
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError(".gitattributes self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError(".gitattributes self-test did not reject unsafe text-normalization drift")
+
 
 def assert_smoke_manifest_wiring() -> None:
     smoke_text = read(SMOKE)
@@ -2032,6 +2103,7 @@ def main() -> int:
 
     manifest = load_manifest()
     assert_manifest_shape(manifest)
+    assert_gitattributes_text_normalization()
     assert_endpoint_docs(manifest)
     assert_roadmap_last_updated_freshness()
     assert_license_metadata()

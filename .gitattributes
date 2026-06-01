@@ -1,0 +1,24 @@
+# Keep public diffs stable across platforms.
+* text=auto eol=lf
+
+# Binary artifacts should never be line-ending normalized.
+*.bin binary
+*.dmg binary
+*.gif binary
+*.gguf binary
+*.gz binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.npy binary
+*.npz binary
+*.onnx binary
+*.pdf binary
+*.png binary
+*.pt binary
+*.pth binary
+*.safetensors binary
+*.tar binary
+*.tgz binary
+*.webp binary
+*.zip binary

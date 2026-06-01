@@ -77,6 +77,8 @@ FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR=public-contract-artifacts \
 
 The optional `public-contract-smoke-summary.json` and `.md` files include commit, manifest path/name/status, endpoint checks, boundary checks, and scope caveats only. They intentionally omit local temp paths, server log tails, request secrets, and model/provider payloads. Validate them offline before sharing with `python3 scripts/public_contract_smoke_artifact_qa.py public-contract-artifacts`.
 
+The static QA also requires root `.gitattributes` text-normalization metadata so public diffs stay stable across platforms while binary artifact extensions remain marked as binary.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:
