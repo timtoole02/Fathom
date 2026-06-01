@@ -158,6 +158,15 @@ required_model_artifact_gitignore_patterns = {
     "*.safetensors",
     "*.tflite",
 }
+required_container_artifact_gitignore_patterns = {
+    "/.docker/",
+    "/docker-data/",
+    "/docker-volumes/",
+    "compose.override.yaml",
+    "compose.override.yml",
+    "docker-compose.override.yaml",
+    "docker-compose.override.yml",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -270,6 +279,17 @@ blocked_tracked_model_artifact_suffixes = {
     ".pth",
     ".safetensors",
     ".tflite",
+}
+blocked_tracked_container_artifact_dirs = {
+    ".docker",
+    "docker-data",
+    "docker-volumes",
+}
+blocked_tracked_container_artifact_filenames = {
+    "compose.override.yaml",
+    "compose.override.yml",
+    "docker-compose.override.yaml",
+    "docker-compose.override.yml",
 }
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
@@ -433,6 +453,22 @@ def gitignore_model_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local model/checkpoint artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_container_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local container artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_container_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local container artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -541,6 +577,19 @@ def tracked_model_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_model_artifact_suffixes:
             failures.append(f"{rel}: local model/checkpoint artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_container_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] in blocked_tracked_container_artifact_dirs:
+            failures.append(f"{rel}: local Docker/container artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_container_artifact_filenames:
+            failures.append(f"{rel}: local Docker/container override files must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -706,6 +755,16 @@ def self_test():
     model_artifact_gitignore_failures = gitignore_model_artifact_failures(allowed_model_artifact_gitignore.replace("*.gguf\n", ""))
     if model_artifact_gitignore_failures != [".gitignore: missing local model/checkpoint artifact ignore patterns: *.gguf"]:
         raise AssertionError("public risk self-test did not reject missing local model/checkpoint artifact ignore patterns")
+    allowed_container_artifact_gitignore = "\n".join(sorted(required_container_artifact_gitignore_patterns)) + "\n"
+    if gitignore_container_artifact_failures(allowed_container_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local container artifact ignore patterns")
+    container_artifact_gitignore_failures = gitignore_container_artifact_failures(
+        allowed_container_artifact_gitignore.replace("docker-compose.override.yml\n", "")
+    )
+    if container_artifact_gitignore_failures != [
+        ".gitignore: missing local container artifact ignore patterns: docker-compose.override.yml"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local container artifact ignore patterns")
     runtime_artifact_failures = tracked_runtime_artifact_file_failures(
         tracked_paths=[
             ".fathom/state/registry.json",
@@ -903,6 +962,31 @@ def self_test():
         "fixtures/model.tflite: local model/checkpoint artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local model/checkpoint artifacts")
+    container_artifact_failures = tracked_container_artifact_file_failures(
+        tracked_paths=[
+            ".docker/cache/buildkit.db",
+            "docker-data/postgres/base/0001",
+            "docker-volumes/fathom-model-store/metadata.json",
+            "docker-compose.override.yml",
+            "docker-compose.override.yaml",
+            "compose.override.yml",
+            "compose.override.yaml",
+            "Dockerfile",
+            "docs/deployment/docker.md",
+            "docker-compose.yml",
+            "compose.yml",
+        ],
+    )
+    if container_artifact_failures != [
+        ".docker/cache/buildkit.db: local Docker/container artifacts must not be tracked for public launch",
+        "docker-data/postgres/base/0001: local Docker/container artifacts must not be tracked for public launch",
+        "docker-volumes/fathom-model-store/metadata.json: local Docker/container artifacts must not be tracked for public launch",
+        "docker-compose.override.yml: local Docker/container override files must not be tracked for public launch",
+        "docker-compose.override.yaml: local Docker/container override files must not be tracked for public launch",
+        "compose.override.yml: local Docker/container override files must not be tracked for public launch",
+        "compose.override.yaml: local Docker/container override files must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Docker/container artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -938,6 +1022,7 @@ failures.extend(tracked_workspace_context_failures())
 failures.extend(gitignore_workspace_context_failures())
 failures.extend(gitignore_credential_failures())
 failures.extend(gitignore_model_artifact_failures())
+failures.extend(gitignore_container_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
@@ -945,6 +1030,7 @@ failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_model_artifact_file_failures())
+failures.extend(tracked_container_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

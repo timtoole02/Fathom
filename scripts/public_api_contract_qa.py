@@ -732,6 +732,8 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
     assert_contains(launch_text, "tracked local model/checkpoint artifacts", "launch checklist model/checkpoint artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local model/checkpoint artifacts", "launch checklist model/checkpoint artifact ignore scope")
+    assert_contains(launch_text, "tracked local Docker/container artifacts", "launch checklist Docker/container artifact risk-scan scope")
+    assert_contains(launch_text, "root `.gitignore` coverage for local Docker/container artifacts", "launch checklist Docker/container artifact ignore scope")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
     assert_contains(launch_text, "scripts/backend_acceptance_artifact_qa.py", "launch checklist backend acceptance artifact QA")
     assert_contains(launch_text, "backend acceptance smoke success/failure summaries", "launch checklist backend acceptance artifact QA scope")
@@ -845,6 +847,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local model/checkpoint artifacts",
         "launch evidence model/checkpoint artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "local Docker/container artifact guard",
+        "launch evidence Docker/container artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Docker/container artifacts such as top-level `.docker/`, `docker-data/`, `docker-volumes/`, `docker-compose.override.yml`, `docker-compose.override.yaml`, `compose.override.yml`, and `compose.override.yaml`",
+        "launch evidence Docker/container artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Docker/container artifacts",
+        "launch evidence Docker/container artifact ignore examples",
     )
     assert_contains(
         evidence_text,

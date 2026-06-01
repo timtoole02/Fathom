@@ -69,6 +69,15 @@ desktop.ini
 *.npy
 *.tflite
 
+# Local Docker/container artifacts
+/.docker/
+/docker-data/
+/docker-volumes/
+docker-compose.override.yml
+docker-compose.override.yaml
+compose.override.yml
+compose.override.yaml
+
 # Personal workspace context
 /.openclaw/
 /memory/
