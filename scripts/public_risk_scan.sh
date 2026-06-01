@@ -70,6 +70,12 @@ skip_suffixes = {".lock"}
 skip_paths = {"scripts/public_risk_scan.sh", "frontend/scripts/ui-copy-qa.mjs"}
 max_tracked_file_bytes = 1024 * 1024
 blocked_tracked_filenames = {".DS_Store", "Thumbs.db", "desktop.ini"}
+blocked_tracked_editor_artifact_suffixes = {
+    ".orig",
+    ".rej",
+    ".swo",
+    ".swp",
+}
 allowed_tracked_credential_filenames = {".env.example"}
 blocked_tracked_credential_filenames = {
     ".env",
@@ -223,8 +229,12 @@ def tracked_blocked_file_failures(tracked_paths=None):
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
     failures = []
     for rel in tracked_paths:
-        if pathlib.PurePosixPath(rel).name in blocked_tracked_filenames:
+        path = pathlib.PurePosixPath(rel)
+        if path.name in blocked_tracked_filenames:
             failures.append(f"{rel}: OS/editor metadata files must not be tracked for public launch")
+            continue
+        if path.name.endswith("~") or path.suffix.lower() in blocked_tracked_editor_artifact_suffixes:
+            failures.append(f"{rel}: editor backup/swap artifacts must not be tracked for public launch")
     return failures
 
 def tracked_credential_file_failures(tracked_paths=None):
@@ -381,14 +391,27 @@ def self_test():
     ]:
         raise AssertionError("public risk self-test did not reject oversized tracked files")
     blocked_file_failures = tracked_blocked_file_failures(
-        tracked_paths=["docs/api/public-contract.json", "docs/.DS_Store", "frontend/Thumbs.db", "desktop.ini"],
+        tracked_paths=[
+            "docs/api/public-contract.json",
+            "docs/.DS_Store",
+            "frontend/Thumbs.db",
+            "desktop.ini",
+            "README.md~",
+            "docs/api/client-examples.md.swp",
+            "docs/public-launch-checklist.md.orig",
+            "docs/public-launch-evidence.md.rej",
+        ],
     )
     if blocked_file_failures != [
         "docs/.DS_Store: OS/editor metadata files must not be tracked for public launch",
         "frontend/Thumbs.db: OS/editor metadata files must not be tracked for public launch",
         "desktop.ini: OS/editor metadata files must not be tracked for public launch",
+        "README.md~: editor backup/swap artifacts must not be tracked for public launch",
+        "docs/api/client-examples.md.swp: editor backup/swap artifacts must not be tracked for public launch",
+        "docs/public-launch-checklist.md.orig: editor backup/swap artifacts must not be tracked for public launch",
+        "docs/public-launch-evidence.md.rej: editor backup/swap artifacts must not be tracked for public launch",
     ]:
-        raise AssertionError("public risk self-test did not reject tracked OS/editor metadata files")
+        raise AssertionError("public risk self-test did not reject tracked OS/editor metadata or backup/swap files")
     credential_file_failures = tracked_credential_file_failures(
         tracked_paths=[
             ".env",

@@ -12,6 +12,11 @@ dist/
 .fathom/
 *.log
 .DS_Store
+*~
+*.orig
+*.rej
+*.swo
+*.swp
 
 # Local secrets and credentials
 .env
