@@ -35,6 +35,7 @@ Common gates:
 
 ```bash
 git diff --check
+python3 -m py_compile scripts/public_api_contract_qa.py examples/api/python-no-deps.py
 cargo fmt --all --check
 cargo test -q
 npm --prefix frontend run build

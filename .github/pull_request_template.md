@@ -23,6 +23,8 @@
 ## Gates run
 
 - [ ] `git diff --check`
+- [ ] Python syntax gate from `docs/public-launch-checklist.md` was run: `python3 -m py_compile ...`
+- [ ] Shell syntax gate from `docs/public-launch-checklist.md` was run: `bash -n ...`
 - [ ] `python3 scripts/api_client_examples_regression.py`
 - [ ] `python3 scripts/api_client_examples_regression.py --self-test`
 - [ ] `python3 scripts/public_api_contract_qa.py`

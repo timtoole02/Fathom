@@ -128,7 +128,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard REST Client example headers|Guard API example regression self-test|"
-    r"Guard CI frontend launch gates|Guard public risk scan .+|Guard tracked credential config files|"
+    r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
+    r"Guard public risk scan .+|Guard tracked credential config files|"
     r"Guard tracked workspace instruction files|Guard tracked local runtime artifacts)$"
 )
 NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
@@ -446,6 +447,8 @@ def assert_contributing_common_gates() -> None:
     contributing_text = read(CONTRIBUTING)
     required_commands = (
         "git diff --check",
+        "python3 -m py_compile",
+        "bash -n",
         "python3 scripts/api_client_examples_regression.py",
         "python3 scripts/api_client_examples_regression.py --self-test",
         "python3 scripts/public_api_contract_qa.py",
@@ -1660,6 +1663,8 @@ def assert_pull_request_template() -> None:
         "README, CONTRIBUTING, SECURITY, API docs, UI copy, and tests",
         "runnable, planned, blocked, metadata-only, and unavailable states",
         "git diff --check",
+        "python3 -m py_compile",
+        "bash -n",
         "python3 scripts/api_client_examples_regression.py",
         "python3 scripts/api_client_examples_regression.py --self-test",
         "python3 scripts/public_api_contract_qa.py",
