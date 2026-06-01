@@ -182,6 +182,9 @@ xcuserdata/
 !.env.example
 /.direnv/
 /.ssh/
+/.aws/
+/.azure/
+/.config/gcloud/
 *.pem
 *.key
 *.p12
@@ -193,3 +196,9 @@ id_dsa
 .netrc
 .npmrc
 .pypirc
+.boto
+boto.cfg
+application_default_credentials.json
+service-account.json
+service_account.json
+serviceAccountKey.json
