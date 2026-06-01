@@ -110,6 +110,9 @@ blocked_tracked_credential_suffixes = {
     ".pfx",
 }
 blocked_tracked_workspace_filenames = {
+    ".aider.chat.history.md",
+    ".aider.input.history",
+    ".aider.tags.cache.v4",
     "AGENTS.md",
     "BOOTSTRAP.md",
     "HEARTBEAT.md",
@@ -119,7 +122,18 @@ blocked_tracked_workspace_filenames = {
     "TOOLS.md",
     "USER.md",
 }
+blocked_tracked_workspace_dirs = {
+    ".claude",
+    ".codex",
+    ".continue",
+}
 required_workspace_gitignore_patterns = {
+    "/.aider.chat.history.md",
+    "/.aider.input.history",
+    "/.aider.tags.cache.v4",
+    "/.claude/",
+    "/.codex/",
+    "/.continue/",
     "/.openclaw/",
     "/memory/",
     "/AGENTS.md",
@@ -585,7 +599,11 @@ def tracked_workspace_context_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
-        if path.name in blocked_tracked_workspace_filenames or rel.startswith(("memory/", ".openclaw/")):
+        if (
+            path.name in blocked_tracked_workspace_filenames
+            or rel.startswith(("memory/", ".openclaw/"))
+            or any(part in blocked_tracked_workspace_dirs for part in path.parts)
+        ):
             failures.append(f"{rel}: workspace/personal agent context files must not be tracked for public launch")
     return failures
 
@@ -1165,6 +1183,12 @@ def self_test():
             "MEMORY.md",
             "memory/2026-05-31.md",
             ".openclaw/session.json",
+            ".codex/config.toml",
+            ".claude/settings.local.json",
+            ".continue/config.json",
+            ".aider.chat.history.md",
+            ".aider.input.history",
+            ".aider.tags.cache.v4",
             "docs/api/public-contract.json",
         ],
     )
@@ -1175,13 +1199,19 @@ def self_test():
         "MEMORY.md: workspace/personal agent context files must not be tracked for public launch",
         "memory/2026-05-31.md: workspace/personal agent context files must not be tracked for public launch",
         ".openclaw/session.json: workspace/personal agent context files must not be tracked for public launch",
+        ".codex/config.toml: workspace/personal agent context files must not be tracked for public launch",
+        ".claude/settings.local.json: workspace/personal agent context files must not be tracked for public launch",
+        ".continue/config.json: workspace/personal agent context files must not be tracked for public launch",
+        ".aider.chat.history.md: workspace/personal agent context files must not be tracked for public launch",
+        ".aider.input.history: workspace/personal agent context files must not be tracked for public launch",
+        ".aider.tags.cache.v4: workspace/personal agent context files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked workspace/personal agent context files")
     allowed_gitignore = "\n".join(sorted(required_workspace_gitignore_patterns)) + "\n"
     if gitignore_workspace_context_failures(allowed_gitignore):
         raise AssertionError("public risk self-test rejected complete workspace/personal context ignore patterns")
-    gitignore_failures = gitignore_workspace_context_failures(allowed_gitignore.replace("/IDENTITY.md\n", ""))
-    if gitignore_failures != [".gitignore: missing workspace/personal context ignore patterns: /IDENTITY.md"]:
+    gitignore_failures = gitignore_workspace_context_failures(allowed_gitignore.replace("/.codex/\n", ""))
+    if gitignore_failures != [".gitignore: missing workspace/personal context ignore patterns: /.codex/"]:
         raise AssertionError("public risk self-test did not reject missing workspace/personal context ignore patterns")
     allowed_credential_gitignore = "\n".join(sorted(required_credential_gitignore_patterns)) + "\n"
     if gitignore_credential_failures(allowed_credential_gitignore):

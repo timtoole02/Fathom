@@ -780,6 +780,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "local assistant state such as `.codex/`, `.claude/`, `.continue/`, and `.aider.*`",
+        "launch evidence local assistant state risk-scan examples",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for personal workspace context including local assistant state",
+        "launch checklist local assistant state ignore scope",
+    )
+    assert_contains(
+        evidence_text,
         "OS/platform metadata-file",
         "launch evidence OS/platform metadata risk-scan scope",
     )

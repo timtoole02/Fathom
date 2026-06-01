@@ -159,8 +159,14 @@ xcuserdata/
 
 # Personal workspace context
 /.openclaw/
+/.codex/
+/.claude/
+/.continue/
 /memory/
 /AGENTS.md
+/.aider.chat.history.md
+/.aider.input.history
+/.aider.tags.cache.v4
 /BOOTSTRAP.md
 /HEARTBEAT.md
 /IDENTITY.md
