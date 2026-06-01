@@ -864,6 +864,11 @@ def assert_boundary_docs() -> None:
         "launch checklist release/package artifact ignore scope",
     )
     assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local backup/dump artifacts",
+        "launch checklist backup/dump artifact ignore scope",
+    )
+    assert_contains(
         evidence_text,
         "root `.gitignore` local release/package artifact guard",
         "launch evidence release/package artifact ignore risk-scan scope",
@@ -880,8 +885,18 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "root `.gitignore` local backup/dump artifact guard",
+        "launch evidence backup/dump artifact ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
         "tracked backup/dump artifacts",
         "launch evidence backup/dump artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local backup/dump artifacts",
+        "launch evidence backup/dump artifact ignore examples",
     )
     assert_contains(
         evidence_text,
