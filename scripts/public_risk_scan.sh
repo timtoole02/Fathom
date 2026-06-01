@@ -76,6 +76,13 @@ blocked_tracked_editor_artifact_suffixes = {
     ".swo",
     ".swp",
 }
+blocked_tracked_ide_artifact_dirs = {
+    ".idea",
+    ".vscode",
+}
+blocked_tracked_ide_artifact_suffixes = {
+    ".code-workspace",
+}
 allowed_tracked_credential_filenames = {".env.example"}
 blocked_tracked_credential_filenames = {
     ".env",
@@ -273,6 +280,12 @@ def tracked_blocked_file_failures(tracked_paths=None):
             continue
         if path.name.endswith("~") or path.suffix.lower() in blocked_tracked_editor_artifact_suffixes:
             failures.append(f"{rel}: editor backup/swap artifacts must not be tracked for public launch")
+            continue
+        if any(part in blocked_tracked_ide_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: IDE workspace/config artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_ide_artifact_suffixes:
+            failures.append(f"{rel}: IDE workspace/config artifacts must not be tracked for public launch")
     return failures
 
 def tracked_credential_file_failures(tracked_paths=None):
@@ -477,6 +490,9 @@ def self_test():
             "docs/api/client-examples.md.swp",
             "docs/public-launch-checklist.md.orig",
             "docs/public-launch-evidence.md.rej",
+            ".vscode/settings.json",
+            ".idea/workspace.xml",
+            "fathom.code-workspace",
         ],
     )
     if blocked_file_failures != [
@@ -487,8 +503,11 @@ def self_test():
         "docs/api/client-examples.md.swp: editor backup/swap artifacts must not be tracked for public launch",
         "docs/public-launch-checklist.md.orig: editor backup/swap artifacts must not be tracked for public launch",
         "docs/public-launch-evidence.md.rej: editor backup/swap artifacts must not be tracked for public launch",
+        ".vscode/settings.json: IDE workspace/config artifacts must not be tracked for public launch",
+        ".idea/workspace.xml: IDE workspace/config artifacts must not be tracked for public launch",
+        "fathom.code-workspace: IDE workspace/config artifacts must not be tracked for public launch",
     ]:
-        raise AssertionError("public risk self-test did not reject tracked OS/editor metadata or backup/swap files")
+        raise AssertionError("public risk self-test did not reject tracked OS/editor metadata, backup/swap, or IDE config files")
     credential_file_failures = tracked_credential_file_failures(
         tracked_paths=[
             ".env",

@@ -17,6 +17,9 @@ dist/
 *.rej
 *.swo
 *.swp
+/.idea/
+/.vscode/
+*.code-workspace
 
 # Local release/package artifacts
 /artifacts/
