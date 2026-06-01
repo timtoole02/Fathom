@@ -826,6 +826,21 @@ def assert_boundary_docs() -> None:
         "launch evidence Rust artifact risk-scan scope",
     )
     assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local release/package artifacts",
+        "launch checklist release/package artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local release/package artifact guard",
+        "launch evidence release/package artifact ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local release/package artifacts",
+        "launch evidence release/package artifact ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "backup/dump artifact guard",
         "launch evidence backup/dump artifact risk-scan scope",

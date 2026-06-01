@@ -188,6 +188,23 @@ required_mobile_build_gitignore_patterns = {
     "local.properties",
     "xcuserdata/",
 }
+required_package_artifact_gitignore_patterns = {
+    "/artifacts/",
+    "/release/",
+    "/releases/",
+    "*.7z",
+    "*.app",
+    "*.bz2",
+    "*.dmg",
+    "*.egg",
+    "*.gz",
+    "*.pkg",
+    "*.tar",
+    "*.tgz",
+    "*.whl",
+    "*.xz",
+    "*.zip",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -547,6 +564,22 @@ def gitignore_mobile_build_failures(gitignore_text=None):
     missing = sorted(required_mobile_build_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local mobile/Xcode/Android build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_package_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local release/package artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_package_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local release/package artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
@@ -1038,6 +1071,16 @@ def self_test():
         "snapshots/fathom.7z: release/package artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked release/package artifacts")
+    allowed_package_artifact_gitignore = "\n".join(sorted(required_package_artifact_gitignore_patterns)) + "\n"
+    if gitignore_package_artifact_failures(allowed_package_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local release/package artifact ignore patterns")
+    package_artifact_gitignore_failures = gitignore_package_artifact_failures(
+        allowed_package_artifact_gitignore.replace("*.whl\n", "")
+    )
+    if package_artifact_gitignore_failures != [
+        ".gitignore: missing local release/package artifact ignore patterns: *.whl"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local release/package artifact ignore patterns")
     backup_artifact_failures = tracked_backup_artifact_file_failures(
         tracked_paths=[
             "backups/model-registry.json",
@@ -1215,6 +1258,7 @@ failures.extend(gitignore_model_artifact_failures())
 failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_mobile_build_failures())
+failures.extend(gitignore_package_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
