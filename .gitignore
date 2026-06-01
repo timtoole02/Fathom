@@ -59,6 +59,12 @@ summary.local.json
 *.heapsnapshot
 *.perf
 *.prof
+/core
+/core.[0-9]*
+*.core
+*.crash
+*.dmp
+*.ips
 .DS_Store
 __MACOSX/
 ._*

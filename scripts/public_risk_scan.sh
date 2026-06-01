@@ -318,8 +318,14 @@ required_diagnostic_artifact_gitignore_patterns = {
     "/logs/",
     "/profiles/",
     "/traces/",
+    "/core",
+    "/core.[0-9]*",
     "*.cpuprofile",
+    "*.core",
+    "*.crash",
+    "*.dmp",
     "*.heapsnapshot",
+    "*.ips",
     "*.log",
     "*.perf",
     "*.prof",
@@ -422,8 +428,12 @@ blocked_tracked_diagnostic_artifact_dirs = {
     "traces",
 }
 blocked_tracked_diagnostic_artifact_suffixes = {
+    ".core",
     ".cpuprofile",
+    ".crash",
+    ".dmp",
     ".heapsnapshot",
+    ".ips",
     ".perf",
     ".prof",
     ".trace",
@@ -1107,6 +1117,9 @@ def tracked_diagnostic_artifact_file_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
+        if path.name == "core" or re.fullmatch(r"core\.[0-9]+", path.name):
+            failures.append(f"{rel}: local log/trace/profiling/debug-output artifacts must not be tracked for public launch")
+            continue
         if path.parts and path.parts[0] in blocked_tracked_diagnostic_artifact_dirs:
             failures.append(f"{rel}: local log/trace/profiling/debug-output artifacts must not be tracked for public launch")
             continue
@@ -1636,10 +1649,10 @@ def self_test():
     if gitignore_diagnostic_artifact_failures(allowed_diagnostic_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local log/trace/profiling/debug-output artifact ignore patterns")
     diagnostic_artifact_gitignore_failures = gitignore_diagnostic_artifact_failures(
-        allowed_diagnostic_artifact_gitignore.replace("*.cpuprofile\n", "")
+        allowed_diagnostic_artifact_gitignore.replace("*.dmp\n", "")
     )
     if diagnostic_artifact_gitignore_failures != [
-        ".gitignore: missing local log/trace/profiling/debug-output artifact ignore patterns: *.cpuprofile"
+        ".gitignore: missing local log/trace/profiling/debug-output artifact ignore patterns: *.dmp"
     ]:
         raise AssertionError("public risk self-test did not reject missing local log/trace/profiling/debug-output artifact ignore patterns")
     diagnostic_artifact_failures = tracked_diagnostic_artifact_file_failures(
@@ -1648,9 +1661,16 @@ def self_test():
             "traces/public-contract.trace",
             "profiles/backend.cpuprofile",
             "debug-output/request-dump.json",
+            "core",
+            "core.123",
+            "crashes/fathom.dmp",
+            "DiagnosticReports/Fathom.crash",
+            "DiagnosticReports/Fathom.ips",
+            "fathom.core",
             "crates/fathom-server/heap.heapsnapshot",
             "crates/fathom-core/flame.perf",
             "crates/fathom-core/flame.prof",
+            "docs/research/core.md",
             "docs/api/public-contract.json",
             "docs/research/performance-strategy.md",
         ],
@@ -1660,6 +1680,12 @@ def self_test():
         "traces/public-contract.trace: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
         "profiles/backend.cpuprofile: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
         "debug-output/request-dump.json: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "core: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "core.123: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "crashes/fathom.dmp: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "DiagnosticReports/Fathom.crash: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "DiagnosticReports/Fathom.ips: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "fathom.core: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
         "crates/fathom-server/heap.heapsnapshot: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
         "crates/fathom-core/flame.perf: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
         "crates/fathom-core/flame.prof: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",

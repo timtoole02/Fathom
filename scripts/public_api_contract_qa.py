@@ -1037,7 +1037,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local log/trace/profiling/debug-output artifacts such as top-level `logs/`, `traces/`, `profiles/`, `debug-output/`, `.trace`, `.cpuprofile`, `.heapsnapshot`, `.perf`, and `.prof` files",
+        "tracked local log/trace/profiling/debug-output artifacts such as top-level `logs/`, `traces/`, `profiles/`, `debug-output/`, `.trace`, `.cpuprofile`, `.heapsnapshot`, `.perf`, `.prof`, `.core`, `.crash`, `.dmp`, `.ips`, and root `core` files",
         "launch evidence diagnostic artifact examples",
     )
     assert_contains(
