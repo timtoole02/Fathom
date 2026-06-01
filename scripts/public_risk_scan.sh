@@ -55,6 +55,8 @@ def secret_value_patterns():
         ("GitHub fine-grained token", re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b")),
         ("Hugging Face token", re.compile(r"\bhf_[A-Za-z0-9]{20,}\b")),
         ("Slack token", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b")),
+        ("AWS access key ID", re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b")),
+        ("Google API key", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
         ("Bearer token value", re.compile(r"\bBearer\s+[A-Za-z0-9._~+/=-]{16,}\b", re.IGNORECASE)),
         ("PEM private key block", re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----")),
     ]
@@ -1179,6 +1181,8 @@ def self_test():
         ("README.md", "OPENAI_API_KEY=sk-this-is-not-share-safe"),
         ("docs/api/example.md", "Hugging Face token: hf_abcdefghijklmnopqrstuvwxyz"),
         ("docs/api/example.md", "GitHub token: ghp_abcdefghijklmnopqrstuvwxyz"),
+        ("docs/api/example.md", "AWS key id: AKIAABCDEFGHIJKLMNOP"),
+        ("docs/api/example.md", "Google API key: AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"),
         ("docs/api/example.md", "-----BEGIN OPENSSH PRIVATE KEY-----"),
         ("docs/api/example.md", "Fathom includes a GGUF runtime for local inference."),
         ("docs/api/example.md", "Fathom uses torch.load to inspect PyTorch weights."),
