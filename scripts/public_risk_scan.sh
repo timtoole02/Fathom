@@ -69,7 +69,18 @@ claim_patterns = [
 skip_suffixes = {".lock"}
 skip_paths = {"scripts/public_risk_scan.sh", "frontend/scripts/ui-copy-qa.mjs"}
 max_tracked_file_bytes = 1024 * 1024
-blocked_tracked_filenames = {".DS_Store", "Thumbs.db", "desktop.ini"}
+blocked_tracked_os_metadata_filenames = {
+    ".AppleDouble",
+    ".DS_Store",
+    ".localized",
+    ".LSOverride",
+    "desktop.ini",
+    "Thumbs.db",
+}
+blocked_tracked_os_metadata_dirs = {
+    "__MACOSX",
+    ".AppleDouble",
+}
 blocked_tracked_editor_artifact_suffixes = {
     ".orig",
     ".rej",
@@ -275,8 +286,12 @@ def tracked_blocked_file_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
-        if path.name in blocked_tracked_filenames:
-            failures.append(f"{rel}: OS/editor metadata files must not be tracked for public launch")
+        if (
+            path.name in blocked_tracked_os_metadata_filenames
+            or path.name.startswith("._")
+            or any(part in blocked_tracked_os_metadata_dirs for part in path.parts)
+        ):
+            failures.append(f"{rel}: OS/platform metadata files must not be tracked for public launch")
             continue
         if path.name.endswith("~") or path.suffix.lower() in blocked_tracked_editor_artifact_suffixes:
             failures.append(f"{rel}: editor backup/swap artifacts must not be tracked for public launch")
@@ -484,6 +499,11 @@ def self_test():
         tracked_paths=[
             "docs/api/public-contract.json",
             "docs/.DS_Store",
+            "docs/__MACOSX/._public-launch-evidence.md",
+            "docs/.AppleDouble/public-launch-checklist.md",
+            "frontend/._vite.config.ts",
+            "frontend/.LSOverride",
+            "frontend/.localized",
             "frontend/Thumbs.db",
             "desktop.ini",
             "README.md~",
@@ -496,9 +516,14 @@ def self_test():
         ],
     )
     if blocked_file_failures != [
-        "docs/.DS_Store: OS/editor metadata files must not be tracked for public launch",
-        "frontend/Thumbs.db: OS/editor metadata files must not be tracked for public launch",
-        "desktop.ini: OS/editor metadata files must not be tracked for public launch",
+        "docs/.DS_Store: OS/platform metadata files must not be tracked for public launch",
+        "docs/__MACOSX/._public-launch-evidence.md: OS/platform metadata files must not be tracked for public launch",
+        "docs/.AppleDouble/public-launch-checklist.md: OS/platform metadata files must not be tracked for public launch",
+        "frontend/._vite.config.ts: OS/platform metadata files must not be tracked for public launch",
+        "frontend/.LSOverride: OS/platform metadata files must not be tracked for public launch",
+        "frontend/.localized: OS/platform metadata files must not be tracked for public launch",
+        "frontend/Thumbs.db: OS/platform metadata files must not be tracked for public launch",
+        "desktop.ini: OS/platform metadata files must not be tracked for public launch",
         "README.md~: editor backup/swap artifacts must not be tracked for public launch",
         "docs/api/client-examples.md.swp: editor backup/swap artifacts must not be tracked for public launch",
         "docs/public-launch-checklist.md.orig: editor backup/swap artifacts must not be tracked for public launch",
@@ -507,7 +532,7 @@ def self_test():
         ".idea/workspace.xml: IDE workspace/config artifacts must not be tracked for public launch",
         "fathom.code-workspace: IDE workspace/config artifacts must not be tracked for public launch",
     ]:
-        raise AssertionError("public risk self-test did not reject tracked OS/editor metadata, backup/swap, or IDE config files")
+        raise AssertionError("public risk self-test did not reject tracked OS/platform metadata, backup/swap, or IDE config files")
     credential_file_failures = tracked_credential_file_failures(
         tracked_paths=[
             ".env",

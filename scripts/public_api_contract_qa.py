@@ -771,6 +771,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "OS/platform metadata-file",
+        "launch evidence OS/platform metadata risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked OS/platform metadata files such as `.DS_Store`, `Thumbs.db`, `desktop.ini`, `__MACOSX/`, `._*`, `.AppleDouble`, `.LSOverride`, and `.localized`",
+        "launch evidence OS/platform metadata examples",
+    )
+    assert_contains(
+        evidence_text,
         "editor backup/swap artifact guard",
         "launch evidence editor backup/swap risk-scan scope",
     )

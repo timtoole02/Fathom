@@ -12,6 +12,13 @@ dist/
 .fathom/
 *.log
 .DS_Store
+__MACOSX/
+._*
+.AppleDouble/
+.LSOverride
+.localized
+Thumbs.db
+desktop.ini
 *~
 *.orig
 *.rej
