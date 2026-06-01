@@ -809,6 +809,16 @@ def assert_boundary_docs() -> None:
         "Rust/Cargo cache/build artifact guard",
         "launch evidence Rust artifact risk-scan scope",
     )
+    assert_contains(
+        evidence_text,
+        "backup/dump artifact guard",
+        "launch evidence backup/dump artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked backup/dump artifacts",
+        "launch evidence backup/dump artifact examples",
+    )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(
         evidence_text,

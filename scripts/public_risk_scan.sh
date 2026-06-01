@@ -215,6 +215,16 @@ blocked_tracked_package_artifact_dirs = {
     "release",
     "releases",
 }
+blocked_tracked_backup_artifact_dirs = {
+    "backups",
+    "dumps",
+}
+blocked_tracked_backup_artifact_suffixes = {
+    ".bak",
+    ".backup",
+    ".dump",
+    ".sql",
+}
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -427,6 +437,19 @@ def tracked_package_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_package_artifact_suffixes:
             failures.append(f"{rel}: release/package artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_backup_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] in blocked_tracked_backup_artifact_dirs:
+            failures.append(f"{rel}: backup/dump artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_backup_artifact_suffixes:
+            failures.append(f"{rel}: backup/dump artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -726,6 +749,27 @@ def self_test():
         "snapshots/fathom.7z: release/package artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked release/package artifacts")
+    backup_artifact_failures = tracked_backup_artifact_file_failures(
+        tracked_paths=[
+            "backups/model-registry.json",
+            "dumps/fathom-state.json",
+            "state/models.json.bak",
+            "state/models.json.backup",
+            "state/fathom.dump",
+            "state/fathom.sql",
+            "docs/api/public-contract.json",
+            "docs/research/runtime-safety-policy.md",
+        ],
+    )
+    if backup_artifact_failures != [
+        "backups/model-registry.json: backup/dump artifacts must not be tracked for public launch",
+        "dumps/fathom-state.json: backup/dump artifacts must not be tracked for public launch",
+        "state/models.json.bak: backup/dump artifacts must not be tracked for public launch",
+        "state/models.json.backup: backup/dump artifacts must not be tracked for public launch",
+        "state/fathom.dump: backup/dump artifacts must not be tracked for public launch",
+        "state/fathom.sql: backup/dump artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked backup/dump artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -764,6 +808,7 @@ failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
+failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)

@@ -45,6 +45,14 @@ desktop.ini
 *.xz
 *.zip
 
+# Local backup/dump artifacts
+/backups/
+/dumps/
+*.bak
+*.backup
+*.dump
+*.sql
+
 # Personal workspace context
 /.openclaw/
 /memory/
