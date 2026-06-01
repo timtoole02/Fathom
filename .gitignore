@@ -78,6 +78,15 @@ docker-compose.override.yaml
 compose.override.yml
 compose.override.yaml
 
+# Local infrastructure state
+/.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+
 # Personal workspace context
 /.openclaw/
 /memory/

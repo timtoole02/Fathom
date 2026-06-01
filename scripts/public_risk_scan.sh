@@ -167,6 +167,15 @@ required_container_artifact_gitignore_patterns = {
     "docker-compose.override.yaml",
     "docker-compose.override.yml",
 }
+required_infra_state_gitignore_patterns = {
+    "/.terraform/",
+    ".terraform.lock.hcl",
+    "*.tfplan",
+    "*.tfstate",
+    "*.tfstate.*",
+    "*.tfvars",
+    "*.tfvars.json",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -290,6 +299,17 @@ blocked_tracked_container_artifact_filenames = {
     "compose.override.yml",
     "docker-compose.override.yaml",
     "docker-compose.override.yml",
+}
+blocked_tracked_infra_state_dirs = {
+    ".terraform",
+}
+blocked_tracked_infra_state_filenames = {
+    ".terraform.lock.hcl",
+}
+blocked_tracked_infra_state_suffixes = {
+    ".tfplan",
+    ".tfstate",
+    ".tfvars",
 }
 tracked_symlink_mode = "120000"
 docs_evidence_prefixes = (
@@ -469,6 +489,22 @@ def gitignore_container_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local container artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_infra_state_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local infrastructure state ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_infra_state_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local infrastructure state ignore patterns: {', '.join(missing)}"]
+    return []
+
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
     if tracked_paths is None:
         tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
@@ -590,6 +626,26 @@ def tracked_container_artifact_file_failures(tracked_paths=None):
             continue
         if path.name in blocked_tracked_container_artifact_filenames:
             failures.append(f"{rel}: local Docker/container override files must not be tracked for public launch")
+    return failures
+
+def tracked_infra_state_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        lower_name = path.name.lower()
+        if any(part in blocked_tracked_infra_state_dirs for part in path.parts):
+            failures.append(f"{rel}: local infrastructure state artifacts must not be tracked for public launch")
+            continue
+        if lower_name in blocked_tracked_infra_state_filenames:
+            failures.append(f"{rel}: local infrastructure state artifacts must not be tracked for public launch")
+            continue
+        if lower_name.endswith(".tfstate.backup") or lower_name.endswith(".tfvars.json"):
+            failures.append(f"{rel}: local infrastructure state artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_infra_state_suffixes:
+            failures.append(f"{rel}: local infrastructure state artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -765,6 +821,14 @@ def self_test():
         ".gitignore: missing local container artifact ignore patterns: docker-compose.override.yml"
     ]:
         raise AssertionError("public risk self-test did not reject missing local container artifact ignore patterns")
+    allowed_infra_state_gitignore = "\n".join(sorted(required_infra_state_gitignore_patterns)) + "\n"
+    if gitignore_infra_state_failures(allowed_infra_state_gitignore):
+        raise AssertionError("public risk self-test rejected complete local infrastructure state ignore patterns")
+    infra_state_gitignore_failures = gitignore_infra_state_failures(
+        allowed_infra_state_gitignore.replace("*.tfvars\n", "")
+    )
+    if infra_state_gitignore_failures != [".gitignore: missing local infrastructure state ignore patterns: *.tfvars"]:
+        raise AssertionError("public risk self-test did not reject missing local infrastructure state ignore patterns")
     runtime_artifact_failures = tracked_runtime_artifact_file_failures(
         tracked_paths=[
             ".fathom/state/registry.json",
@@ -987,6 +1051,31 @@ def self_test():
         "compose.override.yaml: local Docker/container override files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Docker/container artifacts")
+    infra_state_failures = tracked_infra_state_file_failures(
+        tracked_paths=[
+            ".terraform/providers/registry.terraform.io/example/provider",
+            ".terraform.lock.hcl",
+            "infra/default.tfstate",
+            "infra/default.tfstate.backup",
+            "infra/prod.tfvars",
+            "infra/prod.auto.tfvars",
+            "infra/prod.tfvars.json",
+            "infra/plan.tfplan",
+            "infra/main.tf",
+            "docs/deployment/terraform.md",
+        ],
+    )
+    if infra_state_failures != [
+        ".terraform/providers/registry.terraform.io/example/provider: local infrastructure state artifacts must not be tracked for public launch",
+        ".terraform.lock.hcl: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/default.tfstate: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/default.tfstate.backup: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/prod.tfvars: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/prod.auto.tfvars: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/prod.tfvars.json: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/plan.tfplan: local infrastructure state artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local infrastructure state artifacts")
     symlink_failures = tracked_symlink_failures(
         tracked_entries=[
             ("100644", "README.md"),
@@ -1023,6 +1112,7 @@ failures.extend(gitignore_workspace_context_failures())
 failures.extend(gitignore_credential_failures())
 failures.extend(gitignore_model_artifact_failures())
 failures.extend(gitignore_container_artifact_failures())
+failures.extend(gitignore_infra_state_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
@@ -1031,6 +1121,7 @@ failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_model_artifact_file_failures())
 failures.extend(tracked_container_artifact_file_failures())
+failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
