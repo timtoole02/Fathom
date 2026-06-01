@@ -907,6 +907,26 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "tracked cloud SDK credential/config guard",
+        "launch evidence cloud SDK credential risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local cloud SDK credential/config guard",
+        "launch evidence cloud SDK credential ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked cloud SDK credential/config files such as `.aws/`, `.azure/`, `.config/gcloud/`, `.boto`, `boto.cfg`, `application_default_credentials.json`, `service-account.json`, `service_account.json`, and `serviceAccountKey.json`",
+        "launch evidence cloud SDK credential examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local cloud SDK credential/config files",
+        "launch evidence cloud SDK credential ignore examples",
+    )
+    assert_contains(
+        evidence_text,
         "root `.gitignore` local credential/config guard",
         "launch evidence credential/config ignore risk-scan scope",
     )
@@ -929,6 +949,16 @@ def assert_boundary_docs() -> None:
         launch_text,
         "root `.gitignore` coverage for local credential/config files including SSH private-key filenames and `.ssh/`",
         "launch checklist credential/config SSH ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "tracked local cloud SDK credential/config files",
+        "launch checklist cloud SDK credential risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local cloud SDK credential/config files",
+        "launch checklist cloud SDK credential ignore scope",
     )
     assert_contains(
         evidence_text,
