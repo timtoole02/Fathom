@@ -213,6 +213,25 @@ required_python_artifact_gitignore_patterns = {
     "*.pyc",
     "*.pyo",
 }
+required_frontend_artifact_gitignore_patterns = {
+    ".parcel-cache/",
+    ".turbo/",
+    "*.tsbuildinfo",
+    "build/",
+    "coverage/",
+    "dist/",
+    "frontend/.next/",
+    "frontend/.vite/",
+    "frontend/build/",
+    "frontend/coverage/",
+    "frontend/dist/",
+    "frontend/node_modules/",
+    "node_modules/",
+    "npm-debug.log",
+    "pnpm-debug.log",
+    "yarn-debug.log",
+    "yarn-error.log",
+}
 blocked_tracked_runtime_artifact_filenames = {
     "server.log",
     "summary.local.json",
@@ -604,6 +623,22 @@ def gitignore_python_artifact_failures(gitignore_text=None):
     missing = sorted(required_python_artifact_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local Python cache/build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_frontend_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local frontend/Node cache/build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_frontend_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local frontend/Node cache/build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def tracked_runtime_artifact_file_failures(tracked_paths=None):
@@ -1038,6 +1073,16 @@ def self_test():
         "pnpm-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked frontend/Node cache/build artifacts")
+    allowed_frontend_artifact_gitignore = "\n".join(sorted(required_frontend_artifact_gitignore_patterns)) + "\n"
+    if gitignore_frontend_artifact_failures(allowed_frontend_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local frontend/Node cache/build artifact ignore patterns")
+    frontend_artifact_gitignore_failures = gitignore_frontend_artifact_failures(
+        allowed_frontend_artifact_gitignore.replace("frontend/.vite/\n", "")
+    )
+    if frontend_artifact_gitignore_failures != [
+        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: frontend/.vite/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local frontend/Node cache/build artifact ignore patterns")
     rust_artifact_failures = tracked_rust_artifact_file_failures(
         tracked_paths=[
             "target/debug/fathom",
@@ -1298,6 +1343,7 @@ failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
+failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())

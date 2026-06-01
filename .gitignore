@@ -5,8 +5,21 @@
 # Node/frontend
 frontend/node_modules/
 frontend/dist/
+frontend/build/
+frontend/coverage/
+frontend/.next/
+frontend/.vite/
 node_modules/
 dist/
+build/
+coverage/
+.turbo/
+.parcel-cache/
+*.tsbuildinfo
+npm-debug.log
+pnpm-debug.log
+yarn-debug.log
+yarn-error.log
 
 # Local runtime state
 .fathom/
