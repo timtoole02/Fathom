@@ -106,6 +106,8 @@ Review `summary.md` first, then `summary.json` and the named JSON artifacts. Kee
 
 It also blocks tracked local CI runner artifacts/config such as `.act/` and `.actrc`, with matching root `.gitignore` coverage, so local `act` workflow state cannot be mistaken for launch evidence.
 
+It also blocks tracked local Swift Package Manager build/workspace artifacts such as `.build/` and `.swiftpm/`, with matching root `.gitignore` coverage for local Swift Package Manager artifacts.
+
 For Yarn lockfiles, local `portal:` dependencies and local `patch:` references count as local/private dependency sources.
 
 The Rust/Cargo guard also rejects tracked Rust/Cargo cache/build artifacts such as `.cargo/`, `target/`, compiler outputs, and coverage profiles, with matching root `.gitignore` coverage.

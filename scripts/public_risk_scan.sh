@@ -377,6 +377,10 @@ required_nix_artifact_gitignore_patterns = {
     "/result",
     "/result-*",
 }
+required_swiftpm_artifact_gitignore_patterns = {
+    "/.build/",
+    "/.swiftpm/",
+}
 required_mobile_build_gitignore_patterns = {
     "/.gradle/",
     "/DerivedData/",
@@ -831,6 +835,10 @@ blocked_tracked_infra_state_suffixes = {
 }
 blocked_tracked_nix_artifact_root_names = {
     "result",
+}
+blocked_tracked_swiftpm_artifact_dirs = {
+    ".build",
+    ".swiftpm",
 }
 blocked_tracked_mobile_build_dirs = {
     ".gradle",
@@ -1439,6 +1447,22 @@ def gitignore_nix_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Nix build result artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_swiftpm_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Swift Package Manager artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_swiftpm_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Swift Package Manager artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_mobile_build_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1959,6 +1983,16 @@ def tracked_nix_artifact_file_failures(tracked_paths=None):
         root_name = path.parts[0]
         if root_name in blocked_tracked_nix_artifact_root_names or root_name.startswith("result-"):
             failures.append(f"{rel}: local Nix build result artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_swiftpm_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_swiftpm_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local Swift Package Manager artifacts must not be tracked for public launch")
     return failures
 
 def tracked_mobile_build_file_failures(tracked_paths=None):
@@ -3232,6 +3266,29 @@ def self_test():
         "result-docs/share/doc/fathom/index.html: local Nix build result artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Nix build result artifacts")
+    allowed_swiftpm_artifact_gitignore = "\n".join(sorted(required_swiftpm_artifact_gitignore_patterns)) + "\n"
+    if gitignore_swiftpm_artifact_failures(allowed_swiftpm_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Swift Package Manager artifact ignore patterns")
+    swiftpm_artifact_gitignore_failures = gitignore_swiftpm_artifact_failures(
+        allowed_swiftpm_artifact_gitignore.replace("/.swiftpm/\n", "")
+    )
+    if swiftpm_artifact_gitignore_failures != [
+        ".gitignore: missing local Swift Package Manager artifact ignore patterns: /.swiftpm/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Swift Package Manager artifact ignore patterns")
+    swiftpm_artifact_failures = tracked_swiftpm_artifact_file_failures(
+        tracked_paths=[
+            ".build/debug/Fathom",
+            ".swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata",
+            "Package.swift",
+            "Sources/Fathom/main.swift",
+        ],
+    )
+    if swiftpm_artifact_failures != [
+        ".build/debug/Fathom: local Swift Package Manager artifacts must not be tracked for public launch",
+        ".swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata: local Swift Package Manager artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Swift Package Manager artifacts")
     allowed_mobile_build_gitignore = "\n".join(sorted(required_mobile_build_gitignore_patterns)) + "\n"
     if gitignore_mobile_build_failures(allowed_mobile_build_gitignore):
         raise AssertionError("public risk self-test rejected complete local mobile/Xcode/Android build artifact ignore patterns")
@@ -3490,6 +3547,7 @@ failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_deployment_platform_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_nix_artifact_failures())
+failures.extend(gitignore_swiftpm_artifact_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_screen_capture_failures())
 failures.extend(gitignore_media_capture_failures())
@@ -3524,6 +3582,7 @@ failures.extend(tracked_container_artifact_file_failures())
 failures.extend(tracked_deployment_platform_artifact_file_failures())
 failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_nix_artifact_file_failures())
+failures.extend(tracked_swiftpm_artifact_file_failures())
 failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_screen_capture_file_failures())
 failures.extend(tracked_media_capture_file_failures())
