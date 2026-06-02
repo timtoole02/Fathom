@@ -420,6 +420,13 @@ required_rust_artifact_gitignore_patterns = {
     "*.profraw",
     "target/",
 }
+required_native_build_artifact_gitignore_patterns = {
+    "/CMakeFiles/",
+    "/cmake-build-*/",
+    "CMakeCache.txt",
+    "cmake_install.cmake",
+    "compile_commands.json",
+}
 required_package_artifact_gitignore_patterns = {
     "/artifacts/",
     "/release/",
@@ -717,6 +724,14 @@ blocked_tracked_rust_artifact_suffixes = {
     ".rlib",
     ".rmeta",
     ".so",
+}
+blocked_tracked_native_build_artifact_dirs = {
+    "CMakeFiles",
+}
+blocked_tracked_native_build_artifact_filenames = {
+    "CMakeCache.txt",
+    "cmake_install.cmake",
+    "compile_commands.json",
 }
 blocked_tracked_package_artifact_suffixes = {
     ".7z",
@@ -1470,6 +1485,22 @@ def gitignore_rust_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Rust/Cargo cache/build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_native_build_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local native/CMake build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_native_build_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local native/CMake build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_package_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1763,6 +1794,22 @@ def tracked_rust_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_rust_artifact_suffixes:
             failures.append(f"{rel}: Rust/Cargo cache/build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_native_build_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0].startswith("cmake-build-"):
+            failures.append(f"{rel}: native/CMake build artifacts must not be tracked for public launch")
+            continue
+        if any(part in blocked_tracked_native_build_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: native/CMake build artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_native_build_artifact_filenames:
+            failures.append(f"{rel}: native/CMake build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_package_artifact_file_failures(tracked_paths=None):
@@ -2847,6 +2894,38 @@ def self_test():
         ".gitignore: missing local Rust/Cargo cache/build artifact ignore patterns: *.profraw"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Rust/Cargo cache/build artifact ignore patterns")
+    native_build_artifact_failures = tracked_native_build_artifact_file_failures(
+        tracked_paths=[
+            "cmake-build-debug/CMakeCache.txt",
+            "CMakeFiles/CMakeOutput.log",
+            "native/CMakeFiles/rules.ninja",
+            "native/CMakeCache.txt",
+            "native/cmake_install.cmake",
+            "compile_commands.json",
+            "CMakeLists.txt",
+            "docs/research/runtime-safety-policy.md",
+            "crates/fathom-core/src/lib.rs",
+        ],
+    )
+    if native_build_artifact_failures != [
+        "cmake-build-debug/CMakeCache.txt: native/CMake build artifacts must not be tracked for public launch",
+        "CMakeFiles/CMakeOutput.log: native/CMake build artifacts must not be tracked for public launch",
+        "native/CMakeFiles/rules.ninja: native/CMake build artifacts must not be tracked for public launch",
+        "native/CMakeCache.txt: native/CMake build artifacts must not be tracked for public launch",
+        "native/cmake_install.cmake: native/CMake build artifacts must not be tracked for public launch",
+        "compile_commands.json: native/CMake build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked native/CMake build artifacts")
+    allowed_native_build_artifact_gitignore = "\n".join(sorted(required_native_build_artifact_gitignore_patterns)) + "\n"
+    if gitignore_native_build_artifact_failures(allowed_native_build_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local native/CMake build artifact ignore patterns")
+    native_build_artifact_gitignore_failures = gitignore_native_build_artifact_failures(
+        allowed_native_build_artifact_gitignore.replace("compile_commands.json\n", "")
+    )
+    if native_build_artifact_gitignore_failures != [
+        ".gitignore: missing local native/CMake build artifact ignore patterns: compile_commands.json"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local native/CMake build artifact ignore patterns")
     package_artifact_failures = tracked_package_artifact_file_failures(
         tracked_paths=[
             "artifacts/public-contract-smoke-summary.json",
@@ -3335,6 +3414,7 @@ failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_screen_capture_failures())
 failures.extend(gitignore_media_capture_failures())
 failures.extend(gitignore_rust_artifact_failures())
+failures.extend(gitignore_native_build_artifact_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_backup_artifact_failures())
 failures.extend(gitignore_diagnostic_artifact_failures())
@@ -3354,6 +3434,7 @@ failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_local_cache_artifact_file_failures())
 failures.extend(tracked_temp_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
+failures.extend(tracked_native_build_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_model_artifact_file_failures())

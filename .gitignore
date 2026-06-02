@@ -6,6 +6,13 @@ target/
 *.profraw
 *.profdata
 
+# Local native/CMake build artifacts
+/cmake-build-*/
+/CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
 # Node/frontend
 frontend/node_modules/
 frontend/.bun/
