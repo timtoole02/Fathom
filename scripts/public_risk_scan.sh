@@ -427,6 +427,7 @@ required_diagnostic_artifact_gitignore_patterns = {
 }
 required_python_artifact_gitignore_patterns = {
     "__pycache__/",
+    ".hypothesis/",
     ".pytest_cache/",
     ".mypy_cache/",
     ".ruff_cache/",
@@ -543,6 +544,7 @@ blocked_tracked_diagnostic_artifact_suffixes = {
 }
 blocked_tracked_python_artifact_dirs = {
     "__pycache__",
+    ".hypothesis",
     ".mypy_cache",
     ".pytest_cache",
     ".ruff_cache",
@@ -2110,6 +2112,7 @@ def self_test():
     python_artifact_failures = tracked_python_artifact_file_failures(
         tracked_paths=[
             "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc",
+            ".hypothesis/examples/7c1b4d6c3d8f2a1e",
             ".pytest_cache/v/cache/nodeids",
             ".mypy_cache/3.12/scripts/public_api_contract_qa.data.json",
             ".ruff_cache/0.12.0/file",
@@ -2120,6 +2123,7 @@ def self_test():
     )
     if python_artifact_failures != [
         "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc: Python cache/build artifacts must not be tracked for public launch",
+        ".hypothesis/examples/7c1b4d6c3d8f2a1e: Python cache/build artifacts must not be tracked for public launch",
         ".pytest_cache/v/cache/nodeids: Python cache/build artifacts must not be tracked for public launch",
         ".mypy_cache/3.12/scripts/public_api_contract_qa.data.json: Python cache/build artifacts must not be tracked for public launch",
         ".ruff_cache/0.12.0/file: Python cache/build artifacts must not be tracked for public launch",

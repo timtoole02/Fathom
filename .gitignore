@@ -95,6 +95,7 @@ desktop.ini
 
 # Local Python cache/build artifacts
 __pycache__/
+.hypothesis/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
