@@ -193,13 +193,16 @@ junit.xml
 *.deb
 *.dmg
 *.egg
+*.ear
 *.gz
+*.jar
 *.msi
 *.pkg
 *.rar
 *.rpm
 *.tar
 *.tgz
+*.war
 *.whl
 *.xz
 *.zip
