@@ -1267,6 +1267,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "Playwright/browser-test report directories such as `playwright-report/`, `blob-report/`, and `.playwright/`",
+        "launch evidence Playwright/browser-test report examples",
+    )
+    assert_contains(
+        evidence_text,
         "root `.gitignore` local Rust/Cargo cache/build artifact guard",
         "launch evidence Rust artifact ignore risk-scan scope",
     )

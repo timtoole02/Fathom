@@ -455,7 +455,10 @@ required_frontend_artifact_gitignore_patterns = {
     "yarn-error.log",
 }
 required_test_report_artifact_gitignore_patterns = {
+    "/.playwright/",
+    "/blob-report/",
     "/htmlcov/",
+    "/playwright-report/",
     "/reports/",
     "/test-reports/",
     "/test-results/",
@@ -693,7 +696,10 @@ blocked_tracked_media_capture_suffixes = {
     ".webm",
 }
 blocked_tracked_test_report_artifact_dirs = {
+    ".playwright",
+    "blob-report",
     "htmlcov",
+    "playwright-report",
     "reports",
     "test-reports",
     "test-results",
@@ -2189,14 +2195,17 @@ def self_test():
     if gitignore_test_report_artifact_failures(allowed_test_report_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local test report artifact ignore patterns")
     test_report_artifact_gitignore_failures = gitignore_test_report_artifact_failures(
-        allowed_test_report_artifact_gitignore.replace("coverage.xml\n", "")
+        allowed_test_report_artifact_gitignore.replace("/playwright-report/\n", "")
     )
     if test_report_artifact_gitignore_failures != [
-        ".gitignore: missing local test report artifact ignore patterns: coverage.xml"
+        ".gitignore: missing local test report artifact ignore patterns: /playwright-report/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local test report artifact ignore patterns")
     test_report_artifact_failures = tracked_test_report_artifact_file_failures(
         tracked_paths=[
+            "playwright-report/index.html",
+            "blob-report/report.zip",
+            ".playwright/screenshots/home.png",
             "test-results/junit.xml",
             "test-reports/backend.xml",
             "reports/public-risk/index.html",
@@ -2209,6 +2218,9 @@ def self_test():
         ],
     )
     if test_report_artifact_failures != [
+        "playwright-report/index.html: local test report artifacts must not be tracked for public launch",
+        "blob-report/report.zip: local test report artifacts must not be tracked for public launch",
+        ".playwright/screenshots/home.png: local test report artifacts must not be tracked for public launch",
         "test-results/junit.xml: local test report artifacts must not be tracked for public launch",
         "test-reports/backend.xml: local test report artifacts must not be tracked for public launch",
         "reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",
