@@ -508,6 +508,12 @@ required_frontend_artifact_gitignore_patterns = {
 required_local_cache_artifact_gitignore_patterns = {
     ".cache/",
 }
+required_temp_artifact_gitignore_patterns = {
+    "/temp/",
+    "/tmp/",
+    "*.temp",
+    "*.tmp",
+}
 required_test_report_artifact_gitignore_patterns = {
     "/.playwright/",
     "/blob-report/",
@@ -656,6 +662,14 @@ blocked_tracked_frontend_artifact_suffixes = {
 }
 blocked_tracked_local_cache_artifact_dirs = {
     ".cache",
+}
+blocked_tracked_temp_artifact_dirs = {
+    "temp",
+    "tmp",
+}
+blocked_tracked_temp_artifact_suffixes = {
+    ".temp",
+    ".tmp",
 }
 blocked_tracked_rust_artifact_dirs = {
     "target",
@@ -1435,6 +1449,22 @@ def gitignore_local_cache_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local cache artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_temp_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local temporary/scratch artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_temp_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local temporary/scratch artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_test_report_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1574,6 +1604,19 @@ def tracked_local_cache_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_local_cache_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: local cache artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_temp_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] in blocked_tracked_temp_artifact_dirs:
+            failures.append(f"{rel}: local temporary/scratch artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_temp_artifact_suffixes:
+            failures.append(f"{rel}: local temporary/scratch artifacts must not be tracked for public launch")
     return failures
 
 def tracked_rust_artifact_file_failures(tracked_paths=None):
@@ -2443,6 +2486,30 @@ def self_test():
         ".gitignore: missing local cache artifact ignore patterns: .cache/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local cache artifact ignore patterns")
+    temp_artifact_failures = tracked_temp_artifact_file_failures(
+        tracked_paths=[
+            "tmp/public-contract-smoke-summary.json",
+            "temp/model-registry.json",
+            "docs/api/generated.tmp",
+            "frontend/src/App.jsx",
+        ],
+    )
+    if temp_artifact_failures != [
+        "tmp/public-contract-smoke-summary.json: local temporary/scratch artifacts must not be tracked for public launch",
+        "temp/model-registry.json: local temporary/scratch artifacts must not be tracked for public launch",
+        "docs/api/generated.tmp: local temporary/scratch artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local temporary/scratch artifacts")
+    allowed_temp_artifact_gitignore = "\n".join(sorted(required_temp_artifact_gitignore_patterns)) + "\n"
+    if gitignore_temp_artifact_failures(allowed_temp_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local temporary/scratch artifact ignore patterns")
+    temp_artifact_gitignore_failures = gitignore_temp_artifact_failures(
+        allowed_temp_artifact_gitignore.replace("*.tmp\n", "")
+    )
+    if temp_artifact_gitignore_failures != [
+        ".gitignore: missing local temporary/scratch artifact ignore patterns: *.tmp"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local temporary/scratch artifact ignore patterns")
     allowed_test_report_artifact_gitignore = "\n".join(sorted(required_test_report_artifact_gitignore_patterns)) + "\n"
     if gitignore_test_report_artifact_failures(allowed_test_report_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local test report artifact ignore patterns")
@@ -2989,6 +3056,7 @@ failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_local_cache_artifact_failures())
+failures.extend(gitignore_temp_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
 failures.extend(gitignore_notebook_artifact_failures())
 failures.extend(gitignore_runtime_artifact_failures())
@@ -2998,6 +3066,7 @@ failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_python_env_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_local_cache_artifact_file_failures())
+failures.extend(tracked_temp_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())

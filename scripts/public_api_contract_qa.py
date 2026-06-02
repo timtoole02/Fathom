@@ -1363,6 +1363,36 @@ def assert_boundary_docs() -> None:
         "launch evidence frontend artifact ignore examples",
     )
     assert_contains(
+        launch_text,
+        "tracked local temporary/scratch artifacts",
+        "launch checklist temporary/scratch artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local temporary/scratch artifacts",
+        "launch checklist temporary/scratch artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local temporary/scratch artifact guard",
+        "launch evidence temporary/scratch artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "root `.gitignore` local temporary/scratch artifact guard",
+        "launch evidence temporary/scratch artifact ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local temporary/scratch artifacts such as `tmp/`, `temp/`, `*.tmp`, and `*.temp`",
+        "launch evidence temporary/scratch artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local temporary/scratch artifacts",
+        "launch evidence temporary/scratch artifact ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "Rust/Cargo cache/build artifact guard",
         "launch evidence Rust artifact risk-scan scope",

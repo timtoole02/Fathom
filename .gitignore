@@ -77,6 +77,13 @@ summary.local.json
 *.ips
 *.sarif
 *.sarif.json
+
+# Local temporary/scratch artifacts
+/tmp/
+/temp/
+*.tmp
+*.temp
+
 .DS_Store
 __MACOSX/
 ._*
