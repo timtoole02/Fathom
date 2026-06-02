@@ -79,7 +79,9 @@ __MACOSX/
 Thumbs.db
 desktop.ini
 *~
+*.diff
 *.orig
+*.patch
 *.rej
 *.swo
 *.swp

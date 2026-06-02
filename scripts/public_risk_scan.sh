@@ -90,7 +90,9 @@ blocked_tracked_os_metadata_dirs = {
     ".fseventsd",
 }
 blocked_tracked_editor_artifact_suffixes = {
+    ".diff",
     ".orig",
+    ".patch",
     ".rej",
     ".swo",
     ".swp",
@@ -281,7 +283,9 @@ required_os_metadata_gitignore_patterns = {
 }
 required_editor_artifact_gitignore_patterns = {
     "*~",
+    "*.diff",
     "*.orig",
+    "*.patch",
     "*.rej",
     "*.swo",
     "*.swp",
@@ -1733,6 +1737,8 @@ def self_test():
             "frontend/Thumbs.db",
             "desktop.ini",
             "README.md~",
+            "docs/launch-review.patch",
+            "docs/launch-review.diff",
             "docs/api/client-examples.md.swp",
             "docs/public-launch-checklist.md.orig",
             "docs/public-launch-evidence.md.rej",
@@ -1759,6 +1765,8 @@ def self_test():
         "frontend/Thumbs.db: OS/platform metadata files must not be tracked for public launch",
         "desktop.ini: OS/platform metadata files must not be tracked for public launch",
         "README.md~: editor backup/swap artifacts must not be tracked for public launch",
+        "docs/launch-review.patch: editor backup/swap artifacts must not be tracked for public launch",
+        "docs/launch-review.diff: editor backup/swap artifacts must not be tracked for public launch",
         "docs/api/client-examples.md.swp: editor backup/swap artifacts must not be tracked for public launch",
         "docs/public-launch-checklist.md.orig: editor backup/swap artifacts must not be tracked for public launch",
         "docs/public-launch-evidence.md.rej: editor backup/swap artifacts must not be tracked for public launch",
@@ -1781,9 +1789,9 @@ def self_test():
     if gitignore_editor_artifact_failures(allowed_editor_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local editor backup/swap ignore patterns")
     editor_artifact_gitignore_failures = gitignore_editor_artifact_failures(
-        allowed_editor_artifact_gitignore.replace("*.swp\n", "")
+        allowed_editor_artifact_gitignore.replace("*.patch\n", "")
     )
-    if editor_artifact_gitignore_failures != [".gitignore: missing local editor backup/swap ignore patterns: *.swp"]:
+    if editor_artifact_gitignore_failures != [".gitignore: missing local editor backup/swap ignore patterns: *.patch"]:
         raise AssertionError("public risk self-test did not reject missing local editor backup/swap ignore patterns")
     allowed_ide_artifact_gitignore = "\n".join(sorted(required_ide_artifact_gitignore_patterns)) + "\n"
     if gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore):
