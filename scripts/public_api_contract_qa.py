@@ -874,6 +874,11 @@ def assert_boundary_docs() -> None:
     assert_contains(read(CONTRIBUTING), "docs/public-launch-checklist.md", "contributing launch checklist link")
     assert_contributing_common_gates()
     assert_public_security_docs()
+    assert_contains(
+        launch_text,
+        "tracked-file privacy patterns including macOS, Linux, and Windows home/profile paths",
+        "launch checklist cross-platform home/profile path risk-scan scope",
+    )
     assert_contains(v1_text, "public-contract.json", "v1 contract manifest link")
     assert_contains(launch_text, "api/public-contract.json", "launch checklist manifest link")
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
@@ -971,6 +976,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "workspace/personal agent context-file guard",
         "launch evidence workspace context risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked-file secret-token/private-key/cloud API-key and macOS/Linux/Windows home/profile path guards",
+        "launch evidence cross-platform home/profile path risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "macOS, Linux, and Windows home/profile paths",
+        "launch evidence cross-platform home/profile path examples",
     )
     assert_contains(
         evidence_text,
