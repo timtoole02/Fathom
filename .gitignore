@@ -166,6 +166,14 @@ site-packages/
 /vendor/bundle/
 /vendor/cache/
 
+# Local PHP Composer dependency/test artifacts
+/vendor/autoload.php
+/vendor/bin/
+/vendor/composer/
+/.phpunit.cache/
+.phpunit.result.cache
+composer.phar
+
 # Local R/RStudio artifacts
 /.Rproj.user/
 /renv/library/

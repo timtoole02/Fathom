@@ -122,6 +122,8 @@ The Gradle/JVM build artifact guard also rejects tracked local Gradle cache/stat
 
 The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/`, with matching root `.gitignore` coverage.
 
+The PHP Composer guard also rejects tracked local dependency/test artifacts such as `vendor/autoload.php`, `vendor/bin/`, `vendor/composer/`, `.phpunit.cache/`, `.phpunit.result.cache`, and `composer.phar`, with matching root `.gitignore` coverage.
+
 The R/RStudio artifact guard also rejects tracked local session and dependency artifacts such as `.Rproj.user/`, `.Rhistory`, `.RData`, `.Ruserdata`, and `renv/library/`, with matching root `.gitignore` coverage for local R/RStudio artifacts.
 
 The Go cache/test artifact guard also rejects tracked local generated outputs such as `.gocache/`, `.gomodcache/`, `coverage.out`, and `*.test`, with matching root `.gitignore` coverage.

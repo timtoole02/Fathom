@@ -1036,6 +1036,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "PHP Composer guard also rejects tracked local dependency/test artifacts",
+        "launch checklist PHP Composer artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root `.gitignore` coverage",
+        "launch checklist PHP Composer artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "with matching root `.gitignore` coverage",
         "launch checklist Go artifact ignore scope",
     )
@@ -1534,6 +1544,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local R/RStudio artifacts",
         "launch evidence R/RStudio artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "PHP Composer dependency/test artifact guard",
+        "launch evidence PHP Composer artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Composer/PHPUnit artifacts such as `vendor/autoload.php`, `vendor/bin/`, `vendor/composer/`, `.phpunit.cache/`, `.phpunit.result.cache`, and `composer.phar`",
+        "launch evidence PHP Composer artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local PHP Composer dependency/test artifacts",
+        "launch evidence PHP Composer artifact ignore examples",
     )
     assert_contains(
         launch_text,
