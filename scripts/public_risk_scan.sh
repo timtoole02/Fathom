@@ -672,6 +672,7 @@ blocked_tracked_temp_artifact_suffixes = {
     ".tmp",
 }
 blocked_tracked_rust_artifact_dirs = {
+    ".cargo",
     "target",
 }
 blocked_tracked_rust_artifact_suffixes = {
@@ -2596,6 +2597,10 @@ def self_test():
         raise AssertionError("public risk self-test did not reject tracked local notebook artifacts")
     rust_artifact_failures = tracked_rust_artifact_file_failures(
         tracked_paths=[
+            ".cargo/registry/cache/index.crate",
+            ".cargo/git/checkouts/fathom-local/HEAD",
+            ".cargo/credentials.toml",
+            ".cargo/config.toml",
             "target/debug/fathom",
             "crates/fathom-core/target/release/deps/libfathom_core.rlib",
             "crates/fathom-core/target/release/deps/fathom_core.rmeta",
@@ -2614,6 +2619,10 @@ def self_test():
         ],
     )
     if rust_artifact_failures != [
+        ".cargo/registry/cache/index.crate: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        ".cargo/git/checkouts/fathom-local/HEAD: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        ".cargo/credentials.toml: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        ".cargo/config.toml: Rust/Cargo cache/build artifacts must not be tracked for public launch",
         "target/debug/fathom: Rust/Cargo cache/build artifacts must not be tracked for public launch",
         "crates/fathom-core/target/release/deps/libfathom_core.rlib: Rust/Cargo cache/build artifacts must not be tracked for public launch",
         "crates/fathom-core/target/release/deps/fathom_core.rmeta: Rust/Cargo cache/build artifacts must not be tracked for public launch",

@@ -1399,6 +1399,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "tracked Rust/Cargo cache/build artifacts such as `.cargo/`, `target/`, compiler outputs, and coverage profiles",
+        "launch evidence Rust artifact examples",
+    )
+    assert_contains(
+        evidence_text,
         "Playwright/browser-test report directories such as `playwright-report/`, `blob-report/`, and `.playwright/`",
         "launch evidence Playwright/browser-test report examples",
     )
