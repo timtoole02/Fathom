@@ -120,6 +120,8 @@ The JVM dependency artifact guard also rejects tracked local Maven repository/ca
 
 The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/`, with matching root `.gitignore` coverage.
 
+The R/RStudio artifact guard also rejects tracked local session and dependency artifacts such as `.Rproj.user/`, `.Rhistory`, `.RData`, `.Ruserdata`, and `renv/library/`, with matching root `.gitignore` coverage for local R/RStudio artifacts.
+
 The Go cache/test artifact guard also rejects tracked local generated outputs such as `.gocache/`, `.gomodcache/`, `coverage.out`, and `*.test`, with matching root `.gitignore` coverage.
 
 The backend acceptance artifact summaries reject local paths, secret markers, and request/payload text in shareable `summary.json` and `summary.md`; keep full JSON artifacts and logs on the manual review path before publishing.

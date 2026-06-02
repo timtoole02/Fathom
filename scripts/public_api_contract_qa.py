@@ -1511,6 +1511,21 @@ def assert_boundary_docs() -> None:
         "launch evidence JVM dependency artifact ignore examples",
     )
     assert_contains(
+        evidence_text,
+        "R/RStudio artifact guard",
+        "launch evidence R/RStudio artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local R/RStudio artifacts such as `.Rproj.user/`, `.Rhistory`, `.RData`, `.Ruserdata`, and `renv/library/`",
+        "launch evidence R/RStudio artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local R/RStudio artifacts",
+        "launch evidence R/RStudio artifact ignore examples",
+    )
+    assert_contains(
         launch_text,
         "root `.gitignore` coverage for local release/package artifacts",
         "launch checklist release/package artifact ignore scope",
