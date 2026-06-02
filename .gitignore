@@ -321,6 +321,11 @@ Voice Memo *
 *.jks
 *.keystore
 *.p12
+*.crt
+*.csr
+*.der
+*.p7b
+*.p7c
 *.p8
 *.pfx
 *.secret
