@@ -116,6 +116,8 @@ site-packages/
 /test-reports/
 /reports/
 /htmlcov/
+.coverage
+.coverage.*
 coverage.xml
 lcov.info
 *.lcov

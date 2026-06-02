@@ -472,6 +472,8 @@ required_test_report_artifact_gitignore_patterns = {
     "/reports/",
     "/test-reports/",
     "/test-results/",
+    ".coverage",
+    ".coverage.*",
     "*.lcov",
     "*.junit.xml",
     "coverage.xml",
@@ -717,6 +719,7 @@ blocked_tracked_test_report_artifact_dirs = {
     "test-results",
 }
 blocked_tracked_test_report_artifact_filenames = {
+    ".coverage",
     "coverage.xml",
     "junit.xml",
     "lcov.info",
@@ -1586,6 +1589,9 @@ def tracked_test_report_artifact_file_failures(tracked_paths=None):
         if path.name in blocked_tracked_test_report_artifact_filenames:
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
             continue
+        if path.name.startswith(".coverage."):
+            failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
+            continue
         if any(rel.endswith(suffix) for suffix in blocked_tracked_test_report_artifact_suffixes):
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
     return failures
@@ -2235,6 +2241,8 @@ def self_test():
             "test-reports/backend.xml",
             "reports/public-risk/index.html",
             "htmlcov/index.html",
+            ".coverage",
+            ".coverage.public-risk",
             "coverage.xml",
             "lcov.info",
             "crates/fathom-core/coverage.lcov",
@@ -2252,6 +2260,8 @@ def self_test():
         "test-reports/backend.xml: local test report artifacts must not be tracked for public launch",
         "reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",
         "htmlcov/index.html: local test report artifacts must not be tracked for public launch",
+        ".coverage: local test report artifacts must not be tracked for public launch",
+        ".coverage.public-risk: local test report artifacts must not be tracked for public launch",
         "coverage.xml: local test report artifacts must not be tracked for public launch",
         "lcov.info: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/coverage.lcov: local test report artifacts must not be tracked for public launch",
