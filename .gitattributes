@@ -3,6 +3,7 @@
 
 # Binary artifacts should never be line-ending normalized.
 *.bin binary
+*.deb binary
 *.dmg binary
 *.gif binary
 *.gguf binary
@@ -10,6 +11,7 @@
 *.ico binary
 *.jpeg binary
 *.jpg binary
+*.msi binary
 *.npy binary
 *.npz binary
 *.onnx binary
@@ -17,8 +19,11 @@
 *.png binary
 *.pt binary
 *.pth binary
+*.rar binary
+*.rpm binary
 *.safetensors binary
 *.tar binary
 *.tgz binary
 *.webp binary
 *.zip binary
+*.zst binary

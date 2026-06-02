@@ -650,8 +650,10 @@ def assert_gitattributes_text_normalization(text: str | None = None, label: str 
     required_lines = {
         "* text=auto eol=lf",
         "*.bin binary",
+        "*.deb binary",
         "*.gguf binary",
         "*.gz binary",
+        "*.msi binary",
         "*.npy binary",
         "*.npz binary",
         "*.onnx binary",
@@ -659,10 +661,13 @@ def assert_gitattributes_text_normalization(text: str | None = None, label: str 
         "*.png binary",
         "*.pt binary",
         "*.pth binary",
+        "*.rar binary",
+        "*.rpm binary",
         "*.safetensors binary",
         "*.tar binary",
         "*.tgz binary",
         "*.zip binary",
+        "*.zst binary",
     }
     missing = sorted(required_lines - active_lines)
     if missing:
@@ -1943,8 +1948,10 @@ npm --prefix frontend run qa:copy
     valid_gitattributes = """
 * text=auto eol=lf
 *.bin binary
+*.deb binary
 *.gguf binary
 *.gz binary
+*.msi binary
 *.npy binary
 *.npz binary
 *.onnx binary
@@ -1952,10 +1959,13 @@ npm --prefix frontend run qa:copy
 *.png binary
 *.pt binary
 *.pth binary
+*.rar binary
+*.rpm binary
 *.safetensors binary
 *.tar binary
 *.tgz binary
 *.zip binary
+*.zst binary
 """
     assert_gitattributes_text_normalization(valid_gitattributes, "synthetic .gitattributes")
     for text, expected in (
