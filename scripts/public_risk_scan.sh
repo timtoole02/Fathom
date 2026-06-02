@@ -869,7 +869,12 @@ dependency_lockfile_names = {
 dependency_lock_source_patterns = [
     (
         "local file dependency source in lockfile",
-        re.compile(r"\b(?:file|link):(?:\.\.?/|/|~)|\bpath\s*=\s*[\"'](?:\.\.?/|/|~)", re.IGNORECASE),
+        re.compile(
+            r"\b(?:file|link|portal):(?:\.\.?/|/|~)"
+            r"|\bpath\s*=\s*[\"'](?:\.\.?/|/|~)"
+            r"|\bpatch:[^\s\"']*#(?:\.\.?/|/|~)",
+            re.IGNORECASE,
+        ),
     ),
     (
         "SSH dependency source in lockfile",
@@ -3145,7 +3150,14 @@ def self_test():
                 '"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}'
             ),
             "pnpm-lock.yaml": "packages:\n  /private:\n    resolution: {tarball: /Users/example/private.tgz}\n",
-            "yarn.lock": '"safe@npm:^1.0.0":\n  resolution: "safe@npm:1.0.0"\n',
+            "yarn.lock": (
+                '"safe@npm:^1.0.0":\n'
+                '  resolution: "safe@npm:1.0.0"\n'
+                '"portal-helper@portal:../private-helper":\n'
+                '  resolution: "portal-helper@portal:../private-helper"\n'
+                '"patched@patch:patched@npm%3A1.0.0#./.yarn/patches/patched.patch":\n'
+                '  resolution: "patched@patch:patched@npm%3A1.0.0#./.yarn/patches/patched.patch"\n'
+            ),
             "docs/api/public-contract.json": '{"source":"file:../ignored.json"}\n',
         },
     )
@@ -3155,6 +3167,10 @@ def self_test():
         'package-lock.json:1: local file dependency source in lockfile: {"packages":{"node_modules/local":{"resolved":"file:../local.tgz"},"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}',
         'package-lock.json:1: authenticated dependency URL in lockfile: {"packages":{"node_modules/local":{"resolved":"file:../local.tgz"},"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}',
         "pnpm-lock.yaml:3: personal home path in dependency lockfile: resolution: {tarball: /Users/example/private.tgz}",
+        'yarn.lock:3: local file dependency source in lockfile: "portal-helper@portal:../private-helper":',
+        'yarn.lock:4: local file dependency source in lockfile: resolution: "portal-helper@portal:../private-helper"',
+        'yarn.lock:5: local file dependency source in lockfile: "patched@patch:patched@npm%3A1.0.0#./.yarn/patches/patched.patch":',
+        'yarn.lock:6: local file dependency source in lockfile: resolution: "patched@patch:patched@npm%3A1.0.0#./.yarn/patches/patched.patch"',
     ]:
         raise AssertionError("public risk self-test did not reject local/private dependency lockfile sources")
     print("public risk scan self-test passed")
