@@ -32,11 +32,15 @@ coverage/
 .turbo/
 .parcel-cache/
 .cache/
+.eslintcache
+.stylelintcache
 *.tsbuildinfo
 npm-debug.log
 pnpm-debug.log
 yarn-debug.log
 yarn-error.log
+frontend/.eslintcache
+frontend/.stylelintcache
 
 # Local runtime state
 .fathom/
