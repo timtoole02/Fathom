@@ -893,6 +893,16 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "root `.gitignore` coverage for local model/checkpoint artifacts", "launch checklist model/checkpoint artifact ignore scope")
     assert_contains(launch_text, "tracked local Docker/container artifacts", "launch checklist Docker/container artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local Docker/container artifacts", "launch checklist Docker/container artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "tracked local Terraform/OpenTofu state artifacts",
+        "launch checklist infrastructure state artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local infrastructure state artifacts",
+        "launch checklist infrastructure state artifact ignore scope",
+    )
     assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact ignore scope")
     assert_contains(
@@ -904,6 +914,26 @@ def assert_boundary_docs() -> None:
         launch_text,
         "root `.gitignore` coverage for local mobile/Xcode/Android signing/provisioning artifacts",
         "launch checklist mobile signing artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "tracked local screenshot/screen-recording artifacts",
+        "launch checklist screenshot/screen-recording artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local screenshot/screen-recording artifacts",
+        "launch checklist screenshot/screen-recording artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "tracked local audio/video capture/export artifacts",
+        "launch checklist audio/video capture artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local audio/video capture/export artifacts",
+        "launch checklist audio/video capture artifact ignore scope",
     )
     assert_contains(launch_text, "root `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
     assert_contains(
@@ -1399,6 +1429,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "local Terraform/OpenTofu infrastructure state artifact guard",
+        "launch evidence infrastructure state artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Terraform/OpenTofu infrastructure state artifacts such as `.terraform/`, `.terraform.lock.hcl`, `.tfstate`, `.tfvars`, `.tfvars.json`, and `.tfplan` files",
+        "launch evidence infrastructure state artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local infrastructure state artifacts",
+        "launch evidence infrastructure state artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
         "local mobile/Xcode/Android build artifact guard",
         "launch evidence mobile build artifact risk-scan scope",
     )
@@ -1426,6 +1471,36 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "matching root `.gitignore` coverage",
         "launch evidence mobile signing artifact ignore coverage",
+    )
+    assert_contains(
+        evidence_text,
+        "local screenshot/screen-recording artifact guard",
+        "launch evidence screenshot/screen-recording artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local screenshot/screen-recording artifacts with default macOS capture prefixes",
+        "launch evidence screenshot/screen-recording artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local screenshot/screen-recording artifacts",
+        "launch evidence screenshot/screen-recording artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "local audio/video capture/export artifact guard",
+        "launch evidence audio/video capture artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local audio/video capture/export artifacts with common media extensions and default voice memo/audio recording prefixes",
+        "launch evidence audio/video capture artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local audio/video capture/export artifacts",
+        "launch evidence audio/video capture artifact ignore examples",
     )
     assert_contains(
         evidence_text,
