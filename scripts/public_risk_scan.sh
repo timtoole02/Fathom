@@ -471,6 +471,7 @@ required_python_env_artifact_gitignore_patterns = {
     "site-packages/",
 }
 required_frontend_artifact_gitignore_patterns = {
+    ".bun/",
     ".eslintcache",
     ".npm/",
     ".parcel-cache/",
@@ -483,6 +484,7 @@ required_frontend_artifact_gitignore_patterns = {
     ".yarn/unplugged/",
     "*.tsbuildinfo",
     "build/",
+    "bun-debug.log",
     "coverage/",
     "dist/",
     "frontend/.next/",
@@ -498,6 +500,7 @@ required_frontend_artifact_gitignore_patterns = {
     "frontend/dist/",
     "frontend/node_modules/",
     "frontend/.eslintcache",
+    "frontend/.bun/",
     "frontend/.stylelintcache",
     "node_modules/",
     "npm-debug.log",
@@ -624,6 +627,7 @@ blocked_tracked_python_env_artifact_dirs = {
     "wheelhouse",
 }
 blocked_tracked_frontend_artifact_dirs = {
+    ".bun",
     ".npm",
     ".next",
     ".parcel-cache",
@@ -652,6 +656,7 @@ blocked_tracked_root_frontend_build_dirs = {
 blocked_tracked_frontend_artifact_filenames = {
     ".eslintcache",
     ".stylelintcache",
+    "bun-debug.log",
     "npm-debug.log",
     "pnpm-debug.log",
     "yarn-debug.log",
@@ -2431,12 +2436,14 @@ def self_test():
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
+            ".bun/install/cache/react/package.json",
             ".npm/_cacache/index-v5/00/cache-entry",
             ".pnpm-store/v3/files/00/package",
             ".yarn/cache/react-npm-18.2.0.zip",
             ".yarn/unplugged/esbuild/package.json",
             ".yarn/build-state.yml",
             ".yarn/install-state.gz",
+            "frontend/.bun/install/cache/vite/package.json",
             "frontend/.npm/_logs/install.log",
             "frontend/.pnpm-store/v3/files/00/package",
             "frontend/.yarn/cache/vite-npm-5.0.0.zip",
@@ -2457,6 +2464,7 @@ def self_test():
             "frontend/.eslintcache",
             "frontend/.stylelintcache",
             "frontend/src/tsconfig.tsbuildinfo",
+            "bun-debug.log",
             "npm-debug.log",
             "yarn-error.log",
             "pnpm-debug.log",
@@ -2470,12 +2478,14 @@ def self_test():
     )
     if frontend_artifact_failures != [
         "frontend/node_modules/.package-lock.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".bun/install/cache/react/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".npm/_cacache/index-v5/00/cache-entry: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".pnpm-store/v3/files/00/package: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".yarn/cache/react-npm-18.2.0.zip: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".yarn/unplugged/esbuild/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".yarn/build-state.yml: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".yarn/install-state.gz: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.bun/install/cache/vite/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.npm/_logs/install.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.pnpm-store/v3/files/00/package: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.yarn/cache/vite-npm-5.0.0.zip: frontend/Node cache/build artifacts must not be tracked for public launch",
@@ -2496,6 +2506,7 @@ def self_test():
         "frontend/.eslintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.stylelintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/src/tsconfig.tsbuildinfo: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "bun-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         "npm-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         "yarn-error.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         "pnpm-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",

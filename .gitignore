@@ -8,6 +8,7 @@ target/
 
 # Node/frontend
 frontend/node_modules/
+frontend/.bun/
 frontend/.npm/
 frontend/.pnpm-store/
 frontend/.yarn/cache/
@@ -20,6 +21,7 @@ frontend/coverage/
 frontend/.next/
 frontend/.vite/
 node_modules/
+.bun/
 .npm/
 .pnpm-store/
 .yarn/cache/
@@ -36,6 +38,7 @@ coverage/
 .stylelintcache
 *.tsbuildinfo
 npm-debug.log
+bun-debug.log
 pnpm-debug.log
 yarn-debug.log
 yarn-error.log
