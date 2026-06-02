@@ -118,6 +118,8 @@ The release/package artifact guard also rejects JVM package archives such as `.j
 
 The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/`, with matching root `.gitignore` coverage.
 
+The Gradle/JVM build artifact guard also rejects tracked local Gradle cache/state such as `.gradle/` and common Gradle `build/` output subtrees such as `classes/`, `reports/`, `test-results/`, `tmp/`, `generated/`, `intermediates/`, and `libs/`, with matching root `.gitignore` coverage. It does not treat source-of-truth Gradle project files such as `build.gradle`, `settings.gradle`, `gradle.properties`, `gradlew`, or `gradle/wrapper/gradle-wrapper.properties` as build artifacts.
+
 The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/`, with matching root `.gitignore` coverage.
 
 The R/RStudio artifact guard also rejects tracked local session and dependency artifacts such as `.Rproj.user/`, `.Rhistory`, `.RData`, `.Ruserdata`, and `renv/library/`, with matching root `.gitignore` coverage for local R/RStudio artifacts.
