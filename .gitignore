@@ -143,6 +143,9 @@ junit.xml
 # Local notebook artifacts
 .ipynb_checkpoints/
 
+# Local editor history artifacts
+.history/
+
 # Local release/package artifacts
 /artifacts/
 /release/

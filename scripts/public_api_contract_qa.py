@@ -1074,6 +1074,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "local editor history artifact guard",
+        "launch evidence editor history risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
         "IDE workspace/config artifact guard",
         "launch evidence IDE workspace/config risk-scan scope",
     )
@@ -1086,6 +1091,11 @@ def assert_boundary_docs() -> None:
         launch_text,
         "root `.gitignore` coverage for local editor backup/swap files",
         "launch checklist editor backup/swap ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "local editor history directories",
+        "launch checklist editor history risk-scan scope",
     )
     assert_contains(
         launch_text,

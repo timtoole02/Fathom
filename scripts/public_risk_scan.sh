@@ -99,6 +99,9 @@ blocked_tracked_editor_artifact_suffixes = {
     ".swo",
     ".swp",
 }
+blocked_tracked_editor_artifact_dirs = {
+    ".history",
+}
 blocked_tracked_ide_artifact_dirs = {
     ".idea",
     ".settings",
@@ -289,6 +292,7 @@ required_os_metadata_gitignore_patterns = {
     "desktop.ini",
 }
 required_editor_artifact_gitignore_patterns = {
+    ".history/",
     "*~",
     "*.diff",
     "*.orig",
@@ -950,7 +954,11 @@ def tracked_blocked_file_failures(tracked_paths=None):
         ):
             failures.append(f"{rel}: OS/platform metadata files must not be tracked for public launch")
             continue
-        if path.name.endswith("~") or path.suffix.lower() in blocked_tracked_editor_artifact_suffixes:
+        if (
+            path.name.endswith("~")
+            or path.suffix.lower() in blocked_tracked_editor_artifact_suffixes
+            or any(part in blocked_tracked_editor_artifact_dirs for part in path.parts)
+        ):
             failures.append(f"{rel}: editor backup/swap artifacts must not be tracked for public launch")
             continue
         if any(part in blocked_tracked_ide_artifact_dirs for part in path.parts):
@@ -1850,6 +1858,7 @@ def self_test():
             "frontend/Thumbs.db",
             "desktop.ini",
             "README.md~",
+            "docs/.history/public-launch-evidence.md",
             "docs/launch-review.patch",
             "docs/launch-review.diff",
             "docs/api/client-examples.md.swp",
@@ -1879,6 +1888,7 @@ def self_test():
         "frontend/Thumbs.db: OS/platform metadata files must not be tracked for public launch",
         "desktop.ini: OS/platform metadata files must not be tracked for public launch",
         "README.md~: editor backup/swap artifacts must not be tracked for public launch",
+        "docs/.history/public-launch-evidence.md: editor backup/swap artifacts must not be tracked for public launch",
         "docs/launch-review.patch: editor backup/swap artifacts must not be tracked for public launch",
         "docs/launch-review.diff: editor backup/swap artifacts must not be tracked for public launch",
         "docs/api/client-examples.md.swp: editor backup/swap artifacts must not be tracked for public launch",
