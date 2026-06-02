@@ -859,6 +859,20 @@ dependency_lock_source_patterns = [
         re.compile(r"https?://[^/\s:@]+:[^@\s]+@", re.IGNORECASE),
     ),
 ]
+gitmodules_source_patterns = [
+    (
+        "local or relative submodule URL in .gitmodules",
+        re.compile(r"\burl\s*=\s*(?:file:|(?:\.\.?|~|/)[^\s]+)", re.IGNORECASE),
+    ),
+    (
+        "SSH submodule URL in .gitmodules",
+        re.compile(r"\b(?:git\+)?ssh://|git@[A-Za-z0-9_.-]+:", re.IGNORECASE),
+    ),
+    (
+        "authenticated submodule URL in .gitmodules",
+        re.compile(r"https?://[^/\s:@]+:[^@\s]+@", re.IGNORECASE),
+    ),
+]
 git_lfs_pointer_version = "version https://git-lfs.github.com/spec/v1"
 docs_evidence_prefixes = (
     "docs/benchmarks/",
@@ -938,6 +952,36 @@ def tracked_dependency_lock_source_failures(tracked_paths=None, texts=None):
                 if pattern.search(privacy_line):
                     failures.append(f"{rel}:{line_no}: {label} in dependency lockfile: {line.strip()}")
             for label, pattern in dependency_lock_source_patterns:
+                if pattern.search(privacy_line):
+                    failures.append(f"{rel}:{line_no}: {label}: {line.strip()}")
+    return failures
+
+def tracked_gitmodules_source_failures(tracked_paths=None, texts=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        if rel != ".gitmodules":
+            continue
+        path = pathlib.Path(rel)
+        try:
+            if path.is_symlink():
+                continue
+            text = texts[rel] if texts is not None else path.read_text(encoding="utf-8")
+        except (FileNotFoundError, KeyError, OSError, UnicodeDecodeError):
+            continue
+
+        for line_no, line in enumerate(text.splitlines(), 1):
+            privacy_line = line
+            for public_repo_url in public_repo_urls:
+                privacy_line = privacy_line.replace(public_repo_url, "")
+            for label, pattern in privacy_patterns():
+                if pattern.search(privacy_line):
+                    failures.append(f"{rel}:{line_no}: {label} in Git submodule metadata: {line.strip()}")
+            for label, pattern in secret_value_patterns():
+                if pattern.search(privacy_line):
+                    failures.append(f"{rel}:{line_no}: {label} in Git submodule metadata: {line.strip()}")
+            for label, pattern in gitmodules_source_patterns:
                 if pattern.search(privacy_line):
                     failures.append(f"{rel}:{line_no}: {label}: {line.strip()}")
     return failures
@@ -2989,6 +3033,40 @@ def self_test():
         "docs/missing-contract-link: tracked symlink target must resolve to an existing tracked in-repository path, found api/missing-contract.json",
     ]:
         raise AssertionError("public risk self-test did not reject symlinks escaping the repository or resolving to local-only targets")
+    gitmodules_failures = tracked_gitmodules_source_failures(
+        tracked_paths=[
+            ".gitmodules",
+            "docs/api/public-contract.json",
+        ],
+        texts={
+            ".gitmodules": (
+                '[submodule "safe"]\n'
+                "  path = vendor/safe\n"
+                "  url = https://github.com/example/safe.git\n"
+                '[submodule "relative"]\n'
+                "  path = vendor/private-relative\n"
+                "  url = ../private-relative.git\n"
+                '[submodule "ssh"]\n'
+                "  path = vendor/private-ssh\n"
+                "  url = git@github.com:example/private.git\n"
+                '[submodule "auth"]\n'
+                "  path = vendor/private-auth\n"
+                "  url = https://user:token@example.invalid/private.git\n"
+                '[submodule "home"]\n'
+                "  path = vendor/private-home\n"
+                "  url = /Users/example/private.git\n"
+            ),
+            "docs/api/public-contract.json": '{"source":"../ignored.json"}\n',
+        },
+    )
+    if gitmodules_failures != [
+        ".gitmodules:6: local or relative submodule URL in .gitmodules: url = ../private-relative.git",
+        ".gitmodules:9: SSH submodule URL in .gitmodules: url = git@github.com:example/private.git",
+        ".gitmodules:12: authenticated submodule URL in .gitmodules: url = https://user:token@example.invalid/private.git",
+        ".gitmodules:15: personal home path in Git submodule metadata: url = /Users/example/private.git",
+        ".gitmodules:15: local or relative submodule URL in .gitmodules: url = /Users/example/private.git",
+    ]:
+        raise AssertionError("public risk self-test did not reject local/private Git submodule metadata sources")
     lockfile_failures = tracked_dependency_lock_source_failures(
         tracked_paths=[
             "Cargo.lock",
@@ -3034,6 +3112,7 @@ if "--self-test" in sys.argv[1:]:
 
 failures = scan_items(tracked_items())
 failures.extend(tracked_dependency_lock_source_failures())
+failures.extend(tracked_gitmodules_source_failures())
 failures.extend(tracked_large_file_failures())
 failures.extend(tracked_git_lfs_pointer_failures())
 failures.extend(tracked_blocked_file_failures())

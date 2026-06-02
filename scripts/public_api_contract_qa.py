@@ -929,6 +929,11 @@ def assert_boundary_docs() -> None:
         "tracked Git LFS pointer files that can hide external artifact downloads",
         "launch checklist Git LFS pointer risk-scan scope",
     )
+    assert_contains(
+        launch_text,
+        "tracked Git submodule metadata for local/relative, SSH-only, authenticated, secret, or private source URLs",
+        "launch checklist Git submodule metadata risk-scan scope",
+    )
     assert_contains(launch_text, "tracked local model/checkpoint artifacts", "launch checklist model/checkpoint artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local model/checkpoint artifacts", "launch checklist model/checkpoint artifact ignore scope")
     assert_contains(launch_text, "tracked local Docker/container artifacts", "launch checklist Docker/container artifact risk-scan scope")
@@ -1014,6 +1019,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "tracked Git LFS pointer files that can hide external artifact downloads",
         "launch evidence Git LFS pointer examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Git submodule metadata local/private source guard",
+        "launch evidence Git submodule metadata risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked Git submodule metadata such as `.gitmodules` local/relative, SSH-only, authenticated, secret, or private source URLs",
+        "launch evidence Git submodule metadata examples",
     )
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
