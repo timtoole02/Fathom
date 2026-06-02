@@ -163,6 +163,13 @@ site-packages/
 /vendor/bundle/
 /vendor/cache/
 
+# Local R/RStudio artifacts
+/.Rproj.user/
+/renv/library/
+.Rhistory
+.RData
+.Ruserdata
+
 # Local Go cache/test artifacts
 /.gocache/
 /.gomodcache/

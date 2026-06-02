@@ -514,6 +514,13 @@ required_ruby_bundle_artifact_gitignore_patterns = {
     "/vendor/bundle/",
     "/vendor/cache/",
 }
+required_r_artifact_gitignore_patterns = {
+    "/.Rproj.user/",
+    "/renv/library/",
+    ".RData",
+    ".Rhistory",
+    ".Ruserdata",
+}
 required_go_artifact_gitignore_patterns = {
     "/.gocache/",
     "/.gomodcache/",
@@ -693,6 +700,17 @@ blocked_tracked_ruby_bundle_artifact_dirs = {
 blocked_tracked_ruby_vendor_artifact_dirs = {
     ("vendor", "bundle"),
     ("vendor", "cache"),
+}
+blocked_tracked_r_artifact_dirs = {
+    ".Rproj.user",
+}
+blocked_tracked_r_dependency_artifact_dirs = {
+    ("renv", "library"),
+}
+blocked_tracked_r_artifact_filenames = {
+    ".RData",
+    ".Rhistory",
+    ".Ruserdata",
 }
 blocked_tracked_go_artifact_dirs = {
     ".gocache",
@@ -1673,6 +1691,22 @@ def gitignore_ruby_bundle_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Ruby/Bundler dependency artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_r_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local R/RStudio artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_r_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local R/RStudio artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_go_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1867,6 +1901,22 @@ def tracked_ruby_bundle_artifact_file_failures(tracked_paths=None):
             continue
         if len(path.parts) >= 2 and tuple(path.parts[:2]) in blocked_tracked_ruby_vendor_artifact_dirs:
             failures.append(f"{rel}: Ruby/Bundler dependency artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_r_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_r_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: R/RStudio local artifacts must not be tracked for public launch")
+            continue
+        if len(path.parts) >= 2 and tuple(path.parts[:2]) in blocked_tracked_r_dependency_artifact_dirs:
+            failures.append(f"{rel}: R/RStudio local artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_r_artifact_filenames:
+            failures.append(f"{rel}: R/RStudio local artifacts must not be tracked for public launch")
     return failures
 
 def tracked_go_artifact_file_failures(tracked_paths=None):
@@ -2823,6 +2873,37 @@ def self_test():
         ".gitignore: missing local Ruby/Bundler dependency artifact ignore patterns: /vendor/cache/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Ruby/Bundler dependency artifact ignore patterns")
+    r_artifact_failures = tracked_r_artifact_file_failures(
+        tracked_paths=[
+            ".Rproj.user/123/session.json",
+            "analysis/.Rhistory",
+            "analysis/.RData",
+            "analysis/.Ruserdata",
+            "renv/library/macos/R-4.4/x86_64-apple-darwin20/dplyr/DESCRIPTION",
+            "analysis/fathom.R",
+            "analysis/fathom.Rproj",
+            "renv.lock",
+            "docs/r-analysis.md",
+        ],
+    )
+    if r_artifact_failures != [
+        ".Rproj.user/123/session.json: R/RStudio local artifacts must not be tracked for public launch",
+        "analysis/.Rhistory: R/RStudio local artifacts must not be tracked for public launch",
+        "analysis/.RData: R/RStudio local artifacts must not be tracked for public launch",
+        "analysis/.Ruserdata: R/RStudio local artifacts must not be tracked for public launch",
+        "renv/library/macos/R-4.4/x86_64-apple-darwin20/dplyr/DESCRIPTION: R/RStudio local artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local R/RStudio artifacts")
+    allowed_r_artifact_gitignore = "\n".join(sorted(required_r_artifact_gitignore_patterns)) + "\n"
+    if gitignore_r_artifact_failures(allowed_r_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local R/RStudio artifact ignore patterns")
+    r_artifact_gitignore_failures = gitignore_r_artifact_failures(
+        allowed_r_artifact_gitignore.replace("/renv/library/\n", "")
+    )
+    if r_artifact_gitignore_failures != [
+        ".gitignore: missing local R/RStudio artifact ignore patterns: /renv/library/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local R/RStudio artifact ignore patterns")
     go_artifact_failures = tracked_go_artifact_file_failures(
         tracked_paths=[
             ".gocache/00/abcdef-a",
@@ -3717,6 +3798,7 @@ failures.extend(gitignore_diagnostic_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_ruby_bundle_artifact_failures())
+failures.extend(gitignore_r_artifact_failures())
 failures.extend(gitignore_go_artifact_failures())
 failures.extend(gitignore_jvm_dependency_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
@@ -3730,6 +3812,7 @@ failures.extend(tracked_diagnostic_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_python_env_artifact_file_failures())
 failures.extend(tracked_ruby_bundle_artifact_file_failures())
+failures.extend(tracked_r_artifact_file_failures())
 failures.extend(tracked_go_artifact_file_failures())
 failures.extend(tracked_jvm_dependency_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
