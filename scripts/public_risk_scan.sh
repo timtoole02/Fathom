@@ -472,8 +472,10 @@ required_test_report_artifact_gitignore_patterns = {
     "/reports/",
     "/test-reports/",
     "/test-results/",
+    "*.lcov",
     "*.junit.xml",
     "coverage.xml",
+    "lcov.info",
     "junit.xml",
 }
 required_notebook_artifact_gitignore_patterns = {
@@ -717,8 +719,10 @@ blocked_tracked_test_report_artifact_dirs = {
 blocked_tracked_test_report_artifact_filenames = {
     "coverage.xml",
     "junit.xml",
+    "lcov.info",
 }
 blocked_tracked_test_report_artifact_suffixes = {
+    ".lcov",
     ".junit.xml",
 }
 blocked_tracked_notebook_artifact_dirs = {
@@ -2216,10 +2220,10 @@ def self_test():
     if gitignore_test_report_artifact_failures(allowed_test_report_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local test report artifact ignore patterns")
     test_report_artifact_gitignore_failures = gitignore_test_report_artifact_failures(
-        allowed_test_report_artifact_gitignore.replace("/playwright-report/\n", "")
+        allowed_test_report_artifact_gitignore.replace("*.lcov\n", "")
     )
     if test_report_artifact_gitignore_failures != [
-        ".gitignore: missing local test report artifact ignore patterns: /playwright-report/"
+        ".gitignore: missing local test report artifact ignore patterns: *.lcov"
     ]:
         raise AssertionError("public risk self-test did not reject missing local test report artifact ignore patterns")
     test_report_artifact_failures = tracked_test_report_artifact_file_failures(
@@ -2232,6 +2236,8 @@ def self_test():
             "reports/public-risk/index.html",
             "htmlcov/index.html",
             "coverage.xml",
+            "lcov.info",
+            "crates/fathom-core/coverage.lcov",
             "junit.xml",
             "crates/fathom-core/test-output.junit.xml",
             "docs/api/public-contract.json",
@@ -2247,6 +2253,8 @@ def self_test():
         "reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",
         "htmlcov/index.html: local test report artifacts must not be tracked for public launch",
         "coverage.xml: local test report artifacts must not be tracked for public launch",
+        "lcov.info: local test report artifacts must not be tracked for public launch",
+        "crates/fathom-core/coverage.lcov: local test report artifacts must not be tracked for public launch",
         "junit.xml: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/test-output.junit.xml: local test report artifacts must not be tracked for public launch",
     ]:

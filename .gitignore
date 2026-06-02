@@ -117,6 +117,8 @@ site-packages/
 /reports/
 /htmlcov/
 coverage.xml
+lcov.info
+*.lcov
 junit.xml
 *.junit.xml
 
