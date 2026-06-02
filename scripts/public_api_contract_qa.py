@@ -948,6 +948,12 @@ def assert_boundary_docs() -> None:
         "root `.gitignore` coverage for local infrastructure state artifacts",
         "launch checklist infrastructure state artifact ignore scope",
     )
+    assert_contains(launch_text, "tracked local Nix build result artifacts", "launch checklist Nix artifact risk-scan scope")
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local Nix build result artifacts",
+        "launch checklist Nix artifact ignore scope",
+    )
     assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact ignore scope")
     assert_contains(
@@ -1556,6 +1562,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local infrastructure state artifacts",
         "launch evidence infrastructure state artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "local Nix build result artifact guard",
+        "launch evidence Nix artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Nix build result artifacts such as root `result` and `result-*` outputs",
+        "launch evidence Nix artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Nix build result artifacts",
+        "launch evidence Nix artifact ignore examples",
     )
     assert_contains(
         evidence_text,

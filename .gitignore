@@ -239,6 +239,10 @@ compose.override.yaml
 *.tfvars.json
 *.tfplan
 
+# Local Nix build result artifacts
+/result
+/result-*
+
 # Local mobile/Xcode/Android build artifacts
 /DerivedData/
 /.gradle/
