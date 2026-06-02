@@ -186,6 +186,9 @@ xcuserdata/
 *.apk
 *.aab
 *.dSYM
+*.xcarchive
+*.mobileprovision
+*.provisionprofile
 
 # Local screenshots/screen recordings
 Screenshot *
@@ -251,7 +254,10 @@ Voice Memo *
 /.kube/
 *.pem
 *.key
+*.jks
+*.keystore
 *.p12
+*.p8
 *.pfx
 *.secret
 *.secrets

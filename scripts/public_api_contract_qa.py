@@ -889,6 +889,16 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "root `.gitignore` coverage for local Docker/container artifacts", "launch checklist Docker/container artifact ignore scope")
     assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "tracked local mobile/Xcode/Android signing/provisioning artifacts",
+        "launch checklist mobile signing artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local mobile/Xcode/Android signing/provisioning artifacts",
+        "launch checklist mobile signing artifact ignore scope",
+    )
     assert_contains(launch_text, "root `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
     assert_contains(
         launch_text,
@@ -1127,12 +1137,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "tracked credential/config filenames including SSH private-key filenames, `.ssh/` directories, direnv config/state, and generic secret material paths",
+        "tracked credential/config filenames including SSH private-key filenames, `.ssh/` directories, direnv config/state, generic secret material paths, and Java/Android/Apple signing key material",
         "launch checklist credential/config SSH risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local credential/config files including SSH private-key filenames, `.ssh/`, direnv config/state, and generic secret material patterns",
+        "root `.gitignore` coverage for local credential/config files including SSH private-key filenames, `.ssh/`, direnv config/state, generic secret material patterns, and Java/Android/Apple signing key material patterns",
         "launch checklist credential/config SSH ignore scope",
     )
     assert_contains(
@@ -1374,6 +1384,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local mobile/Xcode/Android build artifacts",
         "launch evidence mobile build artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "app-signing key stores (`*.p8`, `*.jks`, `*.keystore`)",
+        "launch evidence mobile signing key artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "mobile provisioning/build archives (`*.mobileprovision`, `*.provisionprofile`, `*.xcarchive`)",
+        "launch evidence mobile provisioning artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "matching root `.gitignore` coverage",
+        "launch evidence mobile signing artifact ignore coverage",
     )
     assert_contains(
         evidence_text,

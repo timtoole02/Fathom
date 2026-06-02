@@ -125,8 +125,11 @@ blocked_tracked_credential_dirs = {
     "secrets",
 }
 blocked_tracked_credential_suffixes = {
+    ".jks",
     ".key",
+    ".keystore",
     ".p12",
+    ".p8",
     ".pem",
     ".pfx",
     ".secret",
@@ -219,9 +222,12 @@ required_credential_gitignore_patterns = {
     "/private/",
     "/secrets/",
     "!.env.example",
-    "*.pem",
+    "*.jks",
     "*.key",
+    "*.keystore",
     "*.p12",
+    "*.p8",
+    "*.pem",
     "*.pfx",
     "*.secret",
     "*.secrets",
@@ -320,6 +326,9 @@ required_mobile_build_gitignore_patterns = {
     "*.apk",
     "*.dSYM",
     "*.ipa",
+    "*.mobileprovision",
+    "*.provisionprofile",
+    "*.xcarchive",
     "*.xcresult",
     "*.xcuserstate",
     "local.properties",
@@ -655,6 +664,9 @@ blocked_tracked_mobile_build_suffixes = {
     ".apk",
     ".dSYM",
     ".ipa",
+    ".mobileprovision",
+    ".provisionprofile",
+    ".xcarchive",
     ".xcresult",
     ".xcuserstate",
 }
@@ -1509,7 +1521,7 @@ def tracked_mobile_build_file_failures(tracked_paths=None):
         if path.name in blocked_tracked_mobile_build_filenames:
             failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
             continue
-        if any(part.endswith((".dSYM", ".xcresult")) for part in path.parts):
+        if any(part.endswith((".dSYM", ".xcarchive", ".xcresult")) for part in path.parts):
             failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
             continue
         if path.suffix in blocked_tracked_mobile_build_suffixes:
@@ -1757,6 +1769,9 @@ def self_test():
             "ops/secrets.json",
             "ops/secrets.yaml",
             "ops/secrets.yml",
+            "mobile/AuthKey_ABC123.p8",
+            "android/release.jks",
+            "android/release.keystore",
             "docs/public.pem",
             "docs/public-key.txt",
             "frontend/.pypirc",
@@ -1778,6 +1793,9 @@ def self_test():
         "ops/secrets.json: credential/config files must not be tracked for public launch",
         "ops/secrets.yaml: credential/config files must not be tracked for public launch",
         "ops/secrets.yml: credential/config files must not be tracked for public launch",
+        "mobile/AuthKey_ABC123.p8: credential/key files must not be tracked for public launch",
+        "android/release.jks: credential/key files must not be tracked for public launch",
+        "android/release.keystore: credential/key files must not be tracked for public launch",
         "docs/public.pem: credential/key files must not be tracked for public launch",
         "frontend/.pypirc: credential/config files must not be tracked for public launch",
         "crates/fathom-server/credentials: credential/config files must not be tracked for public launch",
@@ -2468,10 +2486,13 @@ def self_test():
             "android/local.properties",
             "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate",
             "TestResults/Fathom.xcresult/Data/data.0~",
+            "archives/Fathom.xcarchive/Info.plist",
             "builds/Fathom.ipa",
             "android/app/release/app-release.apk",
             "android/app/release/app-release.aab",
             "Fathom.app.dSYM/Contents/Resources/DWARF/Fathom",
+            "profiles/Fathom.mobileprovision",
+            "profiles/Fathom.provisionprofile",
             "ios/Fathom.xcodeproj/project.pbxproj",
             "android/app/build.gradle",
             "docs/mobile.md",
@@ -2483,10 +2504,13 @@ def self_test():
         "android/local.properties: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "TestResults/Fathom.xcresult/Data/data.0~: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "archives/Fathom.xcarchive/Info.plist: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "builds/Fathom.ipa: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/app/release/app-release.apk: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/app/release/app-release.aab: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "Fathom.app.dSYM/Contents/Resources/DWARF/Fathom: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "profiles/Fathom.mobileprovision: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "profiles/Fathom.provisionprofile: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local mobile/Xcode/Android build artifacts")
     screen_capture_failures = tracked_screen_capture_file_failures(
