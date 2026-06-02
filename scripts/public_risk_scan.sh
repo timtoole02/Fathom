@@ -492,6 +492,9 @@ required_local_cache_artifact_gitignore_patterns = {
 required_test_report_artifact_gitignore_patterns = {
     "/.playwright/",
     "/blob-report/",
+    "/cypress/downloads/",
+    "/cypress/screenshots/",
+    "/cypress/videos/",
     "/htmlcov/",
     "/playwright-report/",
     "/reports/",
@@ -502,6 +505,9 @@ required_test_report_artifact_gitignore_patterns = {
     "*.lcov",
     "*.junit.xml",
     "coverage.xml",
+    "frontend/cypress/downloads/",
+    "frontend/cypress/screenshots/",
+    "frontend/cypress/videos/",
     "lcov.info",
     "junit.xml",
 }
@@ -767,6 +773,11 @@ blocked_tracked_test_report_artifact_filenames = {
 blocked_tracked_test_report_artifact_suffixes = {
     ".lcov",
     ".junit.xml",
+}
+blocked_tracked_cypress_artifact_dirs = {
+    "downloads",
+    "screenshots",
+    "videos",
 }
 blocked_tracked_notebook_artifact_dirs = {
     ".ipynb_checkpoints",
@@ -1678,6 +1689,12 @@ def tracked_test_report_artifact_file_failures(tracked_paths=None):
         if path.parts and path.parts[0] in blocked_tracked_test_report_artifact_dirs:
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
             continue
+        if any(
+            part == "cypress" and path.parts[index + 1] in blocked_tracked_cypress_artifact_dirs
+            for index, part in enumerate(path.parts[:-1])
+        ):
+            failures.append(f"{rel}: local browser-test artifacts must not be tracked for public launch")
+            continue
         if path.name in blocked_tracked_test_report_artifact_filenames:
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
             continue
@@ -2365,6 +2382,10 @@ def self_test():
             "playwright-report/index.html",
             "blob-report/report.zip",
             ".playwright/screenshots/home.png",
+            "cypress/screenshots/chat/refusal.png",
+            "cypress/videos/chat/refusal.mp4",
+            "cypress/downloads/public-contract-summary.json",
+            "frontend/cypress/screenshots/chat/refusal.png",
             "test-results/junit.xml",
             "test-reports/backend.xml",
             "reports/public-risk/index.html",
@@ -2384,6 +2405,10 @@ def self_test():
         "playwright-report/index.html: local test report artifacts must not be tracked for public launch",
         "blob-report/report.zip: local test report artifacts must not be tracked for public launch",
         ".playwright/screenshots/home.png: local test report artifacts must not be tracked for public launch",
+        "cypress/screenshots/chat/refusal.png: local browser-test artifacts must not be tracked for public launch",
+        "cypress/videos/chat/refusal.mp4: local browser-test artifacts must not be tracked for public launch",
+        "cypress/downloads/public-contract-summary.json: local browser-test artifacts must not be tracked for public launch",
+        "frontend/cypress/screenshots/chat/refusal.png: local browser-test artifacts must not be tracked for public launch",
         "test-results/junit.xml: local test report artifacts must not be tracked for public launch",
         "test-reports/backend.xml: local test report artifacts must not be tracked for public launch",
         "reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",

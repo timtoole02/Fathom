@@ -118,6 +118,12 @@ site-packages/
 /playwright-report/
 /blob-report/
 /.playwright/
+/cypress/screenshots/
+/cypress/videos/
+/cypress/downloads/
+frontend/cypress/screenshots/
+frontend/cypress/videos/
+frontend/cypress/downloads/
 /test-results/
 /test-reports/
 /reports/
