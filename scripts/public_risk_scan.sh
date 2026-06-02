@@ -378,6 +378,12 @@ required_nix_artifact_gitignore_patterns = {
     "/result",
     "/result-*",
 }
+required_bazel_artifact_gitignore_patterns = {
+    "/bazel-*/",
+    "/bazel-bin/",
+    "/bazel-out/",
+    "/bazel-testlogs/",
+}
 required_swiftpm_artifact_gitignore_patterns = {
     "/.build/",
     "/.swiftpm/",
@@ -941,6 +947,16 @@ blocked_tracked_infra_state_suffixes = {
 }
 blocked_tracked_nix_artifact_root_names = {
     "result",
+}
+blocked_tracked_bazel_artifact_root_names = {
+    "bazel-bin",
+    "bazel-out",
+    "bazel-testlogs",
+}
+blocked_tracked_bazel_output_tree_children = {
+    "bazel-out",
+    "execroot",
+    "external",
 }
 blocked_tracked_swiftpm_artifact_dirs = {
     ".build",
@@ -1551,6 +1567,22 @@ def gitignore_nix_artifact_failures(gitignore_text=None):
     missing = sorted(required_nix_artifact_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local Nix build result artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_bazel_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Bazel build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_bazel_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Bazel build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_swiftpm_artifact_failures(gitignore_text=None):
@@ -2253,6 +2285,26 @@ def tracked_nix_artifact_file_failures(tracked_paths=None):
         root_name = path.parts[0]
         if root_name in blocked_tracked_nix_artifact_root_names or root_name.startswith("result-"):
             failures.append(f"{rel}: local Nix build result artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_bazel_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if not path.parts:
+            continue
+        root_name = path.parts[0]
+        if root_name in blocked_tracked_bazel_artifact_root_names:
+            failures.append(f"{rel}: local Bazel build artifacts must not be tracked for public launch")
+            continue
+        if (
+            root_name.startswith("bazel-")
+            and len(path.parts) > 1
+            and path.parts[1] in blocked_tracked_bazel_output_tree_children
+        ):
+            failures.append(f"{rel}: local Bazel build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_swiftpm_artifact_file_failures(tracked_paths=None):
@@ -3709,6 +3761,36 @@ def self_test():
         "result-docs/share/doc/fathom/index.html: local Nix build result artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Nix build result artifacts")
+    allowed_bazel_artifact_gitignore = "\n".join(sorted(required_bazel_artifact_gitignore_patterns)) + "\n"
+    if gitignore_bazel_artifact_failures(allowed_bazel_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Bazel build artifact ignore patterns")
+    bazel_artifact_gitignore_failures = gitignore_bazel_artifact_failures(
+        allowed_bazel_artifact_gitignore.replace("/bazel-testlogs/\n", "")
+    )
+    if bazel_artifact_gitignore_failures != [
+        ".gitignore: missing local Bazel build artifact ignore patterns: /bazel-testlogs/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Bazel build artifact ignore patterns")
+    bazel_artifact_failures = tracked_bazel_artifact_file_failures(
+        tracked_paths=[
+            "bazel-bin/fathom",
+            "bazel-out/darwin-fastbuild/bin/app",
+            "bazel-testlogs/tests/test.log",
+            "bazel-fathom/external/repo/file",
+            "bazel-overview.md",
+            "bazel-tools/BUILD",
+            "BUILD.bazel",
+            "MODULE.bazel",
+            "tools/bazel/BUILD",
+        ],
+    )
+    if bazel_artifact_failures != [
+        "bazel-bin/fathom: local Bazel build artifacts must not be tracked for public launch",
+        "bazel-out/darwin-fastbuild/bin/app: local Bazel build artifacts must not be tracked for public launch",
+        "bazel-testlogs/tests/test.log: local Bazel build artifacts must not be tracked for public launch",
+        "bazel-fathom/external/repo/file: local Bazel build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Bazel build artifacts")
     allowed_swiftpm_artifact_gitignore = "\n".join(sorted(required_swiftpm_artifact_gitignore_patterns)) + "\n"
     if gitignore_swiftpm_artifact_failures(allowed_swiftpm_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Swift Package Manager artifact ignore patterns")
@@ -3990,6 +4072,7 @@ failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_deployment_platform_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_nix_artifact_failures())
+failures.extend(gitignore_bazel_artifact_failures())
 failures.extend(gitignore_swiftpm_artifact_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_screen_capture_failures())
@@ -4035,6 +4118,7 @@ failures.extend(tracked_container_artifact_file_failures())
 failures.extend(tracked_deployment_platform_artifact_file_failures())
 failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_nix_artifact_file_failures())
+failures.extend(tracked_bazel_artifact_file_failures())
 failures.extend(tracked_swiftpm_artifact_file_failures())
 failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_screen_capture_file_failures())

@@ -295,6 +295,12 @@ compose.override.yaml
 /result
 /result-*
 
+# Local Bazel build artifacts
+/bazel-*/
+/bazel-bin/
+/bazel-out/
+/bazel-testlogs/
+
 # Local mobile/Xcode/Android build artifacts
 /DerivedData/
 /.gradle/

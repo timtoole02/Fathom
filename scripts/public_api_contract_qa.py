@@ -954,6 +954,12 @@ def assert_boundary_docs() -> None:
         "root `.gitignore` coverage for local Nix build result artifacts",
         "launch checklist Nix artifact ignore scope",
     )
+    assert_contains(launch_text, "tracked local Bazel build artifacts", "launch checklist Bazel artifact risk-scan scope")
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local Bazel build artifacts",
+        "launch checklist Bazel artifact ignore scope",
+    )
     assert_contains(
         launch_text,
         "tracked local Swift Package Manager build/workspace artifacts",
@@ -1699,6 +1705,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Nix build result artifacts",
         "launch evidence Nix artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "local Bazel build artifact guard",
+        "launch evidence Bazel artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Bazel build artifacts such as `bazel-bin/`, `bazel-out/`, `bazel-testlogs/`, and root `bazel-*` outputs",
+        "launch evidence Bazel artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Bazel build artifacts",
+        "launch evidence Bazel artifact ignore examples",
     )
     assert_contains(
         evidence_text,
