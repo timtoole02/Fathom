@@ -1087,7 +1087,7 @@ def tracked_cloud_credential_file_failures(tracked_paths=None):
         if any(part in blocked_tracked_cloud_credential_dirs for part in path.parts):
             failures.append(f"{rel}: cloud SDK credential/config files must not be tracked for public launch")
             continue
-        if len(path.parts) >= 3 and path.parts[0] == ".config" and path.parts[1] == "gcloud":
+        if len(path.parts) >= 2 and path.parts[0] == ".config" and path.parts[1] == "gcloud":
             failures.append(f"{rel}: cloud SDK credential/config files must not be tracked for public launch")
             continue
         if path.name in blocked_tracked_cloud_credential_filenames:
@@ -2099,7 +2099,9 @@ def self_test():
             ".aws/config",
             ".aws/credentials",
             ".azure/accessTokens.json",
+            ".config/gcloud",
             ".config/gcloud/application_default_credentials.json",
+            ".config/gcloud/configurations/config_default",
             ".boto",
             "boto.cfg",
             "secrets/service-account.json",
@@ -2113,7 +2115,9 @@ def self_test():
         ".aws/config: cloud SDK credential/config files must not be tracked for public launch",
         ".aws/credentials: cloud SDK credential/config files must not be tracked for public launch",
         ".azure/accessTokens.json: cloud SDK credential/config files must not be tracked for public launch",
+        ".config/gcloud: cloud SDK credential/config files must not be tracked for public launch",
         ".config/gcloud/application_default_credentials.json: cloud SDK credential/config files must not be tracked for public launch",
+        ".config/gcloud/configurations/config_default: cloud SDK credential/config files must not be tracked for public launch",
         ".boto: cloud SDK credential/config files must not be tracked for public launch",
         "boto.cfg: cloud SDK credential/config files must not be tracked for public launch",
         "secrets/service-account.json: cloud SDK credential/config files must not be tracked for public launch",
