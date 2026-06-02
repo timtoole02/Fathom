@@ -501,6 +501,11 @@ required_python_env_artifact_gitignore_patterns = {
     "pip-wheel-metadata/",
     "site-packages/",
 }
+required_ruby_bundle_artifact_gitignore_patterns = {
+    "/.bundle/",
+    "/vendor/bundle/",
+    "/vendor/cache/",
+}
 required_frontend_artifact_gitignore_patterns = {
     ".bun/",
     ".eslintcache",
@@ -658,6 +663,13 @@ blocked_tracked_python_env_artifact_dirs = {
     "uv-cache",
     "venv",
     "wheelhouse",
+}
+blocked_tracked_ruby_bundle_artifact_dirs = {
+    ".bundle",
+}
+blocked_tracked_ruby_vendor_artifact_dirs = {
+    ("vendor", "bundle"),
+    ("vendor", "cache"),
 }
 blocked_tracked_frontend_artifact_dirs = {
     ".bun",
@@ -1581,6 +1593,22 @@ def gitignore_python_env_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Python virtualenv/dependency artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_ruby_bundle_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Ruby/Bundler dependency artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_ruby_bundle_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Ruby/Bundler dependency artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_frontend_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1730,6 +1758,19 @@ def tracked_python_env_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_python_env_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: Python virtualenv/dependency artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_ruby_bundle_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_ruby_bundle_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Ruby/Bundler dependency artifacts must not be tracked for public launch")
+            continue
+        if len(path.parts) >= 2 and tuple(path.parts[:2]) in blocked_tracked_ruby_vendor_artifact_dirs:
+            failures.append(f"{rel}: Ruby/Bundler dependency artifacts must not be tracked for public launch")
     return failures
 
 def tracked_frontend_artifact_file_failures(tracked_paths=None):
@@ -2620,6 +2661,33 @@ def self_test():
         ".gitignore: missing local Python virtualenv/dependency artifact ignore patterns: /.uv-cache/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Python virtualenv/dependency artifact ignore patterns")
+    ruby_bundle_artifact_failures = tracked_ruby_bundle_artifact_file_failures(
+        tracked_paths=[
+            ".bundle/config",
+            "vendor/bundle/ruby/3.3.0/gems/rack-3.0.0/lib/rack.rb",
+            "vendor/cache/rack-3.0.0.gem",
+            "docs/api/public-contract.json",
+            "Gemfile",
+            "Gemfile.lock",
+            "vendor/safe/README.md",
+        ],
+    )
+    if ruby_bundle_artifact_failures != [
+        ".bundle/config: Ruby/Bundler dependency artifacts must not be tracked for public launch",
+        "vendor/bundle/ruby/3.3.0/gems/rack-3.0.0/lib/rack.rb: Ruby/Bundler dependency artifacts must not be tracked for public launch",
+        "vendor/cache/rack-3.0.0.gem: Ruby/Bundler dependency artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Ruby/Bundler dependency artifacts")
+    allowed_ruby_bundle_artifact_gitignore = "\n".join(sorted(required_ruby_bundle_artifact_gitignore_patterns)) + "\n"
+    if gitignore_ruby_bundle_artifact_failures(allowed_ruby_bundle_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Ruby/Bundler dependency artifact ignore patterns")
+    ruby_bundle_artifact_gitignore_failures = gitignore_ruby_bundle_artifact_failures(
+        allowed_ruby_bundle_artifact_gitignore.replace("/vendor/cache/\n", "")
+    )
+    if ruby_bundle_artifact_gitignore_failures != [
+        ".gitignore: missing local Ruby/Bundler dependency artifact ignore patterns: /vendor/cache/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Ruby/Bundler dependency artifact ignore patterns")
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
@@ -3420,6 +3488,7 @@ failures.extend(gitignore_backup_artifact_failures())
 failures.extend(gitignore_diagnostic_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_python_env_artifact_failures())
+failures.extend(gitignore_ruby_bundle_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_temp_artifact_failures())
@@ -3430,6 +3499,7 @@ failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_diagnostic_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_python_env_artifact_file_failures())
+failures.extend(tracked_ruby_bundle_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_local_cache_artifact_file_failures())
 failures.extend(tracked_temp_artifact_file_failures())

@@ -148,6 +148,11 @@ __pycache__/
 pip-wheel-metadata/
 site-packages/
 
+# Local Ruby/Bundler dependency artifacts
+/.bundle/
+/vendor/bundle/
+/vendor/cache/
+
 # Local test report artifacts
 /playwright-report/
 /blob-report/

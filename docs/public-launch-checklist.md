@@ -110,6 +110,8 @@ For Yarn lockfiles, local `portal:` dependencies and local `patch:` references c
 
 The Rust/Cargo guard also rejects tracked Rust/Cargo cache/build artifacts such as `.cargo/`, `target/`, compiler outputs, and coverage profiles, with matching root `.gitignore` coverage.
 
+The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/`, with matching root `.gitignore` coverage.
+
 The backend acceptance artifact summaries reject local paths, secret markers, and request/payload text in shareable `summary.json` and `summary.md`; keep full JSON artifacts and logs on the manual review path before publishing.
 
 The browser-test artifact guard also blocks Cypress screenshot, video, and download output directories in addition to Playwright report directories, with matching root `.gitignore` coverage.
