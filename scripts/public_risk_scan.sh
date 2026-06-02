@@ -550,7 +550,9 @@ required_test_report_artifact_gitignore_patterns = {
     "junit.xml",
 }
 required_notebook_artifact_gitignore_patterns = {
+    ".jupyter/",
     ".ipynb_checkpoints/",
+    ".nbhistory",
 }
 required_runtime_artifact_gitignore_patterns = {
     "*.db",
@@ -846,7 +848,11 @@ blocked_tracked_cypress_artifact_dirs = {
     "videos",
 }
 blocked_tracked_notebook_artifact_dirs = {
+    ".jupyter",
     ".ipynb_checkpoints",
+}
+blocked_tracked_notebook_artifact_filenames = {
+    ".nbhistory",
 }
 tracked_symlink_mode = "120000"
 dependency_lockfile_names = {
@@ -1855,7 +1861,13 @@ def tracked_notebook_artifact_file_failures(tracked_paths=None, notebook_texts=N
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_notebook_artifact_dirs for part in path.parts):
-            failures.append(f"{rel}: local notebook checkpoint artifacts must not be tracked for public launch")
+            if ".jupyter" in path.parts:
+                failures.append(f"{rel}: local notebook runtime/config artifacts must not be tracked for public launch")
+            else:
+                failures.append(f"{rel}: local notebook checkpoint artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_notebook_artifact_filenames:
+            failures.append(f"{rel}: local notebook runtime/config artifacts must not be tracked for public launch")
             continue
         if path.suffix.lower() != ".ipynb":
             continue
@@ -2648,14 +2660,18 @@ def self_test():
     allowed_notebook_artifact_gitignore = "\n".join(sorted(required_notebook_artifact_gitignore_patterns)) + "\n"
     if gitignore_notebook_artifact_failures(allowed_notebook_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local notebook artifact ignore patterns")
-    notebook_artifact_gitignore_failures = gitignore_notebook_artifact_failures("")
+    notebook_artifact_gitignore_failures = gitignore_notebook_artifact_failures(
+        allowed_notebook_artifact_gitignore.replace(".nbhistory\n", "")
+    )
     if notebook_artifact_gitignore_failures != [
-        ".gitignore: missing local notebook artifact ignore patterns: .ipynb_checkpoints/"
+        ".gitignore: missing local notebook artifact ignore patterns: .nbhistory"
     ]:
         raise AssertionError("public risk self-test did not reject missing local notebook artifact ignore patterns")
     notebook_artifact_failures = tracked_notebook_artifact_file_failures(
         tracked_paths=[
             "notebooks/.ipynb_checkpoints/demo-checkpoint.ipynb",
+            ".jupyter/jupyter_notebook_config.py",
+            ".nbhistory",
             "notebooks/with-output.ipynb",
             "notebooks/clean.ipynb",
             "docs/api/public-contract.json",
@@ -2671,6 +2687,8 @@ def self_test():
     )
     if notebook_artifact_failures != [
         "notebooks/.ipynb_checkpoints/demo-checkpoint.ipynb: local notebook checkpoint artifacts must not be tracked for public launch",
+        ".jupyter/jupyter_notebook_config.py: local notebook runtime/config artifacts must not be tracked for public launch",
+        ".nbhistory: local notebook runtime/config artifacts must not be tracked for public launch",
         "notebooks/with-output.ipynb: notebook execution outputs must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local notebook artifacts")

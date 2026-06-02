@@ -1474,6 +1474,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked local notebook checkpoint/runtime config artifacts",
+        "launch checklist notebook runtime/config artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
         "root `.gitignore` coverage for local notebook artifacts",
         "launch checklist notebook artifact ignore scope",
     )
@@ -1484,6 +1489,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "local notebook runtime/config artifact guard",
+        "launch evidence notebook runtime/config artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
         "tracked notebook execution-output guard",
         "launch evidence notebook execution-output risk-scan scope",
     )
@@ -1491,6 +1501,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "tracked local notebook checkpoint artifacts such as `.ipynb_checkpoints/`",
         "launch evidence notebook checkpoint artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local notebook runtime/config artifacts such as `.jupyter/` and `.nbhistory`",
+        "launch evidence notebook runtime/config artifact examples",
     )
     assert_contains(
         evidence_text,
