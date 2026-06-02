@@ -122,6 +122,11 @@ __pycache__/
 /env/
 /.tox/
 /.nox/
+/.uv/
+/.uv-cache/
+/.pip-cache/
+/uv-cache/
+/pip-cache/
 /wheelhouse/
 pip-wheel-metadata/
 site-packages/
