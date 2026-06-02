@@ -6,6 +6,7 @@ cd "$ROOT"
 
 python3 - "$@" <<'PY'
 import pathlib
+import fnmatch
 import json
 import posixpath
 import re
@@ -530,6 +531,7 @@ required_frontend_artifact_gitignore_patterns = {
     ".pnpm-store/",
     ".stylelintcache",
     ".turbo/",
+    ".vitest/",
     ".yarn/build-state.yml",
     ".yarn/cache/",
     ".yarn/install-state.gz",
@@ -543,6 +545,7 @@ required_frontend_artifact_gitignore_patterns = {
     "frontend/.npm/",
     "frontend/.pnpm-store/",
     "frontend/.vite/",
+    "frontend/.vitest/",
     "frontend/.yarn/build-state.yml",
     "frontend/.yarn/cache/",
     "frontend/.yarn/install-state.gz",
@@ -554,9 +557,13 @@ required_frontend_artifact_gitignore_patterns = {
     "frontend/.eslintcache",
     "frontend/.bun/",
     "frontend/.stylelintcache",
+    "frontend/vite.config.*.timestamp-*",
+    "frontend/vitest.config.*.timestamp-*",
     "node_modules/",
     "npm-debug.log",
     "pnpm-debug.log",
+    "vite.config.*.timestamp-*",
+    "vitest.config.*.timestamp-*",
     "yarn-debug.log",
     "yarn-error.log",
 }
@@ -708,6 +715,7 @@ blocked_tracked_frontend_artifact_dirs = {
     ".pnpm-store",
     ".turbo",
     ".vite",
+    ".vitest",
     "coverage",
     "node_modules",
 }
@@ -735,6 +743,10 @@ blocked_tracked_frontend_artifact_filenames = {
     "pnpm-debug.log",
     "yarn-debug.log",
     "yarn-error.log",
+}
+blocked_tracked_frontend_artifact_filename_patterns = {
+    "vite.config.*.timestamp-*",
+    "vitest.config.*.timestamp-*",
 }
 blocked_tracked_frontend_artifact_suffixes = {
     ".tsbuildinfo",
@@ -1907,6 +1919,9 @@ def tracked_frontend_artifact_file_failures(tracked_paths=None):
         if path.name in blocked_tracked_frontend_artifact_filenames:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
             continue
+        if any(fnmatch.fnmatch(path.name, pattern) for pattern in blocked_tracked_frontend_artifact_filename_patterns):
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
         if path.suffix.lower() in blocked_tracked_frontend_artifact_suffixes:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
     return failures
@@ -2883,13 +2898,19 @@ def self_test():
             "frontend/coverage/lcov.info",
             "frontend/.next/server/app.js",
             "frontend/.vite/deps/react.js",
+            "frontend/.vitest/cache/results.json",
             ".turbo/cache/build.log",
             ".parcel-cache/data.mdb",
+            ".vitest/cache/results.json",
             ".eslintcache",
             ".stylelintcache",
             "frontend/.eslintcache",
             "frontend/.stylelintcache",
             "frontend/src/tsconfig.tsbuildinfo",
+            "vite.config.ts.timestamp-1710000000000-a1b2c3d4e5f6.mjs",
+            "vitest.config.ts.timestamp-1710000000000-a1b2c3d4e5f6.mjs",
+            "frontend/vite.config.ts.timestamp-1710000000000-a1b2c3d4e5f6.mjs",
+            "frontend/vitest.config.ts.timestamp-1710000000000-a1b2c3d4e5f6.mjs",
             "bun-debug.log",
             "npm-debug.log",
             "yarn-error.log",
@@ -2925,13 +2946,19 @@ def self_test():
         "frontend/coverage/lcov.info: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.vite/deps/react.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.vitest/cache/results.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".turbo/cache/build.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".parcel-cache/data.mdb: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".vitest/cache/results.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".eslintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".stylelintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.eslintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.stylelintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/src/tsconfig.tsbuildinfo: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "vite.config.ts.timestamp-1710000000000-a1b2c3d4e5f6.mjs: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "vitest.config.ts.timestamp-1710000000000-a1b2c3d4e5f6.mjs: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/vite.config.ts.timestamp-1710000000000-a1b2c3d4e5f6.mjs: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/vitest.config.ts.timestamp-1710000000000-a1b2c3d4e5f6.mjs: frontend/Node cache/build artifacts must not be tracked for public launch",
         "bun-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         "npm-debug.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         "yarn-error.log: frontend/Node cache/build artifacts must not be tracked for public launch",
@@ -2942,10 +2969,10 @@ def self_test():
     if gitignore_frontend_artifact_failures(allowed_frontend_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local frontend/Node cache/build artifact ignore patterns")
     frontend_artifact_gitignore_failures = gitignore_frontend_artifact_failures(
-        allowed_frontend_artifact_gitignore.replace("frontend/.vite/\n", "")
+        allowed_frontend_artifact_gitignore.replace("frontend/.vitest/\n", "")
     )
     if frontend_artifact_gitignore_failures != [
-        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: frontend/.vite/"
+        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: frontend/.vitest/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local frontend/Node cache/build artifact ignore patterns")
     local_cache_artifact_failures = tracked_local_cache_artifact_file_failures(

@@ -45,9 +45,12 @@ coverage/
 .turbo/
 .parcel-cache/
 .cache/
+.vitest/
 .eslintcache
 .stylelintcache
 *.tsbuildinfo
+vite.config.*.timestamp-*
+vitest.config.*.timestamp-*
 npm-debug.log
 bun-debug.log
 pnpm-debug.log
@@ -55,6 +58,9 @@ yarn-debug.log
 yarn-error.log
 frontend/.eslintcache
 frontend/.stylelintcache
+frontend/.vitest/
+frontend/vite.config.*.timestamp-*
+frontend/vitest.config.*.timestamp-*
 
 # Local runtime state
 .fathom/
