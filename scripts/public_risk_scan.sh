@@ -475,6 +475,9 @@ required_frontend_artifact_gitignore_patterns = {
     "yarn-debug.log",
     "yarn-error.log",
 }
+required_local_cache_artifact_gitignore_patterns = {
+    ".cache/",
+}
 required_test_report_artifact_gitignore_patterns = {
     "/.playwright/",
     "/blob-report/",
@@ -597,6 +600,9 @@ blocked_tracked_frontend_artifact_filenames = {
 }
 blocked_tracked_frontend_artifact_suffixes = {
     ".tsbuildinfo",
+}
+blocked_tracked_local_cache_artifact_dirs = {
+    ".cache",
 }
 blocked_tracked_rust_artifact_dirs = {
     "target",
@@ -1326,6 +1332,22 @@ def gitignore_frontend_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local frontend/Node cache/build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_local_cache_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local cache artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_local_cache_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local cache artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_test_report_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1455,6 +1477,16 @@ def tracked_frontend_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_frontend_artifact_suffixes:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_local_cache_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_local_cache_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local cache artifacts must not be tracked for public launch")
     return failures
 
 def tracked_rust_artifact_file_failures(tracked_paths=None):
@@ -2250,6 +2282,26 @@ def self_test():
         ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: frontend/.vite/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local frontend/Node cache/build artifact ignore patterns")
+    local_cache_artifact_failures = tracked_local_cache_artifact_file_failures(
+        tracked_paths=[
+            ".cache/huggingface/download/model.safetensors",
+            "docs/.cache/rendered/preview.html",
+            "docs/api/public-contract.json",
+        ],
+    )
+    if local_cache_artifact_failures != [
+        ".cache/huggingface/download/model.safetensors: local cache artifacts must not be tracked for public launch",
+        "docs/.cache/rendered/preview.html: local cache artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local cache artifacts")
+    allowed_local_cache_artifact_gitignore = "\n".join(sorted(required_local_cache_artifact_gitignore_patterns)) + "\n"
+    if gitignore_local_cache_artifact_failures(allowed_local_cache_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local cache artifact ignore patterns")
+    local_cache_artifact_gitignore_failures = gitignore_local_cache_artifact_failures("")
+    if local_cache_artifact_gitignore_failures != [
+        ".gitignore: missing local cache artifact ignore patterns: .cache/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local cache artifact ignore patterns")
     allowed_test_report_artifact_gitignore = "\n".join(sorted(required_test_report_artifact_gitignore_patterns)) + "\n"
     if gitignore_test_report_artifact_failures(allowed_test_report_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local test report artifact ignore patterns")
@@ -2746,6 +2798,7 @@ failures.extend(gitignore_diagnostic_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
+failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
 failures.extend(gitignore_notebook_artifact_failures())
 failures.extend(gitignore_runtime_artifact_failures())
@@ -2754,6 +2807,7 @@ failures.extend(tracked_diagnostic_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_python_env_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
+failures.extend(tracked_local_cache_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
