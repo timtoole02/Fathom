@@ -207,6 +207,12 @@ blocked_tracked_command_history_filenames = {
     ".sqlite_history",
     ".zsh_history",
 }
+blocked_tracked_local_ci_artifact_dirs = {
+    ".act",
+}
+blocked_tracked_local_ci_artifact_filenames = {
+    ".actrc",
+}
 required_workspace_gitignore_patterns = {
     "/.aider.chat.history.md",
     "/.aider.input.history",
@@ -237,6 +243,10 @@ required_command_history_gitignore_patterns = {
     ".rediscli_history",
     ".sqlite_history",
     ".zsh_history",
+}
+required_local_ci_artifact_gitignore_patterns = {
+    "/.act/",
+    ".actrc",
 }
 required_credential_gitignore_patterns = {
     "/.direnv/",
@@ -1152,6 +1162,19 @@ def tracked_command_history_file_failures(tracked_paths=None):
             failures.append(f"{rel}: local shell/REPL command history files must not be tracked for public launch")
     return failures
 
+def tracked_local_ci_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_local_ci_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local CI runner artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_local_ci_artifact_filenames:
+            failures.append(f"{rel}: local CI runner config must not be tracked for public launch")
+    return failures
+
 def gitignore_workspace_context_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1182,6 +1205,22 @@ def gitignore_command_history_failures(gitignore_text=None):
     missing = sorted(required_command_history_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local shell/REPL command history ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_local_ci_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local CI runner artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_local_ci_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local CI runner artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_credential_failures(gitignore_text=None):
@@ -2259,6 +2298,30 @@ def self_test():
         ".gitignore: missing local shell/REPL command history ignore patterns: .zsh_history"
     ]:
         raise AssertionError("public risk self-test did not reject missing local shell/REPL command history ignore patterns")
+    local_ci_artifact_failures = tracked_local_ci_artifact_file_failures(
+        tracked_paths=[
+            ".act/event.json",
+            ".act/workflows/ci-1/container-options.json",
+            ".actrc",
+            "docs/api/public-contract.json",
+        ],
+    )
+    if local_ci_artifact_failures != [
+        ".act/event.json: local CI runner artifacts must not be tracked for public launch",
+        ".act/workflows/ci-1/container-options.json: local CI runner artifacts must not be tracked for public launch",
+        ".actrc: local CI runner config must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local CI runner artifacts")
+    allowed_local_ci_artifact_gitignore = "\n".join(sorted(required_local_ci_artifact_gitignore_patterns)) + "\n"
+    if gitignore_local_ci_artifact_failures(allowed_local_ci_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local CI runner artifact ignore patterns")
+    local_ci_artifact_gitignore_failures = gitignore_local_ci_artifact_failures(
+        allowed_local_ci_artifact_gitignore.replace("/.act/\n", "")
+    )
+    if local_ci_artifact_gitignore_failures != [
+        ".gitignore: missing local CI runner artifact ignore patterns: /.act/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local CI runner artifact ignore patterns")
     allowed_credential_gitignore = "\n".join(sorted(required_credential_gitignore_patterns)) + "\n"
     if gitignore_credential_failures(allowed_credential_gitignore):
         raise AssertionError("public risk self-test rejected complete local credential/config ignore patterns")
@@ -3190,8 +3253,10 @@ failures.extend(tracked_cloud_credential_file_failures())
 failures.extend(tracked_kubernetes_credential_file_failures())
 failures.extend(tracked_workspace_context_failures())
 failures.extend(tracked_command_history_file_failures())
+failures.extend(tracked_local_ci_artifact_file_failures())
 failures.extend(gitignore_workspace_context_failures())
 failures.extend(gitignore_command_history_failures())
+failures.extend(gitignore_local_ci_artifact_failures())
 failures.extend(gitignore_credential_failures())
 failures.extend(gitignore_cloud_credential_failures())
 failures.extend(gitignore_kubernetes_credential_failures())

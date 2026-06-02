@@ -305,6 +305,10 @@ Voice Memo *
 .sqlite_history
 .zsh_history
 
+# Local CI runner artifacts
+/.act/
+.actrc
+
 # Local secrets and credentials
 .env
 .env.*
