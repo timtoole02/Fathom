@@ -75,6 +75,8 @@ summary.local.json
 *.crash
 *.dmp
 *.ips
+*.sarif
+*.sarif.json
 .DS_Store
 __MACOSX/
 ._*

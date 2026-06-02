@@ -438,6 +438,8 @@ required_diagnostic_artifact_gitignore_patterns = {
     "*.log",
     "*.perf",
     "*.prof",
+    "*.sarif",
+    "*.sarif.json",
     "*.trace",
 }
 required_python_artifact_gitignore_patterns = {
@@ -576,6 +578,8 @@ blocked_tracked_diagnostic_artifact_suffixes = {
     ".ips",
     ".perf",
     ".prof",
+    ".sarif",
+    ".sarif.json",
     ".trace",
 }
 blocked_tracked_python_artifact_dirs = {
@@ -2196,10 +2200,10 @@ def self_test():
     if gitignore_diagnostic_artifact_failures(allowed_diagnostic_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local log/trace/profiling/debug-output artifact ignore patterns")
     diagnostic_artifact_gitignore_failures = gitignore_diagnostic_artifact_failures(
-        allowed_diagnostic_artifact_gitignore.replace("*.dmp\n", "")
+        allowed_diagnostic_artifact_gitignore.replace("*.sarif.json\n", "")
     )
     if diagnostic_artifact_gitignore_failures != [
-        ".gitignore: missing local log/trace/profiling/debug-output artifact ignore patterns: *.dmp"
+        ".gitignore: missing local log/trace/profiling/debug-output artifact ignore patterns: *.sarif.json"
     ]:
         raise AssertionError("public risk self-test did not reject missing local log/trace/profiling/debug-output artifact ignore patterns")
     diagnostic_artifact_failures = tracked_diagnostic_artifact_file_failures(
@@ -2217,6 +2221,8 @@ def self_test():
             "crates/fathom-server/heap.heapsnapshot",
             "crates/fathom-core/flame.perf",
             "crates/fathom-core/flame.prof",
+            "reports/codeql.sarif",
+            "reports/semgrep.sarif.json",
             "docs/research/core.md",
             "docs/api/public-contract.json",
             "docs/research/performance-strategy.md",
@@ -2236,6 +2242,8 @@ def self_test():
         "crates/fathom-server/heap.heapsnapshot: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
         "crates/fathom-core/flame.perf: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
         "crates/fathom-core/flame.prof: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "reports/codeql.sarif: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
+        "reports/semgrep.sarif.json: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local log/trace/profiling/debug-output artifacts")
     python_artifact_failures = tracked_python_artifact_file_failures(
