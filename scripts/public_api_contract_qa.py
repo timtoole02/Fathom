@@ -649,24 +649,59 @@ def assert_gitattributes_text_normalization(text: str | None = None, label: str 
     }
     required_lines = {
         "* text=auto eol=lf",
+        "*.7z binary",
+        "*.aab binary",
+        "*.aac binary",
+        "*.apk binary",
+        "*.app binary",
+        "*.avi binary",
         "*.bin binary",
+        "*.bz2 binary",
+        "*.ckpt binary",
         "*.deb binary",
+        "*.dmg binary",
         "*.gguf binary",
         "*.gz binary",
+        "*.dSYM binary",
+        "*.egg binary",
+        "*.flac binary",
+        "*.gif binary",
+        "*.ico binary",
+        "*.ipa binary",
+        "*.jpeg binary",
+        "*.jpg binary",
+        "*.m4a binary",
+        "*.m4v binary",
+        "*.mkv binary",
+        "*.mobileprovision binary",
+        "*.mov binary",
+        "*.mp3 binary",
+        "*.mp4 binary",
         "*.msi binary",
         "*.npy binary",
         "*.npz binary",
         "*.onnx binary",
         "*.pdf binary",
+        "*.pkg binary",
         "*.png binary",
+        "*.provisionprofile binary",
         "*.pt binary",
         "*.pth binary",
         "*.rar binary",
         "*.rpm binary",
         "*.safetensors binary",
         "*.tar binary",
+        "*.tfplan binary",
         "*.tgz binary",
+        "*.tflite binary",
+        "*.wav binary",
+        "*.webm binary",
+        "*.webp binary",
         "*.zip binary",
+        "*.whl binary",
+        "*.xcarchive binary",
+        "*.xcresult binary",
+        "*.xz binary",
         "*.zst binary",
     }
     missing = sorted(required_lines - active_lines)
@@ -1957,29 +1992,65 @@ npm --prefix frontend run qa:copy
 
     valid_gitattributes = """
 * text=auto eol=lf
+*.7z binary
+*.aab binary
+*.aac binary
+*.apk binary
+*.app binary
+*.avi binary
 *.bin binary
+*.bz2 binary
+*.ckpt binary
 *.deb binary
+*.dmg binary
+*.dSYM binary
+*.egg binary
+*.flac binary
+*.gif binary
 *.gguf binary
 *.gz binary
+*.ico binary
+*.ipa binary
+*.jpeg binary
+*.jpg binary
+*.m4a binary
+*.m4v binary
+*.mkv binary
+*.mobileprovision binary
+*.mov binary
+*.mp3 binary
+*.mp4 binary
 *.msi binary
 *.npy binary
 *.npz binary
 *.onnx binary
 *.pdf binary
+*.pkg binary
 *.png binary
+*.provisionprofile binary
 *.pt binary
 *.pth binary
 *.rar binary
 *.rpm binary
 *.safetensors binary
 *.tar binary
+*.tfplan binary
 *.tgz binary
+*.tflite binary
+*.wav binary
+*.webm binary
+*.webp binary
+*.whl binary
+*.xcarchive binary
+*.xcresult binary
+*.xz binary
 *.zip binary
 *.zst binary
 """
     assert_gitattributes_text_normalization(valid_gitattributes, "synthetic .gitattributes")
     for text, expected in (
         (valid_gitattributes.replace("* text=auto eol=lf\n", ""), "missing text-normalization metadata"),
+        (valid_gitattributes.replace("*.mp4 binary\n", ""), "missing text-normalization metadata"),
         (valid_gitattributes.replace("*.safetensors binary\n", ""), "missing text-normalization metadata"),
         ("* binary\n" + valid_gitattributes, "must not mark the whole repository as binary"),
         ("* -text\n" + valid_gitattributes, "must not disable text normalization"),
