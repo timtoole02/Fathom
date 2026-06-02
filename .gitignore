@@ -84,7 +84,11 @@ desktop.ini
 *.swp
 /.idea/
 /.vscode/
+.settings/
+.classpath
+.project
 *.code-workspace
+*.iml
 
 # Local Python cache/build artifacts
 __pycache__/

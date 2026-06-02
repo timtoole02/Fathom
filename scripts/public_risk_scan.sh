@@ -97,10 +97,16 @@ blocked_tracked_editor_artifact_suffixes = {
 }
 blocked_tracked_ide_artifact_dirs = {
     ".idea",
+    ".settings",
     ".vscode",
+}
+blocked_tracked_ide_artifact_filenames = {
+    ".classpath",
+    ".project",
 }
 blocked_tracked_ide_artifact_suffixes = {
     ".code-workspace",
+    ".iml",
 }
 allowed_tracked_credential_filenames = {".env.example"}
 blocked_tracked_credential_filenames = {
@@ -283,7 +289,11 @@ required_editor_artifact_gitignore_patterns = {
 required_ide_artifact_gitignore_patterns = {
     "/.idea/",
     "/.vscode/",
+    ".classpath",
+    ".project",
+    ".settings/",
     "*.code-workspace",
+    "*.iml",
 }
 required_model_artifact_gitignore_patterns = {
     "/checkpoints/",
@@ -878,6 +888,9 @@ def tracked_blocked_file_failures(tracked_paths=None):
             failures.append(f"{rel}: editor backup/swap artifacts must not be tracked for public launch")
             continue
         if any(part in blocked_tracked_ide_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: IDE workspace/config artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_ide_artifact_filenames:
             failures.append(f"{rel}: IDE workspace/config artifacts must not be tracked for public launch")
             continue
         if path.suffix.lower() in blocked_tracked_ide_artifact_suffixes:
@@ -1713,7 +1726,11 @@ def self_test():
             "docs/public-launch-evidence.md.rej",
             ".vscode/settings.json",
             ".idea/workspace.xml",
+            ".settings/org.eclipse.jdt.core.prefs",
+            ".classpath",
+            ".project",
             "fathom.code-workspace",
+            "fathom.iml",
         ],
     )
     if blocked_file_failures != [
@@ -1735,7 +1752,11 @@ def self_test():
         "docs/public-launch-evidence.md.rej: editor backup/swap artifacts must not be tracked for public launch",
         ".vscode/settings.json: IDE workspace/config artifacts must not be tracked for public launch",
         ".idea/workspace.xml: IDE workspace/config artifacts must not be tracked for public launch",
+        ".settings/org.eclipse.jdt.core.prefs: IDE workspace/config artifacts must not be tracked for public launch",
+        ".classpath: IDE workspace/config artifacts must not be tracked for public launch",
+        ".project: IDE workspace/config artifacts must not be tracked for public launch",
         "fathom.code-workspace: IDE workspace/config artifacts must not be tracked for public launch",
+        "fathom.iml: IDE workspace/config artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked OS/platform metadata, backup/swap, or IDE config files")
     allowed_os_metadata_gitignore = "\n".join(sorted(required_os_metadata_gitignore_patterns)) + "\n"
@@ -1755,8 +1776,8 @@ def self_test():
     allowed_ide_artifact_gitignore = "\n".join(sorted(required_ide_artifact_gitignore_patterns)) + "\n"
     if gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local IDE workspace/config ignore patterns")
-    ide_artifact_gitignore_failures = gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore.replace("/.vscode/\n", ""))
-    if ide_artifact_gitignore_failures != [".gitignore: missing local IDE workspace/config ignore patterns: /.vscode/"]:
+    ide_artifact_gitignore_failures = gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore.replace("*.iml\n", ""))
+    if ide_artifact_gitignore_failures != [".gitignore: missing local IDE workspace/config ignore patterns: *.iml"]:
         raise AssertionError("public risk self-test did not reject missing local IDE workspace/config ignore patterns")
     credential_file_failures = tracked_credential_file_failures(
         tracked_paths=[
