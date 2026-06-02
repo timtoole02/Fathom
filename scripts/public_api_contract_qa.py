@@ -1011,6 +1011,16 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "root `.gitignore` coverage for local Rust/Cargo cache/build artifacts", "launch checklist Rust/Cargo artifact ignore scope")
     assert_contains(
         launch_text,
+        "tracked local JVM dependency artifacts",
+        "launch checklist JVM dependency artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local JVM dependency artifacts",
+        "launch checklist JVM dependency artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Go cache/test artifact guard also rejects tracked local generated outputs",
         "launch checklist Go artifact risk-scan scope",
     )
@@ -1474,6 +1484,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Go cache/test artifacts",
         "launch evidence Go artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "JVM dependency artifact guard",
+        "launch evidence JVM dependency artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local JVM dependency artifacts such as `.m2/`",
+        "launch evidence JVM dependency artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local JVM dependency artifacts",
+        "launch evidence JVM dependency artifact ignore examples",
     )
     assert_contains(
         launch_text,

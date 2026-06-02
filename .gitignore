@@ -163,6 +163,9 @@ site-packages/
 coverage.out
 *.test
 
+# Local JVM dependency artifacts
+/.m2/
+
 # Local test report artifacts
 /playwright-report/
 /blob-report/

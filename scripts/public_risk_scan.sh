@@ -519,6 +519,9 @@ required_go_artifact_gitignore_patterns = {
     "*.test",
     "coverage.out",
 }
+required_jvm_dependency_artifact_gitignore_patterns = {
+    "/.m2/",
+}
 required_frontend_artifact_gitignore_patterns = {
     ".bun/",
     ".eslintcache",
@@ -693,6 +696,9 @@ blocked_tracked_go_artifact_filenames = {
 }
 blocked_tracked_go_artifact_suffixes = {
     ".test",
+}
+blocked_tracked_jvm_dependency_artifact_dirs = {
+    ".m2",
 }
 blocked_tracked_frontend_artifact_dirs = {
     ".bun",
@@ -1671,6 +1677,22 @@ def gitignore_go_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Go cache/test artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_jvm_dependency_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local JVM dependency artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_jvm_dependency_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local JVM dependency artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_frontend_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1849,6 +1871,16 @@ def tracked_go_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_go_artifact_suffixes:
             failures.append(f"{rel}: Go cache/test artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_jvm_dependency_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_jvm_dependency_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: JVM dependency artifacts must not be tracked for public launch")
     return failures
 
 def tracked_frontend_artifact_file_failures(tracked_paths=None):
@@ -2804,6 +2836,29 @@ def self_test():
         ".gitignore: missing local Go cache/test artifact ignore patterns: coverage.out"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Go cache/test artifact ignore patterns")
+    jvm_dependency_artifact_failures = tracked_jvm_dependency_artifact_file_failures(
+        tracked_paths=[
+            ".m2/repository/com/example/private-lib/1.0/private-lib-1.0.jar",
+            ".m2/settings.xml",
+            "docs/.m2/repository/com/example/private-lib/1.0/private-lib-1.0.pom",
+            "pom.xml",
+            "docs/java-build.md",
+        ],
+    )
+    if jvm_dependency_artifact_failures != [
+        ".m2/repository/com/example/private-lib/1.0/private-lib-1.0.jar: JVM dependency artifacts must not be tracked for public launch",
+        ".m2/settings.xml: JVM dependency artifacts must not be tracked for public launch",
+        "docs/.m2/repository/com/example/private-lib/1.0/private-lib-1.0.pom: JVM dependency artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local JVM dependency artifacts")
+    allowed_jvm_dependency_artifact_gitignore = "\n".join(sorted(required_jvm_dependency_artifact_gitignore_patterns)) + "\n"
+    if gitignore_jvm_dependency_artifact_failures(allowed_jvm_dependency_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local JVM dependency artifact ignore patterns")
+    jvm_dependency_artifact_gitignore_failures = gitignore_jvm_dependency_artifact_failures("")
+    if jvm_dependency_artifact_gitignore_failures != [
+        ".gitignore: missing local JVM dependency artifact ignore patterns: /.m2/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local JVM dependency artifact ignore patterns")
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
@@ -3636,6 +3691,7 @@ failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_ruby_bundle_artifact_failures())
 failures.extend(gitignore_go_artifact_failures())
+failures.extend(gitignore_jvm_dependency_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_temp_artifact_failures())
@@ -3648,6 +3704,7 @@ failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_python_env_artifact_file_failures())
 failures.extend(tracked_ruby_bundle_artifact_file_failures())
 failures.extend(tracked_go_artifact_file_failures())
+failures.extend(tracked_jvm_dependency_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_local_cache_artifact_file_failures())
 failures.extend(tracked_temp_artifact_file_failures())
