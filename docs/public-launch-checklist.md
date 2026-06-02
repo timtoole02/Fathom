@@ -126,6 +126,8 @@ The R/RStudio artifact guard also rejects tracked local session and dependency a
 
 The Go cache/test artifact guard also rejects tracked local generated outputs such as `.gocache/`, `.gomodcache/`, `coverage.out`, and `*.test`, with matching root `.gitignore` coverage.
 
+The Python cache/build artifact guard also rejects tracked local Pyre/Pytype and mypy daemon state such as `.pyre/`, `.pytype/`, and `.dmypy.json`, with matching root `.gitignore` coverage.
+
 The backend acceptance artifact summaries reject local paths, secret markers, and request/payload text in shareable `summary.json` and `summary.md`; keep full JSON artifacts and logs on the manual review path before publishing.
 
 The browser-test artifact guard also blocks Cypress screenshot, video, and download output directories in addition to Playwright report directories, with matching root `.gitignore` coverage.

@@ -487,9 +487,12 @@ required_diagnostic_artifact_gitignore_patterns = {
 }
 required_python_artifact_gitignore_patterns = {
     "__pycache__/",
+    ".dmypy.json",
     ".hypothesis/",
     ".pytest_cache/",
     ".mypy_cache/",
+    ".pyre/",
+    ".pytype/",
     ".ruff_cache/",
     "*.pyc",
     "*.pyo",
@@ -676,8 +679,13 @@ blocked_tracked_python_artifact_dirs = {
     "__pycache__",
     ".hypothesis",
     ".mypy_cache",
+    ".pyre",
     ".pytest_cache",
+    ".pytype",
     ".ruff_cache",
+}
+blocked_tracked_python_artifact_filenames = {
+    ".dmypy.json",
 }
 blocked_tracked_python_artifact_suffixes = {
     ".pyc",
@@ -1916,6 +1924,9 @@ def tracked_python_artifact_file_failures(tracked_paths=None):
         if any(part in blocked_tracked_python_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
             continue
+        if path.name in blocked_tracked_python_artifact_filenames:
+            failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
+            continue
         if path.suffix.lower() in blocked_tracked_python_artifact_suffixes:
             failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
     return failures
@@ -2833,6 +2844,9 @@ def self_test():
             ".hypothesis/examples/7c1b4d6c3d8f2a1e",
             ".pytest_cache/v/cache/nodeids",
             ".mypy_cache/3.12/scripts/public_api_contract_qa.data.json",
+            ".dmypy.json",
+            ".pyre/server/server.stderr",
+            ".pytype/pyi/scripts/public_api_contract_qa.pyi",
             ".ruff_cache/0.12.0/file",
             "scripts/public_api_contract_qa.pyo",
             "docs/api/public-contract.json",
@@ -2844,6 +2858,9 @@ def self_test():
         ".hypothesis/examples/7c1b4d6c3d8f2a1e: Python cache/build artifacts must not be tracked for public launch",
         ".pytest_cache/v/cache/nodeids: Python cache/build artifacts must not be tracked for public launch",
         ".mypy_cache/3.12/scripts/public_api_contract_qa.data.json: Python cache/build artifacts must not be tracked for public launch",
+        ".dmypy.json: Python cache/build artifacts must not be tracked for public launch",
+        ".pyre/server/server.stderr: Python cache/build artifacts must not be tracked for public launch",
+        ".pytype/pyi/scripts/public_api_contract_qa.pyi: Python cache/build artifacts must not be tracked for public launch",
         ".ruff_cache/0.12.0/file: Python cache/build artifacts must not be tracked for public launch",
         "scripts/public_api_contract_qa.pyo: Python cache/build artifacts must not be tracked for public launch",
     ]:

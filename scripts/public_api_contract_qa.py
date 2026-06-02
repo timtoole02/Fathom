@@ -999,6 +999,11 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "root `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
     assert_contains(
         launch_text,
+        "Pyre/Pytype and mypy daemon state",
+        "launch checklist Python type-checker artifact scope",
+    )
+    assert_contains(
+        launch_text,
         "tracked Python virtualenv/dependency artifacts",
         "launch checklist Python virtualenv/dependency artifact risk-scan scope",
     )
@@ -1374,6 +1379,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Python cache/build artifact guard",
         "launch evidence Python artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Pyre/Pytype and mypy daemon state",
+        "launch evidence Python type-checker artifact scope",
     )
     assert_contains(
         evidence_text,

@@ -23,6 +23,7 @@ This snapshot records the current public launch verification state for Fathom. I
 - The Go cache/test artifact guard rejects tracked local Go cache/test artifacts such as `.gocache/`, `.gomodcache/`, `coverage.out`, and `*.test`, and rejects missing root `.gitignore` coverage for local Go cache/test artifacts.
 - The JVM dependency artifact guard rejects tracked local JVM dependency artifacts such as `.m2/`, and rejects missing root `.gitignore` coverage for local JVM dependency artifacts.
 - The Gradle/JVM build artifact guard rejects tracked local Gradle cache/state and build outputs such as `.gradle/`, `app/build/classes/`, `service/build/reports/`, `service/build/test-results/`, `service/build/tmp/`, `service/build/generated/`, and `service/build/libs/`, and rejects missing root `.gitignore` coverage for local Gradle/JVM build artifacts.
+- The Python cache/build artifact guard rejects tracked local Pyre/Pytype and mypy daemon state such as `.pyre/`, `.pytype/`, and `.dmypy.json`, and rejects missing root `.gitignore` coverage for local Python cache/build artifacts.
 - Dependency lockfile source hardening includes Yarn `portal:` dependencies and local Yarn `patch:` references so those cannot quietly smuggle local/private source paths into public launch evidence.
 
 ## Gates represented by the snapshot
