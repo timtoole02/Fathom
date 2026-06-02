@@ -44,12 +44,16 @@ yarn-error.log
 *.db-journal
 *.db-shm
 *.db-wal
+*.duckdb
+*.duckdb.wal
 *.pid
+*.rdb
 *.sqlite
 *.sqlite-journal
 *.sqlite-shm
 *.sqlite-wal
 *.sqlite3
+dump.rdb
 summary.local.json
 *.log
 /logs/

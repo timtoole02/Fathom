@@ -519,16 +519,21 @@ required_runtime_artifact_gitignore_patterns = {
     "*.db-journal",
     "*.db-shm",
     "*.db-wal",
+    "*.duckdb",
+    "*.duckdb.wal",
     "*.pid",
+    "*.rdb",
     "*.sqlite",
     "*.sqlite-journal",
     "*.sqlite-shm",
     "*.sqlite-wal",
     "*.sqlite3",
     ".fathom/",
+    "dump.rdb",
     "summary.local.json",
 }
 blocked_tracked_runtime_artifact_filenames = {
+    "dump.rdb",
     "server.log",
     "summary.local.json",
 }
@@ -537,8 +542,11 @@ blocked_tracked_runtime_artifact_suffixes = {
     ".db-journal",
     ".db-shm",
     ".db-wal",
+    ".duckdb",
+    ".duckdb.wal",
     ".log",
     ".pid",
+    ".rdb",
     ".sqlite",
     ".sqlite-journal",
     ".sqlite-shm",
@@ -2138,6 +2146,10 @@ def self_test():
             "run/server.pid",
             "state/fathom.sqlite",
             "state/fathom.sqlite-wal",
+            "state/fathom.duckdb",
+            "state/fathom.duckdb.wal",
+            "state/dump.rdb",
+            "redis/dump.rdb",
             "frontend/package-lock.json",
         ],
     )
@@ -2148,6 +2160,10 @@ def self_test():
         "run/server.pid: local runtime/artifact detail files must not be tracked for public launch",
         "state/fathom.sqlite: local runtime/artifact detail files must not be tracked for public launch",
         "state/fathom.sqlite-wal: local runtime/artifact detail files must not be tracked for public launch",
+        "state/fathom.duckdb: local runtime/artifact detail files must not be tracked for public launch",
+        "state/fathom.duckdb.wal: local runtime/artifact detail files must not be tracked for public launch",
+        "state/dump.rdb: local runtime/artifact detail files must not be tracked for public launch",
+        "redis/dump.rdb: local runtime/artifact detail files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local runtime/artifact files")
     allowed_runtime_artifact_gitignore = "\n".join(sorted(required_runtime_artifact_gitignore_patterns)) + "\n"
