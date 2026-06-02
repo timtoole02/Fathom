@@ -81,6 +81,7 @@ blocked_tracked_os_metadata_filenames = {
     ".localized",
     ".LSOverride",
     "desktop.ini",
+    "ehthumbs.db",
     "Thumbs.db",
 }
 blocked_tracked_os_metadata_dirs = {
@@ -89,6 +90,7 @@ blocked_tracked_os_metadata_dirs = {
     "__MACOSX",
     ".AppleDouble",
     ".Trashes",
+    "$RECYCLE.BIN",
     ".fseventsd",
 }
 blocked_tracked_editor_artifact_suffixes = {
@@ -287,7 +289,9 @@ required_os_metadata_gitignore_patterns = {
     ".fseventsd/",
     ".localized",
     "._*",
+    "$RECYCLE.BIN/",
     "__MACOSX/",
+    "ehthumbs.db",
     "Thumbs.db",
     "desktop.ini",
 }
@@ -1866,6 +1870,8 @@ def self_test():
             "frontend/.LSOverride",
             "frontend/.localized",
             "frontend/Thumbs.db",
+            "frontend/ehthumbs.db",
+            "$RECYCLE.BIN/S-1-5-21-1234567890/deleted.md",
             "desktop.ini",
             "README.md~",
             "docs/.history/public-launch-evidence.md",
@@ -1896,6 +1902,8 @@ def self_test():
         "frontend/.LSOverride: OS/platform metadata files must not be tracked for public launch",
         "frontend/.localized: OS/platform metadata files must not be tracked for public launch",
         "frontend/Thumbs.db: OS/platform metadata files must not be tracked for public launch",
+        "frontend/ehthumbs.db: OS/platform metadata files must not be tracked for public launch",
+        "$RECYCLE.BIN/S-1-5-21-1234567890/deleted.md: OS/platform metadata files must not be tracked for public launch",
         "desktop.ini: OS/platform metadata files must not be tracked for public launch",
         "README.md~: editor backup/swap artifacts must not be tracked for public launch",
         "docs/.history/public-launch-evidence.md: editor backup/swap artifacts must not be tracked for public launch",

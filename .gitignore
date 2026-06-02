@@ -88,7 +88,9 @@ __MACOSX/
 .LSOverride
 .localized
 Thumbs.db
+ehthumbs.db
 desktop.ini
+$RECYCLE.BIN/
 *~
 *.diff
 *.orig
