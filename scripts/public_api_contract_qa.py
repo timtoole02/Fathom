@@ -691,6 +691,7 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 ".github/ISSUE_TEMPLATE/security_or_privacy.yml",
                 ".github/pull_request_template.md",
                 "scripts/api_client_examples_regression.py",
+                "scripts/backend_acceptance_artifact_qa.py",
                 "scripts/ci_static_policy.py",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
@@ -915,6 +916,7 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
     assert_contains(launch_text, "scripts/backend_acceptance_artifact_qa.py", "launch checklist backend acceptance artifact QA")
     assert_contains(launch_text, "backend acceptance smoke success/failure summaries", "launch checklist backend acceptance artifact QA scope")
+    assert_contains(launch_text, "backend acceptance artifact summaries reject local paths, secret markers, and request/payload text", "launch checklist backend acceptance artifact share-safety scope")
     assert_contains(
         launch_text,
         "optional backend acceptance smoke itself remains networked",
@@ -940,6 +942,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(evidence_text, "scripts/public_contract_smoke_artifact_qa.py", "launch evidence artifact QA")
     assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
+    assert_contains(
+        evidence_text,
+        "backend acceptance artifact summary share-safety guard rejects local paths, secret markers, and request/payload text",
+        "launch evidence backend acceptance artifact share-safety scope",
+    )
     assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")
     assert_contains(evidence_text, "manifest-to-`/v1` docs boundary coverage", "launch evidence manifest docs boundary gate")

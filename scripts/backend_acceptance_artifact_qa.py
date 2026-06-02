@@ -39,6 +39,19 @@ EXTERNAL_PLACEHOLDER_CHECKS = {
     "external_placeholder_activation_refusal",
     "external_placeholder_v1_chat_refusal",
 }
+SECRET_PATTERNS = [
+    re.compile(r"\bsk-[A-Za-z0-9_-]{12,}\b"),
+    re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}\b"),
+    re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"),
+    re.compile(r"\bhf_[A-Za-z0-9]{20,}\b"),
+    re.compile(r"\bBearer\s+[A-Za-z0-9._~+/=-]{12,}\b", re.IGNORECASE),
+    re.compile(r"\b(api[_-]?key|authorization|bearer|token|secret)\b\s*[:=]", re.IGNORECASE),
+]
+REQUEST_PAYLOAD_PATTERNS = [
+    re.compile(r"\b(messages|input|prompt|request_body|provider_payload)\b\s*[:=]", re.IGNORECASE),
+    re.compile(r"placeholder-key", re.IGNORECASE),
+    re.compile(r"api\.example\.test", re.IGNORECASE),
+]
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -53,11 +66,17 @@ def load_json(path: Path) -> dict[str, Any]:
     return data
 
 
-def assert_no_public_path_leaks(path: Path) -> None:
+def assert_public_summary_share_safe(path: Path) -> None:
     text = path.read_text(encoding="utf-8")
     for pattern in LOCAL_PATH_PATTERNS:
         if pattern.search(text):
             raise AssertionError(f"{path.name} contains a local path-like leak matching {pattern.pattern}")
+    for pattern in SECRET_PATTERNS:
+        if pattern.search(text):
+            raise AssertionError(f"{path.name} contains a secret-like marker matching {pattern.pattern}")
+    for pattern in REQUEST_PAYLOAD_PATTERNS:
+        if pattern.search(text):
+            raise AssertionError(f"{path.name} contains request/payload text matching {pattern.pattern}")
     if LEGAL_OVERCLAIM.search(text):
         raise AssertionError(f"{path.name} contains legal/license overclaim wording")
     if EXTERNAL_PROXY_OVERCLAIM.search(text):
@@ -74,8 +93,8 @@ def validate_summary_dir(directory: Path) -> None:
     if not summary_local.exists():
         raise AssertionError("missing summary.local.json")
 
-    assert_no_public_path_leaks(summary_path)
-    assert_no_public_path_leaks(summary_md)
+    assert_public_summary_share_safe(summary_path)
+    assert_public_summary_share_safe(summary_md)
 
     if summary.get("local_paths_file") != "summary.local.json":
         raise AssertionError("summary.json must point local_paths_file at summary.local.json")
@@ -315,6 +334,37 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("summary.json share-safety self-check did not fail")
+
+        secret_leak = root / "summary-secret-leak"
+        write_sample(secret_leak, passed=True)
+        summary = load_json(secret_leak / "summary.json")
+        summary["debug_note"] = "author" + "ization: Bear" + "er sample-token-value"
+        (secret_leak / "summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        try:
+            validate_summary_dir(secret_leak)
+        except AssertionError as exc:
+            if "summary.json contains a secret-like marker" not in str(exc):
+                raise
+        else:
+            raise AssertionError("summary.json secret-marker self-check did not fail")
+
+        payload_leak = root / "summary-payload-leak"
+        write_sample(payload_leak, passed=True)
+        summary_md = payload_leak / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8")
+            + "\nDebug request body: messages: [{'role': 'user', 'content': 'private'}]\n",
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(payload_leak)
+        except AssertionError as exc:
+            if "summary.md contains request/payload text" not in str(exc):
+                raise
+        else:
+            raise AssertionError("summary.md request/payload self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)
