@@ -1009,6 +1009,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(launch_text, "root `.gitignore` coverage for local frontend/Node cache/build artifacts", "launch checklist frontend artifact ignore scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local Rust/Cargo cache/build artifacts", "launch checklist Rust/Cargo artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "Go cache/test artifact guard also rejects tracked local generated outputs",
+        "launch checklist Go artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root `.gitignore` coverage",
+        "launch checklist Go artifact ignore scope",
+    )
     assert_contains(launch_text, "tracked local native/CMake build artifacts", "launch checklist native/CMake artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local native/CMake build artifacts", "launch checklist native/CMake artifact ignore scope")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
@@ -1449,6 +1459,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Rust/Cargo cache/build artifacts",
         "launch evidence Rust artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Go cache/test artifact guard",
+        "launch evidence Go artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Go cache/test artifacts such as `.gocache/`, `.gomodcache/`, `coverage.out`, and `*.test`",
+        "launch evidence Go artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Go cache/test artifacts",
+        "launch evidence Go artifact ignore examples",
     )
     assert_contains(
         launch_text,
