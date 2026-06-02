@@ -103,6 +103,7 @@ blocked_tracked_ide_artifact_dirs = {
     ".idea",
     ".settings",
     ".vscode",
+    ".zed",
 }
 blocked_tracked_ide_artifact_filenames = {
     ".classpath",
@@ -299,6 +300,7 @@ required_editor_artifact_gitignore_patterns = {
 required_ide_artifact_gitignore_patterns = {
     "/.idea/",
     "/.vscode/",
+    "/.zed/",
     ".classpath",
     ".project",
     ".settings/",
@@ -1831,6 +1833,7 @@ def self_test():
             ".vscode/settings.json",
             ".idea/workspace.xml",
             ".settings/org.eclipse.jdt.core.prefs",
+            ".zed/settings.json",
             ".classpath",
             ".project",
             "fathom.code-workspace",
@@ -1859,6 +1862,7 @@ def self_test():
         ".vscode/settings.json: IDE workspace/config artifacts must not be tracked for public launch",
         ".idea/workspace.xml: IDE workspace/config artifacts must not be tracked for public launch",
         ".settings/org.eclipse.jdt.core.prefs: IDE workspace/config artifacts must not be tracked for public launch",
+        ".zed/settings.json: IDE workspace/config artifacts must not be tracked for public launch",
         ".classpath: IDE workspace/config artifacts must not be tracked for public launch",
         ".project: IDE workspace/config artifacts must not be tracked for public launch",
         "fathom.code-workspace: IDE workspace/config artifacts must not be tracked for public launch",

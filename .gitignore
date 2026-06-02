@@ -88,6 +88,7 @@ desktop.ini
 *.swp
 /.idea/
 /.vscode/
+/.zed/
 .settings/
 .classpath
 .project
