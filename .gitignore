@@ -229,6 +229,8 @@ Voice Memo *
 /.codex/
 /.claude/
 /.continue/
+/.cursor/
+/.windsurf/
 /memory/
 /AGENTS.md
 /.aider.chat.history.md

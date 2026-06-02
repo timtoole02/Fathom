@@ -989,7 +989,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "local assistant state such as `.codex/`, `.claude/`, `.continue/`, and `.aider.*`",
+        "local assistant state such as `.codex/`, `.claude/`, `.continue/`, `.cursor/`, `.windsurf/`, and `.aider.*`",
         "launch evidence local assistant state risk-scan examples",
     )
     assert_contains(
