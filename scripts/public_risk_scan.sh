@@ -488,6 +488,7 @@ required_runtime_artifact_gitignore_patterns = {
     "*.db-journal",
     "*.db-shm",
     "*.db-wal",
+    "*.pid",
     "*.sqlite",
     "*.sqlite-journal",
     "*.sqlite-shm",
@@ -506,6 +507,7 @@ blocked_tracked_runtime_artifact_suffixes = {
     ".db-shm",
     ".db-wal",
     ".log",
+    ".pid",
     ".sqlite",
     ".sqlite-journal",
     ".sqlite-shm",
@@ -2014,6 +2016,7 @@ def self_test():
             "docs/api/public-contract.json",
             "logs/server.log",
             "public-contract-artifacts/summary.local.json",
+            "run/server.pid",
             "state/fathom.sqlite",
             "state/fathom.sqlite-wal",
             "frontend/package-lock.json",
@@ -2023,6 +2026,7 @@ def self_test():
         ".fathom/state/registry.json: local Fathom runtime state must not be tracked for public launch",
         "logs/server.log: local runtime/artifact detail files must not be tracked for public launch",
         "public-contract-artifacts/summary.local.json: local runtime/artifact detail files must not be tracked for public launch",
+        "run/server.pid: local runtime/artifact detail files must not be tracked for public launch",
         "state/fathom.sqlite: local runtime/artifact detail files must not be tracked for public launch",
         "state/fathom.sqlite-wal: local runtime/artifact detail files must not be tracked for public launch",
     ]:
@@ -2031,10 +2035,10 @@ def self_test():
     if gitignore_runtime_artifact_failures(allowed_runtime_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local runtime/artifact detail-file ignore patterns")
     runtime_artifact_gitignore_failures = gitignore_runtime_artifact_failures(
-        allowed_runtime_artifact_gitignore.replace("*.sqlite-wal\n", "")
+        allowed_runtime_artifact_gitignore.replace("*.pid\n", "")
     )
     if runtime_artifact_gitignore_failures != [
-        ".gitignore: missing local runtime/artifact detail-file ignore patterns: *.sqlite-wal"
+        ".gitignore: missing local runtime/artifact detail-file ignore patterns: *.pid"
     ]:
         raise AssertionError("public risk self-test did not reject missing local runtime/artifact detail-file ignore patterns")
     allowed_diagnostic_artifact_gitignore = "\n".join(sorted(required_diagnostic_artifact_gitignore_patterns)) + "\n"

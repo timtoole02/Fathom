@@ -43,6 +43,7 @@ yarn-error.log
 *.db-journal
 *.db-shm
 *.db-wal
+*.pid
 *.sqlite
 *.sqlite-journal
 *.sqlite-shm
