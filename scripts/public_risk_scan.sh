@@ -7,6 +7,7 @@ cd "$ROOT"
 python3 - "$@" <<'PY'
 import pathlib
 import json
+import posixpath
 import re
 import subprocess
 import sys
@@ -1584,9 +1585,13 @@ def tracked_index_entries():
         entries.append((mode, rel))
     return entries
 
-def tracked_symlink_failures(tracked_entries=None, targets=None):
+def tracked_symlink_failures(tracked_entries=None, targets=None, tracked_paths=None):
     if tracked_entries is None:
         tracked_entries = tracked_index_entries()
+    if tracked_paths is None:
+        tracked_paths = {rel for _mode, rel in tracked_entries}
+    else:
+        tracked_paths = set(tracked_paths)
     failures = []
     for mode, rel in tracked_entries:
         if mode != tracked_symlink_mode:
@@ -1599,6 +1604,13 @@ def tracked_symlink_failures(tracked_entries=None, targets=None):
         target_path = pathlib.PurePosixPath(target)
         if target.startswith("~") or target_path.is_absolute() or ".." in target_path.parts:
             failures.append(f"{rel}: tracked symlink must use a relative in-repository target, found {target}")
+            continue
+        target_rel = posixpath.normpath((pathlib.PurePosixPath(rel).parent / target_path).as_posix())
+        target_prefix = target_rel.rstrip("/") + "/"
+        if target_rel == "." or (
+            target_rel not in tracked_paths and not any(path.startswith(target_prefix) for path in tracked_paths)
+        ):
+            failures.append(f"{rel}: tracked symlink target must resolve to an existing tracked in-repository path, found {target}")
     return failures
 
 def self_test():
@@ -2534,20 +2546,29 @@ def self_test():
             (tracked_symlink_mode, "docs/private-temp"),
             (tracked_symlink_mode, "docs/parent"),
             (tracked_symlink_mode, "docs/public-contract-link"),
+            (tracked_symlink_mode, "docs/missing-contract-link"),
         ],
         targets={
             "docs/internal-home": "/Users/example/private-notes.md",
             "docs/private-temp": "~/private-output.json",
             "docs/parent": "../outside-repo.md",
             "docs/public-contract-link": "api/public-contract.json",
+            "docs/missing-contract-link": "api/missing-contract.json",
         },
+        tracked_paths=[
+            "README.md",
+            "docs/api/public-contract.json",
+            "docs/public-contract-link",
+            "docs/missing-contract-link",
+        ],
     )
     if symlink_failures != [
         "docs/internal-home: tracked symlink must use a relative in-repository target, found /Users/example/private-notes.md",
         "docs/private-temp: tracked symlink must use a relative in-repository target, found ~/private-output.json",
         "docs/parent: tracked symlink must use a relative in-repository target, found ../outside-repo.md",
+        "docs/missing-contract-link: tracked symlink target must resolve to an existing tracked in-repository path, found api/missing-contract.json",
     ]:
-        raise AssertionError("public risk self-test did not reject symlinks escaping the repository")
+        raise AssertionError("public risk self-test did not reject symlinks escaping the repository or resolving to local-only targets")
     lockfile_failures = tracked_dependency_lock_source_failures(
         tracked_paths=[
             "Cargo.lock",
