@@ -182,6 +182,10 @@ docker-compose.override.yaml
 compose.override.yml
 compose.override.yaml
 
+# Local deployment platform artifacts
+/.vercel/
+/.netlify/
+
 # Local infrastructure state
 /.terraform/
 .terraform.lock.hcl

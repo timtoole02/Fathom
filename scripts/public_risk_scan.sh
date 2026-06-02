@@ -330,6 +330,10 @@ required_container_artifact_gitignore_patterns = {
     "docker-compose.override.yaml",
     "docker-compose.override.yml",
 }
+required_deployment_platform_artifact_gitignore_patterns = {
+    "/.netlify/",
+    "/.vercel/",
+}
 required_infra_state_gitignore_patterns = {
     "/.terraform/",
     ".terraform.lock.hcl",
@@ -676,6 +680,10 @@ blocked_tracked_container_artifact_filenames = {
     "compose.override.yml",
     "docker-compose.override.yaml",
     "docker-compose.override.yml",
+}
+blocked_tracked_deployment_platform_artifact_dirs = {
+    ".netlify",
+    ".vercel",
 }
 blocked_tracked_infra_state_dirs = {
     ".terraform",
@@ -1156,6 +1164,22 @@ def gitignore_container_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local container artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_deployment_platform_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local deployment platform artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_deployment_platform_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local deployment platform artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_infra_state_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -1559,6 +1583,16 @@ def tracked_container_artifact_file_failures(tracked_paths=None):
             continue
         if path.name in blocked_tracked_container_artifact_filenames:
             failures.append(f"{rel}: local Docker/container override files must not be tracked for public launch")
+    return failures
+
+def tracked_deployment_platform_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_deployment_platform_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local deployment platform artifacts must not be tracked for public launch")
     return failures
 
 def tracked_infra_state_file_failures(tracked_paths=None):
@@ -2555,6 +2589,36 @@ def self_test():
         "compose.override.yaml: local Docker/container override files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Docker/container artifacts")
+    allowed_deployment_platform_artifact_gitignore = "\n".join(
+        sorted(required_deployment_platform_artifact_gitignore_patterns)
+    ) + "\n"
+    if gitignore_deployment_platform_artifact_failures(allowed_deployment_platform_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local deployment platform artifact ignore patterns")
+    deployment_platform_artifact_gitignore_failures = gitignore_deployment_platform_artifact_failures(
+        allowed_deployment_platform_artifact_gitignore.replace("/.vercel/\n", "")
+    )
+    if deployment_platform_artifact_gitignore_failures != [
+        ".gitignore: missing local deployment platform artifact ignore patterns: /.vercel/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local deployment platform artifact ignore patterns")
+    deployment_platform_artifact_failures = tracked_deployment_platform_artifact_file_failures(
+        tracked_paths=[
+            ".vercel/project.json",
+            ".vercel/output/config.json",
+            ".netlify/state.json",
+            ".netlify/functions-internal/manifest.json",
+            "netlify.toml",
+            "vercel.json",
+            "docs/api/public-contract.json",
+        ],
+    )
+    if deployment_platform_artifact_failures != [
+        ".vercel/project.json: local deployment platform artifacts must not be tracked for public launch",
+        ".vercel/output/config.json: local deployment platform artifacts must not be tracked for public launch",
+        ".netlify/state.json: local deployment platform artifacts must not be tracked for public launch",
+        ".netlify/functions-internal/manifest.json: local deployment platform artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local deployment platform artifacts")
     infra_state_failures = tracked_infra_state_file_failures(
         tracked_paths=[
             ".terraform/providers/registry.terraform.io/example/provider",
@@ -2787,6 +2851,7 @@ failures.extend(gitignore_editor_artifact_failures())
 failures.extend(gitignore_ide_artifact_failures())
 failures.extend(gitignore_model_artifact_failures())
 failures.extend(gitignore_container_artifact_failures())
+failures.extend(gitignore_deployment_platform_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_screen_capture_failures())
@@ -2813,6 +2878,7 @@ failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_model_artifact_file_failures())
 failures.extend(tracked_container_artifact_file_failures())
+failures.extend(tracked_deployment_platform_artifact_file_failures())
 failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_screen_capture_file_failures())
