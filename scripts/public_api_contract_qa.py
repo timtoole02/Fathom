@@ -1617,6 +1617,16 @@ def assert_boundary_docs() -> None:
         "launch checklist notebook artifact ignore scope",
     )
     assert_contains(
+        launch_text,
+        "tracked local documentation build artifacts",
+        "launch checklist documentation build artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local documentation build artifacts",
+        "launch checklist documentation build artifact ignore scope",
+    )
+    assert_contains(
         evidence_text,
         "local notebook checkpoint artifact guard",
         "launch evidence notebook checkpoint artifact risk-scan scope",
@@ -1645,6 +1655,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local notebook artifacts",
         "launch evidence notebook artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "local documentation build artifact guard",
+        "launch evidence documentation build artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "LaTeX/Pandoc-adjacent build byproducts such as `*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`, and `_minted-*` caches",
+        "launch evidence documentation build artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local documentation build artifacts",
+        "launch evidence documentation build artifact ignore examples",
     )
     assert_contains(
         evidence_text,

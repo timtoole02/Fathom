@@ -631,6 +631,15 @@ required_notebook_artifact_gitignore_patterns = {
     ".ipynb_checkpoints/",
     ".nbhistory",
 }
+required_doc_build_artifact_gitignore_patterns = {
+    "_minted-*/",
+    "*.aux",
+    "*.bbl",
+    "*.blg",
+    "*.fdb_latexmk",
+    "*.fls",
+    "*.synctex.gz",
+}
 required_runtime_artifact_gitignore_patterns = {
     "*.db",
     "*.db-journal",
@@ -1033,6 +1042,14 @@ blocked_tracked_notebook_artifact_dirs = {
 }
 blocked_tracked_notebook_artifact_filenames = {
     ".nbhistory",
+}
+blocked_tracked_doc_build_artifact_suffixes = {
+    ".aux",
+    ".bbl",
+    ".blg",
+    ".fdb_latexmk",
+    ".fls",
+    ".synctex.gz",
 }
 tracked_symlink_mode = "120000"
 dependency_lockfile_names = {
@@ -1937,6 +1954,22 @@ def gitignore_notebook_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local notebook artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_doc_build_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local documentation build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_doc_build_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local documentation build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_runtime_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2410,6 +2443,20 @@ def tracked_notebook_artifact_file_failures(tracked_paths=None, notebook_texts=N
             if cell.get("execution_count") is not None or cell.get("outputs"):
                 failures.append(f"{rel}: notebook execution outputs must not be tracked for public launch")
                 break
+    return failures
+
+def tracked_doc_build_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        lower_name = path.name.lower()
+        if any(part.startswith("_minted-") for part in path.parts):
+            failures.append(f"{rel}: local documentation build artifacts must not be tracked for public launch")
+            continue
+        if any(lower_name.endswith(suffix) for suffix in blocked_tracked_doc_build_artifact_suffixes):
+            failures.append(f"{rel}: local documentation build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_index_entries():
@@ -3446,6 +3493,39 @@ def self_test():
         "notebooks/with-output.ipynb: notebook execution outputs must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local notebook artifacts")
+    allowed_doc_build_artifact_gitignore = "\n".join(sorted(required_doc_build_artifact_gitignore_patterns)) + "\n"
+    if gitignore_doc_build_artifact_failures(allowed_doc_build_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local documentation build artifact ignore patterns")
+    doc_build_artifact_gitignore_failures = gitignore_doc_build_artifact_failures(
+        allowed_doc_build_artifact_gitignore.replace("*.fdb_latexmk\n", "")
+    )
+    if doc_build_artifact_gitignore_failures != [
+        ".gitignore: missing local documentation build artifact ignore patterns: *.fdb_latexmk"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local documentation build artifact ignore patterns")
+    doc_build_artifact_failures = tracked_doc_build_artifact_file_failures(
+        tracked_paths=[
+            "docs/paper.aux",
+            "docs/paper.bbl",
+            "docs/paper.blg",
+            "docs/paper.fdb_latexmk",
+            "docs/paper.fls",
+            "docs/paper.synctex.gz",
+            "docs/_minted-paper/default.pygstyle",
+            "docs/paper.tex",
+            "docs/public-launch-checklist.md",
+        ],
+    )
+    if doc_build_artifact_failures != [
+        "docs/paper.aux: local documentation build artifacts must not be tracked for public launch",
+        "docs/paper.bbl: local documentation build artifacts must not be tracked for public launch",
+        "docs/paper.blg: local documentation build artifacts must not be tracked for public launch",
+        "docs/paper.fdb_latexmk: local documentation build artifacts must not be tracked for public launch",
+        "docs/paper.fls: local documentation build artifacts must not be tracked for public launch",
+        "docs/paper.synctex.gz: local documentation build artifacts must not be tracked for public launch",
+        "docs/_minted-paper/default.pygstyle: local documentation build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local documentation build artifacts")
     rust_artifact_failures = tracked_rust_artifact_file_failures(
         tracked_paths=[
             ".cargo/registry/cache/index.crate",
@@ -4095,6 +4175,7 @@ failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_temp_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
 failures.extend(gitignore_notebook_artifact_failures())
+failures.extend(gitignore_doc_build_artifact_failures())
 failures.extend(gitignore_runtime_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_diagnostic_artifact_file_failures())
@@ -4125,6 +4206,7 @@ failures.extend(tracked_screen_capture_file_failures())
 failures.extend(tracked_media_capture_file_failures())
 failures.extend(tracked_test_report_artifact_file_failures())
 failures.extend(tracked_notebook_artifact_file_failures())
+failures.extend(tracked_doc_build_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
 if failures:
     print("Public risk scan failed:", file=sys.stderr)
