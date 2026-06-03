@@ -17,6 +17,11 @@ compile_commands.json
 /.build/
 /.swiftpm/
 
+# Local Zig build artifacts
+/.zig-cache/
+/zig-cache/
+/zig-out/
+
 # Local Dart/Flutter artifacts
 .dart_tool/
 .pub-cache/

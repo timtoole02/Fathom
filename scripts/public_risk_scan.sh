@@ -395,6 +395,11 @@ required_swiftpm_artifact_gitignore_patterns = {
     "/.build/",
     "/.swiftpm/",
 }
+required_zig_artifact_gitignore_patterns = {
+    "/.zig-cache/",
+    "/zig-cache/",
+    "/zig-out/",
+}
 required_dart_flutter_artifact_gitignore_patterns = {
     ".dart_tool/",
     ".flutter-plugins",
@@ -1049,6 +1054,11 @@ blocked_tracked_bazel_output_tree_children = {
 blocked_tracked_swiftpm_artifact_dirs = {
     ".build",
     ".swiftpm",
+}
+blocked_tracked_zig_artifact_dirs = {
+    ".zig-cache",
+    "zig-cache",
+    "zig-out",
 }
 blocked_tracked_dart_flutter_artifact_dirs = {
     ".dart_tool",
@@ -1724,6 +1734,22 @@ def gitignore_swiftpm_artifact_failures(gitignore_text=None):
     missing = sorted(required_swiftpm_artifact_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local Swift Package Manager artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_zig_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Zig build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_zig_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Zig build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_dart_flutter_artifact_failures(gitignore_text=None):
@@ -2569,6 +2595,16 @@ def tracked_swiftpm_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_swiftpm_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: local Swift Package Manager artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_zig_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_zig_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local Zig build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_dart_flutter_artifact_file_failures(tracked_paths=None):
@@ -4267,6 +4303,35 @@ def self_test():
         ".swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata: local Swift Package Manager artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Swift Package Manager artifacts")
+    allowed_zig_artifact_gitignore = "\n".join(sorted(required_zig_artifact_gitignore_patterns)) + "\n"
+    if gitignore_zig_artifact_failures(allowed_zig_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Zig build artifact ignore patterns")
+    zig_artifact_gitignore_failures = gitignore_zig_artifact_failures(
+        allowed_zig_artifact_gitignore.replace("/zig-out/\n", "")
+    )
+    if zig_artifact_gitignore_failures != [
+        ".gitignore: missing local Zig build artifact ignore patterns: /zig-out/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Zig build artifact ignore patterns")
+    zig_artifact_failures = tracked_zig_artifact_file_failures(
+        tracked_paths=[
+            ".zig-cache/o/0123456789abcdef/fathom.o",
+            "zig-cache/o/0123456789abcdef/fathom.o",
+            "zig-out/bin/fathom",
+            "tools/.zig-cache/h/manifest.txt",
+            "build.zig",
+            "build.zig.zon",
+            "src/main.zig",
+            "docs/zig-build.md",
+        ],
+    )
+    if zig_artifact_failures != [
+        ".zig-cache/o/0123456789abcdef/fathom.o: local Zig build artifacts must not be tracked for public launch",
+        "zig-cache/o/0123456789abcdef/fathom.o: local Zig build artifacts must not be tracked for public launch",
+        "zig-out/bin/fathom: local Zig build artifacts must not be tracked for public launch",
+        "tools/.zig-cache/h/manifest.txt: local Zig build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Zig build artifacts")
     allowed_dart_flutter_artifact_gitignore = "\n".join(sorted(required_dart_flutter_artifact_gitignore_patterns)) + "\n"
     if gitignore_dart_flutter_artifact_failures(allowed_dart_flutter_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Dart/Flutter artifact ignore patterns")
@@ -4562,6 +4627,7 @@ failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_nix_artifact_failures())
 failures.extend(gitignore_bazel_artifact_failures())
 failures.extend(gitignore_swiftpm_artifact_failures())
+failures.extend(gitignore_zig_artifact_failures())
 failures.extend(gitignore_dart_flutter_artifact_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_screen_capture_failures())
@@ -4617,6 +4683,7 @@ failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_nix_artifact_file_failures())
 failures.extend(tracked_bazel_artifact_file_failures())
 failures.extend(tracked_swiftpm_artifact_file_failures())
+failures.extend(tracked_zig_artifact_file_failures())
 failures.extend(tracked_dart_flutter_artifact_file_failures())
 failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_screen_capture_file_failures())
