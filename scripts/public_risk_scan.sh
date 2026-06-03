@@ -603,6 +603,10 @@ required_haskell_build_artifact_gitignore_patterns = {
     "/cabal.sandbox.config",
     "/dist-newstyle/",
 }
+required_ocaml_opam_artifact_gitignore_patterns = {
+    "/.opam-switch/",
+    "/_opam/",
+}
 required_frontend_artifact_gitignore_patterns = {
     ".bun/",
     ".eslintcache",
@@ -888,6 +892,10 @@ blocked_tracked_haskell_build_artifact_dirs = {
 }
 blocked_tracked_haskell_build_artifact_filenames = {
     "cabal.sandbox.config",
+}
+blocked_tracked_ocaml_opam_artifact_dirs = {
+    ".opam-switch",
+    "_opam",
 }
 blocked_tracked_frontend_artifact_dirs = {
     ".bun",
@@ -2126,6 +2134,22 @@ def gitignore_haskell_build_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Haskell Stack/Cabal build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_ocaml_opam_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local OCaml/opam artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_ocaml_opam_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local OCaml/opam artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_frontend_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2444,6 +2468,16 @@ def tracked_haskell_build_artifact_file_failures(tracked_paths=None):
             continue
         if path.name in blocked_tracked_haskell_build_artifact_filenames:
             failures.append(f"{rel}: Haskell Stack/Cabal build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_ocaml_opam_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_ocaml_opam_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: OCaml/opam local artifacts must not be tracked for public launch")
     return failures
 
 def tracked_frontend_artifact_file_failures(tracked_paths=None):
@@ -3766,6 +3800,35 @@ def self_test():
         ".gitignore: missing local Haskell Stack/Cabal build artifact ignore patterns: /dist-newstyle/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Haskell Stack/Cabal build artifact ignore patterns")
+    ocaml_opam_artifact_failures = tracked_ocaml_opam_artifact_file_failures(
+        tracked_paths=[
+            "_opam/lib/ocaml/stdlib.cma",
+            "_opam/.opam-switch/switch-state",
+            ".opam-switch/sources/fathom/url",
+            "fathom.opam",
+            "dune",
+            "dune-project",
+            "src/main.ml",
+            "src/main.mli",
+            "docs/ocaml-build.md",
+        ],
+    )
+    if ocaml_opam_artifact_failures != [
+        "_opam/lib/ocaml/stdlib.cma: OCaml/opam local artifacts must not be tracked for public launch",
+        "_opam/.opam-switch/switch-state: OCaml/opam local artifacts must not be tracked for public launch",
+        ".opam-switch/sources/fathom/url: OCaml/opam local artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local OCaml/opam artifacts")
+    allowed_ocaml_opam_artifact_gitignore = "\n".join(sorted(required_ocaml_opam_artifact_gitignore_patterns)) + "\n"
+    if gitignore_ocaml_opam_artifact_failures(allowed_ocaml_opam_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local OCaml/opam artifact ignore patterns")
+    ocaml_opam_artifact_gitignore_failures = gitignore_ocaml_opam_artifact_failures(
+        allowed_ocaml_opam_artifact_gitignore.replace("/.opam-switch/\n", "")
+    )
+    if ocaml_opam_artifact_gitignore_failures != [
+        ".gitignore: missing local OCaml/opam artifact ignore patterns: /.opam-switch/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local OCaml/opam artifact ignore patterns")
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
@@ -4790,6 +4853,7 @@ failures.extend(gitignore_gradle_artifact_failures())
 failures.extend(gitignore_kotlin_artifact_failures())
 failures.extend(gitignore_scala_build_artifact_failures())
 failures.extend(gitignore_haskell_build_artifact_failures())
+failures.extend(gitignore_ocaml_opam_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_temp_artifact_failures())
@@ -4812,6 +4876,7 @@ failures.extend(tracked_gradle_artifact_file_failures())
 failures.extend(tracked_kotlin_artifact_file_failures())
 failures.extend(tracked_scala_build_artifact_file_failures())
 failures.extend(tracked_haskell_build_artifact_file_failures())
+failures.extend(tracked_ocaml_opam_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_local_cache_artifact_file_failures())
 failures.extend(tracked_temp_artifact_file_failures())

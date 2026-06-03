@@ -1104,6 +1104,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "OCaml/opam local switch artifact guard also rejects tracked local switch/dependency artifacts",
+        "launch checklist OCaml/opam artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth OCaml project files such as `dune`, `dune-project`, `*.opam`, or OCaml source files",
+        "launch checklist OCaml/opam source-file allowance scope",
+    )
+    assert_contains(
+        launch_text,
         "tracked local Elixir/Mix build/dependency artifacts",
         "launch checklist Elixir/Mix artifact risk-scan scope",
     )
@@ -1187,6 +1197,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "rejects missing root `.gitignore` coverage for local Haskell Stack/Cabal build artifacts",
         "launch evidence Haskell Stack/Cabal artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local OCaml/opam artifact guard",
+        "launch evidence OCaml/opam artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local OCaml/opam local switch artifacts such as `_opam/` and `.opam-switch/`",
+        "launch evidence OCaml/opam artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local OCaml/opam artifacts",
+        "launch evidence OCaml/opam artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth OCaml project files such as `dune`, `dune-project`, `*.opam`, and OCaml source files",
+        "launch evidence OCaml/opam source allowance",
     )
     assert_contains(
         evidence_text,

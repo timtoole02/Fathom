@@ -237,6 +237,10 @@ deps/
 /.cabal-sandbox/
 /cabal.sandbox.config
 
+# Local OCaml/opam artifacts
+/_opam/
+/.opam-switch/
+
 # Local test report artifacts
 /playwright-report/
 /blob-report/
