@@ -700,6 +700,10 @@ required_frontend_artifact_gitignore_patterns = {
     "frontend/.stylelintcache",
     "frontend/vite.config.*.timestamp-*",
     "frontend/vitest.config.*.timestamp-*",
+    ".vitepress/cache/",
+    ".vitepress/dist/",
+    "docs/.vitepress/cache/",
+    "docs/.vitepress/dist/",
     "node_modules/",
     "npm-debug.log",
     "pnpm-debug.log",
@@ -1054,6 +1058,10 @@ blocked_tracked_frontend_artifact_filenames = {
 blocked_tracked_frontend_artifact_filename_patterns = {
     "vite.config.*.timestamp-*",
     "vitest.config.*.timestamp-*",
+}
+blocked_tracked_frontend_nested_build_dirs = {
+    (".vitepress", "cache"),
+    (".vitepress", "dist"),
 }
 blocked_tracked_frontend_artifact_suffixes = {
     ".tsbuildinfo",
@@ -2796,6 +2804,12 @@ def tracked_frontend_artifact_file_failures(tracked_paths=None):
         if any(tuple(path.parts[index : index + 2]) == (".angular", "cache") for index in range(len(path.parts) - 1)):
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
             continue
+        if any(
+            tuple(path.parts[index : index + 2]) in blocked_tracked_frontend_nested_build_dirs
+            for index in range(len(path.parts) - 1)
+        ):
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
         if path.parts and path.parts[0] in blocked_tracked_root_frontend_build_dirs:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
             continue
@@ -4340,6 +4354,8 @@ def self_test():
             "frontend/.astro/types.d.ts",
             ".docusaurus/routes.js",
             "docs/.docusaurus/routes.js",
+            ".vitepress/cache/deps/app.js",
+            "docs/.vitepress/dist/index.html",
             ".next/server/app.js",
             "frontend/.next/server/app.js",
             "frontend/.svelte-kit/output/server/index.js",
@@ -4411,6 +4427,8 @@ def self_test():
         "frontend/.astro/types.d.ts: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".docusaurus/routes.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "docs/.docusaurus/routes.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".vitepress/cache/deps/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "docs/.vitepress/dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.svelte-kit/output/server/index.js: frontend/Node cache/build artifacts must not be tracked for public launch",

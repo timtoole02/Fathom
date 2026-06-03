@@ -83,6 +83,8 @@ coverage/
 .parcel-cache/
 .cache/
 .vitest/
+.vitepress/cache/
+.vitepress/dist/
 .eslintcache
 .stylelintcache
 *.tsbuildinfo
@@ -98,6 +100,8 @@ frontend/.stylelintcache
 frontend/.vitest/
 frontend/vite.config.*.timestamp-*
 frontend/vitest.config.*.timestamp-*
+docs/.vitepress/cache/
+docs/.vitepress/dist/
 
 # Local runtime state
 .fathom/
