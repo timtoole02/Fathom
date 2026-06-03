@@ -576,6 +576,12 @@ required_gradle_artifact_gitignore_patterns = {
     "/.gradle/",
     "build/",
 }
+required_scala_build_artifact_gitignore_patterns = {
+    "/.bloop/",
+    "/.bsp/",
+    "/.metals/",
+    "/.scala-build/",
+}
 required_frontend_artifact_gitignore_patterns = {
     ".bun/",
     ".eslintcache",
@@ -835,6 +841,12 @@ blocked_tracked_gradle_build_output_children = {
     "resources",
     "test-results",
     "tmp",
+}
+blocked_tracked_scala_build_artifact_dirs = {
+    ".bloop",
+    ".bsp",
+    ".metals",
+    ".scala-build",
 }
 blocked_tracked_frontend_artifact_dirs = {
     ".bun",
@@ -1988,6 +2000,22 @@ def gitignore_gradle_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Gradle/JVM build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_scala_build_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Scala/SBT build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_scala_build_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Scala/SBT build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_frontend_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2260,6 +2288,16 @@ def tracked_gradle_artifact_file_failures(tracked_paths=None):
             if path.parts[index + 1] in blocked_tracked_gradle_build_output_children:
                 failures.append(f"{rel}: Gradle/JVM build artifacts must not be tracked for public launch")
                 break
+    return failures
+
+def tracked_scala_build_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_scala_build_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Scala/SBT build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_frontend_artifact_file_failures(tracked_paths=None):
@@ -3450,6 +3488,35 @@ def self_test():
         ".gitignore: missing local Gradle/JVM build artifact ignore patterns: build/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Gradle/JVM build artifact ignore patterns")
+    scala_build_artifact_failures = tracked_scala_build_artifact_file_failures(
+        tracked_paths=[
+            ".bloop/fathom/bloop-internal-classes/main/Fathom.class",
+            ".bsp/sbt.json",
+            ".metals/metals.h2.db",
+            ".scala-build/fathom/project.json",
+            "build.sbt",
+            "project/build.properties",
+            "src/main/scala/Fathom.scala",
+            "docs/scala-build.md",
+        ],
+    )
+    if scala_build_artifact_failures != [
+        ".bloop/fathom/bloop-internal-classes/main/Fathom.class: Scala/SBT build artifacts must not be tracked for public launch",
+        ".bsp/sbt.json: Scala/SBT build artifacts must not be tracked for public launch",
+        ".metals/metals.h2.db: Scala/SBT build artifacts must not be tracked for public launch",
+        ".scala-build/fathom/project.json: Scala/SBT build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Scala/SBT build artifacts")
+    allowed_scala_build_artifact_gitignore = "\n".join(sorted(required_scala_build_artifact_gitignore_patterns)) + "\n"
+    if gitignore_scala_build_artifact_failures(allowed_scala_build_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Scala/SBT build artifact ignore patterns")
+    scala_build_artifact_gitignore_failures = gitignore_scala_build_artifact_failures(
+        allowed_scala_build_artifact_gitignore.replace("/.metals/\n", "")
+    )
+    if scala_build_artifact_gitignore_failures != [
+        ".gitignore: missing local Scala/SBT build artifact ignore patterns: /.metals/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Scala/SBT build artifact ignore patterns")
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
@@ -4440,6 +4507,7 @@ failures.extend(gitignore_go_artifact_failures())
 failures.extend(gitignore_elixir_mix_artifact_failures())
 failures.extend(gitignore_jvm_dependency_artifact_failures())
 failures.extend(gitignore_gradle_artifact_failures())
+failures.extend(gitignore_scala_build_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_temp_artifact_failures())
@@ -4458,6 +4526,7 @@ failures.extend(tracked_go_artifact_file_failures())
 failures.extend(tracked_elixir_mix_artifact_file_failures())
 failures.extend(tracked_jvm_dependency_artifact_file_failures())
 failures.extend(tracked_gradle_artifact_file_failures())
+failures.extend(tracked_scala_build_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_local_cache_artifact_file_failures())
 failures.extend(tracked_temp_artifact_file_failures())

@@ -210,6 +210,12 @@ deps/
 # Local JVM dependency artifacts
 /.m2/
 
+# Local Scala/SBT build artifacts
+/.bloop/
+/.bsp/
+/.metals/
+/.scala-build/
+
 # Local test report artifacts
 /playwright-report/
 /blob-report/

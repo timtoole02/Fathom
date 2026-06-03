@@ -126,6 +126,8 @@ The JVM dependency artifact guard also rejects tracked local Maven repository/ca
 
 The Gradle/JVM build artifact guard also rejects tracked local Gradle cache/state such as `.gradle/` and common Gradle `build/` output subtrees such as `classes/`, `reports/`, `test-results/`, `tmp/`, `generated/`, `intermediates/`, and `libs/`, with matching root `.gitignore` coverage. It does not treat source-of-truth Gradle project files such as `build.gradle`, `settings.gradle`, `gradle.properties`, `gradlew`, or `gradle/wrapper/gradle-wrapper.properties` as build artifacts.
 
+The Scala/SBT build artifact guard also rejects tracked local Scala build server/IDE outputs such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/`, with matching root `.gitignore` coverage. It does not treat source-of-truth Scala/SBT files such as `build.sbt`, `project/build.properties`, or Scala source files as local tool artifacts.
+
 The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/`, with matching root `.gitignore` coverage.
 
 The PHP Composer guard also rejects tracked local dependency/test artifacts such as `vendor/autoload.php`, `vendor/bin/`, `vendor/composer/`, `.phpunit.cache/`, `.phpunit.result.cache`, and `composer.phar`, with matching root `.gitignore` coverage.

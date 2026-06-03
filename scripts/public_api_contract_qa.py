@@ -1599,6 +1599,26 @@ def assert_boundary_docs() -> None:
         "launch evidence JVM dependency artifact ignore examples",
     )
     assert_contains(
+        launch_text,
+        "The Scala/SBT build artifact guard also rejects tracked local Scala build server/IDE outputs",
+        "launch checklist Scala/SBT artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "It does not treat source-of-truth Scala/SBT files such as `build.sbt`, `project/build.properties`, or Scala source files as local tool artifacts.",
+        "launch checklist Scala/SBT source-file allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "The Scala/SBT build artifact guard rejects tracked local Scala build server/IDE outputs such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/`",
+        "launch evidence Scala/SBT artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Scala/SBT build artifacts",
+        "launch evidence Scala/SBT artifact ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "R/RStudio artifact guard",
         "launch evidence R/RStudio artifact risk-scan scope",
