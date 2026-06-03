@@ -445,6 +445,9 @@ compose.override.yaml
 /Carthage/Build/
 /Carthage/Checkouts/
 /DerivedData/
+fastlane/Preview.html
+fastlane/report.xml
+fastlane/test_output/
 /.gradle/
 /Pods/
 android/.cxx/

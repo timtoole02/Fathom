@@ -417,6 +417,9 @@ required_mobile_build_gitignore_patterns = {
     "/Carthage/Build/",
     "/Carthage/Checkouts/",
     "/DerivedData/",
+    "fastlane/Preview.html",
+    "fastlane/report.xml",
+    "fastlane/test_output/",
     "/Pods/",
     "android/.cxx/",
     "android/.externalNativeBuild/",
@@ -1267,9 +1270,14 @@ blocked_tracked_mobile_build_filenames = {
 blocked_tracked_mobile_build_path_prefixes = (
     "Carthage/Build/",
     "Carthage/Checkouts/",
+    "fastlane/test_output/",
     "Pods/",
     "ios/Pods/",
 )
+blocked_tracked_mobile_build_paths = {
+    "fastlane/Preview.html",
+    "fastlane/report.xml",
+}
 blocked_tracked_mobile_build_suffixes = {
     ".aab",
     ".apk",
@@ -3104,6 +3112,9 @@ def tracked_mobile_build_file_failures(tracked_paths=None):
             failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
             continue
         if path.name in blocked_tracked_mobile_build_filenames:
+            failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
+            continue
+        if rel in blocked_tracked_mobile_build_paths:
             failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
             continue
         if any(rel.startswith(prefix) for prefix in blocked_tracked_mobile_build_path_prefixes):
@@ -5221,6 +5232,9 @@ def self_test():
             ".gradle/caches/modules-2/files-2.1/metadata.bin",
             "Carthage/Build/iOS/FathomKit.framework/FathomKit",
             "Carthage/Checkouts/FathomKit/Package.swift",
+            "fastlane/Preview.html",
+            "fastlane/report.xml",
+            "fastlane/test_output/report.junit",
             "Pods/Manifest.lock",
             "android/.cxx/Release/x86_64/compile_commands.json",
             "android/.externalNativeBuild/ndkBuild/debug/armeabi-v7a/Android.mk",
@@ -5238,6 +5252,9 @@ def self_test():
             "profiles/Fathom.provisionprofile",
             "Cartfile",
             "Cartfile.resolved",
+            "fastlane/Fastfile",
+            "fastlane/Appfile",
+            "fastlane/metadata/en-US/name.txt",
             "ios/Fathom.xcodeproj/project.pbxproj",
             "ios/Podfile",
             "ios/Podfile.lock",
@@ -5254,6 +5271,9 @@ def self_test():
         ".gradle/caches/modules-2/files-2.1/metadata.bin: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "Carthage/Build/iOS/FathomKit.framework/FathomKit: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "Carthage/Checkouts/FathomKit/Package.swift: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "fastlane/Preview.html: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "fastlane/report.xml: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "fastlane/test_output/report.junit: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "Pods/Manifest.lock: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/.cxx/Release/x86_64/compile_commands.json: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/.externalNativeBuild/ndkBuild/debug/armeabi-v7a/Android.mk: local mobile/Xcode/Android build artifacts must not be tracked for public launch",

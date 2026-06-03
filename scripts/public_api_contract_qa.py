@@ -994,6 +994,16 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "source-of-truth Carthage files such as `Cartfile` or `Cartfile.resolved`", "launch checklist Carthage source allowance")
     assert_contains(
         launch_text,
+        "Fastlane generated report/test artifacts such as `fastlane/report.xml`, `fastlane/Preview.html`, and `fastlane/test_output/`",
+        "launch checklist Fastlane report/test artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Fastlane configuration or App Store metadata such as `Fastfile`, `Appfile`, or `fastlane/metadata/`",
+        "launch checklist Fastlane source allowance",
+    )
+    assert_contains(
+        launch_text,
         "tracked local mobile/Xcode/Android signing/provisioning artifacts",
         "launch checklist mobile signing artifact risk-scan scope",
     )
@@ -2200,6 +2210,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "source-file allowances for `Cartfile` and `Cartfile.resolved`",
         "launch evidence Carthage source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Fastlane generated report/test artifact guard for `fastlane/report.xml`, `fastlane/Preview.html`, and `fastlane/test_output/`",
+        "launch evidence Fastlane report/test artifact scope",
+    )
+    assert_contains(
+        evidence_text,
+        "source-file allowances for Fastlane configuration and App Store metadata such as `Fastfile`, `Appfile`, and `fastlane/metadata/`",
+        "launch evidence Fastlane source allowance",
     )
     assert_contains(
         evidence_text,

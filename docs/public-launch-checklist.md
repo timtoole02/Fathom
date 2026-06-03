@@ -130,6 +130,8 @@ It also blocks tracked CocoaPods dependency outputs such as root `Pods/` and `io
 
 It also blocks tracked Carthage dependency outputs such as `Carthage/Build/` and `Carthage/Checkouts/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth Carthage files such as `Cartfile` or `Cartfile.resolved` as local tool artifacts.
 
+It also blocks tracked Fastlane generated report/test artifacts such as `fastlane/report.xml`, `fastlane/Preview.html`, and `fastlane/test_output/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth Fastlane configuration or App Store metadata such as `Fastfile`, `Appfile`, or `fastlane/metadata/` as local tool artifacts.
+
 It also blocks tracked local Bazel output symlinks/directories such as `bazel-bin/`, `bazel-out/`, `bazel-testlogs/`, and root `bazel-*` outputs, with matching root `.gitignore` coverage for local Bazel build artifacts. It does not treat source-of-truth Bazel files such as `BUILD`, `BUILD.bazel`, `MODULE.bazel`, or `.bzl` files as build artifacts.
 
 For Yarn lockfiles, local `portal:` dependencies and local `patch:` references count as local/private dependency sources.
