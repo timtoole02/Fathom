@@ -966,6 +966,12 @@ def assert_boundary_docs() -> None:
         "root `.gitignore` coverage for local Bazel build artifacts",
         "launch checklist Bazel artifact ignore scope",
     )
+    assert_contains(launch_text, "tracked local Buck/Buck2 build artifacts", "launch checklist Buck/Buck2 artifact risk-scan scope")
+    assert_contains(
+        launch_text,
+        "source-of-truth Buck files such as `BUCK`, `BUCK.v2`, or `.buckconfig`",
+        "launch checklist Buck/Buck2 source allowance",
+    )
     assert_contains(
         launch_text,
         "tracked local Swift Package Manager build/workspace artifacts",
@@ -2075,6 +2081,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Bazel build artifacts",
         "launch evidence Bazel artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Buck/Buck2 local build output guard for `.buckd/` and `buck-out/`",
+        "launch evidence Buck/Buck2 artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "source-file allowances for `BUCK`, `BUCK.v2`, and `.buckconfig`",
+        "launch evidence Buck/Buck2 source allowance",
     )
     assert_contains(
         evidence_text,

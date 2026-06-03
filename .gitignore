@@ -439,6 +439,10 @@ compose.override.yaml
 /bazel-out/
 /bazel-testlogs/
 
+# Local Buck/Buck2 build artifacts
+/.buckd/
+/buck-out/
+
 # Local mobile/Xcode/Android build artifacts
 /.cxx/
 /.expo/
