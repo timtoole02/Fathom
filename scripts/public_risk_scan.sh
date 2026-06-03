@@ -598,6 +598,20 @@ required_jvm_compiler_artifact_gitignore_patterns = {
     "*.class",
     "*.tasty",
 }
+required_dotnet_nuget_artifact_gitignore_patterns = {
+    "/.nuget/",
+    "/packages/",
+    "*.csproj.user",
+    "*.fsproj.user",
+    "*.nupkg",
+    "*.snupkg",
+    "*.suo",
+    "*.vbproj.user",
+    "bin/",
+    "obj/",
+    "project.assets.json",
+    "project.nuget.cache",
+}
 required_clojure_artifact_gitignore_patterns = {
     "/.cpcache/",
     "/.lein/",
@@ -897,6 +911,30 @@ blocked_tracked_jvm_dependency_artifact_dirs = {
 blocked_tracked_jvm_compiler_artifact_suffixes = {
     ".class",
     ".tasty",
+}
+blocked_tracked_dotnet_nuget_artifact_root_dirs = {
+    ".nuget",
+    "packages",
+}
+blocked_tracked_dotnet_nuget_build_dirs = {
+    "bin",
+    "obj",
+}
+blocked_tracked_dotnet_nuget_build_markers = {
+    "Debug",
+    "Release",
+}
+blocked_tracked_dotnet_nuget_artifact_filenames = {
+    "project.assets.json",
+    "project.nuget.cache",
+}
+blocked_tracked_dotnet_nuget_artifact_suffixes = {
+    ".csproj.user",
+    ".fsproj.user",
+    ".nupkg",
+    ".snupkg",
+    ".suo",
+    ".vbproj.user",
 }
 blocked_tracked_clojure_artifact_dirs = {
     ".cpcache",
@@ -2154,6 +2192,22 @@ def gitignore_jvm_compiler_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local JVM compiler artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_dotnet_nuget_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local .NET/NuGet artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_dotnet_nuget_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local .NET/NuGet artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_clojure_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2592,6 +2646,33 @@ def tracked_jvm_compiler_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if path.suffix.lower() in blocked_tracked_jvm_compiler_artifact_suffixes:
             failures.append(f"{rel}: JVM compiler bytecode artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_dotnet_nuget_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] in blocked_tracked_dotnet_nuget_artifact_root_dirs:
+            failures.append(f"{rel}: .NET/NuGet artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_dotnet_nuget_artifact_filenames:
+            failures.append(f"{rel}: .NET/NuGet artifacts must not be tracked for public launch")
+            continue
+        if any(path.name.endswith(suffix) for suffix in blocked_tracked_dotnet_nuget_artifact_suffixes):
+            failures.append(f"{rel}: .NET/NuGet artifacts must not be tracked for public launch")
+            continue
+        for index, part in enumerate(path.parts[:-1]):
+            if part not in blocked_tracked_dotnet_nuget_build_dirs:
+                continue
+            build_tail = path.parts[index + 1 :]
+            if any(marker in build_tail for marker in blocked_tracked_dotnet_nuget_build_markers):
+                failures.append(f"{rel}: .NET/NuGet artifacts must not be tracked for public launch")
+                break
+            if any(re.fullmatch(r"net(?:standard|coreapp)?[0-9].*", tail) for tail in build_tail):
+                failures.append(f"{rel}: .NET/NuGet artifacts must not be tracked for public launch")
+                break
     return failures
 
 def tracked_clojure_artifact_file_failures(tracked_paths=None):
@@ -3947,6 +4028,45 @@ def self_test():
         ".gitignore: missing local JVM compiler artifact ignore patterns: *.tasty"
     ]:
         raise AssertionError("public risk self-test did not reject missing local JVM compiler artifact ignore patterns")
+    dotnet_nuget_artifact_failures = tracked_dotnet_nuget_artifact_file_failures(
+        tracked_paths=[
+            ".nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg",
+            "packages/Newtonsoft.Json.13.0.3/lib/netstandard2.0/Newtonsoft.Json.dll",
+            "src/Fathom/bin/Debug/net8.0/Fathom.dll",
+            "src/Fathom/obj/Release/net8.0/Fathom.AssemblyInfo.cs",
+            "src/Fathom/obj/project.assets.json",
+            "src/Fathom/project.nuget.cache",
+            "src/Fathom/Fathom.csproj.user",
+            "Fathom.suo",
+            "Fathom.sln",
+            "Directory.Build.props",
+            "src/Fathom/Fathom.csproj",
+            "src/Fathom/Program.cs",
+            "src/Fathom/Package.lock.json",
+            "docs/dotnet-build.md",
+        ],
+    )
+    if dotnet_nuget_artifact_failures != [
+        ".nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg: .NET/NuGet artifacts must not be tracked for public launch",
+        "packages/Newtonsoft.Json.13.0.3/lib/netstandard2.0/Newtonsoft.Json.dll: .NET/NuGet artifacts must not be tracked for public launch",
+        "src/Fathom/bin/Debug/net8.0/Fathom.dll: .NET/NuGet artifacts must not be tracked for public launch",
+        "src/Fathom/obj/Release/net8.0/Fathom.AssemblyInfo.cs: .NET/NuGet artifacts must not be tracked for public launch",
+        "src/Fathom/obj/project.assets.json: .NET/NuGet artifacts must not be tracked for public launch",
+        "src/Fathom/project.nuget.cache: .NET/NuGet artifacts must not be tracked for public launch",
+        "src/Fathom/Fathom.csproj.user: .NET/NuGet artifacts must not be tracked for public launch",
+        "Fathom.suo: .NET/NuGet artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local .NET/NuGet artifacts")
+    allowed_dotnet_nuget_artifact_gitignore = "\n".join(sorted(required_dotnet_nuget_artifact_gitignore_patterns)) + "\n"
+    if gitignore_dotnet_nuget_artifact_failures(allowed_dotnet_nuget_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local .NET/NuGet artifact ignore patterns")
+    dotnet_nuget_artifact_gitignore_failures = gitignore_dotnet_nuget_artifact_failures(
+        allowed_dotnet_nuget_artifact_gitignore.replace("obj/\n", "")
+    )
+    if dotnet_nuget_artifact_gitignore_failures != [
+        ".gitignore: missing local .NET/NuGet artifact ignore patterns: obj/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local .NET/NuGet artifact ignore patterns")
     clojure_artifact_failures = tracked_clojure_artifact_file_failures(
         tracked_paths=[
             ".lein/profiles.clj",
@@ -5232,6 +5352,7 @@ failures.extend(gitignore_elixir_mix_artifact_failures())
 failures.extend(gitignore_erlang_rebar3_artifact_failures())
 failures.extend(gitignore_jvm_dependency_artifact_failures())
 failures.extend(gitignore_jvm_compiler_artifact_failures())
+failures.extend(gitignore_dotnet_nuget_artifact_failures())
 failures.extend(gitignore_clojure_artifact_failures())
 failures.extend(gitignore_gradle_artifact_failures())
 failures.extend(gitignore_kotlin_artifact_failures())
@@ -5259,6 +5380,7 @@ failures.extend(tracked_elixir_mix_artifact_file_failures())
 failures.extend(tracked_erlang_rebar3_artifact_file_failures())
 failures.extend(tracked_jvm_dependency_artifact_file_failures())
 failures.extend(tracked_jvm_compiler_artifact_file_failures())
+failures.extend(tracked_dotnet_nuget_artifact_file_failures())
 failures.extend(tracked_clojure_artifact_file_failures())
 failures.extend(tracked_gradle_artifact_file_failures())
 failures.extend(tracked_kotlin_artifact_file_failures())

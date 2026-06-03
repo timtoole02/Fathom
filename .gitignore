@@ -240,6 +240,20 @@ erl_crash.dump
 *.class
 *.tasty
 
+# Local .NET/NuGet artifacts
+/.nuget/
+/packages/
+bin/
+obj/
+*.nupkg
+*.snupkg
+project.assets.json
+project.nuget.cache
+*.csproj.user
+*.fsproj.user
+*.vbproj.user
+*.suo
+
 # Local Clojure/Leiningen artifacts
 /.lein/
 /.cpcache/

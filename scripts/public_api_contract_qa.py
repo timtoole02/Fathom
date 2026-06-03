@@ -1069,6 +1069,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        ".NET/NuGet artifact guard also rejects tracked local dependency/build/user-state artifacts",
+        "launch checklist .NET/NuGet artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root `.gitignore` coverage",
+        "launch checklist .NET/NuGet artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth .NET files such as `*.csproj`, `*.fsproj`, `*.vbproj`, `*.sln`, `Directory.Build.props`, C# source files, F# source files, or NuGet lock files",
+        "launch checklist .NET/NuGet source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, `.shadow-cljs/`, and `.nrepl-port`",
         "launch checklist Clojure/Leiningen artifact risk-scan scope",
     )
@@ -2082,6 +2097,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
         "launch evidence Kotlin/Kotlin Native artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        ".NET/NuGet local dependency/build/user-state artifact guard",
+        "launch evidence .NET/NuGet artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local dependency/build/user-state artifacts such as `.nuget/`, `packages/`, `bin/Debug/`, `obj/Release/`, `project.assets.json`, `project.nuget.cache`, `*.nupkg`, `*.snupkg`, `*.csproj.user`, and `*.suo`",
+        "launch evidence .NET/NuGet artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local .NET/NuGet artifacts",
+        "launch evidence .NET/NuGet artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth .NET project files such as `*.csproj`, `*.fsproj`, `*.vbproj`, `*.sln`, `Directory.Build.props`, C# source files, F# source files, and NuGet lock files",
+        "launch evidence .NET/NuGet source allowance",
     )
     assert_contains(
         evidence_text,
