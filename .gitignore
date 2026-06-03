@@ -165,6 +165,8 @@ __pycache__/
 /env/
 /.tox/
 /.nox/
+/.pdm-build/
+/__pypackages__/
 /.uv/
 /.uv-cache/
 /.pip-cache/
