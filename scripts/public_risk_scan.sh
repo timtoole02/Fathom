@@ -409,10 +409,14 @@ required_dart_flutter_artifact_gitignore_patterns = {
     ".pub/",
 }
 required_mobile_build_gitignore_patterns = {
+    "/.cxx/",
     "/.expo-shared/",
     "/.expo/",
+    "/.externalNativeBuild/",
     "/.gradle/",
     "/DerivedData/",
+    "android/.cxx/",
+    "android/.externalNativeBuild/",
     "*.aab",
     "*.apk",
     "*.dSYM",
@@ -1245,8 +1249,10 @@ blocked_tracked_dart_flutter_artifact_filenames = {
     ".packages",
 }
 blocked_tracked_mobile_build_dirs = {
+    ".cxx",
     ".expo",
     ".expo-shared",
+    ".externalNativeBuild",
     ".gradle",
     "DerivedData",
     "xcuserdata",
@@ -5195,9 +5201,13 @@ def self_test():
     mobile_build_failures = tracked_mobile_build_file_failures(
         tracked_paths=[
             "DerivedData/Fathom/Build/Products/Debug/Fathom.app",
+            ".cxx/Debug/arm64-v8a/build.ninja",
             ".expo/settings.json",
             ".expo-shared/assets.json",
+            ".externalNativeBuild/cmake/debug/arm64-v8a/build.ninja",
             ".gradle/caches/modules-2/files-2.1/metadata.bin",
+            "android/.cxx/Release/x86_64/compile_commands.json",
+            "android/.externalNativeBuild/ndkBuild/debug/armeabi-v7a/Android.mk",
             "android/local.properties",
             "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate",
             "TestResults/Fathom.xcresult/Data/data.0~",
@@ -5215,9 +5225,13 @@ def self_test():
     )
     if mobile_build_failures != [
         "DerivedData/Fathom/Build/Products/Debug/Fathom.app: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        ".cxx/Debug/arm64-v8a/build.ninja: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         ".expo/settings.json: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         ".expo-shared/assets.json: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        ".externalNativeBuild/cmake/debug/arm64-v8a/build.ninja: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         ".gradle/caches/modules-2/files-2.1/metadata.bin: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "android/.cxx/Release/x86_64/compile_commands.json: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "android/.externalNativeBuild/ndkBuild/debug/armeabi-v7a/Android.mk: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/local.properties: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "TestResults/Fathom.xcresult/Data/data.0~: local mobile/Xcode/Android build artifacts must not be tracked for public launch",

@@ -438,10 +438,14 @@ compose.override.yaml
 /bazel-testlogs/
 
 # Local mobile/Xcode/Android build artifacts
+/.cxx/
 /.expo/
 /.expo-shared/
+/.externalNativeBuild/
 /DerivedData/
 /.gradle/
+android/.cxx/
+android/.externalNativeBuild/
 local.properties
 xcuserdata/
 *.xcuserstate
