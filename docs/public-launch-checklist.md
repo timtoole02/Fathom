@@ -112,6 +112,8 @@ It also blocks tracked local CI runner artifacts/config such as `.act/` and `.ac
 
 It also blocks tracked local Swift Package Manager build/workspace artifacts such as `.build/` and `.swiftpm/`, with matching root `.gitignore` coverage for local Swift Package Manager artifacts.
 
+It also blocks tracked local Dart/Flutter artifacts such as `.dart_tool/`, `.pub-cache/`, `.pub/`, `.packages`, `.flutter-plugins`, and `.flutter-plugins-dependencies`, with matching root `.gitignore` coverage for local Dart/Flutter artifacts. It does not treat source-of-truth Dart/Flutter files such as `pubspec.yaml`, `pubspec.lock`, Dart source, Android Gradle project files, or iOS Xcode project files as local tool artifacts.
+
 It also blocks tracked local Bazel output symlinks/directories such as `bazel-bin/`, `bazel-out/`, `bazel-testlogs/`, and root `bazel-*` outputs, with matching root `.gitignore` coverage for local Bazel build artifacts. It does not treat source-of-truth Bazel files such as `BUILD`, `BUILD.bazel`, `MODULE.bazel`, or `.bzl` files as build artifacts.
 
 For Yarn lockfiles, local `portal:` dependencies and local `patch:` references count as local/private dependency sources.

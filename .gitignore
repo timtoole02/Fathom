@@ -17,6 +17,14 @@ compile_commands.json
 /.build/
 /.swiftpm/
 
+# Local Dart/Flutter artifacts
+.dart_tool/
+.pub-cache/
+.pub/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+
 # Node/frontend
 frontend/node_modules/
 frontend/.bun/

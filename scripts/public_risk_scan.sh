@@ -395,6 +395,14 @@ required_swiftpm_artifact_gitignore_patterns = {
     "/.build/",
     "/.swiftpm/",
 }
+required_dart_flutter_artifact_gitignore_patterns = {
+    ".dart_tool/",
+    ".flutter-plugins",
+    ".flutter-plugins-dependencies",
+    ".packages",
+    ".pub-cache/",
+    ".pub/",
+}
 required_mobile_build_gitignore_patterns = {
     "/.gradle/",
     "/DerivedData/",
@@ -1011,6 +1019,16 @@ blocked_tracked_bazel_output_tree_children = {
 blocked_tracked_swiftpm_artifact_dirs = {
     ".build",
     ".swiftpm",
+}
+blocked_tracked_dart_flutter_artifact_dirs = {
+    ".dart_tool",
+    ".pub",
+    ".pub-cache",
+}
+blocked_tracked_dart_flutter_artifact_filenames = {
+    ".flutter-plugins",
+    ".flutter-plugins-dependencies",
+    ".packages",
 }
 blocked_tracked_mobile_build_dirs = {
     ".gradle",
@@ -1676,6 +1694,22 @@ def gitignore_swiftpm_artifact_failures(gitignore_text=None):
     missing = sorted(required_swiftpm_artifact_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local Swift Package Manager artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_dart_flutter_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Dart/Flutter artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_dart_flutter_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Dart/Flutter artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_mobile_build_failures(gitignore_text=None):
@@ -2450,6 +2484,19 @@ def tracked_swiftpm_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_swiftpm_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: local Swift Package Manager artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_dart_flutter_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_dart_flutter_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local Dart/Flutter artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_dart_flutter_artifact_filenames:
+            failures.append(f"{rel}: local Dart/Flutter artifacts must not be tracked for public launch")
     return failures
 
 def tracked_mobile_build_file_failures(tracked_paths=None):
@@ -4072,6 +4119,40 @@ def self_test():
         ".swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata: local Swift Package Manager artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Swift Package Manager artifacts")
+    allowed_dart_flutter_artifact_gitignore = "\n".join(sorted(required_dart_flutter_artifact_gitignore_patterns)) + "\n"
+    if gitignore_dart_flutter_artifact_failures(allowed_dart_flutter_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Dart/Flutter artifact ignore patterns")
+    dart_flutter_artifact_gitignore_failures = gitignore_dart_flutter_artifact_failures(
+        allowed_dart_flutter_artifact_gitignore.replace(".dart_tool/\n", "")
+    )
+    if dart_flutter_artifact_gitignore_failures != [
+        ".gitignore: missing local Dart/Flutter artifact ignore patterns: .dart_tool/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Dart/Flutter artifact ignore patterns")
+    dart_flutter_artifact_failures = tracked_dart_flutter_artifact_file_failures(
+        tracked_paths=[
+            ".dart_tool/package_config.json",
+            ".pub-cache/hosted/pub.dev/meta/pubspec.yaml",
+            ".pub/bin/build_runner",
+            ".packages",
+            ".flutter-plugins",
+            ".flutter-plugins-dependencies",
+            "pubspec.yaml",
+            "pubspec.lock",
+            "lib/main.dart",
+            "android/app/build.gradle",
+            "ios/Runner.xcodeproj/project.pbxproj",
+        ],
+    )
+    if dart_flutter_artifact_failures != [
+        ".dart_tool/package_config.json: local Dart/Flutter artifacts must not be tracked for public launch",
+        ".pub-cache/hosted/pub.dev/meta/pubspec.yaml: local Dart/Flutter artifacts must not be tracked for public launch",
+        ".pub/bin/build_runner: local Dart/Flutter artifacts must not be tracked for public launch",
+        ".packages: local Dart/Flutter artifacts must not be tracked for public launch",
+        ".flutter-plugins: local Dart/Flutter artifacts must not be tracked for public launch",
+        ".flutter-plugins-dependencies: local Dart/Flutter artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Dart/Flutter artifacts")
     allowed_mobile_build_gitignore = "\n".join(sorted(required_mobile_build_gitignore_patterns)) + "\n"
     if gitignore_mobile_build_failures(allowed_mobile_build_gitignore):
         raise AssertionError("public risk self-test rejected complete local mobile/Xcode/Android build artifact ignore patterns")
@@ -4333,6 +4414,7 @@ failures.extend(gitignore_infra_state_failures())
 failures.extend(gitignore_nix_artifact_failures())
 failures.extend(gitignore_bazel_artifact_failures())
 failures.extend(gitignore_swiftpm_artifact_failures())
+failures.extend(gitignore_dart_flutter_artifact_failures())
 failures.extend(gitignore_mobile_build_failures())
 failures.extend(gitignore_screen_capture_failures())
 failures.extend(gitignore_media_capture_failures())
@@ -4383,6 +4465,7 @@ failures.extend(tracked_infra_state_file_failures())
 failures.extend(tracked_nix_artifact_file_failures())
 failures.extend(tracked_bazel_artifact_file_failures())
 failures.extend(tracked_swiftpm_artifact_file_failures())
+failures.extend(tracked_dart_flutter_artifact_file_failures())
 failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_screen_capture_file_failures())
 failures.extend(tracked_media_capture_file_failures())
