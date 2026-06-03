@@ -984,6 +984,8 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact ignore scope")
+    assert_contains(launch_text, "Expo local project state such as `.expo/` and `.expo-shared/`", "launch checklist Expo local state scope")
+    assert_contains(launch_text, "source-of-truth mobile app code, Expo config, Android Gradle project files, or iOS Xcode project files", "launch checklist Expo source allowance")
     assert_contains(
         launch_text,
         "tracked local mobile/Xcode/Android signing/provisioning artifacts",
@@ -2152,6 +2154,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "local mobile/Xcode/Android build artifact guard",
         "launch evidence mobile build artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Expo local project state guard for `.expo/` and `.expo-shared/`",
+        "launch evidence Expo local state scope",
+    )
+    assert_contains(
+        evidence_text,
+        "source-file allowances for mobile app source, Expo config, Android Gradle project files, and iOS Xcode project files",
+        "launch evidence Expo source allowance",
     )
     assert_contains(
         evidence_text,

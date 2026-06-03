@@ -409,6 +409,8 @@ required_dart_flutter_artifact_gitignore_patterns = {
     ".pub/",
 }
 required_mobile_build_gitignore_patterns = {
+    "/.expo-shared/",
+    "/.expo/",
     "/.gradle/",
     "/DerivedData/",
     "*.aab",
@@ -1243,6 +1245,8 @@ blocked_tracked_dart_flutter_artifact_filenames = {
     ".packages",
 }
 blocked_tracked_mobile_build_dirs = {
+    ".expo",
+    ".expo-shared",
     ".gradle",
     "DerivedData",
     "xcuserdata",
@@ -5191,6 +5195,8 @@ def self_test():
     mobile_build_failures = tracked_mobile_build_file_failures(
         tracked_paths=[
             "DerivedData/Fathom/Build/Products/Debug/Fathom.app",
+            ".expo/settings.json",
+            ".expo-shared/assets.json",
             ".gradle/caches/modules-2/files-2.1/metadata.bin",
             "android/local.properties",
             "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate",
@@ -5209,6 +5215,8 @@ def self_test():
     )
     if mobile_build_failures != [
         "DerivedData/Fathom/Build/Products/Debug/Fathom.app: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        ".expo/settings.json: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        ".expo-shared/assets.json: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         ".gradle/caches/modules-2/files-2.1/metadata.bin: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/local.properties: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
