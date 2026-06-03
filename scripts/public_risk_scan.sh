@@ -509,6 +509,7 @@ required_python_artifact_gitignore_patterns = {
     ".pytype/",
     ".ruff_cache/",
     "*.egg-info/",
+    "*.dist-info/",
     "*.pyc",
     "*.pyo",
 }
@@ -726,6 +727,7 @@ blocked_tracked_python_artifact_dirs = {
     ".ruff_cache",
 }
 blocked_tracked_python_artifact_dir_suffixes = {
+    ".dist-info",
     ".egg-info",
 }
 blocked_tracked_python_artifact_filenames = {
@@ -3102,6 +3104,7 @@ def self_test():
             ".ruff_cache/0.12.0/file",
             ".eggs/fathom-0.1.0-py3.12.egg",
             "crates/fathom_py/fathom.egg-info/PKG-INFO",
+            "crates/fathom_py/fathom-0.1.0.dist-info/METADATA",
             "scripts/public_api_contract_qa.pyo",
             "docs/api/public-contract.json",
             "scripts/public_api_contract_qa.py",
@@ -3118,6 +3121,7 @@ def self_test():
         ".ruff_cache/0.12.0/file: Python cache/build artifacts must not be tracked for public launch",
         ".eggs/fathom-0.1.0-py3.12.egg: Python cache/build artifacts must not be tracked for public launch",
         "crates/fathom_py/fathom.egg-info/PKG-INFO: Python cache/build artifacts must not be tracked for public launch",
+        "crates/fathom_py/fathom-0.1.0.dist-info/METADATA: Python cache/build artifacts must not be tracked for public launch",
         "scripts/public_api_contract_qa.pyo: Python cache/build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Python cache/build artifacts")
@@ -3125,10 +3129,10 @@ def self_test():
     if gitignore_python_artifact_failures(allowed_python_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Python cache/build artifact ignore patterns")
     python_artifact_gitignore_failures = gitignore_python_artifact_failures(
-        allowed_python_artifact_gitignore.replace("*.egg-info/\n", "")
+        allowed_python_artifact_gitignore.replace("*.dist-info/\n", "")
     )
     if python_artifact_gitignore_failures != [
-        ".gitignore: missing local Python cache/build artifact ignore patterns: *.egg-info/"
+        ".gitignore: missing local Python cache/build artifact ignore patterns: *.dist-info/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Python cache/build artifact ignore patterns")
     python_env_artifact_failures = tracked_python_env_artifact_file_failures(

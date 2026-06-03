@@ -145,6 +145,7 @@ __pycache__/
 .ruff_cache/
 .eggs/
 *.egg-info/
+*.dist-info/
 *.pyc
 *.pyo
 

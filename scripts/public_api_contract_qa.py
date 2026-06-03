@@ -1016,7 +1016,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "Python package metadata/build artifacts",
+        "Python package metadata/build artifacts such as `.eggs/`, `*.egg-info/`, and `*.dist-info/`",
         "launch checklist Python package metadata artifact scope",
     )
     assert_contains(
@@ -1424,7 +1424,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "Python package metadata/build artifacts",
+        "Python package metadata/build artifacts such as `.eggs/`, `*.egg-info/`, and `*.dist-info/`",
         "launch evidence Python package metadata artifact scope",
     )
     assert_contains(
