@@ -1894,6 +1894,36 @@ def assert_boundary_docs() -> None:
         "launch evidence Dart/Flutter artifact ignore examples",
     )
     assert_contains(
+        launch_text,
+        "tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/`",
+        "launch checklist Kotlin/Kotlin Native artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
+        "launch checklist Kotlin/Kotlin Native artifact ignore examples",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Kotlin files such as `build.gradle.kts`, `settings.gradle.kts`, Kotlin source files, or Gradle version catalog files",
+        "launch checklist Kotlin/Kotlin Native source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "local Kotlin/Kotlin Native compiler artifact guard",
+        "launch evidence Kotlin/Kotlin Native artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/`",
+        "launch evidence Kotlin/Kotlin Native artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
+        "launch evidence Kotlin/Kotlin Native artifact ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "local mobile/Xcode/Android build artifact guard",
         "launch evidence mobile build artifact risk-scan scope",

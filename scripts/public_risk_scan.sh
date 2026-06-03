@@ -581,6 +581,10 @@ required_gradle_artifact_gitignore_patterns = {
     "/.gradle/",
     "build/",
 }
+required_kotlin_artifact_gitignore_patterns = {
+    "/.kotlin/",
+    "/.konan/",
+}
 required_scala_build_artifact_gitignore_patterns = {
     "/.bloop/",
     "/.bsp/",
@@ -852,6 +856,10 @@ blocked_tracked_gradle_build_output_children = {
     "resources",
     "test-results",
     "tmp",
+}
+blocked_tracked_kotlin_artifact_dirs = {
+    ".kotlin",
+    ".konan",
 }
 blocked_tracked_scala_build_artifact_dirs = {
     ".bloop",
@@ -2040,6 +2048,22 @@ def gitignore_gradle_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Gradle/JVM build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_kotlin_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Kotlin/Kotlin Native artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_kotlin_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Kotlin/Kotlin Native artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_scala_build_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2344,6 +2368,16 @@ def tracked_gradle_artifact_file_failures(tracked_paths=None):
             if path.parts[index + 1] in blocked_tracked_gradle_build_output_children:
                 failures.append(f"{rel}: Gradle/JVM build artifacts must not be tracked for public launch")
                 break
+    return failures
+
+def tracked_kotlin_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_kotlin_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch")
     return failures
 
 def tracked_scala_build_artifact_file_failures(tracked_paths=None):
@@ -3567,6 +3601,37 @@ def self_test():
         ".gitignore: missing local Gradle/JVM build artifact ignore patterns: build/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Gradle/JVM build artifact ignore patterns")
+    kotlin_artifact_failures = tracked_kotlin_artifact_file_failures(
+        tracked_paths=[
+            ".kotlin/sessions/kotlin-compiler-123.salive",
+            ".kotlin/build/kotlin-daemon/client-is-alive",
+            ".konan/cache/linux_x64/stdlib-cache",
+            ".konan/kotlin-native-prebuilt-macos-aarch64-2.0.0/bin/konanc",
+            "build.gradle.kts",
+            "settings.gradle.kts",
+            "src/main/kotlin/Fathom.kt",
+            "src/main/kotlin/Fathom.kts",
+            "gradle/libs.versions.toml",
+            "docs/kotlin-build.md",
+        ],
+    )
+    if kotlin_artifact_failures != [
+        ".kotlin/sessions/kotlin-compiler-123.salive: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
+        ".kotlin/build/kotlin-daemon/client-is-alive: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
+        ".konan/cache/linux_x64/stdlib-cache: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
+        ".konan/kotlin-native-prebuilt-macos-aarch64-2.0.0/bin/konanc: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Kotlin/Kotlin Native compiler artifacts")
+    allowed_kotlin_artifact_gitignore = "\n".join(sorted(required_kotlin_artifact_gitignore_patterns)) + "\n"
+    if gitignore_kotlin_artifact_failures(allowed_kotlin_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Kotlin/Kotlin Native artifact ignore patterns")
+    kotlin_artifact_gitignore_failures = gitignore_kotlin_artifact_failures(
+        allowed_kotlin_artifact_gitignore.replace("/.konan/\n", "")
+    )
+    if kotlin_artifact_gitignore_failures != [
+        ".gitignore: missing local Kotlin/Kotlin Native artifact ignore patterns: /.konan/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Kotlin/Kotlin Native artifact ignore patterns")
     scala_build_artifact_failures = tracked_scala_build_artifact_file_failures(
         tracked_paths=[
             ".bloop/fathom/bloop-internal-classes/main/Fathom.class",
@@ -4646,6 +4711,7 @@ failures.extend(gitignore_go_artifact_failures())
 failures.extend(gitignore_elixir_mix_artifact_failures())
 failures.extend(gitignore_jvm_dependency_artifact_failures())
 failures.extend(gitignore_gradle_artifact_failures())
+failures.extend(gitignore_kotlin_artifact_failures())
 failures.extend(gitignore_scala_build_artifact_failures())
 failures.extend(gitignore_haskell_build_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
@@ -4666,6 +4732,7 @@ failures.extend(tracked_go_artifact_file_failures())
 failures.extend(tracked_elixir_mix_artifact_file_failures())
 failures.extend(tracked_jvm_dependency_artifact_file_failures())
 failures.extend(tracked_gradle_artifact_file_failures())
+failures.extend(tracked_kotlin_artifact_file_failures())
 failures.extend(tracked_scala_build_artifact_file_failures())
 failures.extend(tracked_haskell_build_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())

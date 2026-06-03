@@ -215,6 +215,10 @@ deps/
 # Local JVM dependency artifacts
 /.m2/
 
+# Local Kotlin/Kotlin Native artifacts
+/.kotlin/
+/.konan/
+
 # Local Scala/SBT build artifacts
 /.bloop/
 /.bsp/
