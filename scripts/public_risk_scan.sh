@@ -458,6 +458,12 @@ required_native_build_artifact_gitignore_patterns = {
     "cmake_install.cmake",
     "compile_commands.json",
 }
+required_meson_build_artifact_gitignore_patterns = {
+    "/.mesonpy-*/",
+    "meson-info/",
+    "meson-logs/",
+    "meson-private/",
+}
 required_package_artifact_gitignore_patterns = {
     "/artifacts/",
     "/release/",
@@ -1031,6 +1037,14 @@ blocked_tracked_native_build_artifact_filenames = {
     "CMakeCache.txt",
     "cmake_install.cmake",
     "compile_commands.json",
+}
+blocked_tracked_meson_build_artifact_dirs = {
+    "meson-info",
+    "meson-logs",
+    "meson-private",
+}
+blocked_tracked_meson_build_artifact_dir_patterns = {
+    ".mesonpy-*",
 }
 blocked_tracked_package_artifact_suffixes = {
     ".7z",
@@ -1932,6 +1946,22 @@ def gitignore_native_build_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local native/CMake build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_meson_build_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Meson build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_meson_build_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Meson build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_package_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2731,6 +2761,23 @@ def tracked_native_build_artifact_file_failures(tracked_paths=None):
             continue
         if path.name in blocked_tracked_native_build_artifact_filenames:
             failures.append(f"{rel}: native/CMake build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_meson_build_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_meson_build_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Meson build artifacts must not be tracked for public launch")
+            continue
+        if any(
+            fnmatch.fnmatch(part, pattern)
+            for part in path.parts
+            for pattern in blocked_tracked_meson_build_artifact_dir_patterns
+        ):
+            failures.append(f"{rel}: Meson build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_package_artifact_file_failures(tracked_paths=None):
@@ -4494,6 +4541,35 @@ def self_test():
         ".gitignore: missing local native/CMake build artifact ignore patterns: compile_commands.json"
     ]:
         raise AssertionError("public risk self-test did not reject missing local native/CMake build artifact ignore patterns")
+    meson_build_artifact_failures = tracked_meson_build_artifact_file_failures(
+        tracked_paths=[
+            ".mesonpy-abcd1234/build/meson-info/intro-targets.json",
+            "builddir/meson-info/intro-buildoptions.json",
+            "builddir/meson-logs/meson-log.txt",
+            "builddir/meson-private/coredata.dat",
+            "src/meson.build",
+            "meson_options.txt",
+            "meson.options",
+            "docs/meson-build.md",
+        ],
+    )
+    if meson_build_artifact_failures != [
+        ".mesonpy-abcd1234/build/meson-info/intro-targets.json: Meson build artifacts must not be tracked for public launch",
+        "builddir/meson-info/intro-buildoptions.json: Meson build artifacts must not be tracked for public launch",
+        "builddir/meson-logs/meson-log.txt: Meson build artifacts must not be tracked for public launch",
+        "builddir/meson-private/coredata.dat: Meson build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Meson build artifacts")
+    allowed_meson_build_artifact_gitignore = "\n".join(sorted(required_meson_build_artifact_gitignore_patterns)) + "\n"
+    if gitignore_meson_build_artifact_failures(allowed_meson_build_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Meson build artifact ignore patterns")
+    meson_build_artifact_gitignore_failures = gitignore_meson_build_artifact_failures(
+        allowed_meson_build_artifact_gitignore.replace("meson-private/\n", "")
+    )
+    if meson_build_artifact_gitignore_failures != [
+        ".gitignore: missing local Meson build artifact ignore patterns: meson-private/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Meson build artifact ignore patterns")
     package_artifact_failures = tracked_package_artifact_file_failures(
         tracked_paths=[
             "artifacts/public-contract-smoke-summary.json",
@@ -5141,6 +5217,7 @@ failures.extend(gitignore_screen_capture_failures())
 failures.extend(gitignore_media_capture_failures())
 failures.extend(gitignore_rust_artifact_failures())
 failures.extend(gitignore_native_build_artifact_failures())
+failures.extend(gitignore_meson_build_artifact_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_backup_artifact_failures())
 failures.extend(gitignore_diagnostic_artifact_failures())
@@ -5194,6 +5271,7 @@ failures.extend(tracked_local_cache_artifact_file_failures())
 failures.extend(tracked_temp_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_native_build_artifact_file_failures())
+failures.extend(tracked_meson_build_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_model_artifact_file_failures())

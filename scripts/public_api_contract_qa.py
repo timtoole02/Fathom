@@ -1904,6 +1904,36 @@ def assert_boundary_docs() -> None:
         "launch evidence documentation build artifact ignore examples",
     )
     assert_contains(
+        launch_text,
+        "Meson build artifact guard also rejects tracked local Meson build artifacts",
+        "launch checklist Meson build artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Meson files such as `meson.build`, `meson_options.txt`, or `meson.options`",
+        "launch checklist Meson source-file allowance scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local Meson build artifact guard",
+        "launch evidence Meson build artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Meson build artifacts such as `.mesonpy-*`, `meson-info/`, `meson-logs/`, and `meson-private/`",
+        "launch evidence Meson build artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Meson build artifacts",
+        "launch evidence Meson build artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Meson files such as `meson.build`, `meson_options.txt`, and `meson.options`",
+        "launch evidence Meson source allowance",
+    )
+    assert_contains(
         evidence_text,
         "local model/checkpoint artifact guard",
         "launch evidence model/checkpoint artifact risk-scan scope",
