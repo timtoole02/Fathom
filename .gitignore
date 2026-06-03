@@ -62,6 +62,7 @@ node_modules/
 .bun/
 .deno/
 deno-dir/
+.docusaurus/
 .angular/cache/
 .astro/
 .next/
