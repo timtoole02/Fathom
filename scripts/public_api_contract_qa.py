@@ -1048,7 +1048,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "Next.js `.next/`, SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories",
+        "Astro `.astro/`, Next.js `.next/`, SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories",
         "launch checklist frontend framework artifact scope",
     )
     assert_contains(
@@ -1615,7 +1615,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "Next.js/SvelteKit/Nuxt/Angular framework cache/build outputs such as `.next/`, `.svelte-kit/`, `.nuxt/`, `.output/`, and `.angular/cache/`",
+        "Astro/Next.js/SvelteKit/Nuxt/Angular framework cache/build outputs such as `.astro/`, `.next/`, `.svelte-kit/`, `.nuxt/`, `.output/`, and `.angular/cache/`",
         "launch evidence frontend framework artifact scope",
     )
     assert_contains(

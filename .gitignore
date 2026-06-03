@@ -39,6 +39,7 @@ meson-private/
 # Node/frontend
 frontend/node_modules/
 frontend/.angular/cache/
+frontend/.astro/
 frontend/.bun/
 frontend/.deno/
 frontend/deno-dir/
@@ -62,6 +63,7 @@ node_modules/
 .deno/
 deno-dir/
 .angular/cache/
+.astro/
 .next/
 .npm/
 .nuxt/

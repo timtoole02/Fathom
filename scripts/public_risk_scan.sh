@@ -649,6 +649,7 @@ required_lua_luarocks_artifact_gitignore_patterns = {
 }
 required_frontend_artifact_gitignore_patterns = {
     ".angular/cache/",
+    ".astro/",
     ".bun/",
     ".deno/",
     ".eslintcache",
@@ -672,6 +673,7 @@ required_frontend_artifact_gitignore_patterns = {
     "coverage/",
     "deno-dir/",
     "dist/",
+    "frontend/.astro/",
     "frontend/.angular/cache/",
     "frontend/.deno/",
     "frontend/.nuxt/",
@@ -1003,6 +1005,7 @@ blocked_tracked_lua_luarocks_artifact_suffixes = {
     ".rock",
 }
 blocked_tracked_frontend_artifact_dirs = {
+    ".astro",
     ".bun",
     ".deno",
     ".npm",
@@ -4331,6 +4334,8 @@ def self_test():
             "frontend/build/assets/app.js",
             "frontend/storybook-static/index.html",
             "frontend/coverage/lcov.info",
+            ".astro/types.d.ts",
+            "frontend/.astro/types.d.ts",
             ".next/server/app.js",
             "frontend/.next/server/app.js",
             "frontend/.svelte-kit/output/server/index.js",
@@ -4398,6 +4403,8 @@ def self_test():
         "frontend/build/assets/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/storybook-static/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/coverage/lcov.info: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".astro/types.d.ts: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.astro/types.d.ts: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.svelte-kit/output/server/index.js: frontend/Node cache/build artifacts must not be tracked for public launch",
