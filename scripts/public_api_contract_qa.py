@@ -1046,6 +1046,16 @@ def assert_boundary_docs() -> None:
         "Storybook static build output",
         "launch checklist Storybook frontend artifact scope",
     )
+    assert_contains(
+        launch_text,
+        "Deno local cache artifacts such as `.deno/` and `deno-dir/`",
+        "launch checklist Deno artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Deno project files such as `deno.json`, `deno.jsonc`, `deno.lock`, JavaScript files, and TypeScript files",
+        "launch checklist Deno source-file allowance",
+    )
     assert_contains(launch_text, "root `.gitignore` coverage for local Rust/Cargo cache/build artifacts", "launch checklist Rust/Cargo artifact ignore scope")
     assert_contains(
         launch_text,
@@ -1642,6 +1652,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "NYC/Istanbul coverage artifacts such as `.nyc_output/`, `coverage-final.json`, and `clover.xml`",
         "launch evidence JS coverage artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Deno local cache artifact guard",
+        "launch evidence Deno artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Deno cache artifacts such as `.deno/` and `deno-dir/`",
+        "launch evidence Deno artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Deno cache artifacts",
+        "launch evidence Deno artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Deno project files such as `deno.json`, `deno.jsonc`, `deno.lock`, JavaScript files, and TypeScript files",
+        "launch evidence Deno source allowance",
     )
     assert_contains(
         evidence_text,

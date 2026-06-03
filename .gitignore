@@ -33,6 +33,8 @@ compile_commands.json
 # Node/frontend
 frontend/node_modules/
 frontend/.bun/
+frontend/.deno/
+frontend/deno-dir/
 frontend/.npm/
 frontend/.pnpm-store/
 frontend/.yarn/cache/
@@ -47,6 +49,8 @@ frontend/.next/
 frontend/.vite/
 node_modules/
 .bun/
+.deno/
+deno-dir/
 .npm/
 .pnpm-store/
 .yarn/cache/

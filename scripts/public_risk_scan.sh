@@ -629,6 +629,7 @@ required_lua_luarocks_artifact_gitignore_patterns = {
 }
 required_frontend_artifact_gitignore_patterns = {
     ".bun/",
+    ".deno/",
     ".eslintcache",
     ".npm/",
     ".parcel-cache/",
@@ -644,7 +645,9 @@ required_frontend_artifact_gitignore_patterns = {
     "build/",
     "bun-debug.log",
     "coverage/",
+    "deno-dir/",
     "dist/",
+    "frontend/.deno/",
     "frontend/.next/",
     "frontend/.npm/",
     "frontend/.pnpm-store/",
@@ -656,6 +659,7 @@ required_frontend_artifact_gitignore_patterns = {
     "frontend/.yarn/unplugged/",
     "frontend/build/",
     "frontend/coverage/",
+    "frontend/deno-dir/",
     "frontend/dist/",
     "frontend/storybook-static/",
     "frontend/node_modules/",
@@ -947,6 +951,7 @@ blocked_tracked_lua_luarocks_artifact_suffixes = {
 }
 blocked_tracked_frontend_artifact_dirs = {
     ".bun",
+    ".deno",
     ".npm",
     ".next",
     ".parcel-cache",
@@ -955,6 +960,7 @@ blocked_tracked_frontend_artifact_dirs = {
     ".vite",
     ".vitest",
     "coverage",
+    "deno-dir",
     "node_modules",
 }
 blocked_tracked_frontend_yarn_artifact_dirs = {
@@ -4119,6 +4125,8 @@ def self_test():
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
             ".bun/install/cache/react/package.json",
+            ".deno/npm/registry.npmjs.org/react/18.2.0/package.json",
+            "deno-dir/deps/https/deno.land/std.ts",
             ".npm/_cacache/index-v5/00/cache-entry",
             ".pnpm-store/v3/files/00/package",
             ".yarn/cache/react-npm-18.2.0.zip",
@@ -4126,6 +4134,8 @@ def self_test():
             ".yarn/build-state.yml",
             ".yarn/install-state.gz",
             "frontend/.bun/install/cache/vite/package.json",
+            "frontend/.deno/npm/registry.npmjs.org/vite/5.0.0/package.json",
+            "frontend/deno-dir/gen/file.js",
             "frontend/.npm/_logs/install.log",
             "frontend/.pnpm-store/v3/files/00/package",
             "frontend/.yarn/cache/vite-npm-5.0.0.zip",
@@ -4158,6 +4168,10 @@ def self_test():
             "npm-debug.log",
             "yarn-error.log",
             "pnpm-debug.log",
+            "deno.json",
+            "deno.jsonc",
+            "deno.lock",
+            "frontend/src/main.ts",
             "frontend/package-lock.json",
             "frontend/yarn.lock",
             "frontend/pnpm-lock.yaml",
@@ -4169,6 +4183,8 @@ def self_test():
     if frontend_artifact_failures != [
         "frontend/node_modules/.package-lock.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".bun/install/cache/react/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".deno/npm/registry.npmjs.org/react/18.2.0/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "deno-dir/deps/https/deno.land/std.ts: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".npm/_cacache/index-v5/00/cache-entry: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".pnpm-store/v3/files/00/package: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".yarn/cache/react-npm-18.2.0.zip: frontend/Node cache/build artifacts must not be tracked for public launch",
@@ -4176,6 +4192,8 @@ def self_test():
         ".yarn/build-state.yml: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".yarn/install-state.gz: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.bun/install/cache/vite/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.deno/npm/registry.npmjs.org/vite/5.0.0/package.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/deno-dir/gen/file.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.npm/_logs/install.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.pnpm-store/v3/files/00/package: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.yarn/cache/vite-npm-5.0.0.zip: frontend/Node cache/build artifacts must not be tracked for public launch",
