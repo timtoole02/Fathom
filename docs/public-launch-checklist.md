@@ -152,6 +152,8 @@ The Go cache/test artifact guard also rejects tracked local generated outputs su
 
 The Elixir/Mix build/dependency artifact guard also rejects tracked local generated outputs such as `.elixir_ls/`, `_build/`, and `deps/`, with matching root `.gitignore` coverage for local Elixir/Mix build/dependency artifacts.
 
+The Erlang/Rebar3 artifact guard also rejects tracked local cache and crash artifacts such as `.rebar3/`, `rebar3.crashdump`, and `erl_crash.dump`, with matching root `.gitignore` coverage. It does not treat source-of-truth Erlang/Rebar3 files such as `rebar.config`, `rebar.lock`, Erlang source files, or Erlang header files as local tool artifacts.
+
 The Python cache/build artifact guard also rejects tracked local Pyre/Pytype and mypy daemon state such as `.pyre/`, `.pytype/`, and `.dmypy.json`, plus Python package metadata/build artifacts such as `.eggs/`, `*.egg-info/`, and `*.dist-info/`, with matching root `.gitignore` coverage. The Python virtualenv/dependency artifact guard rejects local PDM/PEP 582 artifacts such as `.pdm-build/` and `__pypackages__/`, with matching root `.gitignore` coverage.
 
 The ML experiment/tracking artifact guard rejects tracked local W&B, MLflow, Lightning, and TensorBoard run outputs such as `.wandb/`, `wandb/`, `mlruns/`, `lightning_logs/`, and `events.out.tfevents.*`, with matching root `.gitignore` coverage.

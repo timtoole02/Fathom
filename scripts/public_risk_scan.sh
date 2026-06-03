@@ -580,6 +580,11 @@ required_elixir_mix_artifact_gitignore_patterns = {
     "_build/",
     "deps/",
 }
+required_erlang_rebar3_artifact_gitignore_patterns = {
+    "/.rebar3/",
+    "erl_crash.dump",
+    "rebar3.crashdump",
+}
 required_jvm_dependency_artifact_gitignore_patterns = {
     "/.m2/",
 }
@@ -864,6 +869,13 @@ blocked_tracked_elixir_mix_artifact_dirs = {
     ".elixir_ls",
     "_build",
     "deps",
+}
+blocked_tracked_erlang_rebar3_artifact_dirs = {
+    ".rebar3",
+}
+blocked_tracked_erlang_rebar3_artifact_filenames = {
+    "erl_crash.dump",
+    "rebar3.crashdump",
 }
 blocked_tracked_jvm_dependency_artifact_dirs = {
     ".m2",
@@ -2114,6 +2126,22 @@ def gitignore_elixir_mix_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Elixir/Mix build/dependency artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_erlang_rebar3_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Erlang/Rebar3 artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_erlang_rebar3_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Erlang/Rebar3 artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_gradle_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2471,6 +2499,19 @@ def tracked_elixir_mix_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_elixir_mix_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: Elixir/Mix build/dependency artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_erlang_rebar3_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_erlang_rebar3_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Erlang/Rebar3 local artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_erlang_rebar3_artifact_filenames:
+            failures.append(f"{rel}: Erlang/Rebar3 local artifacts must not be tracked for public launch")
     return failures
 
 def tracked_jvm_dependency_artifact_file_failures(tracked_paths=None):
@@ -3736,6 +3777,36 @@ def self_test():
         ".gitignore: missing local Elixir/Mix build/dependency artifact ignore patterns: deps/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Elixir/Mix build/dependency artifact ignore patterns")
+    erlang_rebar3_artifact_failures = tracked_erlang_rebar3_artifact_file_failures(
+        tracked_paths=[
+            ".rebar3/cache/hex/default/packages/cowboy-2.10.0.tar",
+            ".rebar3/rebar_compiler_erl/state.dag",
+            "rebar3.crashdump",
+            "erl_crash.dump",
+            "rebar.config",
+            "rebar.lock",
+            "src/fathom_app.erl",
+            "include/fathom.hrl",
+            "docs/erlang-build.md",
+        ],
+    )
+    if erlang_rebar3_artifact_failures != [
+        ".rebar3/cache/hex/default/packages/cowboy-2.10.0.tar: Erlang/Rebar3 local artifacts must not be tracked for public launch",
+        ".rebar3/rebar_compiler_erl/state.dag: Erlang/Rebar3 local artifacts must not be tracked for public launch",
+        "rebar3.crashdump: Erlang/Rebar3 local artifacts must not be tracked for public launch",
+        "erl_crash.dump: Erlang/Rebar3 local artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Erlang/Rebar3 artifacts")
+    allowed_erlang_rebar3_artifact_gitignore = "\n".join(sorted(required_erlang_rebar3_artifact_gitignore_patterns)) + "\n"
+    if gitignore_erlang_rebar3_artifact_failures(allowed_erlang_rebar3_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Erlang/Rebar3 artifact ignore patterns")
+    erlang_rebar3_artifact_gitignore_failures = gitignore_erlang_rebar3_artifact_failures(
+        allowed_erlang_rebar3_artifact_gitignore.replace("/.rebar3/\n", "")
+    )
+    if erlang_rebar3_artifact_gitignore_failures != [
+        ".gitignore: missing local Erlang/Rebar3 artifact ignore patterns: /.rebar3/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Erlang/Rebar3 artifact ignore patterns")
     jvm_dependency_artifact_failures = tracked_jvm_dependency_artifact_file_failures(
         tracked_paths=[
             ".m2/repository/com/example/private-lib/1.0/private-lib-1.0.jar",
@@ -4999,6 +5070,7 @@ failures.extend(gitignore_r_artifact_failures())
 failures.extend(gitignore_julia_artifact_failures())
 failures.extend(gitignore_go_artifact_failures())
 failures.extend(gitignore_elixir_mix_artifact_failures())
+failures.extend(gitignore_erlang_rebar3_artifact_failures())
 failures.extend(gitignore_jvm_dependency_artifact_failures())
 failures.extend(gitignore_clojure_artifact_failures())
 failures.extend(gitignore_gradle_artifact_failures())
@@ -5024,6 +5096,7 @@ failures.extend(tracked_r_artifact_file_failures())
 failures.extend(tracked_julia_artifact_file_failures())
 failures.extend(tracked_go_artifact_file_failures())
 failures.extend(tracked_elixir_mix_artifact_file_failures())
+failures.extend(tracked_erlang_rebar3_artifact_file_failures())
 failures.extend(tracked_jvm_dependency_artifact_file_failures())
 failures.extend(tracked_clojure_artifact_file_failures())
 failures.extend(tracked_gradle_artifact_file_failures())

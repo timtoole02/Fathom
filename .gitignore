@@ -218,6 +218,11 @@ coverage.out
 _build/
 deps/
 
+# Local Erlang/Rebar3 artifacts
+/.rebar3/
+rebar3.crashdump
+erl_crash.dump
+
 # Local JVM dependency artifacts
 /.m2/
 
