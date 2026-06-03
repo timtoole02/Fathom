@@ -128,6 +128,8 @@ The release/package artifact guard also rejects JVM package archives such as `.j
 
 The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/`, with matching root `.gitignore` coverage.
 
+The JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`, with matching root `.gitignore` coverage. It does not treat source-of-truth JVM project files such as `pom.xml`, `build.gradle`, `build.sbt`, Java source files, Kotlin source files, or Scala source files as local tool artifacts.
+
 The Gradle/JVM build artifact guard also rejects tracked local Gradle cache/state such as `.gradle/` and common Gradle `build/` output subtrees such as `classes/`, `reports/`, `test-results/`, `tmp/`, `generated/`, `intermediates/`, and `libs/`, with matching root `.gitignore` coverage. It does not treat source-of-truth Gradle project files such as `build.gradle`, `settings.gradle`, `gradle.properties`, `gradlew`, or `gradle/wrapper/gradle-wrapper.properties` as build artifacts.
 
 The Kotlin/Kotlin Native compiler artifact guard also rejects tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/`, with matching root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts. It does not treat source-of-truth Kotlin files such as `build.gradle.kts`, `settings.gradle.kts`, Kotlin source files, or Gradle version catalog files as local tool artifacts.

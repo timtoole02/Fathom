@@ -588,6 +588,10 @@ required_erlang_rebar3_artifact_gitignore_patterns = {
 required_jvm_dependency_artifact_gitignore_patterns = {
     "/.m2/",
 }
+required_jvm_compiler_artifact_gitignore_patterns = {
+    "*.class",
+    "*.tasty",
+}
 required_clojure_artifact_gitignore_patterns = {
     "/.cpcache/",
     "/.lein/",
@@ -879,6 +883,10 @@ blocked_tracked_erlang_rebar3_artifact_filenames = {
 }
 blocked_tracked_jvm_dependency_artifact_dirs = {
     ".m2",
+}
+blocked_tracked_jvm_compiler_artifact_suffixes = {
+    ".class",
+    ".tasty",
 }
 blocked_tracked_clojure_artifact_dirs = {
     ".cpcache",
@@ -2094,6 +2102,22 @@ def gitignore_jvm_dependency_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local JVM dependency artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_jvm_compiler_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local JVM compiler artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_jvm_compiler_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local JVM compiler artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_clojure_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2522,6 +2546,16 @@ def tracked_jvm_dependency_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_jvm_dependency_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: JVM dependency artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_jvm_compiler_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.suffix.lower() in blocked_tracked_jvm_compiler_artifact_suffixes:
+            failures.append(f"{rel}: JVM compiler bytecode artifacts must not be tracked for public launch")
     return failures
 
 def tracked_clojure_artifact_file_failures(tracked_paths=None):
@@ -3830,6 +3864,36 @@ def self_test():
         ".gitignore: missing local JVM dependency artifact ignore patterns: /.m2/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local JVM dependency artifact ignore patterns")
+    jvm_compiler_artifact_failures = tracked_jvm_compiler_artifact_file_failures(
+        tracked_paths=[
+            "target/classes/com/example/App.class",
+            "out/production/classes/com/example/App.class",
+            "target/scala-3.4.2/classes/com/example/App.tasty",
+            "src/main/java/com/example/App.java",
+            "src/main/kotlin/com/example/App.kt",
+            "src/main/scala/com/example/App.scala",
+            "pom.xml",
+            "build.gradle",
+            "build.sbt",
+            "docs/jvm-build.md",
+        ],
+    )
+    if jvm_compiler_artifact_failures != [
+        "target/classes/com/example/App.class: JVM compiler bytecode artifacts must not be tracked for public launch",
+        "out/production/classes/com/example/App.class: JVM compiler bytecode artifacts must not be tracked for public launch",
+        "target/scala-3.4.2/classes/com/example/App.tasty: JVM compiler bytecode artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local JVM compiler artifacts")
+    allowed_jvm_compiler_artifact_gitignore = "\n".join(sorted(required_jvm_compiler_artifact_gitignore_patterns)) + "\n"
+    if gitignore_jvm_compiler_artifact_failures(allowed_jvm_compiler_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local JVM compiler artifact ignore patterns")
+    jvm_compiler_artifact_gitignore_failures = gitignore_jvm_compiler_artifact_failures(
+        allowed_jvm_compiler_artifact_gitignore.replace("*.tasty\n", "")
+    )
+    if jvm_compiler_artifact_gitignore_failures != [
+        ".gitignore: missing local JVM compiler artifact ignore patterns: *.tasty"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local JVM compiler artifact ignore patterns")
     clojure_artifact_failures = tracked_clojure_artifact_file_failures(
         tracked_paths=[
             ".lein/profiles.clj",
@@ -5072,6 +5136,7 @@ failures.extend(gitignore_go_artifact_failures())
 failures.extend(gitignore_elixir_mix_artifact_failures())
 failures.extend(gitignore_erlang_rebar3_artifact_failures())
 failures.extend(gitignore_jvm_dependency_artifact_failures())
+failures.extend(gitignore_jvm_compiler_artifact_failures())
 failures.extend(gitignore_clojure_artifact_failures())
 failures.extend(gitignore_gradle_artifact_failures())
 failures.extend(gitignore_kotlin_artifact_failures())
@@ -5098,6 +5163,7 @@ failures.extend(tracked_go_artifact_file_failures())
 failures.extend(tracked_elixir_mix_artifact_file_failures())
 failures.extend(tracked_erlang_rebar3_artifact_file_failures())
 failures.extend(tracked_jvm_dependency_artifact_file_failures())
+failures.extend(tracked_jvm_compiler_artifact_file_failures())
 failures.extend(tracked_clojure_artifact_file_failures())
 failures.extend(tracked_gradle_artifact_file_failures())
 failures.extend(tracked_kotlin_artifact_file_failures())

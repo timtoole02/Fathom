@@ -226,6 +226,10 @@ erl_crash.dump
 # Local JVM dependency artifacts
 /.m2/
 
+# Local JVM compiler artifacts
+*.class
+*.tasty
+
 # Local Clojure/Leiningen artifacts
 /.lein/
 /.cpcache/
