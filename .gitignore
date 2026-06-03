@@ -187,6 +187,11 @@ composer.phar
 coverage.out
 *.test
 
+# Local Elixir/Mix build/dependency artifacts
+.elixir_ls/
+_build/
+deps/
+
 # Local JVM dependency artifacts
 /.m2/
 

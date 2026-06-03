@@ -1061,6 +1061,16 @@ def assert_boundary_docs() -> None:
         "with matching root `.gitignore` coverage",
         "launch checklist Go artifact ignore scope",
     )
+    assert_contains(
+        launch_text,
+        "tracked local Elixir/Mix build/dependency artifacts",
+        "launch checklist Elixir/Mix artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local Elixir/Mix build/dependency artifacts",
+        "launch checklist Elixir/Mix artifact ignore scope",
+    )
     assert_contains(launch_text, "tracked local native/CMake build artifacts", "launch checklist native/CMake artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local native/CMake build artifacts", "launch checklist native/CMake artifact ignore scope")
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
@@ -1531,6 +1541,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Go cache/test artifacts",
         "launch evidence Go artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Elixir/Mix build/dependency artifact guard",
+        "launch evidence Elixir/Mix artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Elixir/Mix build/dependency artifacts such as `.elixir_ls/`, `_build/`, and `deps/`",
+        "launch evidence Elixir/Mix artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Elixir/Mix build/dependency artifacts",
+        "launch evidence Elixir/Mix artifact ignore examples",
     )
     assert_contains(
         evidence_text,
