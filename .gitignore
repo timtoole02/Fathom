@@ -63,6 +63,8 @@ node_modules/
 .deno/
 deno-dir/
 .docusaurus/
+.jekyll-cache/
+.sass-cache/
 .angular/cache/
 .astro/
 .next/
@@ -77,6 +79,7 @@ deno-dir/
 .yarn/install-state.gz
 dist/
 build/
+_site/
 /storybook-static/
 coverage/
 .turbo/
