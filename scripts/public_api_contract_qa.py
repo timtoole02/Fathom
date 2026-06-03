@@ -988,6 +988,8 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "source-of-truth mobile app code, Expo config, Android Gradle project files, or iOS Xcode project files", "launch checklist Expo source allowance")
     assert_contains(launch_text, "Android native build intermediates such as `.cxx/` and `.externalNativeBuild/`", "launch checklist Android native build intermediate scope")
     assert_contains(launch_text, "source-of-truth Android Gradle project files, JNI/C++ source files, or checked-in native build configuration", "launch checklist Android native source allowance")
+    assert_contains(launch_text, "CocoaPods dependency outputs such as root `Pods/` and `ios/Pods/`", "launch checklist CocoaPods dependency output scope")
+    assert_contains(launch_text, "source-of-truth CocoaPods files such as `Podfile` or `Podfile.lock`", "launch checklist CocoaPods source allowance")
     assert_contains(
         launch_text,
         "tracked local mobile/Xcode/Android signing/provisioning artifacts",
@@ -2176,6 +2178,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "source-file allowances for Android Gradle project files, JNI/C++ source files, and checked-in native build configuration",
         "launch evidence Android native source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "CocoaPods dependency output guard for root `Pods/` and `ios/Pods/`",
+        "launch evidence CocoaPods dependency output scope",
+    )
+    assert_contains(
+        evidence_text,
+        "source-file allowances for `Podfile` and `Podfile.lock`",
+        "launch evidence CocoaPods source allowance",
     )
     assert_contains(
         evidence_text,

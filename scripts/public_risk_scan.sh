@@ -415,8 +415,10 @@ required_mobile_build_gitignore_patterns = {
     "/.externalNativeBuild/",
     "/.gradle/",
     "/DerivedData/",
+    "/Pods/",
     "android/.cxx/",
     "android/.externalNativeBuild/",
+    "ios/Pods/",
     "*.aab",
     "*.apk",
     "*.dSYM",
@@ -1260,6 +1262,10 @@ blocked_tracked_mobile_build_dirs = {
 blocked_tracked_mobile_build_filenames = {
     "local.properties",
 }
+blocked_tracked_mobile_build_path_prefixes = (
+    "Pods/",
+    "ios/Pods/",
+)
 blocked_tracked_mobile_build_suffixes = {
     ".aab",
     ".apk",
@@ -3094,6 +3100,9 @@ def tracked_mobile_build_file_failures(tracked_paths=None):
             failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
             continue
         if path.name in blocked_tracked_mobile_build_filenames:
+            failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
+            continue
+        if any(rel.startswith(prefix) for prefix in blocked_tracked_mobile_build_path_prefixes):
             failures.append(f"{rel}: local mobile/Xcode/Android build artifacts must not be tracked for public launch")
             continue
         if any(part.endswith((".dSYM", ".xcarchive", ".xcresult")) for part in path.parts):
@@ -5206,9 +5215,12 @@ def self_test():
             ".expo-shared/assets.json",
             ".externalNativeBuild/cmake/debug/arm64-v8a/build.ninja",
             ".gradle/caches/modules-2/files-2.1/metadata.bin",
+            "Pods/Manifest.lock",
             "android/.cxx/Release/x86_64/compile_commands.json",
             "android/.externalNativeBuild/ndkBuild/debug/armeabi-v7a/Android.mk",
             "android/local.properties",
+            "ios/Pods/Manifest.lock",
+            "ios/Pods/Headers/Public/SomeSDK/SomeSDK.h",
             "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate",
             "TestResults/Fathom.xcresult/Data/data.0~",
             "archives/Fathom.xcarchive/Info.plist",
@@ -5219,6 +5231,8 @@ def self_test():
             "profiles/Fathom.mobileprovision",
             "profiles/Fathom.provisionprofile",
             "ios/Fathom.xcodeproj/project.pbxproj",
+            "ios/Podfile",
+            "ios/Podfile.lock",
             "android/app/build.gradle",
             "docs/mobile.md",
         ],
@@ -5230,9 +5244,12 @@ def self_test():
         ".expo-shared/assets.json: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         ".externalNativeBuild/cmake/debug/arm64-v8a/build.ninja: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         ".gradle/caches/modules-2/files-2.1/metadata.bin: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "Pods/Manifest.lock: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/.cxx/Release/x86_64/compile_commands.json: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/.externalNativeBuild/ndkBuild/debug/armeabi-v7a/Android.mk: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "android/local.properties: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "ios/Pods/Manifest.lock: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "ios/Pods/Headers/Public/SomeSDK/SomeSDK.h: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "ios/Fathom.xcodeproj/xcuserdata/tim.xcuserdatad/UserInterfaceState.xcuserstate: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "TestResults/Fathom.xcresult/Data/data.0~: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "archives/Fathom.xcarchive/Info.plist: local mobile/Xcode/Android build artifacts must not be tracked for public launch",

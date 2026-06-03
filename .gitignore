@@ -444,8 +444,10 @@ compose.override.yaml
 /.externalNativeBuild/
 /DerivedData/
 /.gradle/
+/Pods/
 android/.cxx/
 android/.externalNativeBuild/
+ios/Pods/
 local.properties
 xcuserdata/
 *.xcuserstate
