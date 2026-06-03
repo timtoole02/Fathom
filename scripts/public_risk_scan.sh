@@ -352,6 +352,13 @@ required_model_artifact_gitignore_patterns = {
     "*.safetensors",
     "*.tflite",
 }
+required_experiment_tracking_artifact_gitignore_patterns = {
+    "/.wandb/",
+    "/lightning_logs/",
+    "/mlruns/",
+    "/wandb/",
+    "events.out.tfevents.*",
+}
 required_container_artifact_gitignore_patterns = {
     "/.docker/",
     "/docker-data/",
@@ -928,6 +935,15 @@ blocked_tracked_model_artifact_suffixes = {
     ".safetensors",
     ".tflite",
 }
+blocked_tracked_experiment_tracking_artifact_root_names = {
+    ".wandb",
+    "lightning_logs",
+    "mlruns",
+    "wandb",
+}
+blocked_tracked_experiment_tracking_artifact_filename_patterns = (
+    "events.out.tfevents.*",
+)
 blocked_tracked_container_artifact_dirs = {
     ".docker",
     "docker-data",
@@ -1520,6 +1536,22 @@ def gitignore_model_artifact_failures(gitignore_text=None):
     missing = sorted(required_model_artifact_gitignore_patterns - active_patterns)
     if missing:
         return [f".gitignore: missing local model/checkpoint artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
+def gitignore_experiment_tracking_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local ML experiment/tracking artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_experiment_tracking_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local ML experiment/tracking artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_container_artifact_failures(gitignore_text=None):
@@ -2262,6 +2294,19 @@ def tracked_model_artifact_file_failures(tracked_paths=None):
             continue
         if path.suffix.lower() in blocked_tracked_model_artifact_suffixes:
             failures.append(f"{rel}: local model/checkpoint artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_experiment_tracking_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if path.parts and path.parts[0] in blocked_tracked_experiment_tracking_artifact_root_names:
+            failures.append(f"{rel}: local ML experiment/tracking artifacts must not be tracked for public launch")
+            continue
+        if any(fnmatch.fnmatch(path.name, pattern) for pattern in blocked_tracked_experiment_tracking_artifact_filename_patterns):
+            failures.append(f"{rel}: local ML experiment/tracking artifacts must not be tracked for public launch")
     return failures
 
 def tracked_container_artifact_file_failures(tracked_paths=None):
@@ -3734,6 +3779,37 @@ def self_test():
         "fixtures/model.tflite: local model/checkpoint artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local model/checkpoint artifacts")
+    allowed_experiment_tracking_artifact_gitignore = "\n".join(
+        sorted(required_experiment_tracking_artifact_gitignore_patterns)
+    ) + "\n"
+    if gitignore_experiment_tracking_artifact_failures(allowed_experiment_tracking_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local ML experiment/tracking artifact ignore patterns")
+    experiment_tracking_artifact_gitignore_failures = gitignore_experiment_tracking_artifact_failures(
+        allowed_experiment_tracking_artifact_gitignore.replace("/mlruns/\n", "")
+    )
+    if experiment_tracking_artifact_gitignore_failures != [
+        ".gitignore: missing local ML experiment/tracking artifact ignore patterns: /mlruns/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local ML experiment/tracking artifact ignore patterns")
+    experiment_tracking_artifact_failures = tracked_experiment_tracking_artifact_file_failures(
+        tracked_paths=[
+            ".wandb/run-20260602_174300-fathom/files/config.yaml",
+            "wandb/latest-run/files/output.log",
+            "mlruns/0/meta.yaml",
+            "lightning_logs/version_0/events.out.tfevents.123456.local",
+            "runs/events.out.tfevents.123456.local",
+            "docs/research/performance-strategy.md",
+            "docs/api/public-contract.json",
+        ],
+    )
+    if experiment_tracking_artifact_failures != [
+        ".wandb/run-20260602_174300-fathom/files/config.yaml: local ML experiment/tracking artifacts must not be tracked for public launch",
+        "wandb/latest-run/files/output.log: local ML experiment/tracking artifacts must not be tracked for public launch",
+        "mlruns/0/meta.yaml: local ML experiment/tracking artifacts must not be tracked for public launch",
+        "lightning_logs/version_0/events.out.tfevents.123456.local: local ML experiment/tracking artifacts must not be tracked for public launch",
+        "runs/events.out.tfevents.123456.local: local ML experiment/tracking artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local ML experiment/tracking artifacts")
     container_artifact_failures = tracked_container_artifact_file_failures(
         tracked_paths=[
             ".docker/cache/buildkit.db",
@@ -4148,6 +4224,7 @@ failures.extend(gitignore_os_metadata_failures())
 failures.extend(gitignore_editor_artifact_failures())
 failures.extend(gitignore_ide_artifact_failures())
 failures.extend(gitignore_model_artifact_failures())
+failures.extend(gitignore_experiment_tracking_artifact_failures())
 failures.extend(gitignore_container_artifact_failures())
 failures.extend(gitignore_deployment_platform_artifact_failures())
 failures.extend(gitignore_infra_state_failures())
@@ -4195,6 +4272,7 @@ failures.extend(tracked_native_build_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_model_artifact_file_failures())
+failures.extend(tracked_experiment_tracking_artifact_file_failures())
 failures.extend(tracked_container_artifact_file_failures())
 failures.extend(tracked_deployment_platform_artifact_file_failures())
 failures.extend(tracked_infra_state_file_failures())

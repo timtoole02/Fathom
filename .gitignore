@@ -278,6 +278,13 @@ _minted-*/
 *.npy
 *.tflite
 
+# Local ML experiment/tracking artifacts
+/.wandb/
+/wandb/
+/mlruns/
+/lightning_logs/
+events.out.tfevents.*
+
 # Local Docker/container artifacts
 /.docker/
 /docker-data/

@@ -936,6 +936,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(launch_text, "tracked local model/checkpoint artifacts", "launch checklist model/checkpoint artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local model/checkpoint artifacts", "launch checklist model/checkpoint artifact ignore scope")
+    assert_contains(launch_text, "tracked local ML experiment/tracking artifacts", "launch checklist ML experiment/tracking artifact risk-scan scope")
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local ML experiment/tracking artifacts",
+        "launch checklist ML experiment/tracking artifact ignore scope",
+    )
     assert_contains(launch_text, "tracked local Docker/container artifacts", "launch checklist Docker/container artifact risk-scan scope")
     assert_contains(launch_text, "root `.gitignore` coverage for local Docker/container artifacts", "launch checklist Docker/container artifact ignore scope")
     assert_contains(
@@ -1685,6 +1691,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local model/checkpoint artifacts",
         "launch evidence model/checkpoint artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "local ML experiment/tracking artifact guard",
+        "launch evidence ML experiment/tracking artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked W&B, MLflow, Lightning, and TensorBoard run outputs such as `.wandb/`, `wandb/`, `mlruns/`, `lightning_logs/`, and `events.out.tfevents.*`",
+        "launch evidence ML experiment/tracking artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local ML experiment/tracking artifacts",
+        "launch evidence ML experiment/tracking artifact ignore examples",
     )
     assert_contains(
         evidence_text,
