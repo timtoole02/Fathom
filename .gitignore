@@ -143,6 +143,8 @@ __pycache__/
 .pyre/
 .pytype/
 .ruff_cache/
+.eggs/
+*.egg-info/
 *.pyc
 *.pyo
 

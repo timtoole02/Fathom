@@ -1016,6 +1016,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Python package metadata/build artifacts",
+        "launch checklist Python package metadata artifact scope",
+    )
+    assert_contains(
+        launch_text,
         "tracked Python virtualenv/dependency artifacts",
         "launch checklist Python virtualenv/dependency artifact risk-scan scope",
     )
@@ -1416,6 +1421,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Pyre/Pytype and mypy daemon state",
         "launch evidence Python type-checker artifact scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Python package metadata/build artifacts",
+        "launch evidence Python package metadata artifact scope",
     )
     assert_contains(
         evidence_text,

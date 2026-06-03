@@ -501,12 +501,14 @@ required_diagnostic_artifact_gitignore_patterns = {
 required_python_artifact_gitignore_patterns = {
     "__pycache__/",
     ".dmypy.json",
+    ".eggs/",
     ".hypothesis/",
     ".pytest_cache/",
     ".mypy_cache/",
     ".pyre/",
     ".pytype/",
     ".ruff_cache/",
+    "*.egg-info/",
     "*.pyc",
     "*.pyo",
 }
@@ -715,12 +717,16 @@ blocked_tracked_diagnostic_artifact_suffixes = {
 }
 blocked_tracked_python_artifact_dirs = {
     "__pycache__",
+    ".eggs",
     ".hypothesis",
     ".mypy_cache",
     ".pyre",
     ".pytest_cache",
     ".pytype",
     ".ruff_cache",
+}
+blocked_tracked_python_artifact_dir_suffixes = {
+    ".egg-info",
 }
 blocked_tracked_python_artifact_filenames = {
     ".dmypy.json",
@@ -2091,6 +2097,9 @@ def tracked_python_artifact_file_failures(tracked_paths=None):
         if any(part in blocked_tracked_python_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
             continue
+        if any(part.endswith(tuple(blocked_tracked_python_artifact_dir_suffixes)) for part in path.parts):
+            failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
+            continue
         if path.name in blocked_tracked_python_artifact_filenames:
             failures.append(f"{rel}: Python cache/build artifacts must not be tracked for public launch")
             continue
@@ -3091,6 +3100,8 @@ def self_test():
             ".pyre/server/server.stderr",
             ".pytype/pyi/scripts/public_api_contract_qa.pyi",
             ".ruff_cache/0.12.0/file",
+            ".eggs/fathom-0.1.0-py3.12.egg",
+            "crates/fathom_py/fathom.egg-info/PKG-INFO",
             "scripts/public_api_contract_qa.pyo",
             "docs/api/public-contract.json",
             "scripts/public_api_contract_qa.py",
@@ -3105,6 +3116,8 @@ def self_test():
         ".pyre/server/server.stderr: Python cache/build artifacts must not be tracked for public launch",
         ".pytype/pyi/scripts/public_api_contract_qa.pyi: Python cache/build artifacts must not be tracked for public launch",
         ".ruff_cache/0.12.0/file: Python cache/build artifacts must not be tracked for public launch",
+        ".eggs/fathom-0.1.0-py3.12.egg: Python cache/build artifacts must not be tracked for public launch",
+        "crates/fathom_py/fathom.egg-info/PKG-INFO: Python cache/build artifacts must not be tracked for public launch",
         "scripts/public_api_contract_qa.pyo: Python cache/build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Python cache/build artifacts")
@@ -3112,10 +3125,10 @@ def self_test():
     if gitignore_python_artifact_failures(allowed_python_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Python cache/build artifact ignore patterns")
     python_artifact_gitignore_failures = gitignore_python_artifact_failures(
-        allowed_python_artifact_gitignore.replace(".mypy_cache/\n", "")
+        allowed_python_artifact_gitignore.replace("*.egg-info/\n", "")
     )
     if python_artifact_gitignore_failures != [
-        ".gitignore: missing local Python cache/build artifact ignore patterns: .mypy_cache/"
+        ".gitignore: missing local Python cache/build artifact ignore patterns: *.egg-info/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Python cache/build artifact ignore patterns")
     python_env_artifact_failures = tracked_python_env_artifact_file_failures(
