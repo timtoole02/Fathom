@@ -612,6 +612,7 @@ required_temp_artifact_gitignore_patterns = {
     "*.tmp",
 }
 required_test_report_artifact_gitignore_patterns = {
+    "/.nyc_output/",
     "/.playwright/",
     "/blob-report/",
     "/cypress/downloads/",
@@ -626,6 +627,8 @@ required_test_report_artifact_gitignore_patterns = {
     ".coverage.*",
     "*.lcov",
     "*.junit.xml",
+    "clover.xml",
+    "coverage-final.json",
     "coverage.xml",
     "frontend/cypress/downloads/",
     "frontend/cypress/screenshots/",
@@ -1029,6 +1032,7 @@ blocked_tracked_media_capture_suffixes = {
     ".webm",
 }
 blocked_tracked_test_report_artifact_dirs = {
+    ".nyc_output",
     ".playwright",
     "blob-report",
     "htmlcov",
@@ -1039,6 +1043,8 @@ blocked_tracked_test_report_artifact_dirs = {
 }
 blocked_tracked_test_report_artifact_filenames = {
     ".coverage",
+    "clover.xml",
+    "coverage-final.json",
     "coverage.xml",
     "junit.xml",
     "lcov.info",
@@ -3471,9 +3477,12 @@ def self_test():
             "test-reports/backend.xml",
             "reports/public-risk/index.html",
             "htmlcov/index.html",
+            ".nyc_output/processinfo/index.json",
             ".coverage",
             ".coverage.public-risk",
             "coverage.xml",
+            "coverage-final.json",
+            "clover.xml",
             "lcov.info",
             "crates/fathom-core/coverage.lcov",
             "junit.xml",
@@ -3494,9 +3503,12 @@ def self_test():
         "test-reports/backend.xml: local test report artifacts must not be tracked for public launch",
         "reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",
         "htmlcov/index.html: local test report artifacts must not be tracked for public launch",
+        ".nyc_output/processinfo/index.json: local test report artifacts must not be tracked for public launch",
         ".coverage: local test report artifacts must not be tracked for public launch",
         ".coverage.public-risk: local test report artifacts must not be tracked for public launch",
         "coverage.xml: local test report artifacts must not be tracked for public launch",
+        "coverage-final.json: local test report artifacts must not be tracked for public launch",
+        "clover.xml: local test report artifacts must not be tracked for public launch",
         "lcov.info: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/coverage.lcov: local test report artifacts must not be tracked for public launch",
         "junit.xml: local test report artifacts must not be tracked for public launch",
