@@ -90,6 +90,8 @@ coverage/
 .parcel-cache/
 .metro-cache/
 .cache/
+.watchman-cookie
+.watchman-cookie-*
 .vitest/
 .vitepress/cache/
 .vitepress/dist/

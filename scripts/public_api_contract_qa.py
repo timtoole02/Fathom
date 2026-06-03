@@ -1669,6 +1669,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked Watchman local state cookies such as `.watchman-cookie` and `.watchman-cookie-*`",
+        "launch checklist Watchman local cache artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Watchman configuration such as `.watchmanconfig`",
+        "launch checklist Watchman source allowance",
+    )
+    assert_contains(
+        launch_text,
         "root `.gitignore` coverage for local temporary/scratch artifacts",
         "launch checklist temporary/scratch artifact ignore scope",
     )
@@ -1686,6 +1696,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "tracked local temporary/scratch artifacts such as `tmp/`, `temp/`, `*.tmp`, and `*.temp`",
         "launch evidence temporary/scratch artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked Watchman local state cookies such as `.watchman-cookie` and `.watchman-cookie-*`",
+        "launch evidence Watchman local cache artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for those local Watchman state artifacts",
+        "launch evidence Watchman local cache artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "source-of-truth Watchman configuration such as `.watchmanconfig`",
+        "launch evidence Watchman source allowance",
     )
     assert_contains(
         evidence_text,

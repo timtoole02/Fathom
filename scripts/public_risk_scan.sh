@@ -740,6 +740,8 @@ required_frontend_artifact_gitignore_patterns = {
 }
 required_local_cache_artifact_gitignore_patterns = {
     ".cache/",
+    ".watchman-cookie",
+    ".watchman-cookie-*",
 }
 required_temp_artifact_gitignore_patterns = {
     "/temp/",
@@ -1099,6 +1101,12 @@ blocked_tracked_frontend_artifact_suffixes = {
 }
 blocked_tracked_local_cache_artifact_dirs = {
     ".cache",
+}
+blocked_tracked_local_cache_artifact_filenames = {
+    ".watchman-cookie",
+}
+blocked_tracked_local_cache_artifact_filename_patterns = {
+    ".watchman-cookie-*",
 }
 blocked_tracked_temp_artifact_dirs = {
     "temp",
@@ -2900,6 +2908,12 @@ def tracked_local_cache_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_local_cache_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: local cache artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_local_cache_artifact_filenames:
+            failures.append(f"{rel}: local cache artifacts must not be tracked for public launch")
+            continue
+        if any(fnmatch.fnmatch(path.name, pattern) for pattern in blocked_tracked_local_cache_artifact_filename_patterns):
+            failures.append(f"{rel}: local cache artifacts must not be tracked for public launch")
     return failures
 
 def tracked_temp_artifact_file_failures(tracked_paths=None):
@@ -4577,20 +4591,27 @@ def self_test():
         tracked_paths=[
             ".cache/huggingface/download/model.safetensors",
             "docs/.cache/rendered/preview.html",
+            ".watchman-cookie",
+            "frontend/.watchman-cookie-123",
+            ".watchmanconfig",
             "docs/api/public-contract.json",
         ],
     )
     if local_cache_artifact_failures != [
         ".cache/huggingface/download/model.safetensors: local cache artifacts must not be tracked for public launch",
         "docs/.cache/rendered/preview.html: local cache artifacts must not be tracked for public launch",
+        ".watchman-cookie: local cache artifacts must not be tracked for public launch",
+        "frontend/.watchman-cookie-123: local cache artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local cache artifacts")
     allowed_local_cache_artifact_gitignore = "\n".join(sorted(required_local_cache_artifact_gitignore_patterns)) + "\n"
     if gitignore_local_cache_artifact_failures(allowed_local_cache_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local cache artifact ignore patterns")
-    local_cache_artifact_gitignore_failures = gitignore_local_cache_artifact_failures("")
+    local_cache_artifact_gitignore_failures = gitignore_local_cache_artifact_failures(
+        allowed_local_cache_artifact_gitignore.replace(".watchman-cookie-*\n", "")
+    )
     if local_cache_artifact_gitignore_failures != [
-        ".gitignore: missing local cache artifact ignore patterns: .cache/"
+        ".gitignore: missing local cache artifact ignore patterns: .watchman-cookie-*"
     ]:
         raise AssertionError("public risk self-test did not reject missing local cache artifact ignore patterns")
     temp_artifact_failures = tracked_temp_artifact_file_failures(

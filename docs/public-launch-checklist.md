@@ -108,6 +108,8 @@ It also blocks tracked Deno local cache artifacts such as `.deno/` and `deno-dir
 
 It also blocks tracked local frontend/static-site framework caches and build outputs such as Astro `.astro/`, Docusaurus `.docusaurus/`, Hugo `resources/_gen/` and `.hugo_build.lock`, Jekyll `_site/`, `.jekyll-cache/`, and `.sass-cache/`, VitePress `.vitepress/cache/` and `.vitepress/dist/`, Metro `.metro-cache/`, Next.js `.next/`, SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories, with matching root `.gitignore` coverage. It does not treat source-of-truth Metro configuration such as `metro.config.js` as a local cache artifact.
 
+It also blocks tracked Watchman local state cookies such as `.watchman-cookie` and `.watchman-cookie-*`, with matching root `.gitignore` coverage through the local cache artifact guard. It does not treat source-of-truth Watchman configuration such as `.watchmanconfig` as a local cache artifact.
+
 It also blocks tracked local documentation build artifacts such as LaTeX auxiliary files (`*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`) and `_minted-*` caches, with matching root `.gitignore` coverage for local documentation build artifacts. It intentionally does not block all PDFs because some PDFs can be source-of-truth public docs rather than rebuildable local output.
 
 It also blocks tracked local JVM dependency artifacts such as `.m2/`, with matching root `.gitignore` coverage for local JVM dependency artifacts.
