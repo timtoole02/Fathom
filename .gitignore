@@ -247,6 +247,11 @@ deps/
 /_opam/
 /.opam-switch/
 
+# Local Lua/LuaRocks artifacts
+/.luarocks/
+/lua_modules/
+*.rock
+
 # Local test report artifacts
 /playwright-report/
 /blob-report/

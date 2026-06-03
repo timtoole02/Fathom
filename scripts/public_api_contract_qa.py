@@ -1119,6 +1119,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Lua/LuaRocks artifact guard also rejects tracked local dependency/build/package artifacts",
+        "launch checklist Lua/LuaRocks artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Lua files such as `*.lua`, `*.rockspec`, LuaRocks lock files, or Lua config files",
+        "launch checklist Lua/LuaRocks source-file allowance scope",
+    )
+    assert_contains(
+        launch_text,
         "tracked local Elixir/Mix build/dependency artifacts",
         "launch checklist Elixir/Mix artifact risk-scan scope",
     )
@@ -1222,6 +1232,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving source-of-truth OCaml project files such as `dune`, `dune-project`, `*.opam`, and OCaml source files",
         "launch evidence OCaml/opam source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Lua/LuaRocks artifact guard",
+        "launch evidence Lua/LuaRocks artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Lua/LuaRocks dependency/build/package artifacts such as `.luarocks/`, `lua_modules/`, and `*.rock`",
+        "launch evidence Lua/LuaRocks artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Lua/LuaRocks artifacts",
+        "launch evidence Lua/LuaRocks artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Lua files such as `*.lua`, `*.rockspec`, LuaRocks lock files, and Lua config files",
+        "launch evidence Lua/LuaRocks source allowance",
     )
     assert_contains(
         evidence_text,

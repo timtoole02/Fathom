@@ -613,6 +613,11 @@ required_ocaml_opam_artifact_gitignore_patterns = {
     "/.opam-switch/",
     "/_opam/",
 }
+required_lua_luarocks_artifact_gitignore_patterns = {
+    "/.luarocks/",
+    "/lua_modules/",
+    "*.rock",
+}
 required_frontend_artifact_gitignore_patterns = {
     ".bun/",
     ".eslintcache",
@@ -912,6 +917,13 @@ blocked_tracked_haskell_build_artifact_filenames = {
 blocked_tracked_ocaml_opam_artifact_dirs = {
     ".opam-switch",
     "_opam",
+}
+blocked_tracked_lua_luarocks_artifact_dirs = {
+    ".luarocks",
+    "lua_modules",
+}
+blocked_tracked_lua_luarocks_artifact_suffixes = {
+    ".rock",
 }
 blocked_tracked_frontend_artifact_dirs = {
     ".bun",
@@ -2182,6 +2194,22 @@ def gitignore_ocaml_opam_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local OCaml/opam artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_lua_luarocks_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Lua/LuaRocks artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_lua_luarocks_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Lua/LuaRocks artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_frontend_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2526,6 +2554,19 @@ def tracked_ocaml_opam_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_ocaml_opam_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: OCaml/opam local artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_lua_luarocks_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_lua_luarocks_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Lua/LuaRocks local artifacts must not be tracked for public launch")
+            continue
+        if any(path.name.endswith(suffix) for suffix in blocked_tracked_lua_luarocks_artifact_suffixes):
+            failures.append(f"{rel}: Lua/LuaRocks local artifacts must not be tracked for public launch")
     return failures
 
 def tracked_frontend_artifact_file_failures(tracked_paths=None):
@@ -3909,6 +3950,36 @@ def self_test():
         ".gitignore: missing local OCaml/opam artifact ignore patterns: /.opam-switch/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local OCaml/opam artifact ignore patterns")
+    lua_luarocks_artifact_failures = tracked_lua_luarocks_artifact_file_failures(
+        tracked_paths=[
+            ".luarocks/lib/luarocks/rocks-5.4/fathom/1.0-1/fathom.rockspec",
+            "lua_modules/share/lua/5.4/fathom/init.lua",
+            "fathom-1.0-1.src.rock",
+            "fathom-1.0-1.macosx-aarch64.rock",
+            "fathom.lua",
+            "fathom.rockspec",
+            "luarocks.lock",
+            ".luarc.json",
+            "docs/lua-build.md",
+        ],
+    )
+    if lua_luarocks_artifact_failures != [
+        ".luarocks/lib/luarocks/rocks-5.4/fathom/1.0-1/fathom.rockspec: Lua/LuaRocks local artifacts must not be tracked for public launch",
+        "lua_modules/share/lua/5.4/fathom/init.lua: Lua/LuaRocks local artifacts must not be tracked for public launch",
+        "fathom-1.0-1.src.rock: Lua/LuaRocks local artifacts must not be tracked for public launch",
+        "fathom-1.0-1.macosx-aarch64.rock: Lua/LuaRocks local artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Lua/LuaRocks artifacts")
+    allowed_lua_luarocks_artifact_gitignore = "\n".join(sorted(required_lua_luarocks_artifact_gitignore_patterns)) + "\n"
+    if gitignore_lua_luarocks_artifact_failures(allowed_lua_luarocks_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Lua/LuaRocks artifact ignore patterns")
+    lua_luarocks_artifact_gitignore_failures = gitignore_lua_luarocks_artifact_failures(
+        allowed_lua_luarocks_artifact_gitignore.replace("/lua_modules/\n", "")
+    )
+    if lua_luarocks_artifact_gitignore_failures != [
+        ".gitignore: missing local Lua/LuaRocks artifact ignore patterns: /lua_modules/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Lua/LuaRocks artifact ignore patterns")
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(
         tracked_paths=[
             "frontend/node_modules/.package-lock.json",
@@ -4935,6 +5006,7 @@ failures.extend(gitignore_kotlin_artifact_failures())
 failures.extend(gitignore_scala_build_artifact_failures())
 failures.extend(gitignore_haskell_build_artifact_failures())
 failures.extend(gitignore_ocaml_opam_artifact_failures())
+failures.extend(gitignore_lua_luarocks_artifact_failures())
 failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_temp_artifact_failures())
@@ -4959,6 +5031,7 @@ failures.extend(tracked_kotlin_artifact_file_failures())
 failures.extend(tracked_scala_build_artifact_file_failures())
 failures.extend(tracked_haskell_build_artifact_file_failures())
 failures.extend(tracked_ocaml_opam_artifact_file_failures())
+failures.extend(tracked_lua_luarocks_artifact_file_failures())
 failures.extend(tracked_frontend_artifact_file_failures())
 failures.extend(tracked_local_cache_artifact_file_failures())
 failures.extend(tracked_temp_artifact_file_failures())
