@@ -655,6 +655,7 @@ required_frontend_artifact_gitignore_patterns = {
     ".npm/",
     ".nuxt/",
     ".output/",
+    ".next/",
     ".parcel-cache/",
     ".pnpm-store/",
     ".svelte-kit/",
@@ -4330,6 +4331,7 @@ def self_test():
             "frontend/build/assets/app.js",
             "frontend/storybook-static/index.html",
             "frontend/coverage/lcov.info",
+            ".next/server/app.js",
             "frontend/.next/server/app.js",
             "frontend/.svelte-kit/output/server/index.js",
             "frontend/.nuxt/dist/server/server.mjs",
@@ -4396,6 +4398,7 @@ def self_test():
         "frontend/build/assets/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/storybook-static/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/coverage/lcov.info: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.svelte-kit/output/server/index.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.nuxt/dist/server/server.mjs: frontend/Node cache/build artifacts must not be tracked for public launch",
@@ -4429,10 +4432,10 @@ def self_test():
     if gitignore_frontend_artifact_failures(allowed_frontend_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local frontend/Node cache/build artifact ignore patterns")
     frontend_artifact_gitignore_failures = gitignore_frontend_artifact_failures(
-        allowed_frontend_artifact_gitignore.replace("frontend/.vitest/\n", "")
+        allowed_frontend_artifact_gitignore.replace("\n.next/\n", "\n")
     )
     if frontend_artifact_gitignore_failures != [
-        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: frontend/.vitest/"
+        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: .next/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local frontend/Node cache/build artifact ignore patterns")
     local_cache_artifact_failures = tracked_local_cache_artifact_file_failures(

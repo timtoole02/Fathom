@@ -62,6 +62,7 @@ node_modules/
 .deno/
 deno-dir/
 .angular/cache/
+.next/
 .npm/
 .nuxt/
 .output/
