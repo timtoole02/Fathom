@@ -1084,6 +1084,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Julia depot/preference artifact guard also rejects tracked local Julia depot, preference, coverage, and allocation artifacts",
+        "launch checklist Julia artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
         "matching root `.gitignore` coverage",
         "launch checklist PHP Composer artifact ignore scope",
     )
@@ -1697,6 +1702,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local R/RStudio artifacts",
         "launch evidence R/RStudio artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Julia depot/preference artifact guard",
+        "launch evidence Julia artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Julia depot/preference artifacts such as `.julia/`, `LocalPreferences.toml`, `*.jl.cov`, and `*.jl.mem`",
+        "launch evidence Julia artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Julia depot/preference artifacts",
+        "launch evidence Julia artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, and Julia source files",
+        "launch evidence Julia source allowance",
     )
     assert_contains(
         evidence_text,

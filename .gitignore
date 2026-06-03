@@ -201,6 +201,12 @@ composer.phar
 .RData
 .Ruserdata
 
+# Local Julia depot/preference artifacts
+/.julia/
+LocalPreferences.toml
+*.jl.cov
+*.jl.mem
+
 # Local Go cache/test artifacts
 /.gocache/
 /.gomodcache/

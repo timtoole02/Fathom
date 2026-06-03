@@ -563,6 +563,12 @@ required_r_artifact_gitignore_patterns = {
     ".Rhistory",
     ".Ruserdata",
 }
+required_julia_artifact_gitignore_patterns = {
+    "/.julia/",
+    "*.jl.cov",
+    "*.jl.mem",
+    "LocalPreferences.toml",
+}
 required_go_artifact_gitignore_patterns = {
     "/.gocache/",
     "/.gomodcache/",
@@ -828,6 +834,16 @@ blocked_tracked_r_artifact_filenames = {
     ".RData",
     ".Rhistory",
     ".Ruserdata",
+}
+blocked_tracked_julia_artifact_dirs = {
+    ".julia",
+}
+blocked_tracked_julia_artifact_filenames = {
+    "LocalPreferences.toml",
+}
+blocked_tracked_julia_artifact_suffixes = {
+    ".jl.cov",
+    ".jl.mem",
 }
 blocked_tracked_go_artifact_dirs = {
     ".gocache",
@@ -2006,6 +2022,22 @@ def gitignore_r_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local R/RStudio artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_julia_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Julia depot/preference artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_julia_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Julia depot/preference artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_go_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2369,6 +2401,22 @@ def tracked_r_artifact_file_failures(tracked_paths=None):
             continue
         if path.name in blocked_tracked_r_artifact_filenames:
             failures.append(f"{rel}: R/RStudio local artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_julia_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_julia_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Julia depot/preference artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_julia_artifact_filenames:
+            failures.append(f"{rel}: Julia depot/preference artifacts must not be tracked for public launch")
+            continue
+        if any(rel.endswith(suffix) for suffix in blocked_tracked_julia_artifact_suffixes):
+            failures.append(f"{rel}: Julia depot/preference artifacts must not be tracked for public launch")
     return failures
 
 def tracked_go_artifact_file_failures(tracked_paths=None):
@@ -3558,6 +3606,38 @@ def self_test():
         ".gitignore: missing local R/RStudio artifact ignore patterns: /renv/library/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local R/RStudio artifact ignore patterns")
+    julia_artifact_failures = tracked_julia_artifact_file_failures(
+        tracked_paths=[
+            ".julia/compiled/v1.11/Fathom/jl_ABC123.so",
+            ".julia/artifacts/0123456789abcdef/bin/helper",
+            "LocalPreferences.toml",
+            "src/Fathom.jl.cov",
+            "src/Fathom.jl.mem",
+            "Project.toml",
+            "Manifest.toml",
+            "Artifacts.toml",
+            "src/Fathom.jl",
+            "docs/julia-build.md",
+        ],
+    )
+    if julia_artifact_failures != [
+        ".julia/compiled/v1.11/Fathom/jl_ABC123.so: Julia depot/preference artifacts must not be tracked for public launch",
+        ".julia/artifacts/0123456789abcdef/bin/helper: Julia depot/preference artifacts must not be tracked for public launch",
+        "LocalPreferences.toml: Julia depot/preference artifacts must not be tracked for public launch",
+        "src/Fathom.jl.cov: Julia depot/preference artifacts must not be tracked for public launch",
+        "src/Fathom.jl.mem: Julia depot/preference artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Julia depot/preference artifacts")
+    allowed_julia_artifact_gitignore = "\n".join(sorted(required_julia_artifact_gitignore_patterns)) + "\n"
+    if gitignore_julia_artifact_failures(allowed_julia_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Julia depot/preference artifact ignore patterns")
+    julia_artifact_gitignore_failures = gitignore_julia_artifact_failures(
+        allowed_julia_artifact_gitignore.replace("/.julia/\n", "")
+    )
+    if julia_artifact_gitignore_failures != [
+        ".gitignore: missing local Julia depot/preference artifact ignore patterns: /.julia/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Julia depot/preference artifact ignore patterns")
     go_artifact_failures = tracked_go_artifact_file_failures(
         tracked_paths=[
             ".gocache/00/abcdef-a",
@@ -4845,6 +4925,7 @@ failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_ruby_bundle_artifact_failures())
 failures.extend(gitignore_php_composer_artifact_failures())
 failures.extend(gitignore_r_artifact_failures())
+failures.extend(gitignore_julia_artifact_failures())
 failures.extend(gitignore_go_artifact_failures())
 failures.extend(gitignore_elixir_mix_artifact_failures())
 failures.extend(gitignore_jvm_dependency_artifact_failures())
@@ -4868,6 +4949,7 @@ failures.extend(tracked_python_env_artifact_file_failures())
 failures.extend(tracked_ruby_bundle_artifact_file_failures())
 failures.extend(tracked_php_composer_artifact_file_failures())
 failures.extend(tracked_r_artifact_file_failures())
+failures.extend(tracked_julia_artifact_file_failures())
 failures.extend(tracked_go_artifact_file_failures())
 failures.extend(tracked_elixir_mix_artifact_file_failures())
 failures.extend(tracked_jvm_dependency_artifact_file_failures())
