@@ -648,12 +648,16 @@ required_lua_luarocks_artifact_gitignore_patterns = {
     "*.rock",
 }
 required_frontend_artifact_gitignore_patterns = {
+    ".angular/cache/",
     ".bun/",
     ".deno/",
     ".eslintcache",
     ".npm/",
+    ".nuxt/",
+    ".output/",
     ".parcel-cache/",
     ".pnpm-store/",
+    ".svelte-kit/",
     ".stylelintcache",
     ".turbo/",
     ".vitest/",
@@ -667,7 +671,10 @@ required_frontend_artifact_gitignore_patterns = {
     "coverage/",
     "deno-dir/",
     "dist/",
+    "frontend/.angular/cache/",
     "frontend/.deno/",
+    "frontend/.nuxt/",
+    "frontend/.output/",
     "frontend/.next/",
     "frontend/.npm/",
     "frontend/.pnpm-store/",
@@ -682,6 +689,7 @@ required_frontend_artifact_gitignore_patterns = {
     "frontend/deno-dir/",
     "frontend/dist/",
     "frontend/storybook-static/",
+    "frontend/.svelte-kit/",
     "frontend/node_modules/",
     "frontend/.eslintcache",
     "frontend/.bun/",
@@ -997,9 +1005,12 @@ blocked_tracked_frontend_artifact_dirs = {
     ".bun",
     ".deno",
     ".npm",
+    ".nuxt",
+    ".output",
     ".next",
     ".parcel-cache",
     ".pnpm-store",
+    ".svelte-kit",
     ".turbo",
     ".vite",
     ".vitest",
@@ -2776,6 +2787,9 @@ def tracked_frontend_artifact_file_failures(tracked_paths=None):
         if ".yarn" in path.parts and path.name in blocked_tracked_frontend_yarn_artifact_filenames:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
             continue
+        if any(tuple(path.parts[index : index + 2]) == (".angular", "cache") for index in range(len(path.parts) - 1)):
+            failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
+            continue
         if path.parts and path.parts[0] in blocked_tracked_root_frontend_build_dirs:
             failures.append(f"{rel}: frontend/Node cache/build artifacts must not be tracked for public launch")
             continue
@@ -4317,6 +4331,14 @@ def self_test():
             "frontend/storybook-static/index.html",
             "frontend/coverage/lcov.info",
             "frontend/.next/server/app.js",
+            "frontend/.svelte-kit/output/server/index.js",
+            "frontend/.nuxt/dist/server/server.mjs",
+            "frontend/.output/server/index.mjs",
+            "frontend/.angular/cache/18.2.0/app/vite/deps/chunk.js",
+            ".svelte-kit/output/client/app.js",
+            ".nuxt/dist/client/app.js",
+            ".output/public/index.html",
+            ".angular/cache/18.2.0/fathom/vite/deps/chunk.js",
             "frontend/.vite/deps/react.js",
             "frontend/.vitest/cache/results.json",
             ".turbo/cache/build.log",
@@ -4375,6 +4397,14 @@ def self_test():
         "frontend/storybook-static/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/coverage/lcov.info: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.svelte-kit/output/server/index.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.nuxt/dist/server/server.mjs: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.output/server/index.mjs: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.angular/cache/18.2.0/app/vite/deps/chunk.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".svelte-kit/output/client/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".nuxt/dist/client/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".output/public/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".angular/cache/18.2.0/fathom/vite/deps/chunk.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.vite/deps/react.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.vitest/cache/results.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".turbo/cache/build.log: frontend/Node cache/build artifacts must not be tracked for public launch",

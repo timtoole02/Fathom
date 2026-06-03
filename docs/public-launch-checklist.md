@@ -106,6 +106,8 @@ Review `summary.md` first, then `summary.json` and the named JSON artifacts. Kee
 
 It also blocks tracked Deno local cache artifacts such as `.deno/` and `deno-dir/`, with matching root `.gitignore` coverage for local Deno cache artifacts. It does not treat source-of-truth Deno project files such as `deno.json`, `deno.jsonc`, `deno.lock`, JavaScript files, and TypeScript files as local tool artifacts.
 
+It also blocks tracked local frontend framework caches and build outputs such as SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories, with matching root `.gitignore` coverage.
+
 It also blocks tracked local documentation build artifacts such as LaTeX auxiliary files (`*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`) and `_minted-*` caches, with matching root `.gitignore` coverage for local documentation build artifacts. It intentionally does not block all PDFs because some PDFs can be source-of-truth public docs rather than rebuildable local output.
 
 It also blocks tracked local JVM dependency artifacts such as `.m2/`, with matching root `.gitignore` coverage for local JVM dependency artifacts.

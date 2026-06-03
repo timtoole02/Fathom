@@ -1048,6 +1048,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories",
+        "launch checklist frontend framework artifact scope",
+    )
+    assert_contains(
+        launch_text,
         "Deno local cache artifacts such as `.deno/` and `deno-dir/`",
         "launch checklist Deno artifact scope",
     )
@@ -1607,6 +1612,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Storybook static build output",
         "launch evidence Storybook frontend artifact scope",
+    )
+    assert_contains(
+        evidence_text,
+        "SvelteKit/Nuxt/Angular framework cache/build outputs such as `.svelte-kit/`, `.nuxt/`, `.output/`, and `.angular/cache/`",
+        "launch evidence frontend framework artifact scope",
     )
     assert_contains(
         evidence_text,
