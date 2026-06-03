@@ -596,6 +596,7 @@ required_frontend_artifact_gitignore_patterns = {
     "frontend/build/",
     "frontend/coverage/",
     "frontend/dist/",
+    "frontend/storybook-static/",
     "frontend/node_modules/",
     "frontend/.eslintcache",
     "frontend/.bun/",
@@ -605,6 +606,7 @@ required_frontend_artifact_gitignore_patterns = {
     "node_modules/",
     "npm-debug.log",
     "pnpm-debug.log",
+    "/storybook-static/",
     "vite.config.*.timestamp-*",
     "vitest.config.*.timestamp-*",
     "yarn-debug.log",
@@ -845,10 +847,12 @@ blocked_tracked_frontend_yarn_artifact_filenames = {
 blocked_tracked_frontend_build_dirs = {
     "build",
     "dist",
+    "storybook-static",
 }
 blocked_tracked_root_frontend_build_dirs = {
     "build",
     "dist",
+    "storybook-static",
 }
 blocked_tracked_frontend_artifact_filenames = {
     ".eslintcache",
@@ -3410,8 +3414,10 @@ def self_test():
             "frontend/.yarn/install-state.gz",
             "dist/index.html",
             "build/assets/app.js",
+            "storybook-static/index.html",
             "frontend/dist/index.html",
             "frontend/build/assets/app.js",
+            "frontend/storybook-static/index.html",
             "frontend/coverage/lcov.info",
             "frontend/.next/server/app.js",
             "frontend/.vite/deps/react.js",
@@ -3458,8 +3464,10 @@ def self_test():
         "frontend/.yarn/install-state.gz: frontend/Node cache/build artifacts must not be tracked for public launch",
         "dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "build/assets/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "storybook-static/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/build/assets/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/storybook-static/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/coverage/lcov.info: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.vite/deps/react.js: frontend/Node cache/build artifacts must not be tracked for public launch",
