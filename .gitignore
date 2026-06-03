@@ -56,6 +56,7 @@ frontend/dist/
 frontend/build/
 frontend/storybook-static/
 frontend/coverage/
+frontend/.metro-cache/
 frontend/.next/
 frontend/.vite/
 node_modules/
@@ -87,6 +88,7 @@ docs/resources/_gen/
 coverage/
 .turbo/
 .parcel-cache/
+.metro-cache/
 .cache/
 .vitest/
 .vitepress/cache/

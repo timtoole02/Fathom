@@ -1066,8 +1066,13 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "Astro `.astro/`, Docusaurus `.docusaurus/`, Hugo `resources/_gen/` and `.hugo_build.lock`, Jekyll `_site/`, `.jekyll-cache/`, and `.sass-cache/`, VitePress `.vitepress/cache/` and `.vitepress/dist/`, Next.js `.next/`, SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories",
+        "Astro `.astro/`, Docusaurus `.docusaurus/`, Hugo `resources/_gen/` and `.hugo_build.lock`, Jekyll `_site/`, `.jekyll-cache/`, and `.sass-cache/`, VitePress `.vitepress/cache/` and `.vitepress/dist/`, Metro `.metro-cache/`, Next.js `.next/`, SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories",
         "launch checklist frontend framework artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Metro configuration such as `metro.config.js`",
+        "launch checklist Metro source allowance",
     )
     assert_contains(
         launch_text,
@@ -1633,8 +1638,13 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "Astro/Docusaurus/Hugo/Jekyll/VitePress/Next.js/SvelteKit/Nuxt/Angular framework cache/build outputs such as `.astro/`, `.docusaurus/`, `resources/_gen/`, `.hugo_build.lock`, `_site/`, `.jekyll-cache/`, `.sass-cache/`, `.vitepress/cache/`, `.vitepress/dist/`, `.next/`, `.svelte-kit/`, `.nuxt/`, `.output/`, and `.angular/cache/`",
+        "Astro/Docusaurus/Hugo/Jekyll/VitePress/Metro/Next.js/SvelteKit/Nuxt/Angular framework cache/build outputs such as `.astro/`, `.docusaurus/`, `resources/_gen/`, `.hugo_build.lock`, `_site/`, `.jekyll-cache/`, `.sass-cache/`, `.vitepress/cache/`, `.vitepress/dist/`, `.metro-cache/`, `.next/`, `.svelte-kit/`, `.nuxt/`, `.output/`, and `.angular/cache/`",
         "launch evidence frontend framework artifact scope",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Metro configuration such as `metro.config.js`",
+        "launch evidence Metro source allowance",
     )
     assert_contains(
         evidence_text,
