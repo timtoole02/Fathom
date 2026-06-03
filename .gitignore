@@ -442,6 +442,8 @@ compose.override.yaml
 /.expo/
 /.expo-shared/
 /.externalNativeBuild/
+/Carthage/Build/
+/Carthage/Checkouts/
 /DerivedData/
 /.gradle/
 /Pods/

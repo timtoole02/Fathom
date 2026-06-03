@@ -128,6 +128,8 @@ It also blocks tracked Android native build intermediates such as `.cxx/` and `.
 
 It also blocks tracked CocoaPods dependency outputs such as root `Pods/` and `ios/Pods/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth CocoaPods files such as `Podfile` or `Podfile.lock` as local tool artifacts.
 
+It also blocks tracked Carthage dependency outputs such as `Carthage/Build/` and `Carthage/Checkouts/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth Carthage files such as `Cartfile` or `Cartfile.resolved` as local tool artifacts.
+
 It also blocks tracked local Bazel output symlinks/directories such as `bazel-bin/`, `bazel-out/`, `bazel-testlogs/`, and root `bazel-*` outputs, with matching root `.gitignore` coverage for local Bazel build artifacts. It does not treat source-of-truth Bazel files such as `BUILD`, `BUILD.bazel`, `MODULE.bazel`, or `.bzl` files as build artifacts.
 
 For Yarn lockfiles, local `portal:` dependencies and local `patch:` references count as local/private dependency sources.

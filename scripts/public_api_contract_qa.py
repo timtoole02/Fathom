@@ -990,6 +990,8 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "source-of-truth Android Gradle project files, JNI/C++ source files, or checked-in native build configuration", "launch checklist Android native source allowance")
     assert_contains(launch_text, "CocoaPods dependency outputs such as root `Pods/` and `ios/Pods/`", "launch checklist CocoaPods dependency output scope")
     assert_contains(launch_text, "source-of-truth CocoaPods files such as `Podfile` or `Podfile.lock`", "launch checklist CocoaPods source allowance")
+    assert_contains(launch_text, "Carthage dependency outputs such as `Carthage/Build/` and `Carthage/Checkouts/`", "launch checklist Carthage dependency output scope")
+    assert_contains(launch_text, "source-of-truth Carthage files such as `Cartfile` or `Cartfile.resolved`", "launch checklist Carthage source allowance")
     assert_contains(
         launch_text,
         "tracked local mobile/Xcode/Android signing/provisioning artifacts",
@@ -2188,6 +2190,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "source-file allowances for `Podfile` and `Podfile.lock`",
         "launch evidence CocoaPods source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Carthage dependency output guard for `Carthage/Build/` and `Carthage/Checkouts/`",
+        "launch evidence Carthage dependency output scope",
+    )
+    assert_contains(
+        evidence_text,
+        "source-file allowances for `Cartfile` and `Cartfile.resolved`",
+        "launch evidence Carthage source allowance",
     )
     assert_contains(
         evidence_text,
