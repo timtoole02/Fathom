@@ -1059,6 +1059,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, `.shadow-cljs/`, and `.nrepl-port`",
+        "launch checklist Clojure/Leiningen artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local Clojure/Leiningen artifacts",
+        "launch checklist Clojure/Leiningen artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Clojure files such as `project.clj`, `deps.edn`, `bb.edn`, `shadow-cljs.edn`, or Clojure/ClojureScript source files",
+        "launch checklist Clojure/Leiningen source allowance",
+    )
+    assert_contains(
+        launch_text,
         "Go cache/test artifact guard also rejects tracked local generated outputs",
         "launch checklist Go artifact risk-scan scope",
     )
@@ -1922,6 +1937,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
         "launch evidence Kotlin/Kotlin Native artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Clojure/Leiningen local artifact guard",
+        "launch evidence Clojure/Leiningen artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local artifacts such as `.lein/`, `.cpcache/`, `.shadow-cljs/`, and `.nrepl-port`",
+        "launch evidence Clojure/Leiningen artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Clojure/Leiningen artifacts",
+        "launch evidence Clojure/Leiningen artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Clojure files such as `project.clj`, `deps.edn`, `bb.edn`, `shadow-cljs.edn`, and Clojure/ClojureScript source files",
+        "launch evidence Clojure/Leiningen source allowance",
     )
     assert_contains(
         evidence_text,

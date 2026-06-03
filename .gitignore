@@ -215,6 +215,12 @@ deps/
 # Local JVM dependency artifacts
 /.m2/
 
+# Local Clojure/Leiningen artifacts
+/.lein/
+/.cpcache/
+/.shadow-cljs/
+.nrepl-port
+
 # Local Kotlin/Kotlin Native artifacts
 /.kotlin/
 /.konan/
