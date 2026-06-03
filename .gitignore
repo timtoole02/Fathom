@@ -216,6 +216,12 @@ deps/
 /.metals/
 /.scala-build/
 
+# Local Haskell Stack/Cabal build artifacts
+/.stack-work/
+/dist-newstyle/
+/.cabal-sandbox/
+/cabal.sandbox.config
+
 # Local test report artifacts
 /playwright-report/
 /blob-report/

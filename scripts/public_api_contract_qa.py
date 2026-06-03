@@ -1079,6 +1079,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Haskell Stack/Cabal build artifact guard also rejects tracked local build outputs",
+        "launch checklist Haskell Stack/Cabal artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Haskell files",
+        "launch checklist Haskell Stack/Cabal source-file allowance scope",
+    )
+    assert_contains(
+        launch_text,
         "tracked local Elixir/Mix build/dependency artifacts",
         "launch checklist Elixir/Mix artifact risk-scan scope",
     )
@@ -1152,6 +1162,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "production-readiness/legal-license public overclaim examples",
         "launch evidence production/legal overclaim self-test proof",
+    )
+    assert_contains(
+        evidence_text,
+        "Haskell Stack/Cabal local build artifact guard",
+        "launch evidence Haskell Stack/Cabal artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root `.gitignore` coverage for local Haskell Stack/Cabal build artifacts",
+        "launch evidence Haskell Stack/Cabal artifact ignore scope",
     )
     assert_contains(
         evidence_text,
