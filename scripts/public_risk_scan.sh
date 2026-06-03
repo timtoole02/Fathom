@@ -653,6 +653,7 @@ required_frontend_artifact_gitignore_patterns = {
     ".bun/",
     ".deno/",
     ".docusaurus/",
+    ".hugo_build.lock",
     ".eslintcache",
     ".jekyll-cache/",
     ".npm/",
@@ -706,10 +707,12 @@ required_frontend_artifact_gitignore_patterns = {
     ".vitepress/dist/",
     "docs/.vitepress/cache/",
     "docs/.vitepress/dist/",
+    "docs/resources/_gen/",
     "node_modules/",
     "_site/",
     "npm-debug.log",
     "pnpm-debug.log",
+    "resources/_gen/",
     "/storybook-static/",
     "vite.config.*.timestamp-*",
     "vitest.config.*.timestamp-*",
@@ -1053,6 +1056,7 @@ blocked_tracked_root_frontend_build_dirs = {
     "storybook-static",
 }
 blocked_tracked_frontend_artifact_filenames = {
+    ".hugo_build.lock",
     ".eslintcache",
     ".stylelintcache",
     "bun-debug.log",
@@ -1068,6 +1072,7 @@ blocked_tracked_frontend_artifact_filename_patterns = {
 blocked_tracked_frontend_nested_build_dirs = {
     (".vitepress", "cache"),
     (".vitepress", "dist"),
+    ("resources", "_gen"),
 }
 blocked_tracked_frontend_artifact_suffixes = {
     ".tsbuildinfo",
@@ -4364,6 +4369,9 @@ def self_test():
             "docs/_site/index.html",
             ".jekyll-cache/Jekyll/Cache/site",
             ".sass-cache/main.scssc",
+            "resources/_gen/assets/scss/main.css",
+            "docs/resources/_gen/images/logo.png",
+            ".hugo_build.lock",
             ".vitepress/cache/deps/app.js",
             "docs/.vitepress/dist/index.html",
             ".next/server/app.js",
@@ -4441,6 +4449,9 @@ def self_test():
         "docs/_site/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".jekyll-cache/Jekyll/Cache/site: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".sass-cache/main.scssc: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "resources/_gen/assets/scss/main.css: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "docs/resources/_gen/images/logo.png: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".hugo_build.lock: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".vitepress/cache/deps/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",
         "docs/.vitepress/dist/index.html: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".next/server/app.js: frontend/Node cache/build artifacts must not be tracked for public launch",

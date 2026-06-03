@@ -65,6 +65,7 @@ deno-dir/
 .docusaurus/
 .jekyll-cache/
 .sass-cache/
+.hugo_build.lock
 .angular/cache/
 .astro/
 .next/
@@ -80,6 +81,8 @@ deno-dir/
 dist/
 build/
 _site/
+resources/_gen/
+docs/resources/_gen/
 /storybook-static/
 coverage/
 .turbo/
