@@ -472,6 +472,7 @@ required_native_build_artifact_gitignore_patterns = {
     "/CMakeFiles/",
     "**/CMakeFiles/",
     "**/Testing/Temporary/",
+    "**/_CPack_Packages/",
     "/cmake-build-*/",
     ".ninja_deps",
     ".ninja_log",
@@ -1150,6 +1151,7 @@ blocked_tracked_rust_artifact_suffixes = {
 }
 blocked_tracked_native_build_artifact_dirs = {
     "CMakeFiles",
+    "_CPack_Packages",
 }
 blocked_tracked_native_build_artifact_nested_dirs = {
     ("Testing", "Temporary"),
@@ -4866,6 +4868,8 @@ def self_test():
             "native/CMakeFiles/rules.ninja",
             "Testing/Temporary/LastTest.log",
             "native/Testing/Temporary/CTestCostData.txt",
+            "_CPack_Packages/Darwin/TGZ/fathom.tar.gz",
+            "native/_CPack_Packages/Linux/DEB/fathom.deb",
             "DartConfiguration.tcl",
             "native/CTestTestfile.cmake",
             ".ninja_deps",
@@ -4889,6 +4893,8 @@ def self_test():
         "native/CMakeFiles/rules.ninja: native/CMake build artifacts must not be tracked for public launch",
         "Testing/Temporary/LastTest.log: native/CMake build artifacts must not be tracked for public launch",
         "native/Testing/Temporary/CTestCostData.txt: native/CMake build artifacts must not be tracked for public launch",
+        "_CPack_Packages/Darwin/TGZ/fathom.tar.gz: native/CMake build artifacts must not be tracked for public launch",
+        "native/_CPack_Packages/Linux/DEB/fathom.deb: native/CMake build artifacts must not be tracked for public launch",
         "DartConfiguration.tcl: native/CMake build artifacts must not be tracked for public launch",
         "native/CTestTestfile.cmake: native/CMake build artifacts must not be tracked for public launch",
         ".ninja_deps: native/CMake build artifacts must not be tracked for public launch",
@@ -4906,10 +4912,10 @@ def self_test():
     if gitignore_native_build_artifact_failures(allowed_native_build_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local native/CMake build artifact ignore patterns")
     native_build_artifact_gitignore_failures = gitignore_native_build_artifact_failures(
-        allowed_native_build_artifact_gitignore.replace("DartConfiguration.tcl\n", "")
+        allowed_native_build_artifact_gitignore.replace("**/_CPack_Packages/\n", "")
     )
     if native_build_artifact_gitignore_failures != [
-        ".gitignore: missing local native/CMake build artifact ignore patterns: DartConfiguration.tcl"
+        ".gitignore: missing local native/CMake build artifact ignore patterns: **/_CPack_Packages/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local native/CMake build artifact ignore patterns")
     meson_build_artifact_failures = tracked_meson_build_artifact_file_failures(

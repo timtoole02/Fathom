@@ -11,6 +11,7 @@ target/
 /CMakeFiles/
 **/CMakeFiles/
 **/Testing/Temporary/
+**/_CPack_Packages/
 DartConfiguration.tcl
 CMakeCache.txt
 CMakeUserPresets.json
