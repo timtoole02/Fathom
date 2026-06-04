@@ -156,7 +156,7 @@ The Gradle/JVM build artifact guard also rejects tracked local Gradle cache/stat
 
 The Kotlin/Kotlin Native compiler artifact guard also rejects tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/` at any tree depth, with matching root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts. It does not treat source-of-truth Kotlin files such as `build.gradle.kts`, `settings.gradle.kts`, Kotlin source files, or Gradle version catalog files as local tool artifacts.
 
-The Scala/SBT build artifact guard also rejects tracked local Scala build server/IDE outputs such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/`, with matching root `.gitignore` coverage. It does not treat source-of-truth Scala/SBT files such as `build.sbt`, `project/build.properties`, or Scala source files as local tool artifacts.
+The Scala/SBT build artifact guard also rejects tracked local Scala build server/IDE outputs such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/` at any tree depth, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Scala/SBT files such as `build.sbt`, `project/build.properties`, or Scala source files as local tool artifacts.
 
 The Haskell Stack/Cabal build artifact guard also rejects tracked local build outputs such as `.stack-work/`, `dist-newstyle/`, `.cabal-sandbox/`, and `cabal.sandbox.config`, with matching root `.gitignore` coverage. It does not treat source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, or Haskell source files as local tool artifacts.
 

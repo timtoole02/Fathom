@@ -675,6 +675,10 @@ required_scala_build_artifact_gitignore_patterns = {
     "/.bsp/",
     "/.metals/",
     "/.scala-build/",
+    ".bloop/",
+    ".bsp/",
+    ".metals/",
+    ".scala-build/",
 }
 required_haskell_build_artifact_gitignore_patterns = {
     "/.cabal-sandbox/",
@@ -4387,6 +4391,10 @@ def self_test():
             ".bsp/sbt.json",
             ".metals/metals.h2.db",
             ".scala-build/fathom/project.json",
+            "examples/scala/.bloop/fathom/bloop-internal-classes/main/Fathom.class",
+            "examples/scala/.bsp/sbt.json",
+            "examples/scala/.metals/metals.h2.db",
+            "examples/scala/.scala-build/fathom/project.json",
             "build.sbt",
             "project/build.properties",
             "src/main/scala/Fathom.scala",
@@ -4398,16 +4406,20 @@ def self_test():
         ".bsp/sbt.json: Scala/SBT build artifacts must not be tracked for public launch",
         ".metals/metals.h2.db: Scala/SBT build artifacts must not be tracked for public launch",
         ".scala-build/fathom/project.json: Scala/SBT build artifacts must not be tracked for public launch",
+        "examples/scala/.bloop/fathom/bloop-internal-classes/main/Fathom.class: Scala/SBT build artifacts must not be tracked for public launch",
+        "examples/scala/.bsp/sbt.json: Scala/SBT build artifacts must not be tracked for public launch",
+        "examples/scala/.metals/metals.h2.db: Scala/SBT build artifacts must not be tracked for public launch",
+        "examples/scala/.scala-build/fathom/project.json: Scala/SBT build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Scala/SBT build artifacts")
     allowed_scala_build_artifact_gitignore = "\n".join(sorted(required_scala_build_artifact_gitignore_patterns)) + "\n"
     if gitignore_scala_build_artifact_failures(allowed_scala_build_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Scala/SBT build artifact ignore patterns")
     scala_build_artifact_gitignore_failures = gitignore_scala_build_artifact_failures(
-        allowed_scala_build_artifact_gitignore.replace("/.metals/\n", "")
+        allowed_scala_build_artifact_gitignore.replace(".metals/\n", "", 1)
     )
     if scala_build_artifact_gitignore_failures != [
-        ".gitignore: missing local Scala/SBT build artifact ignore patterns: /.metals/"
+        ".gitignore: missing local Scala/SBT build artifact ignore patterns: .metals/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Scala/SBT build artifact ignore patterns")
     haskell_build_artifact_failures = tracked_haskell_build_artifact_file_failures(

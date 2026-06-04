@@ -323,9 +323,13 @@ project.nuget.cache
 
 # Local Scala/SBT build artifacts
 /.bloop/
+.bloop/
 /.bsp/
+.bsp/
 /.metals/
+.metals/
 /.scala-build/
+.scala-build/
 
 # Local Haskell Stack/Cabal build artifacts
 /.stack-work/

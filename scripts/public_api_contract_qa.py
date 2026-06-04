@@ -1834,12 +1834,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "The Scala/SBT build artifact guard rejects tracked local Scala build server/IDE outputs such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/`",
+        "The Scala/SBT build artifact guard rejects tracked local Scala build server/IDE outputs such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/` at any tree depth",
         "launch evidence Scala/SBT artifact examples",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Scala/SBT build artifacts",
+        "missing root and nested `.gitignore` coverage for local Scala/SBT build artifacts",
         "launch evidence Scala/SBT artifact ignore examples",
     )
     assert_contains(
