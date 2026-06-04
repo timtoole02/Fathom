@@ -5432,6 +5432,12 @@ def self_test():
             ".packages",
             ".flutter-plugins",
             ".flutter-plugins-dependencies",
+            "examples/flutter/.dart_tool/package_config.json",
+            "examples/flutter/.pub-cache/hosted/pub.dev/meta/pubspec.yaml",
+            "examples/flutter/.pub/bin/build_runner",
+            "examples/flutter/.packages",
+            "examples/flutter/.flutter-plugins",
+            "examples/flutter/.flutter-plugins-dependencies",
             "pubspec.yaml",
             "pubspec.lock",
             "lib/main.dart",
@@ -5446,6 +5452,12 @@ def self_test():
         ".packages: local Dart/Flutter artifacts must not be tracked for public launch",
         ".flutter-plugins: local Dart/Flutter artifacts must not be tracked for public launch",
         ".flutter-plugins-dependencies: local Dart/Flutter artifacts must not be tracked for public launch",
+        "examples/flutter/.dart_tool/package_config.json: local Dart/Flutter artifacts must not be tracked for public launch",
+        "examples/flutter/.pub-cache/hosted/pub.dev/meta/pubspec.yaml: local Dart/Flutter artifacts must not be tracked for public launch",
+        "examples/flutter/.pub/bin/build_runner: local Dart/Flutter artifacts must not be tracked for public launch",
+        "examples/flutter/.packages: local Dart/Flutter artifacts must not be tracked for public launch",
+        "examples/flutter/.flutter-plugins: local Dart/Flutter artifacts must not be tracked for public launch",
+        "examples/flutter/.flutter-plugins-dependencies: local Dart/Flutter artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Dart/Flutter artifacts")
     allowed_mobile_build_gitignore = "\n".join(sorted(required_mobile_build_gitignore_patterns)) + "\n"
