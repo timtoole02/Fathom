@@ -655,7 +655,10 @@ required_clojure_artifact_gitignore_patterns = {
     "/.cpcache/",
     "/.lein/",
     "/.shadow-cljs/",
+    ".cpcache/",
+    ".lein/",
     ".nrepl-port",
+    ".shadow-cljs/",
 }
 required_gradle_artifact_gitignore_patterns = {
     "/.gradle/",
@@ -4268,6 +4271,9 @@ def self_test():
             ".lein/profiles.clj",
             ".cpcache/1234567890abcdef.cp",
             ".shadow-cljs/builds/app/release/app.js",
+            "examples/clojure/.lein/profiles.clj",
+            "examples/clojure/.cpcache/1234567890abcdef.cp",
+            "examples/clojure/.shadow-cljs/builds/app/release/app.js",
             ".nrepl-port",
             "project.clj",
             "deps.edn",
@@ -4282,6 +4288,9 @@ def self_test():
         ".lein/profiles.clj: Clojure/Leiningen local artifacts must not be tracked for public launch",
         ".cpcache/1234567890abcdef.cp: Clojure/Leiningen local artifacts must not be tracked for public launch",
         ".shadow-cljs/builds/app/release/app.js: Clojure/Leiningen local artifacts must not be tracked for public launch",
+        "examples/clojure/.lein/profiles.clj: Clojure/Leiningen local artifacts must not be tracked for public launch",
+        "examples/clojure/.cpcache/1234567890abcdef.cp: Clojure/Leiningen local artifacts must not be tracked for public launch",
+        "examples/clojure/.shadow-cljs/builds/app/release/app.js: Clojure/Leiningen local artifacts must not be tracked for public launch",
         ".nrepl-port: Clojure/Leiningen local artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Clojure/Leiningen artifacts")
@@ -4289,10 +4298,10 @@ def self_test():
     if gitignore_clojure_artifact_failures(allowed_clojure_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Clojure/Leiningen artifact ignore patterns")
     clojure_artifact_gitignore_failures = gitignore_clojure_artifact_failures(
-        allowed_clojure_artifact_gitignore.replace("/.shadow-cljs/\n", "")
+        allowed_clojure_artifact_gitignore.replace(".shadow-cljs/\n", "", 1)
     )
     if clojure_artifact_gitignore_failures != [
-        ".gitignore: missing local Clojure/Leiningen artifact ignore patterns: /.shadow-cljs/"
+        ".gitignore: missing local Clojure/Leiningen artifact ignore patterns: .shadow-cljs/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Clojure/Leiningen artifact ignore patterns")
     gradle_artifact_failures = tracked_gradle_artifact_file_failures(

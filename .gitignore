@@ -308,8 +308,11 @@ project.nuget.cache
 
 # Local Clojure/Leiningen artifacts
 /.lein/
+.lein/
 /.cpcache/
+.cpcache/
 /.shadow-cljs/
+.shadow-cljs/
 .nrepl-port
 
 # Local Kotlin/Kotlin Native artifacts

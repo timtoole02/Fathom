@@ -1118,7 +1118,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, `.shadow-cljs/`, and `.nrepl-port`",
+        "tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, and `.shadow-cljs/` at any tree depth, plus `.nrepl-port`",
         "launch checklist Clojure/Leiningen artifact risk-scan scope",
     )
     assert_contains(
@@ -2219,7 +2219,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "local artifacts such as `.lein/`, `.cpcache/`, `.shadow-cljs/`, and `.nrepl-port`",
+        "local artifacts such as `.lein/`, `.cpcache/`, and `.shadow-cljs/` at any tree depth, plus `.nrepl-port`",
         "launch evidence Clojure/Leiningen artifact examples",
     )
     assert_contains(
