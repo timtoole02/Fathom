@@ -126,7 +126,7 @@ It also blocks tracked local Dart/Flutter artifacts such as `.dart_tool/`, `.pub
 
 It also blocks tracked Expo local project state such as `.expo/` and `.expo-shared/` at any tree depth, with matching root and nested `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth mobile app code, Expo config, Android Gradle project files, or iOS Xcode project files as local tool artifacts.
 
-It also blocks tracked Android native build intermediates such as `.cxx/` and `.externalNativeBuild/`, including the same directories under `android/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth Android Gradle project files, JNI/C++ source files, or checked-in native build configuration as local tool artifacts.
+It also blocks tracked Android native build intermediates such as `.cxx/` and `.externalNativeBuild/` at any tree depth, including the same directories under `android/`, with matching root, nested, and `android/` `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth Android Gradle project files, JNI/C++ source files, or checked-in native build configuration as local tool artifacts.
 
 It also blocks tracked CocoaPods dependency outputs such as root `Pods/` and `ios/Pods/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth CocoaPods files such as `Podfile` or `Podfile.lock` as local tool artifacts.
 

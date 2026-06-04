@@ -493,11 +493,13 @@ compose.override.yaml
 
 # Local mobile/Xcode/Android build artifacts
 /.cxx/
+.cxx/
 /.expo/
 .expo/
 /.expo-shared/
 .expo-shared/
 /.externalNativeBuild/
+.externalNativeBuild/
 /Carthage/Build/
 /Carthage/Checkouts/
 /DerivedData/
