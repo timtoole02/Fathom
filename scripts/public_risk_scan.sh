@@ -470,6 +470,7 @@ required_rust_artifact_gitignore_patterns = {
 }
 required_native_build_artifact_gitignore_patterns = {
     "/CMakeFiles/",
+    "**/Testing/Temporary/",
     "/cmake-build-*/",
     ".ninja_deps",
     ".ninja_log",
@@ -1142,6 +1143,9 @@ blocked_tracked_rust_artifact_suffixes = {
 }
 blocked_tracked_native_build_artifact_dirs = {
     "CMakeFiles",
+}
+blocked_tracked_native_build_artifact_nested_dirs = {
+    ("Testing", "Temporary"),
 }
 blocked_tracked_native_build_artifact_filenames = {
     ".ninja_deps",
@@ -2962,6 +2966,12 @@ def tracked_native_build_artifact_file_failures(tracked_paths=None):
             failures.append(f"{rel}: native/CMake build artifacts must not be tracked for public launch")
             continue
         if any(part in blocked_tracked_native_build_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: native/CMake build artifacts must not be tracked for public launch")
+            continue
+        if any(
+            tuple(path.parts[index : index + 2]) in blocked_tracked_native_build_artifact_nested_dirs
+            for index in range(len(path.parts) - 1)
+        ):
             failures.append(f"{rel}: native/CMake build artifacts must not be tracked for public launch")
             continue
         if path.name in blocked_tracked_native_build_artifact_filenames:
@@ -4841,6 +4851,8 @@ def self_test():
             "cmake-build-debug/CMakeCache.txt",
             "CMakeFiles/CMakeOutput.log",
             "native/CMakeFiles/rules.ninja",
+            "Testing/Temporary/LastTest.log",
+            "native/Testing/Temporary/CTestCostData.txt",
             ".ninja_deps",
             "native/.ninja_log",
             "native/CMakeCache.txt",
@@ -4855,6 +4867,8 @@ def self_test():
         "cmake-build-debug/CMakeCache.txt: native/CMake build artifacts must not be tracked for public launch",
         "CMakeFiles/CMakeOutput.log: native/CMake build artifacts must not be tracked for public launch",
         "native/CMakeFiles/rules.ninja: native/CMake build artifacts must not be tracked for public launch",
+        "Testing/Temporary/LastTest.log: native/CMake build artifacts must not be tracked for public launch",
+        "native/Testing/Temporary/CTestCostData.txt: native/CMake build artifacts must not be tracked for public launch",
         ".ninja_deps: native/CMake build artifacts must not be tracked for public launch",
         "native/.ninja_log: native/CMake build artifacts must not be tracked for public launch",
         "native/CMakeCache.txt: native/CMake build artifacts must not be tracked for public launch",
@@ -4866,10 +4880,10 @@ def self_test():
     if gitignore_native_build_artifact_failures(allowed_native_build_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local native/CMake build artifact ignore patterns")
     native_build_artifact_gitignore_failures = gitignore_native_build_artifact_failures(
-        allowed_native_build_artifact_gitignore.replace(".ninja_log\n", "")
+        allowed_native_build_artifact_gitignore.replace("**/Testing/Temporary/\n", "")
     )
     if native_build_artifact_gitignore_failures != [
-        ".gitignore: missing local native/CMake build artifact ignore patterns: .ninja_log"
+        ".gitignore: missing local native/CMake build artifact ignore patterns: **/Testing/Temporary/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local native/CMake build artifact ignore patterns")
     meson_build_artifact_failures = tracked_meson_build_artifact_file_failures(
