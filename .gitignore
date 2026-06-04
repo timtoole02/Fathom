@@ -10,7 +10,9 @@ target/
 /cmake-build-*/
 /CMakeFiles/
 **/Testing/Temporary/
+DartConfiguration.tcl
 CMakeCache.txt
+CTestTestfile.cmake
 cmake_install.cmake
 compile_commands.json
 .ninja_deps
