@@ -124,7 +124,7 @@ It also blocks tracked local Zig build artifacts such as `.zig-cache/`, `zig-cac
 
 It also blocks tracked local Dart/Flutter artifacts such as `.dart_tool/`, `.pub-cache/`, `.pub/`, `.packages`, `.flutter-plugins`, and `.flutter-plugins-dependencies` at any tree depth, with matching `.gitignore` coverage for local Dart/Flutter artifacts. It does not treat source-of-truth Dart/Flutter files such as `pubspec.yaml`, `pubspec.lock`, Dart source, Android Gradle project files, or iOS Xcode project files as local tool artifacts.
 
-It also blocks tracked Expo local project state such as `.expo/` and `.expo-shared/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth mobile app code, Expo config, Android Gradle project files, or iOS Xcode project files as local tool artifacts.
+It also blocks tracked Expo local project state such as `.expo/` and `.expo-shared/` at any tree depth, with matching root and nested `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth mobile app code, Expo config, Android Gradle project files, or iOS Xcode project files as local tool artifacts.
 
 It also blocks tracked Android native build intermediates such as `.cxx/` and `.externalNativeBuild/`, including the same directories under `android/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth Android Gradle project files, JNI/C++ source files, or checked-in native build configuration as local tool artifacts.
 
