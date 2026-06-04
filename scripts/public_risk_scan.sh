@@ -625,6 +625,7 @@ required_elixir_mix_artifact_gitignore_patterns = {
 }
 required_erlang_rebar3_artifact_gitignore_patterns = {
     "/.rebar3/",
+    ".rebar3/",
     "erl_crash.dump",
     "rebar3.crashdump",
 }
@@ -4137,6 +4138,7 @@ def self_test():
         tracked_paths=[
             ".rebar3/cache/hex/default/packages/cowboy-2.10.0.tar",
             ".rebar3/rebar_compiler_erl/state.dag",
+            "apps/api/.rebar3/rebar_compiler_erl/state.dag",
             "rebar3.crashdump",
             "erl_crash.dump",
             "rebar.config",
@@ -4149,6 +4151,7 @@ def self_test():
     if erlang_rebar3_artifact_failures != [
         ".rebar3/cache/hex/default/packages/cowboy-2.10.0.tar: Erlang/Rebar3 local artifacts must not be tracked for public launch",
         ".rebar3/rebar_compiler_erl/state.dag: Erlang/Rebar3 local artifacts must not be tracked for public launch",
+        "apps/api/.rebar3/rebar_compiler_erl/state.dag: Erlang/Rebar3 local artifacts must not be tracked for public launch",
         "rebar3.crashdump: Erlang/Rebar3 local artifacts must not be tracked for public launch",
         "erl_crash.dump: Erlang/Rebar3 local artifacts must not be tracked for public launch",
     ]:
@@ -4157,10 +4160,10 @@ def self_test():
     if gitignore_erlang_rebar3_artifact_failures(allowed_erlang_rebar3_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Erlang/Rebar3 artifact ignore patterns")
     erlang_rebar3_artifact_gitignore_failures = gitignore_erlang_rebar3_artifact_failures(
-        allowed_erlang_rebar3_artifact_gitignore.replace("/.rebar3/\n", "")
+        allowed_erlang_rebar3_artifact_gitignore.replace(".rebar3/\n", "", 1)
     )
     if erlang_rebar3_artifact_gitignore_failures != [
-        ".gitignore: missing local Erlang/Rebar3 artifact ignore patterns: /.rebar3/"
+        ".gitignore: missing local Erlang/Rebar3 artifact ignore patterns: .rebar3/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Erlang/Rebar3 artifact ignore patterns")
     jvm_dependency_artifact_failures = tracked_jvm_dependency_artifact_file_failures(
