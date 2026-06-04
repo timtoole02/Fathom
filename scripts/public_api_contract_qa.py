@@ -2299,8 +2299,13 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local native/CMake build artifacts such as `cmake-build-*`, `CMakeFiles/`, CTest `Testing/Temporary/` output, generated CTest/Dart files such as `CTestTestfile.cmake` and `DartConfiguration.tcl`, `CMakeCache.txt`, `cmake_install.cmake`, `compile_commands.json`, `install_manifest.txt`, and Ninja local state files such as `.ninja_deps` and `.ninja_log`",
+        "tracked local native/CMake build/user-local artifacts such as `cmake-build-*`, `CMakeFiles/`, CTest `Testing/Temporary/` output, generated CTest/Dart files such as `CTestTestfile.cmake` and `DartConfiguration.tcl`, `CMakeCache.txt`, user-local `CMakeUserPresets.json`, `cmake_install.cmake`, `compile_commands.json`, `install_manifest.txt`, and Ninja local state files such as `.ninja_deps` and `.ninja_log`",
         "launch evidence native/CMake artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth CMake files such as `CMakeLists.txt` and `CMakePresets.json`",
+        "launch evidence native/CMake source allowance",
     )
     assert_contains(
         evidence_text,

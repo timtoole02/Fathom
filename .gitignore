@@ -12,6 +12,7 @@ target/
 **/Testing/Temporary/
 DartConfiguration.tcl
 CMakeCache.txt
+CMakeUserPresets.json
 CTestTestfile.cmake
 cmake_install.cmake
 compile_commands.json
