@@ -317,7 +317,9 @@ project.nuget.cache
 
 # Local Kotlin/Kotlin Native artifacts
 /.kotlin/
+.kotlin/
 /.konan/
+.konan/
 
 # Local Scala/SBT build artifacts
 /.bloop/

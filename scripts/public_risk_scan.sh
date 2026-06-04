@@ -667,6 +667,8 @@ required_gradle_artifact_gitignore_patterns = {
 required_kotlin_artifact_gitignore_patterns = {
     "/.kotlin/",
     "/.konan/",
+    ".konan/",
+    ".kotlin/",
 }
 required_scala_build_artifact_gitignore_patterns = {
     "/.bloop/",
@@ -4350,6 +4352,8 @@ def self_test():
             ".kotlin/build/kotlin-daemon/client-is-alive",
             ".konan/cache/linux_x64/stdlib-cache",
             ".konan/kotlin-native-prebuilt-macos-aarch64-2.0.0/bin/konanc",
+            "examples/kotlin/.kotlin/sessions/kotlin-compiler-456.salive",
+            "examples/kotlin/.konan/cache/macos_arm64/stdlib-cache",
             "build.gradle.kts",
             "settings.gradle.kts",
             "src/main/kotlin/Fathom.kt",
@@ -4363,16 +4367,18 @@ def self_test():
         ".kotlin/build/kotlin-daemon/client-is-alive: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
         ".konan/cache/linux_x64/stdlib-cache: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
         ".konan/kotlin-native-prebuilt-macos-aarch64-2.0.0/bin/konanc: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
+        "examples/kotlin/.kotlin/sessions/kotlin-compiler-456.salive: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
+        "examples/kotlin/.konan/cache/macos_arm64/stdlib-cache: Kotlin/Kotlin Native compiler artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Kotlin/Kotlin Native compiler artifacts")
     allowed_kotlin_artifact_gitignore = "\n".join(sorted(required_kotlin_artifact_gitignore_patterns)) + "\n"
     if gitignore_kotlin_artifact_failures(allowed_kotlin_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Kotlin/Kotlin Native artifact ignore patterns")
     kotlin_artifact_gitignore_failures = gitignore_kotlin_artifact_failures(
-        allowed_kotlin_artifact_gitignore.replace("/.konan/\n", "")
+        allowed_kotlin_artifact_gitignore.replace(".konan/\n", "", 1)
     )
     if kotlin_artifact_gitignore_failures != [
-        ".gitignore: missing local Kotlin/Kotlin Native artifact ignore patterns: /.konan/"
+        ".gitignore: missing local Kotlin/Kotlin Native artifact ignore patterns: .konan/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Kotlin/Kotlin Native artifact ignore patterns")
     scala_build_artifact_failures = tracked_scala_build_artifact_file_failures(

@@ -2164,7 +2164,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/`",
+        "tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/` at any tree depth",
         "launch checklist Kotlin/Kotlin Native artifact examples",
     )
     assert_contains(
@@ -2184,7 +2184,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/`",
+        "tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/` at any tree depth",
         "launch evidence Kotlin/Kotlin Native artifact examples",
     )
     assert_contains(

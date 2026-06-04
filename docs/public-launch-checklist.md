@@ -154,7 +154,7 @@ The .NET/NuGet artifact guard also rejects tracked local dependency/build/user-s
 
 The Gradle/JVM build artifact guard also rejects tracked local Gradle cache/state such as `.gradle/` and common Gradle `build/` output subtrees such as `classes/`, `reports/`, `test-results/`, `tmp/`, `generated/`, `intermediates/`, and `libs/`, with matching root `.gitignore` coverage. It does not treat source-of-truth Gradle project files such as `build.gradle`, `settings.gradle`, `gradle.properties`, `gradlew`, or `gradle/wrapper/gradle-wrapper.properties` as build artifacts.
 
-The Kotlin/Kotlin Native compiler artifact guard also rejects tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/`, with matching root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts. It does not treat source-of-truth Kotlin files such as `build.gradle.kts`, `settings.gradle.kts`, Kotlin source files, or Gradle version catalog files as local tool artifacts.
+The Kotlin/Kotlin Native compiler artifact guard also rejects tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/` at any tree depth, with matching root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts. It does not treat source-of-truth Kotlin files such as `build.gradle.kts`, `settings.gradle.kts`, Kotlin source files, or Gradle version catalog files as local tool artifacts.
 
 The Scala/SBT build artifact guard also rejects tracked local Scala build server/IDE outputs such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/`, with matching root `.gitignore` coverage. It does not treat source-of-truth Scala/SBT files such as `build.sbt`, `project/build.properties`, or Scala source files as local tool artifacts.
 
