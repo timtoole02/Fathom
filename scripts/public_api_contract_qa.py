@@ -1864,7 +1864,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local Julia depot/preference artifacts such as `.julia/`, `LocalPreferences.toml`, `*.jl.cov`, and `*.jl.mem`",
+        "tracked local Julia depot/preference artifacts such as `.julia/` at any tree depth, `LocalPreferences.toml`, `*.jl.cov`, and `*.jl.mem`",
         "launch evidence Julia artifact examples",
     )
     assert_contains(

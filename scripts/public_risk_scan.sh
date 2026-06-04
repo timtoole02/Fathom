@@ -605,6 +605,7 @@ required_r_artifact_gitignore_patterns = {
 }
 required_julia_artifact_gitignore_patterns = {
     "/.julia/",
+    ".julia/",
     "*.jl.cov",
     "*.jl.mem",
     "LocalPreferences.toml",
@@ -4041,6 +4042,7 @@ def self_test():
         tracked_paths=[
             ".julia/compiled/v1.11/Fathom/jl_ABC123.so",
             ".julia/artifacts/0123456789abcdef/bin/helper",
+            "analysis/.julia/compiled/v1.11/Fathom/jl_DEF456.so",
             "LocalPreferences.toml",
             "src/Fathom.jl.cov",
             "src/Fathom.jl.mem",
@@ -4054,6 +4056,7 @@ def self_test():
     if julia_artifact_failures != [
         ".julia/compiled/v1.11/Fathom/jl_ABC123.so: Julia depot/preference artifacts must not be tracked for public launch",
         ".julia/artifacts/0123456789abcdef/bin/helper: Julia depot/preference artifacts must not be tracked for public launch",
+        "analysis/.julia/compiled/v1.11/Fathom/jl_DEF456.so: Julia depot/preference artifacts must not be tracked for public launch",
         "LocalPreferences.toml: Julia depot/preference artifacts must not be tracked for public launch",
         "src/Fathom.jl.cov: Julia depot/preference artifacts must not be tracked for public launch",
         "src/Fathom.jl.mem: Julia depot/preference artifacts must not be tracked for public launch",
@@ -4063,10 +4066,10 @@ def self_test():
     if gitignore_julia_artifact_failures(allowed_julia_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Julia depot/preference artifact ignore patterns")
     julia_artifact_gitignore_failures = gitignore_julia_artifact_failures(
-        allowed_julia_artifact_gitignore.replace("/.julia/\n", "")
+        allowed_julia_artifact_gitignore.replace("\n.julia/\n", "\n")
     )
     if julia_artifact_gitignore_failures != [
-        ".gitignore: missing local Julia depot/preference artifact ignore patterns: /.julia/"
+        ".gitignore: missing local Julia depot/preference artifact ignore patterns: .julia/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Julia depot/preference artifact ignore patterns")
     go_artifact_failures = tracked_go_artifact_file_failures(

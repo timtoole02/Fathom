@@ -260,6 +260,7 @@ composer.phar
 
 # Local Julia depot/preference artifacts
 /.julia/
+.julia/
 LocalPreferences.toml
 *.jl.cov
 *.jl.mem
