@@ -34,7 +34,9 @@ meson-private/
 
 # Local Swift Package Manager artifacts
 /.build/
+**/.build/
 /.swiftpm/
+**/.swiftpm/
 
 # Local Zig build artifacts
 /.zig-cache/

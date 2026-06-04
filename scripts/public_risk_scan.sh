@@ -397,7 +397,9 @@ required_buck_artifact_gitignore_patterns = {
 }
 required_swiftpm_artifact_gitignore_patterns = {
     "/.build/",
+    "**/.build/",
     "/.swiftpm/",
+    "**/.swiftpm/",
 }
 required_zig_artifact_gitignore_patterns = {
     "/.zig-cache/",
@@ -5277,23 +5279,28 @@ def self_test():
     if gitignore_swiftpm_artifact_failures(allowed_swiftpm_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Swift Package Manager artifact ignore patterns")
     swiftpm_artifact_gitignore_failures = gitignore_swiftpm_artifact_failures(
-        allowed_swiftpm_artifact_gitignore.replace("/.swiftpm/\n", "")
+        allowed_swiftpm_artifact_gitignore.replace("**/.swiftpm/\n", "")
     )
     if swiftpm_artifact_gitignore_failures != [
-        ".gitignore: missing local Swift Package Manager artifact ignore patterns: /.swiftpm/"
+        ".gitignore: missing local Swift Package Manager artifact ignore patterns: **/.swiftpm/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Swift Package Manager artifact ignore patterns")
     swiftpm_artifact_failures = tracked_swiftpm_artifact_file_failures(
         tracked_paths=[
             ".build/debug/Fathom",
+            "native/.build/debug/Fathom",
             ".swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata",
+            "native/.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata",
             "Package.swift",
+            "native/Package.swift",
             "Sources/Fathom/main.swift",
         ],
     )
     if swiftpm_artifact_failures != [
         ".build/debug/Fathom: local Swift Package Manager artifacts must not be tracked for public launch",
+        "native/.build/debug/Fathom: local Swift Package Manager artifacts must not be tracked for public launch",
         ".swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata: local Swift Package Manager artifacts must not be tracked for public launch",
+        "native/.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata: local Swift Package Manager artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Swift Package Manager artifacts")
     allowed_zig_artifact_gitignore = "\n".join(sorted(required_zig_artifact_gitignore_patterns)) + "\n"

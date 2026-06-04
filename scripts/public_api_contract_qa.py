@@ -2134,13 +2134,18 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local Swift Package Manager build/workspace artifacts such as `.build/` and `.swiftpm/`",
+        "tracked local Swift Package Manager build/workspace artifacts such as `.build/` and `.swiftpm/` at any tree depth",
         "launch evidence SwiftPM artifact examples",
     )
     assert_contains(
         evidence_text,
         "missing root `.gitignore` coverage for local Swift Package Manager artifacts",
         "launch evidence SwiftPM artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Swift package files such as `Package.swift` and Swift source files",
+        "launch evidence SwiftPM source allowance",
     )
     assert_contains(
         evidence_text,
