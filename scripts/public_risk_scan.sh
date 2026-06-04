@@ -685,6 +685,10 @@ required_haskell_build_artifact_gitignore_patterns = {
     "/.stack-work/",
     "/cabal.sandbox.config",
     "/dist-newstyle/",
+    ".cabal-sandbox/",
+    ".stack-work/",
+    "cabal.sandbox.config",
+    "dist-newstyle/",
 }
 required_ocaml_opam_artifact_gitignore_patterns = {
     "/.opam-switch/",
@@ -4428,6 +4432,10 @@ def self_test():
             "dist-newstyle/build/aarch64-osx/ghc-9.6.3/fathom-0.1.0/x/fathom/build/fathom/fathom",
             ".cabal-sandbox/bin/fathom",
             "cabal.sandbox.config",
+            "examples/haskell/.stack-work/dist/aarch64-osx/Cabal-3.10.1.0/build/fathom/fathom",
+            "examples/haskell/dist-newstyle/build/aarch64-osx/ghc-9.6.3/fathom-0.1.0/x/fathom/build/fathom/fathom",
+            "examples/haskell/.cabal-sandbox/bin/fathom",
+            "examples/haskell/cabal.sandbox.config",
             "fathom.cabal",
             "stack.yaml",
             "cabal.project",
@@ -4440,16 +4448,20 @@ def self_test():
         "dist-newstyle/build/aarch64-osx/ghc-9.6.3/fathom-0.1.0/x/fathom/build/fathom/fathom: Haskell Stack/Cabal build artifacts must not be tracked for public launch",
         ".cabal-sandbox/bin/fathom: Haskell Stack/Cabal build artifacts must not be tracked for public launch",
         "cabal.sandbox.config: Haskell Stack/Cabal build artifacts must not be tracked for public launch",
+        "examples/haskell/.stack-work/dist/aarch64-osx/Cabal-3.10.1.0/build/fathom/fathom: Haskell Stack/Cabal build artifacts must not be tracked for public launch",
+        "examples/haskell/dist-newstyle/build/aarch64-osx/ghc-9.6.3/fathom-0.1.0/x/fathom/build/fathom/fathom: Haskell Stack/Cabal build artifacts must not be tracked for public launch",
+        "examples/haskell/.cabal-sandbox/bin/fathom: Haskell Stack/Cabal build artifacts must not be tracked for public launch",
+        "examples/haskell/cabal.sandbox.config: Haskell Stack/Cabal build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Haskell Stack/Cabal build artifacts")
     allowed_haskell_build_artifact_gitignore = "\n".join(sorted(required_haskell_build_artifact_gitignore_patterns)) + "\n"
     if gitignore_haskell_build_artifact_failures(allowed_haskell_build_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Haskell Stack/Cabal build artifact ignore patterns")
     haskell_build_artifact_gitignore_failures = gitignore_haskell_build_artifact_failures(
-        allowed_haskell_build_artifact_gitignore.replace("/dist-newstyle/\n", "")
+        allowed_haskell_build_artifact_gitignore.replace("\ndist-newstyle/\n", "\n", 1)
     )
     if haskell_build_artifact_gitignore_failures != [
-        ".gitignore: missing local Haskell Stack/Cabal build artifact ignore patterns: /dist-newstyle/"
+        ".gitignore: missing local Haskell Stack/Cabal build artifact ignore patterns: dist-newstyle/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Haskell Stack/Cabal build artifact ignore patterns")
     ocaml_opam_artifact_failures = tracked_ocaml_opam_artifact_file_failures(

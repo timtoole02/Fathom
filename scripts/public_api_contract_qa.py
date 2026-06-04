@@ -1269,7 +1269,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "rejects missing root `.gitignore` coverage for local Haskell Stack/Cabal build artifacts",
+        "rejects missing root and nested `.gitignore` coverage for local Haskell Stack/Cabal build artifacts",
         "launch evidence Haskell Stack/Cabal artifact ignore scope",
     )
     assert_contains(

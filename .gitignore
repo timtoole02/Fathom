@@ -333,9 +333,13 @@ project.nuget.cache
 
 # Local Haskell Stack/Cabal build artifacts
 /.stack-work/
+.stack-work/
 /dist-newstyle/
+dist-newstyle/
 /.cabal-sandbox/
+.cabal-sandbox/
 /cabal.sandbox.config
+cabal.sandbox.config
 
 # Local OCaml/opam artifacts
 /_opam/

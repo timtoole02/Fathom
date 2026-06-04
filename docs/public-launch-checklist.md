@@ -158,7 +158,7 @@ The Kotlin/Kotlin Native compiler artifact guard also rejects tracked local Kotl
 
 The Scala/SBT build artifact guard also rejects tracked local Scala build server/IDE outputs such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/` at any tree depth, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Scala/SBT files such as `build.sbt`, `project/build.properties`, or Scala source files as local tool artifacts.
 
-The Haskell Stack/Cabal build artifact guard also rejects tracked local build outputs such as `.stack-work/`, `dist-newstyle/`, `.cabal-sandbox/`, and `cabal.sandbox.config`, with matching root `.gitignore` coverage. It does not treat source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, or Haskell source files as local tool artifacts.
+The Haskell Stack/Cabal build artifact guard also rejects tracked local build outputs such as `.stack-work/`, `dist-newstyle/`, `.cabal-sandbox/`, and `cabal.sandbox.config` at any tree depth, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, or Haskell source files as local tool artifacts.
 
 The OCaml/opam local switch artifact guard also rejects tracked local switch/dependency artifacts such as `_opam/` and `.opam-switch/`, with matching root `.gitignore` coverage. It does not treat source-of-truth OCaml project files such as `dune`, `dune-project`, `*.opam`, or OCaml source files as local tool artifacts.
 
