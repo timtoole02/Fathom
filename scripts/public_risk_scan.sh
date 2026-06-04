@@ -479,6 +479,7 @@ required_native_build_artifact_gitignore_patterns = {
     "DartConfiguration.tcl",
     "cmake_install.cmake",
     "compile_commands.json",
+    "install_manifest.txt",
 }
 required_meson_build_artifact_gitignore_patterns = {
     "/.mesonpy-*/",
@@ -1157,6 +1158,7 @@ blocked_tracked_native_build_artifact_filenames = {
     "DartConfiguration.tcl",
     "cmake_install.cmake",
     "compile_commands.json",
+    "install_manifest.txt",
 }
 blocked_tracked_meson_build_artifact_dirs = {
     "meson-info",
@@ -4864,6 +4866,7 @@ def self_test():
             "native/CMakeCache.txt",
             "native/cmake_install.cmake",
             "compile_commands.json",
+            "native/install_manifest.txt",
             "CMakeLists.txt",
             "docs/research/runtime-safety-policy.md",
             "crates/fathom-core/src/lib.rs",
@@ -4882,6 +4885,7 @@ def self_test():
         "native/CMakeCache.txt: native/CMake build artifacts must not be tracked for public launch",
         "native/cmake_install.cmake: native/CMake build artifacts must not be tracked for public launch",
         "compile_commands.json: native/CMake build artifacts must not be tracked for public launch",
+        "native/install_manifest.txt: native/CMake build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked native/CMake build artifacts")
     allowed_native_build_artifact_gitignore = "\n".join(sorted(required_native_build_artifact_gitignore_patterns)) + "\n"
