@@ -286,6 +286,7 @@ erl_crash.dump
 
 # Local JVM dependency artifacts
 /.m2/
+.m2/
 
 # Local JVM compiler artifacts
 *.class

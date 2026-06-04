@@ -1814,7 +1814,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local JVM dependency artifacts such as `.m2/`",
+        "tracked local JVM dependency artifacts such as `.m2/` at any tree depth",
         "launch evidence JVM dependency artifact examples",
     )
     assert_contains(

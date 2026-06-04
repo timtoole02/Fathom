@@ -112,7 +112,7 @@ It also blocks tracked Watchman local state cookies such as `.watchman-cookie` a
 
 It also blocks tracked local documentation build artifacts such as LaTeX auxiliary files (`*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`) and `_minted-*` caches, with matching root `.gitignore` coverage for local documentation build artifacts. It intentionally does not block all PDFs because some PDFs can be source-of-truth public docs rather than rebuildable local output.
 
-It also blocks tracked local JVM dependency artifacts such as `.m2/`, with matching root `.gitignore` coverage for local JVM dependency artifacts.
+It also blocks tracked local JVM dependency artifacts such as `.m2/` at any tree depth, with matching root `.gitignore` coverage for local JVM dependency artifacts.
 
 It also blocks tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, `.shadow-cljs/`, and `.nrepl-port`, with matching root `.gitignore` coverage for local Clojure/Leiningen artifacts. It does not treat source-of-truth Clojure files such as `project.clj`, `deps.edn`, `bb.edn`, `shadow-cljs.edn`, or Clojure/ClojureScript source files as local tool artifacts.
 

@@ -631,6 +631,7 @@ required_erlang_rebar3_artifact_gitignore_patterns = {
 }
 required_jvm_dependency_artifact_gitignore_patterns = {
     "/.m2/",
+    ".m2/",
 }
 required_jvm_compiler_artifact_gitignore_patterns = {
     "*.class",
@@ -4171,6 +4172,7 @@ def self_test():
             ".m2/repository/com/example/private-lib/1.0/private-lib-1.0.jar",
             ".m2/settings.xml",
             "docs/.m2/repository/com/example/private-lib/1.0/private-lib-1.0.pom",
+            "examples/java/.m2/repository/com/example/private-lib/1.0/private-lib-1.0.pom",
             "pom.xml",
             "docs/java-build.md",
         ],
@@ -4179,14 +4181,17 @@ def self_test():
         ".m2/repository/com/example/private-lib/1.0/private-lib-1.0.jar: JVM dependency artifacts must not be tracked for public launch",
         ".m2/settings.xml: JVM dependency artifacts must not be tracked for public launch",
         "docs/.m2/repository/com/example/private-lib/1.0/private-lib-1.0.pom: JVM dependency artifacts must not be tracked for public launch",
+        "examples/java/.m2/repository/com/example/private-lib/1.0/private-lib-1.0.pom: JVM dependency artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local JVM dependency artifacts")
     allowed_jvm_dependency_artifact_gitignore = "\n".join(sorted(required_jvm_dependency_artifact_gitignore_patterns)) + "\n"
     if gitignore_jvm_dependency_artifact_failures(allowed_jvm_dependency_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local JVM dependency artifact ignore patterns")
-    jvm_dependency_artifact_gitignore_failures = gitignore_jvm_dependency_artifact_failures("")
+    jvm_dependency_artifact_gitignore_failures = gitignore_jvm_dependency_artifact_failures(
+        allowed_jvm_dependency_artifact_gitignore.replace(".m2/\n", "", 1)
+    )
     if jvm_dependency_artifact_gitignore_failures != [
-        ".gitignore: missing local JVM dependency artifact ignore patterns: /.m2/"
+        ".gitignore: missing local JVM dependency artifact ignore patterns: .m2/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local JVM dependency artifact ignore patterns")
     jvm_compiler_artifact_failures = tracked_jvm_compiler_artifact_file_failures(
