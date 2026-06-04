@@ -12,6 +12,8 @@ target/
 CMakeCache.txt
 cmake_install.cmake
 compile_commands.json
+.ninja_deps
+.ninja_log
 
 # Local Meson build artifacts
 /.mesonpy-*/

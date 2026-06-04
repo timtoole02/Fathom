@@ -471,6 +471,8 @@ required_rust_artifact_gitignore_patterns = {
 required_native_build_artifact_gitignore_patterns = {
     "/CMakeFiles/",
     "/cmake-build-*/",
+    ".ninja_deps",
+    ".ninja_log",
     "CMakeCache.txt",
     "cmake_install.cmake",
     "compile_commands.json",
@@ -1142,6 +1144,8 @@ blocked_tracked_native_build_artifact_dirs = {
     "CMakeFiles",
 }
 blocked_tracked_native_build_artifact_filenames = {
+    ".ninja_deps",
+    ".ninja_log",
     "CMakeCache.txt",
     "cmake_install.cmake",
     "compile_commands.json",
@@ -4837,6 +4841,8 @@ def self_test():
             "cmake-build-debug/CMakeCache.txt",
             "CMakeFiles/CMakeOutput.log",
             "native/CMakeFiles/rules.ninja",
+            ".ninja_deps",
+            "native/.ninja_log",
             "native/CMakeCache.txt",
             "native/cmake_install.cmake",
             "compile_commands.json",
@@ -4849,6 +4855,8 @@ def self_test():
         "cmake-build-debug/CMakeCache.txt: native/CMake build artifacts must not be tracked for public launch",
         "CMakeFiles/CMakeOutput.log: native/CMake build artifacts must not be tracked for public launch",
         "native/CMakeFiles/rules.ninja: native/CMake build artifacts must not be tracked for public launch",
+        ".ninja_deps: native/CMake build artifacts must not be tracked for public launch",
+        "native/.ninja_log: native/CMake build artifacts must not be tracked for public launch",
         "native/CMakeCache.txt: native/CMake build artifacts must not be tracked for public launch",
         "native/cmake_install.cmake: native/CMake build artifacts must not be tracked for public launch",
         "compile_commands.json: native/CMake build artifacts must not be tracked for public launch",
@@ -4858,10 +4866,10 @@ def self_test():
     if gitignore_native_build_artifact_failures(allowed_native_build_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local native/CMake build artifact ignore patterns")
     native_build_artifact_gitignore_failures = gitignore_native_build_artifact_failures(
-        allowed_native_build_artifact_gitignore.replace("compile_commands.json\n", "")
+        allowed_native_build_artifact_gitignore.replace(".ninja_log\n", "")
     )
     if native_build_artifact_gitignore_failures != [
-        ".gitignore: missing local native/CMake build artifact ignore patterns: compile_commands.json"
+        ".gitignore: missing local native/CMake build artifact ignore patterns: .ninja_log"
     ]:
         raise AssertionError("public risk self-test did not reject missing local native/CMake build artifact ignore patterns")
     meson_build_artifact_failures = tracked_meson_build_artifact_file_failures(
