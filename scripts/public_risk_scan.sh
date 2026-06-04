@@ -488,6 +488,7 @@ required_native_build_artifact_gitignore_patterns = {
 }
 required_meson_build_artifact_gitignore_patterns = {
     "/.mesonpy-*/",
+    "builddir/",
     "meson-info/",
     "meson-logs/",
     "meson-private/",
@@ -1170,6 +1171,7 @@ blocked_tracked_native_build_artifact_filenames = {
     "install_manifest.txt",
 }
 blocked_tracked_meson_build_artifact_dirs = {
+    "builddir",
     "meson-info",
     "meson-logs",
     "meson-private",
@@ -4921,6 +4923,7 @@ def self_test():
     meson_build_artifact_failures = tracked_meson_build_artifact_file_failures(
         tracked_paths=[
             ".mesonpy-abcd1234/build/meson-info/intro-targets.json",
+            "builddir/build.ninja",
             "builddir/meson-info/intro-buildoptions.json",
             "builddir/meson-logs/meson-log.txt",
             "builddir/meson-private/coredata.dat",
@@ -4932,6 +4935,7 @@ def self_test():
     )
     if meson_build_artifact_failures != [
         ".mesonpy-abcd1234/build/meson-info/intro-targets.json: Meson build artifacts must not be tracked for public launch",
+        "builddir/build.ninja: Meson build artifacts must not be tracked for public launch",
         "builddir/meson-info/intro-buildoptions.json: Meson build artifacts must not be tracked for public launch",
         "builddir/meson-logs/meson-log.txt: Meson build artifacts must not be tracked for public launch",
         "builddir/meson-private/coredata.dat: Meson build artifacts must not be tracked for public launch",
@@ -4941,10 +4945,10 @@ def self_test():
     if gitignore_meson_build_artifact_failures(allowed_meson_build_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Meson build artifact ignore patterns")
     meson_build_artifact_gitignore_failures = gitignore_meson_build_artifact_failures(
-        allowed_meson_build_artifact_gitignore.replace("meson-private/\n", "")
+        allowed_meson_build_artifact_gitignore.replace("builddir/\n", "")
     )
     if meson_build_artifact_gitignore_failures != [
-        ".gitignore: missing local Meson build artifact ignore patterns: meson-private/"
+        ".gitignore: missing local Meson build artifact ignore patterns: builddir/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Meson build artifact ignore patterns")
     package_artifact_failures = tracked_package_artifact_file_failures(
