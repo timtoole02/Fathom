@@ -699,7 +699,9 @@ required_ocaml_opam_artifact_gitignore_patterns = {
 required_lua_luarocks_artifact_gitignore_patterns = {
     "/.luarocks/",
     "/lua_modules/",
+    ".luarocks/",
     "*.rock",
+    "lua_modules/",
 }
 required_frontend_artifact_gitignore_patterns = {
     ".angular/cache/",
@@ -4507,6 +4509,9 @@ def self_test():
             "lua_modules/share/lua/5.4/fathom/init.lua",
             "fathom-1.0-1.src.rock",
             "fathom-1.0-1.macosx-aarch64.rock",
+            "examples/lua/.luarocks/lib/luarocks/rocks-5.4/fathom/1.0-1/fathom.rockspec",
+            "examples/lua/lua_modules/share/lua/5.4/fathom/init.lua",
+            "examples/lua/fathom-1.0-1.src.rock",
             "fathom.lua",
             "fathom.rockspec",
             "luarocks.lock",
@@ -4519,16 +4524,19 @@ def self_test():
         "lua_modules/share/lua/5.4/fathom/init.lua: Lua/LuaRocks local artifacts must not be tracked for public launch",
         "fathom-1.0-1.src.rock: Lua/LuaRocks local artifacts must not be tracked for public launch",
         "fathom-1.0-1.macosx-aarch64.rock: Lua/LuaRocks local artifacts must not be tracked for public launch",
+        "examples/lua/.luarocks/lib/luarocks/rocks-5.4/fathom/1.0-1/fathom.rockspec: Lua/LuaRocks local artifacts must not be tracked for public launch",
+        "examples/lua/lua_modules/share/lua/5.4/fathom/init.lua: Lua/LuaRocks local artifacts must not be tracked for public launch",
+        "examples/lua/fathom-1.0-1.src.rock: Lua/LuaRocks local artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Lua/LuaRocks artifacts")
     allowed_lua_luarocks_artifact_gitignore = "\n".join(sorted(required_lua_luarocks_artifact_gitignore_patterns)) + "\n"
     if gitignore_lua_luarocks_artifact_failures(allowed_lua_luarocks_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Lua/LuaRocks artifact ignore patterns")
     lua_luarocks_artifact_gitignore_failures = gitignore_lua_luarocks_artifact_failures(
-        allowed_lua_luarocks_artifact_gitignore.replace("/lua_modules/\n", "")
+        allowed_lua_luarocks_artifact_gitignore.replace("lua_modules/\n", "", 1)
     )
     if lua_luarocks_artifact_gitignore_failures != [
-        ".gitignore: missing local Lua/LuaRocks artifact ignore patterns: /lua_modules/"
+        ".gitignore: missing local Lua/LuaRocks artifact ignore patterns: lua_modules/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Lua/LuaRocks artifact ignore patterns")
     frontend_artifact_failures = tracked_frontend_artifact_file_failures(

@@ -349,7 +349,9 @@ _opam/
 
 # Local Lua/LuaRocks artifacts
 /.luarocks/
+.luarocks/
 /lua_modules/
+lua_modules/
 *.rock
 
 # Local test report artifacts

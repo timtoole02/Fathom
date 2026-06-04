@@ -1299,12 +1299,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local Lua/LuaRocks dependency/build/package artifacts such as `.luarocks/`, `lua_modules/`, and `*.rock`",
+        "tracked local Lua/LuaRocks dependency/build/package artifacts such as `.luarocks/`, `lua_modules/`, and `*.rock` at any tree depth",
         "launch evidence Lua/LuaRocks artifact examples",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Lua/LuaRocks artifacts",
+        "missing root and nested `.gitignore` coverage for local Lua/LuaRocks artifacts",
         "launch evidence Lua/LuaRocks artifact ignore scope",
     )
     assert_contains(

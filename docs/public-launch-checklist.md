@@ -162,7 +162,7 @@ The Haskell Stack/Cabal build artifact guard also rejects tracked local build ou
 
 The OCaml/opam local switch artifact guard also rejects tracked local switch/dependency artifacts such as `_opam/` and `.opam-switch/` at any tree depth, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth OCaml project files such as `dune`, `dune-project`, `*.opam`, or OCaml source files as local tool artifacts.
 
-The Lua/LuaRocks artifact guard also rejects tracked local dependency/build/package artifacts such as `.luarocks/`, `lua_modules/`, and `*.rock`, with matching root `.gitignore` coverage. It does not treat source-of-truth Lua files such as `*.lua`, `*.rockspec`, LuaRocks lock files, or Lua config files as local tool artifacts.
+The Lua/LuaRocks artifact guard also rejects tracked local dependency/build/package artifacts such as `.luarocks/`, `lua_modules/`, and `*.rock` at any tree depth, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Lua files such as `*.lua`, `*.rockspec`, LuaRocks lock files, or Lua config files as local tool artifacts.
 
 The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/`, with matching root `.gitignore` coverage.
 
