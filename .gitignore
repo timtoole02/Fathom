@@ -47,6 +47,7 @@ frontend/.npm/
 frontend/.nuxt/
 frontend/.output/
 frontend/.pnpm-store/
+frontend/.rpt2_cache/
 frontend/.svelte-kit/
 frontend/.yarn/cache/
 frontend/.yarn/unplugged/
@@ -92,6 +93,7 @@ coverage/
 .cache/
 .watchman-cookie
 .watchman-cookie-*
+.rpt2_cache/
 .vitest/
 .vitepress/cache/
 .vitepress/dist/
