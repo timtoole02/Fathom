@@ -405,6 +405,9 @@ required_zig_artifact_gitignore_patterns = {
     "/.zig-cache/",
     "/zig-cache/",
     "/zig-out/",
+    ".zig-cache/",
+    "zig-cache/",
+    "zig-out/",
 }
 required_dart_flutter_artifact_gitignore_patterns = {
     ".dart_tool/",
@@ -5386,10 +5389,10 @@ def self_test():
     if gitignore_zig_artifact_failures(allowed_zig_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Zig build artifact ignore patterns")
     zig_artifact_gitignore_failures = gitignore_zig_artifact_failures(
-        allowed_zig_artifact_gitignore.replace("/zig-out/\n", "")
+        allowed_zig_artifact_gitignore.replace("\nzig-out/\n", "\n", 1)
     )
     if zig_artifact_gitignore_failures != [
-        ".gitignore: missing local Zig build artifact ignore patterns: /zig-out/"
+        ".gitignore: missing local Zig build artifact ignore patterns: zig-out/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Zig build artifact ignore patterns")
     zig_artifact_failures = tracked_zig_artifact_file_failures(

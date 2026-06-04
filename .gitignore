@@ -40,8 +40,11 @@ meson-private/
 
 # Local Zig build artifacts
 /.zig-cache/
+.zig-cache/
 /zig-cache/
+zig-cache/
 /zig-out/
+zig-out/
 
 # Local Dart/Flutter artifacts
 .dart_tool/
