@@ -597,6 +597,8 @@ required_php_composer_artifact_gitignore_patterns = {
 required_r_artifact_gitignore_patterns = {
     "/.Rproj.user/",
     "/renv/library/",
+    "**/renv/library/",
+    ".Rproj.user/",
     ".RData",
     ".Rhistory",
     ".Ruserdata",
@@ -2701,7 +2703,10 @@ def tracked_r_artifact_file_failures(tracked_paths=None):
         if any(part in blocked_tracked_r_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: R/RStudio local artifacts must not be tracked for public launch")
             continue
-        if len(path.parts) >= 2 and tuple(path.parts[:2]) in blocked_tracked_r_dependency_artifact_dirs:
+        if any(
+            tuple(path.parts[index : index + 2]) in blocked_tracked_r_dependency_artifact_dirs
+            for index in range(len(path.parts) - 1)
+        ):
             failures.append(f"{rel}: R/RStudio local artifacts must not be tracked for public launch")
             continue
         if path.name in blocked_tracked_r_artifact_filenames:
@@ -4006,6 +4011,7 @@ def self_test():
             "analysis/.RData",
             "analysis/.Ruserdata",
             "renv/library/macos/R-4.4/x86_64-apple-darwin20/dplyr/DESCRIPTION",
+            "analysis/renv/library/macos/R-4.4/x86_64-apple-darwin20/dplyr/DESCRIPTION",
             "analysis/fathom.R",
             "analysis/fathom.Rproj",
             "renv.lock",
@@ -4018,16 +4024,17 @@ def self_test():
         "analysis/.RData: R/RStudio local artifacts must not be tracked for public launch",
         "analysis/.Ruserdata: R/RStudio local artifacts must not be tracked for public launch",
         "renv/library/macos/R-4.4/x86_64-apple-darwin20/dplyr/DESCRIPTION: R/RStudio local artifacts must not be tracked for public launch",
+        "analysis/renv/library/macos/R-4.4/x86_64-apple-darwin20/dplyr/DESCRIPTION: R/RStudio local artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local R/RStudio artifacts")
     allowed_r_artifact_gitignore = "\n".join(sorted(required_r_artifact_gitignore_patterns)) + "\n"
     if gitignore_r_artifact_failures(allowed_r_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local R/RStudio artifact ignore patterns")
     r_artifact_gitignore_failures = gitignore_r_artifact_failures(
-        allowed_r_artifact_gitignore.replace("/renv/library/\n", "")
+        allowed_r_artifact_gitignore.replace("**/renv/library/\n", "")
     )
     if r_artifact_gitignore_failures != [
-        ".gitignore: missing local R/RStudio artifact ignore patterns: /renv/library/"
+        ".gitignore: missing local R/RStudio artifact ignore patterns: **/renv/library/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local R/RStudio artifact ignore patterns")
     julia_artifact_failures = tracked_julia_artifact_file_failures(

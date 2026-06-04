@@ -1849,7 +1849,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local R/RStudio artifacts such as `.Rproj.user/`, `.Rhistory`, `.RData`, `.Ruserdata`, and `renv/library/`",
+        "tracked local R/RStudio artifacts such as `.Rproj.user/` and `renv/library/` at any tree depth, plus `.Rhistory`, `.RData`, and `.Ruserdata`",
         "launch evidence R/RStudio artifact examples",
     )
     assert_contains(

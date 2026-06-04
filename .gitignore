@@ -251,7 +251,9 @@ composer.phar
 
 # Local R/RStudio artifacts
 /.Rproj.user/
+.Rproj.user/
 /renv/library/
+**/renv/library/
 .Rhistory
 .RData
 .Ruserdata
