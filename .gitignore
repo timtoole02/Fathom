@@ -13,6 +13,8 @@ target/
 DartConfiguration.tcl
 CMakeCache.txt
 CMakeUserPresets.json
+CPackConfig.cmake
+CPackSourceConfig.cmake
 CTestTestfile.cmake
 cmake_install.cmake
 compile_commands.json
