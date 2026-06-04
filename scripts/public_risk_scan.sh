@@ -686,6 +686,7 @@ required_frontend_artifact_gitignore_patterns = {
     ".stylelintcache",
     ".turbo/",
     ".vitest/",
+    ".webpack-cache/",
     ".yarn/build-state.yml",
     ".yarn/cache/",
     ".yarn/install-state.gz",
@@ -707,6 +708,7 @@ required_frontend_artifact_gitignore_patterns = {
     "frontend/.rpt2_cache/",
     "frontend/.vite/",
     "frontend/.vitest/",
+    "frontend/.webpack-cache/",
     "frontend/.yarn/build-state.yml",
     "frontend/.yarn/cache/",
     "frontend/.yarn/install-state.gz",
@@ -1057,6 +1059,7 @@ blocked_tracked_frontend_artifact_dirs = {
     ".turbo",
     ".vite",
     ".vitest",
+    ".webpack-cache",
     "coverage",
     "deno-dir",
     "node_modules",
@@ -4483,6 +4486,8 @@ def self_test():
             ".rpt2_cache/placeholder/index.ts",
             "frontend/.rpt2_cache/semantic-diagnostics.json",
             ".vitest/cache/results.json",
+            ".webpack-cache/default-development/0.pack",
+            "frontend/.webpack-cache/default-production/index.pack",
             ".eslintcache",
             ".stylelintcache",
             "frontend/.eslintcache",
@@ -4569,6 +4574,8 @@ def self_test():
         ".rpt2_cache/placeholder/index.ts: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.rpt2_cache/semantic-diagnostics.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".vitest/cache/results.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        ".webpack-cache/default-development/0.pack: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "frontend/.webpack-cache/default-production/index.pack: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".eslintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
         ".stylelintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.eslintcache: frontend/Node cache/build artifacts must not be tracked for public launch",
@@ -4588,10 +4595,10 @@ def self_test():
     if gitignore_frontend_artifact_failures(allowed_frontend_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local frontend/Node cache/build artifact ignore patterns")
     frontend_artifact_gitignore_failures = gitignore_frontend_artifact_failures(
-        allowed_frontend_artifact_gitignore.replace("\n.rpt2_cache/\n", "\n")
+        allowed_frontend_artifact_gitignore.replace("\n.webpack-cache/\n", "\n")
     )
     if frontend_artifact_gitignore_failures != [
-        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: .rpt2_cache/"
+        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: .webpack-cache/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local frontend/Node cache/build artifact ignore patterns")
     local_cache_artifact_failures = tracked_local_cache_artifact_file_failures(

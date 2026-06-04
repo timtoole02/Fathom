@@ -60,6 +60,7 @@ frontend/coverage/
 frontend/.metro-cache/
 frontend/.next/
 frontend/.vite/
+frontend/.webpack-cache/
 node_modules/
 .bun/
 .deno/
@@ -95,6 +96,7 @@ coverage/
 .watchman-cookie-*
 .rpt2_cache/
 .vitest/
+.webpack-cache/
 .vitepress/cache/
 .vitepress/dist/
 .eslintcache
