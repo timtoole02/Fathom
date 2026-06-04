@@ -343,7 +343,9 @@ cabal.sandbox.config
 
 # Local OCaml/opam artifacts
 /_opam/
+_opam/
 /.opam-switch/
+.opam-switch/
 
 # Local Lua/LuaRocks artifacts
 /.luarocks/

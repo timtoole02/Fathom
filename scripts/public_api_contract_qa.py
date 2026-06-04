@@ -1279,12 +1279,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local OCaml/opam local switch artifacts such as `_opam/` and `.opam-switch/`",
+        "tracked local OCaml/opam local switch artifacts such as `_opam/` and `.opam-switch/` at any tree depth",
         "launch evidence OCaml/opam artifact examples",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local OCaml/opam artifacts",
+        "missing root and nested `.gitignore` coverage for local OCaml/opam artifacts",
         "launch evidence OCaml/opam artifact ignore scope",
     )
     assert_contains(

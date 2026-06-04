@@ -693,6 +693,8 @@ required_haskell_build_artifact_gitignore_patterns = {
 required_ocaml_opam_artifact_gitignore_patterns = {
     "/.opam-switch/",
     "/_opam/",
+    ".opam-switch/",
+    "_opam/",
 }
 required_lua_luarocks_artifact_gitignore_patterns = {
     "/.luarocks/",
@@ -4469,6 +4471,9 @@ def self_test():
             "_opam/lib/ocaml/stdlib.cma",
             "_opam/.opam-switch/switch-state",
             ".opam-switch/sources/fathom/url",
+            "examples/ocaml/_opam/lib/ocaml/stdlib.cma",
+            "examples/ocaml/_opam/.opam-switch/switch-state",
+            "examples/ocaml/.opam-switch/sources/fathom/url",
             "fathom.opam",
             "dune",
             "dune-project",
@@ -4481,16 +4486,19 @@ def self_test():
         "_opam/lib/ocaml/stdlib.cma: OCaml/opam local artifacts must not be tracked for public launch",
         "_opam/.opam-switch/switch-state: OCaml/opam local artifacts must not be tracked for public launch",
         ".opam-switch/sources/fathom/url: OCaml/opam local artifacts must not be tracked for public launch",
+        "examples/ocaml/_opam/lib/ocaml/stdlib.cma: OCaml/opam local artifacts must not be tracked for public launch",
+        "examples/ocaml/_opam/.opam-switch/switch-state: OCaml/opam local artifacts must not be tracked for public launch",
+        "examples/ocaml/.opam-switch/sources/fathom/url: OCaml/opam local artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local OCaml/opam artifacts")
     allowed_ocaml_opam_artifact_gitignore = "\n".join(sorted(required_ocaml_opam_artifact_gitignore_patterns)) + "\n"
     if gitignore_ocaml_opam_artifact_failures(allowed_ocaml_opam_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local OCaml/opam artifact ignore patterns")
     ocaml_opam_artifact_gitignore_failures = gitignore_ocaml_opam_artifact_failures(
-        allowed_ocaml_opam_artifact_gitignore.replace("/.opam-switch/\n", "")
+        allowed_ocaml_opam_artifact_gitignore.replace(".opam-switch/\n", "", 1)
     )
     if ocaml_opam_artifact_gitignore_failures != [
-        ".gitignore: missing local OCaml/opam artifact ignore patterns: /.opam-switch/"
+        ".gitignore: missing local OCaml/opam artifact ignore patterns: .opam-switch/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local OCaml/opam artifact ignore patterns")
     lua_luarocks_artifact_failures = tracked_lua_luarocks_artifact_file_failures(
