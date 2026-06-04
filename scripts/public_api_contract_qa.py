@@ -2014,7 +2014,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local Meson build artifacts such as `.mesonpy-*`, `builddir/`, `meson-info/`, `meson-logs/`, and `meson-private/`",
+        "tracked local Meson build artifacts such as `.mesonpy-*` build directories at any tree depth, `builddir/`, `meson-info/`, `meson-logs/`, and `meson-private/`",
         "launch evidence Meson build artifact examples",
     )
     assert_contains(
