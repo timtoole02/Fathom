@@ -470,6 +470,7 @@ required_rust_artifact_gitignore_patterns = {
 }
 required_native_build_artifact_gitignore_patterns = {
     "/CMakeFiles/",
+    "**/CMakeFiles/",
     "**/Testing/Temporary/",
     "/cmake-build-*/",
     ".ninja_deps",

@@ -9,6 +9,7 @@ target/
 # Local native/CMake build artifacts
 /cmake-build-*/
 /CMakeFiles/
+**/CMakeFiles/
 **/Testing/Temporary/
 DartConfiguration.tcl
 CMakeCache.txt
