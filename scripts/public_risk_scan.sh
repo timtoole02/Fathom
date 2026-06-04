@@ -610,6 +610,8 @@ required_julia_artifact_gitignore_patterns = {
 required_go_artifact_gitignore_patterns = {
     "/.gocache/",
     "/.gomodcache/",
+    ".gocache/",
+    ".gomodcache/",
     "*.test",
     "coverage.out",
 }
@@ -4064,6 +4066,8 @@ def self_test():
         tracked_paths=[
             ".gocache/00/abcdef-a",
             ".gomodcache/cache/download/example.com/fathom/@v/v0.1.0.mod",
+            "tools/.gocache/00/abcdef-b",
+            "tools/.gomodcache/cache/download/example.com/fathom/@v/v0.2.0.mod",
             "cmd/fathom/fathom.test",
             "coverage.out",
             "go.mod",
@@ -4074,6 +4078,8 @@ def self_test():
     if go_artifact_failures != [
         ".gocache/00/abcdef-a: Go cache/test artifacts must not be tracked for public launch",
         ".gomodcache/cache/download/example.com/fathom/@v/v0.1.0.mod: Go cache/test artifacts must not be tracked for public launch",
+        "tools/.gocache/00/abcdef-b: Go cache/test artifacts must not be tracked for public launch",
+        "tools/.gomodcache/cache/download/example.com/fathom/@v/v0.2.0.mod: Go cache/test artifacts must not be tracked for public launch",
         "cmd/fathom/fathom.test: Go cache/test artifacts must not be tracked for public launch",
         "coverage.out: Go cache/test artifacts must not be tracked for public launch",
     ]:

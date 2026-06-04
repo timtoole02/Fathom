@@ -264,7 +264,9 @@ LocalPreferences.toml
 
 # Local Go cache/test artifacts
 /.gocache/
+.gocache/
 /.gomodcache/
+.gomodcache/
 coverage.out
 *.test
 

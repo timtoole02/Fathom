@@ -172,7 +172,7 @@ The R/RStudio artifact guard also rejects tracked local session and dependency a
 
 The Julia depot/preference artifact guard also rejects tracked local Julia depot, preference, coverage, and allocation artifacts such as `.julia/`, `LocalPreferences.toml`, `*.jl.cov`, and `*.jl.mem`, with matching root `.gitignore` coverage. It does not treat source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, or Julia source files as local tool artifacts.
 
-The Go cache/test artifact guard also rejects tracked local generated outputs such as `.gocache/`, `.gomodcache/`, `coverage.out`, and `*.test`, with matching root `.gitignore` coverage.
+The Go cache/test artifact guard also rejects tracked local generated outputs such as `.gocache/` and `.gomodcache/` at any tree depth, `coverage.out`, and `*.test`, with matching root `.gitignore` coverage.
 
 The Elixir/Mix build/dependency artifact guard also rejects tracked local generated outputs such as `.elixir_ls/`, `_build/`, and `deps/`, with matching root `.gitignore` coverage for local Elixir/Mix build/dependency artifacts.
 
