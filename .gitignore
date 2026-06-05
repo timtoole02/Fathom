@@ -494,7 +494,9 @@ compose.override.yaml
 
 # Local deployment platform artifacts
 /.vercel/
+.vercel/
 /.netlify/
+.netlify/
 
 # Local infrastructure state
 /.terraform/

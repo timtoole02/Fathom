@@ -371,6 +371,8 @@ required_container_artifact_gitignore_patterns = {
 required_deployment_platform_artifact_gitignore_patterns = {
     "/.netlify/",
     "/.vercel/",
+    ".netlify/",
+    ".vercel/",
 }
 required_infra_state_gitignore_patterns = {
     "/.terraform/",
@@ -5328,6 +5330,8 @@ def self_test():
             ".vercel/output/config.json",
             ".netlify/state.json",
             ".netlify/functions-internal/manifest.json",
+            "apps/web/.vercel/project.json",
+            "apps/web/.netlify/state.json",
             "netlify.toml",
             "vercel.json",
             "docs/api/public-contract.json",
@@ -5338,6 +5342,8 @@ def self_test():
         ".vercel/output/config.json: local deployment platform artifacts must not be tracked for public launch",
         ".netlify/state.json: local deployment platform artifacts must not be tracked for public launch",
         ".netlify/functions-internal/manifest.json: local deployment platform artifacts must not be tracked for public launch",
+        "apps/web/.vercel/project.json: local deployment platform artifacts must not be tracked for public launch",
+        "apps/web/.netlify/state.json: local deployment platform artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local deployment platform artifacts")
     infra_state_failures = tracked_infra_state_file_failures(
