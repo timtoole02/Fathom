@@ -1063,7 +1063,7 @@ def assert_boundary_docs() -> None:
         "root and nested `.gitignore` coverage for local Python virtualenv/dependency artifacts",
         "launch checklist Python virtualenv/dependency artifact ignore scope",
     )
-    assert_contains(launch_text, "root `.gitignore` coverage for local frontend/Node cache/build artifacts", "launch checklist frontend artifact ignore scope")
+    assert_contains(launch_text, "root and nested `.gitignore` coverage for local frontend/Node cache/build artifacts", "launch checklist frontend artifact ignore scope")
     assert_contains(
         launch_text,
         "Vite/Vitest cache/config timestamp artifacts",
@@ -1672,12 +1672,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "root `.gitignore` local frontend/Node cache/build artifact guard",
+        "root and nested `.gitignore` local frontend/Node cache/build artifact guard",
         "launch evidence frontend artifact ignore risk-scan scope",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local frontend/Node cache/build artifacts",
+        "missing root and nested `.gitignore` coverage for local frontend/Node cache/build artifacts",
         "launch evidence frontend artifact ignore examples",
     )
     assert_contains(
