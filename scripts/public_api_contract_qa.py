@@ -985,7 +985,7 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "tracked local Dart/Flutter artifacts", "launch checklist Dart/Flutter artifact risk-scan scope")
     assert_contains(
         launch_text,
-        "matching `.gitignore` coverage for local Dart/Flutter artifacts",
+        "root and nested `.gitignore` coverage for local Dart/Flutter artifacts",
         "launch checklist Dart/Flutter artifact ignore scope",
     )
     assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
@@ -2159,7 +2159,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing `.gitignore` coverage for local Dart/Flutter artifacts",
+        "missing root and nested `.gitignore` coverage for local Dart/Flutter artifacts",
         "launch evidence Dart/Flutter artifact ignore examples",
     )
     assert_contains(
