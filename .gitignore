@@ -71,6 +71,10 @@ frontend/.yarn/cache/
 frontend/.yarn/unplugged/
 frontend/.yarn/build-state.yml
 frontend/.yarn/install-state.gz
+**/.yarn/cache/
+**/.yarn/unplugged/
+**/.yarn/build-state.yml
+**/.yarn/install-state.gz
 frontend/dist/
 frontend/build/
 frontend/storybook-static/
@@ -88,8 +92,10 @@ deno-dir/
 .sass-cache/
 .hugo_build.lock
 .angular/cache/
+**/.angular/cache/
 .astro/
 .next/
+.vite/
 .npm/
 .nuxt/
 .output/
@@ -117,6 +123,8 @@ coverage/
 .webpack-cache/
 .vitepress/cache/
 .vitepress/dist/
+**/.vitepress/cache/
+**/.vitepress/dist/
 .eslintcache
 .stylelintcache
 *.tsbuildinfo
