@@ -433,6 +433,8 @@ required_bazel_artifact_gitignore_patterns = {
 required_buck_artifact_gitignore_patterns = {
     "/.buckd/",
     "/buck-out/",
+    ".buckd/",
+    "buck-out/",
 }
 required_swiftpm_artifact_gitignore_patterns = {
     "/.build/",
@@ -3274,7 +3276,7 @@ def tracked_buck_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if not path.parts:
             continue
-        if path.parts[0] in blocked_tracked_buck_artifact_root_names:
+        if any(part in blocked_tracked_buck_artifact_root_names for part in path.parts):
             failures.append(f"{rel}: local Buck/Buck2 build artifacts must not be tracked for public launch")
     return failures
 
@@ -5544,7 +5546,9 @@ def self_test():
     buck_artifact_failures = tracked_buck_artifact_file_failures(
         tracked_paths=[
             ".buckd/socket",
+            "services/api/.buckd/socket",
             "buck-out/gen/app",
+            "services/api/buck-out/gen/app",
             "BUCK",
             "BUCK.v2",
             ".buckconfig",
@@ -5554,7 +5558,9 @@ def self_test():
     )
     if buck_artifact_failures != [
         ".buckd/socket: local Buck/Buck2 build artifacts must not be tracked for public launch",
+        "services/api/.buckd/socket: local Buck/Buck2 build artifacts must not be tracked for public launch",
         "buck-out/gen/app: local Buck/Buck2 build artifacts must not be tracked for public launch",
+        "services/api/buck-out/gen/app: local Buck/Buck2 build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Buck/Buck2 build artifacts")
     allowed_swiftpm_artifact_gitignore = "\n".join(sorted(required_swiftpm_artifact_gitignore_patterns)) + "\n"

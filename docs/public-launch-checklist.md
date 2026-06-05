@@ -138,7 +138,7 @@ The general mobile/Xcode/Android build artifact guard also requires root, nested
 
 It also blocks tracked local Bazel output symlinks/directories such as `bazel-bin/`, `bazel-out/`, `bazel-testlogs/`, and root `bazel-*` outputs, with matching root `.gitignore` coverage for local Bazel build artifacts. It does not treat source-of-truth Bazel files such as `BUILD`, `BUILD.bazel`, `MODULE.bazel`, or `.bzl` files as build artifacts.
 
-It also blocks tracked local Buck/Buck2 build artifacts such as `.buckd/` and `buck-out/`, with matching root `.gitignore` coverage for local Buck/Buck2 build artifacts. It does not treat source-of-truth Buck files such as `BUCK`, `BUCK.v2`, or `.buckconfig` as local build artifacts.
+It also blocks tracked local Buck/Buck2 build artifacts such as `.buckd/` and `buck-out/`, with matching root and nested `.gitignore` coverage for local Buck/Buck2 build artifacts. It does not treat source-of-truth Buck files such as `BUCK`, `BUCK.v2`, or `.buckconfig` as local build artifacts.
 
 For Yarn lockfiles, local `portal:` dependencies and local `patch:` references count as local/private dependency sources.
 

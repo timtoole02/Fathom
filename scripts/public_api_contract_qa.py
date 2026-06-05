@@ -2152,8 +2152,13 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "Buck/Buck2 local build output guard for `.buckd/` and `buck-out/`",
+        "Buck/Buck2 local build output guard for `.buckd/` and `buck-out/`, with matching root and nested `.gitignore` coverage",
         "launch evidence Buck/Buck2 artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root and nested `.gitignore` coverage for local Buck/Buck2 build artifacts",
+        "launch evidence Buck/Buck2 artifact ignore examples",
     )
     assert_contains(
         evidence_text,
