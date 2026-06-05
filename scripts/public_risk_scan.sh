@@ -354,6 +354,9 @@ required_ide_artifact_gitignore_patterns = {
     "/.idea/",
     "/.vscode/",
     "/.zed/",
+    ".idea/",
+    ".vscode/",
+    ".zed/",
     ".classpath",
     ".project",
     ".settings/",
@@ -3540,6 +3543,9 @@ def self_test():
             ".idea/workspace.xml",
             ".settings/org.eclipse.jdt.core.prefs",
             ".zed/settings.json",
+            "services/api/.vscode/settings.json",
+            "services/api/.idea/workspace.xml",
+            "services/api/.zed/settings.json",
             ".classpath",
             ".project",
             "fathom.code-workspace",
@@ -3572,6 +3578,9 @@ def self_test():
         ".idea/workspace.xml: IDE workspace/config artifacts must not be tracked for public launch",
         ".settings/org.eclipse.jdt.core.prefs: IDE workspace/config artifacts must not be tracked for public launch",
         ".zed/settings.json: IDE workspace/config artifacts must not be tracked for public launch",
+        "services/api/.vscode/settings.json: IDE workspace/config artifacts must not be tracked for public launch",
+        "services/api/.idea/workspace.xml: IDE workspace/config artifacts must not be tracked for public launch",
+        "services/api/.zed/settings.json: IDE workspace/config artifacts must not be tracked for public launch",
         ".classpath: IDE workspace/config artifacts must not be tracked for public launch",
         ".project: IDE workspace/config artifacts must not be tracked for public launch",
         "fathom.code-workspace: IDE workspace/config artifacts must not be tracked for public launch",
@@ -3595,8 +3604,8 @@ def self_test():
     allowed_ide_artifact_gitignore = "\n".join(sorted(required_ide_artifact_gitignore_patterns)) + "\n"
     if gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local IDE workspace/config ignore patterns")
-    ide_artifact_gitignore_failures = gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore.replace("*.iml\n", ""))
-    if ide_artifact_gitignore_failures != [".gitignore: missing local IDE workspace/config ignore patterns: *.iml"]:
+    ide_artifact_gitignore_failures = gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore.replace(".zed/\n", "", 1))
+    if ide_artifact_gitignore_failures != [".gitignore: missing local IDE workspace/config ignore patterns: .zed/"]:
         raise AssertionError("public risk self-test did not reject missing local IDE workspace/config ignore patterns")
     credential_file_failures = tracked_credential_file_failures(
         tracked_paths=[

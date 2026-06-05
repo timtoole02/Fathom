@@ -207,8 +207,11 @@ $RECYCLE.BIN/
 *.swo
 *.swp
 /.idea/
+.idea/
 /.vscode/
+.vscode/
 /.zed/
+.zed/
 .settings/
 .classpath
 .project

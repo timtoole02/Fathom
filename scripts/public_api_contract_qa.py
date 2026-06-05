@@ -1404,7 +1404,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local IDE workspace/config artifacts",
+        "root and nested `.gitignore` coverage for local IDE workspace/config artifacts",
         "launch checklist IDE workspace/config ignore scope",
     )
     assert_contains(
@@ -1429,12 +1429,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "root `.gitignore` local IDE workspace/config artifact guard",
+        "root and nested `.gitignore` local IDE workspace/config artifact guard",
         "launch evidence IDE workspace/config ignore risk-scan scope",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local IDE workspace/config artifacts",
+        "missing root and nested `.gitignore` coverage for local IDE workspace/config artifacts",
         "launch evidence IDE workspace/config ignore examples",
     )
     assert_contains(
