@@ -1718,7 +1718,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for those local Watchman state artifacts",
+        "missing root and nested `.gitignore` coverage for those local Watchman state artifacts",
         "launch evidence Watchman local cache artifact ignore scope",
     )
     assert_contains(
