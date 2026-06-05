@@ -427,6 +427,7 @@ required_mobile_build_gitignore_patterns = {
     "/.externalNativeBuild/",
     ".externalNativeBuild/",
     "/.gradle/",
+    ".gradle/",
     "/Carthage/Build/",
     "/Carthage/Checkouts/",
     "/DerivedData/",
@@ -669,6 +670,7 @@ required_clojure_artifact_gitignore_patterns = {
 }
 required_gradle_artifact_gitignore_patterns = {
     "/.gradle/",
+    ".gradle/",
     "build/",
 }
 required_kotlin_artifact_gitignore_patterns = {
@@ -4329,6 +4331,7 @@ def self_test():
         tracked_paths=[
             ".gradle/caches/modules-2/files-2.1/metadata.bin",
             ".gradle/buildOutputCleanup/cache.properties",
+            "examples/android/.gradle/caches/modules-2/files-2.1/metadata.bin",
             "app/build/classes/java/main/App.class",
             "android/app/build/intermediates/merged_manifest/debug/AndroidManifest.xml",
             "service/build/reports/tests/test/index.html",
@@ -4347,6 +4350,7 @@ def self_test():
     if gradle_artifact_failures != [
         ".gradle/caches/modules-2/files-2.1/metadata.bin: Gradle/JVM build artifacts must not be tracked for public launch",
         ".gradle/buildOutputCleanup/cache.properties: Gradle/JVM build artifacts must not be tracked for public launch",
+        "examples/android/.gradle/caches/modules-2/files-2.1/metadata.bin: Gradle/JVM build artifacts must not be tracked for public launch",
         "app/build/classes/java/main/App.class: Gradle/JVM build artifacts must not be tracked for public launch",
         "android/app/build/intermediates/merged_manifest/debug/AndroidManifest.xml: Gradle/JVM build artifacts must not be tracked for public launch",
         "service/build/reports/tests/test/index.html: Gradle/JVM build artifacts must not be tracked for public launch",
@@ -5506,6 +5510,7 @@ def self_test():
             "examples/android/.cxx/Debug/arm64-v8a/build.ninja",
             "examples/android/.externalNativeBuild/cmake/debug/arm64-v8a/build.ninja",
             ".gradle/caches/modules-2/files-2.1/metadata.bin",
+            "examples/android/.gradle/caches/modules-2/files-2.1/metadata.bin",
             "Carthage/Build/iOS/FathomKit.framework/FathomKit",
             "Carthage/Checkouts/FathomKit/Package.swift",
             "fastlane/Preview.html",
@@ -5549,6 +5554,7 @@ def self_test():
         "examples/android/.cxx/Debug/arm64-v8a/build.ninja: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "examples/android/.externalNativeBuild/cmake/debug/arm64-v8a/build.ninja: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         ".gradle/caches/modules-2/files-2.1/metadata.bin: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
+        "examples/android/.gradle/caches/modules-2/files-2.1/metadata.bin: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "Carthage/Build/iOS/FathomKit.framework/FathomKit: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "Carthage/Checkouts/FathomKit/Package.swift: local mobile/Xcode/Android build artifacts must not be tracked for public launch",
         "fastlane/Preview.html: local mobile/Xcode/Android build artifacts must not be tracked for public launch",

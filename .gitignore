@@ -507,6 +507,7 @@ fastlane/Preview.html
 fastlane/report.xml
 fastlane/test_output/
 /.gradle/
+.gradle/
 /Pods/
 android/.cxx/
 android/.externalNativeBuild/
