@@ -1357,7 +1357,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local shell/REPL command history files",
+        "missing root and nested `.gitignore` coverage for local shell/REPL command history files",
         "launch evidence command history ignore examples",
     )
     assert_contains(
@@ -1367,7 +1367,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local shell/REPL command history files",
+        "root and nested `.gitignore` coverage for local shell/REPL command history files",
         "launch checklist command history ignore scope",
     )
     assert_contains(
