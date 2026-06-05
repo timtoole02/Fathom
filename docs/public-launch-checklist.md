@@ -150,7 +150,7 @@ The release/package artifact guard also rejects JVM package archives such as `.j
 
 The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage.
 
-The JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`, with matching root `.gitignore` coverage. It does not treat source-of-truth JVM project files such as `pom.xml`, `build.gradle`, `build.sbt`, Java source files, Kotlin source files, or Scala source files as local tool artifacts.
+The JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth JVM project files such as `pom.xml`, `build.gradle`, `build.sbt`, Java source files, Kotlin source files, or Scala source files as local tool artifacts.
 
 The .NET/NuGet artifact guard also rejects tracked local dependency/build/user-state artifacts such as `.nuget/`, `packages/`, `bin/Debug/`, `obj/Release/`, `project.assets.json`, `project.nuget.cache`, `*.nupkg`, `*.snupkg`, `*.csproj.user`, and `*.suo`, with matching root `.gitignore` coverage. It does not treat source-of-truth .NET files such as `*.csproj`, `*.fsproj`, `*.vbproj`, `*.sln`, `Directory.Build.props`, C# source files, F# source files, or NuGet lock files as local tool artifacts.
 
