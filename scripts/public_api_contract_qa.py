@@ -2173,7 +2173,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
+        "root and nested `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
         "launch checklist Kotlin/Kotlin Native artifact ignore examples",
     )
     assert_contains(
@@ -2193,7 +2193,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
+        "missing root and nested `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
         "launch evidence Kotlin/Kotlin Native artifact ignore examples",
     )
     assert_contains(
