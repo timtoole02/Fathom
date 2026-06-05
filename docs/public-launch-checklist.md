@@ -112,7 +112,7 @@ It also blocks tracked Watchman local state cookies such as `.watchman-cookie` a
 
 It also blocks tracked local documentation build artifacts such as LaTeX auxiliary files (`*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`) and `_minted-*` caches, with matching root `.gitignore` coverage for local documentation build artifacts. It intentionally does not block all PDFs because some PDFs can be source-of-truth public docs rather than rebuildable local output.
 
-It also blocks tracked local JVM dependency artifacts such as `.m2/` at any tree depth, with matching root `.gitignore` coverage for local JVM dependency artifacts.
+It also blocks tracked local JVM dependency artifacts such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage for local JVM dependency artifacts.
 
 It also blocks tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, and `.shadow-cljs/` at any tree depth, plus `.nrepl-port`, with matching root `.gitignore` coverage for local Clojure/Leiningen artifacts. It does not treat source-of-truth Clojure files such as `project.clj`, `deps.edn`, `bb.edn`, `shadow-cljs.edn`, or Clojure/ClojureScript source files as local tool artifacts.
 
@@ -146,7 +146,7 @@ The Meson build artifact guard also rejects tracked local Meson build artifacts 
 
 The release/package artifact guard also rejects JVM package archives such as `.jar`, `.war`, and `.ear`, with matching root `.gitignore` coverage.
 
-The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/`, with matching root `.gitignore` coverage.
+The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage.
 
 The JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`, with matching root `.gitignore` coverage. It does not treat source-of-truth JVM project files such as `pom.xml`, `build.gradle`, `build.sbt`, Java source files, Kotlin source files, or Scala source files as local tool artifacts.
 

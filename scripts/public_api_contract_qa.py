@@ -1098,7 +1098,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local JVM dependency artifacts",
+        "root and nested `.gitignore` coverage for local JVM dependency artifacts",
         "launch checklist JVM dependency artifact ignore scope",
     )
     assert_contains(
@@ -1819,7 +1819,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local JVM dependency artifacts",
+        "missing root and nested `.gitignore` coverage for local JVM dependency artifacts",
         "launch evidence JVM dependency artifact ignore examples",
     )
     assert_contains(
