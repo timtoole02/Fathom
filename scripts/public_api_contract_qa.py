@@ -1883,7 +1883,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local R/RStudio artifacts",
+        "missing root and nested `.gitignore` coverage for local R/RStudio artifacts",
         "launch evidence R/RStudio artifact ignore examples",
     )
     assert_contains(
