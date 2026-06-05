@@ -511,6 +511,7 @@ required_media_capture_gitignore_patterns = {
 }
 required_rust_artifact_gitignore_patterns = {
     "/.cargo/",
+    ".cargo/",
     "/target/",
     "**/*.rs.bk",
     "*.profdata",
@@ -5086,6 +5087,7 @@ def self_test():
             ".cargo/git/checkouts/fathom-local/HEAD",
             ".cargo/credentials.toml",
             ".cargo/config.toml",
+            "crates/fathom-core/.cargo/registry/cache/index.crate",
             "target/debug/fathom",
             "crates/fathom-core/target/release/deps/libfathom_core.rlib",
             "crates/fathom-core/target/release/deps/fathom_core.rmeta",
@@ -5108,6 +5110,7 @@ def self_test():
         ".cargo/git/checkouts/fathom-local/HEAD: Rust/Cargo cache/build artifacts must not be tracked for public launch",
         ".cargo/credentials.toml: Rust/Cargo cache/build artifacts must not be tracked for public launch",
         ".cargo/config.toml: Rust/Cargo cache/build artifacts must not be tracked for public launch",
+        "crates/fathom-core/.cargo/registry/cache/index.crate: Rust/Cargo cache/build artifacts must not be tracked for public launch",
         "target/debug/fathom: Rust/Cargo cache/build artifacts must not be tracked for public launch",
         "crates/fathom-core/target/release/deps/libfathom_core.rlib: Rust/Cargo cache/build artifacts must not be tracked for public launch",
         "crates/fathom-core/target/release/deps/fathom_core.rmeta: Rust/Cargo cache/build artifacts must not be tracked for public launch",

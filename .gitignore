@@ -1,5 +1,6 @@
 # Rust
 /.cargo/
+.cargo/
 /target/
 target/
 **/*.rs.bk

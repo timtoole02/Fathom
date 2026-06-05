@@ -1094,7 +1094,11 @@ def assert_boundary_docs() -> None:
         "source-of-truth Deno project files such as `deno.json`, `deno.jsonc`, `deno.lock`, JavaScript files, and TypeScript files",
         "launch checklist Deno source-file allowance",
     )
-    assert_contains(launch_text, "root `.gitignore` coverage for local Rust/Cargo cache/build artifacts", "launch checklist Rust/Cargo artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "Rust/Cargo cache/build artifacts such as `.cargo/`, `target/`, compiler outputs, and coverage profiles, with matching root and nested `.gitignore` coverage",
+        "launch checklist Rust/Cargo artifact ignore scope",
+    )
     assert_contains(
         launch_text,
         "tracked local JVM dependency artifacts",
@@ -1773,12 +1777,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "root `.gitignore` local Rust/Cargo cache/build artifact guard",
+        "root and nested `.gitignore` local Rust/Cargo cache/build artifact guard",
         "launch evidence Rust artifact ignore risk-scan scope",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Rust/Cargo cache/build artifacts",
+        "missing root and nested `.gitignore` coverage for local Rust/Cargo cache/build artifacts",
         "launch evidence Rust artifact ignore examples",
     )
     assert_contains(
