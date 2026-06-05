@@ -195,7 +195,9 @@ blocked_tracked_workspace_dirs = {
     ".codex",
     ".continue",
     ".cursor",
+    ".openclaw",
     ".windsurf",
+    "memory",
 }
 blocked_tracked_command_history_filenames = {
     ".bash_history",
@@ -233,6 +235,24 @@ required_workspace_gitignore_patterns = {
     "/SOUL.md",
     "/TOOLS.md",
     "/USER.md",
+    ".aider.chat.history.md",
+    ".aider.input.history",
+    ".aider.tags.cache.v4",
+    ".claude/",
+    ".codex/",
+    ".continue/",
+    ".cursor/",
+    ".openclaw/",
+    ".windsurf/",
+    "memory/",
+    "AGENTS.md",
+    "BOOTSTRAP.md",
+    "HEARTBEAT.md",
+    "IDENTITY.md",
+    "MEMORY.md",
+    "SOUL.md",
+    "TOOLS.md",
+    "USER.md",
 }
 required_command_history_gitignore_patterns = {
     ".bash_history",
@@ -3708,9 +3728,20 @@ def self_test():
             ".continue/config.json",
             ".cursor/rules/project.mdc",
             ".windsurf/config.json",
+            "packages/api/.openclaw/session.json",
+            "packages/api/.codex/config.toml",
+            "packages/api/.claude/settings.local.json",
+            "packages/api/.continue/config.json",
+            "packages/api/.cursor/rules/project.mdc",
+            "packages/api/.windsurf/config.json",
+            "packages/api/memory/2026-05-31.md",
+            "packages/api/AGENTS.md",
             ".aider.chat.history.md",
             ".aider.input.history",
             ".aider.tags.cache.v4",
+            "packages/api/.aider.chat.history.md",
+            "packages/api/.aider.input.history",
+            "packages/api/.aider.tags.cache.v4",
             "docs/api/public-contract.json",
         ],
     )
@@ -3726,16 +3757,27 @@ def self_test():
         ".continue/config.json: workspace/personal agent context files must not be tracked for public launch",
         ".cursor/rules/project.mdc: workspace/personal agent context files must not be tracked for public launch",
         ".windsurf/config.json: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.openclaw/session.json: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.codex/config.toml: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.claude/settings.local.json: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.continue/config.json: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.cursor/rules/project.mdc: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.windsurf/config.json: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/memory/2026-05-31.md: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/AGENTS.md: workspace/personal agent context files must not be tracked for public launch",
         ".aider.chat.history.md: workspace/personal agent context files must not be tracked for public launch",
         ".aider.input.history: workspace/personal agent context files must not be tracked for public launch",
         ".aider.tags.cache.v4: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.aider.chat.history.md: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.aider.input.history: workspace/personal agent context files must not be tracked for public launch",
+        "packages/api/.aider.tags.cache.v4: workspace/personal agent context files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked workspace/personal agent context files")
     allowed_gitignore = "\n".join(sorted(required_workspace_gitignore_patterns)) + "\n"
     if gitignore_workspace_context_failures(allowed_gitignore):
         raise AssertionError("public risk self-test rejected complete workspace/personal context ignore patterns")
-    gitignore_failures = gitignore_workspace_context_failures(allowed_gitignore.replace("/.codex/\n", ""))
-    if gitignore_failures != [".gitignore: missing workspace/personal context ignore patterns: /.codex/"]:
+    gitignore_failures = gitignore_workspace_context_failures(allowed_gitignore.replace(".codex/\n", "", 1))
+    if gitignore_failures != [".gitignore: missing workspace/personal context ignore patterns: .codex/"]:
         raise AssertionError("public risk self-test did not reject missing workspace/personal context ignore patterns")
     command_history_failures = tracked_command_history_file_failures(
         tracked_paths=[

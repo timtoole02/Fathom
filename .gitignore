@@ -577,23 +577,41 @@ Voice Memo *
 
 # Personal workspace context
 /.openclaw/
+.openclaw/
 /.codex/
+.codex/
 /.claude/
+.claude/
 /.continue/
+.continue/
 /.cursor/
+.cursor/
 /.windsurf/
+.windsurf/
 /memory/
+memory/
 /AGENTS.md
+AGENTS.md
 /.aider.chat.history.md
+.aider.chat.history.md
 /.aider.input.history
+.aider.input.history
 /.aider.tags.cache.v4
+.aider.tags.cache.v4
 /BOOTSTRAP.md
+BOOTSTRAP.md
 /HEARTBEAT.md
+HEARTBEAT.md
 /IDENTITY.md
+IDENTITY.md
 /MEMORY.md
+MEMORY.md
 /SOUL.md
+SOUL.md
 /TOOLS.md
+TOOLS.md
 /USER.md
+USER.md
 
 # Local command history
 .bash_history

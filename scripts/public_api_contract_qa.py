@@ -1334,7 +1334,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for personal workspace context including local assistant state",
+        "root and nested `.gitignore` coverage for personal workspace context including local assistant state",
         "launch checklist local assistant state ignore scope",
     )
     assert_contains(
