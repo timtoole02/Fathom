@@ -396,6 +396,9 @@ lua_modules/
 /cypress/screenshots/
 /cypress/videos/
 /cypress/downloads/
+**/cypress/screenshots/
+**/cypress/videos/
+**/cypress/downloads/
 frontend/cypress/screenshots/
 frontend/cypress/videos/
 frontend/cypress/downloads/

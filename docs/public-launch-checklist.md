@@ -186,7 +186,7 @@ The ML experiment/tracking artifact guard rejects tracked local W&B, MLflow, Lig
 
 The backend acceptance artifact summaries reject local paths, secret markers, and request/payload text in shareable `summary.json` and `summary.md`; keep full JSON artifacts and logs on the manual review path before publishing.
 
-The browser-test artifact guard also blocks Cypress screenshot, video, and download output directories in addition to Playwright report directories, with matching root `.gitignore` coverage.
+The browser-test artifact guard also blocks Cypress screenshot, video, and download output directories in addition to Playwright report directories, with matching root and nested `.gitignore` coverage for Cypress outputs.
 
 ## What this launch currently proves
 
