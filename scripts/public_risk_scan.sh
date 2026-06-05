@@ -271,12 +271,16 @@ required_local_ci_artifact_gitignore_patterns = {
 }
 required_credential_gitignore_patterns = {
     "/.direnv/",
+    ".direnv/",
     ".env",
     ".env.*",
     ".envrc",
     "/.ssh/",
+    ".ssh/",
     "/private/",
+    "private/",
     "/secrets/",
+    "secrets/",
     "!.env.example",
     "*.jks",
     "*.key",
@@ -3616,8 +3620,12 @@ def self_test():
             ".direnv/allow",
             ".npmrc",
             ".ssh/config",
+            "services/api/.direnv/allow",
+            "services/api/.ssh/config",
             "secrets/api-keys.json",
             "private/prod-env.txt",
+            "services/api/secrets/api-keys.json",
+            "services/api/private/prod-env.txt",
             "docs/id_ed25519",
             "docs/deploy.secret",
             "docs/deploy.secrets",
@@ -3645,8 +3653,12 @@ def self_test():
         ".direnv/allow: credential/config files must not be tracked for public launch",
         ".npmrc: credential/config files must not be tracked for public launch",
         ".ssh/config: credential/config files must not be tracked for public launch",
+        "services/api/.direnv/allow: credential/config files must not be tracked for public launch",
+        "services/api/.ssh/config: credential/config files must not be tracked for public launch",
         "secrets/api-keys.json: credential/config files must not be tracked for public launch",
         "private/prod-env.txt: credential/config files must not be tracked for public launch",
+        "services/api/secrets/api-keys.json: credential/config files must not be tracked for public launch",
+        "services/api/private/prod-env.txt: credential/config files must not be tracked for public launch",
         "docs/id_ed25519: credential/config files must not be tracked for public launch",
         "docs/deploy.secret: credential/key files must not be tracked for public launch",
         "docs/deploy.secrets: credential/key files must not be tracked for public launch",
@@ -3851,8 +3863,8 @@ def self_test():
     allowed_credential_gitignore = "\n".join(sorted(required_credential_gitignore_patterns)) + "\n"
     if gitignore_credential_failures(allowed_credential_gitignore):
         raise AssertionError("public risk self-test rejected complete local credential/config ignore patterns")
-    credential_gitignore_failures = gitignore_credential_failures(allowed_credential_gitignore.replace("/.ssh/\n", ""))
-    if credential_gitignore_failures != [".gitignore: missing local credential/config ignore patterns: /.ssh/"]:
+    credential_gitignore_failures = gitignore_credential_failures(allowed_credential_gitignore.replace(".ssh/\n", "", 1))
+    if credential_gitignore_failures != [".gitignore: missing local credential/config ignore patterns: .ssh/"]:
         raise AssertionError("public risk self-test did not reject missing local credential/config ignore patterns")
     allowed_cloud_credential_gitignore = "\n".join(sorted(required_cloud_credential_gitignore_patterns)) + "\n"
     if gitignore_cloud_credential_failures(allowed_cloud_credential_gitignore):
