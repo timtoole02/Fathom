@@ -224,18 +224,31 @@ __pycache__/
 
 # Local Python virtualenv/dependency artifacts
 /.venv/
+.venv/
 /venv/
+venv/
 /env/
+env/
 /.tox/
+.tox/
 /.nox/
+.nox/
 /.pdm-build/
+.pdm-build/
 /__pypackages__/
+__pypackages__/
 /.uv/
+.uv/
 /.uv-cache/
+.uv-cache/
 /.pip-cache/
+.pip-cache/
 /uv-cache/
+uv-cache/
 /pip-cache/
+pip-cache/
 /wheelhouse/
+wheelhouse/
 pip-wheel-metadata/
 site-packages/
 

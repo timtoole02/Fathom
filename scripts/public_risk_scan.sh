@@ -586,8 +586,21 @@ required_python_env_artifact_gitignore_patterns = {
     "/uv-cache/",
     "/venv/",
     "/wheelhouse/",
+    ".nox/",
+    ".pdm-build/",
+    ".pip-cache/",
+    ".tox/",
+    ".uv-cache/",
+    ".uv/",
+    ".venv/",
+    "__pypackages__/",
+    "env/",
     "pip-wheel-metadata/",
+    "pip-cache/",
     "site-packages/",
+    "uv-cache/",
+    "venv/",
+    "wheelhouse/",
 }
 required_ruby_bundle_artifact_gitignore_patterns = {
     "/.bundle/",
@@ -3951,8 +3964,14 @@ def self_test():
             "wheelhouse/fathom-0.1.0-py3-none-any.whl",
             "pip-wheel-metadata/fathom.json",
             "python/site-packages/fathom/__init__.py",
+            "examples/python/.pdm-build/fathom/wheel-data.json",
+            "examples/python/__pypackages__/3.12/lib/fathom/__init__.py",
+            "examples/python/.uv-cache/archive-v0/package",
+            "examples/python/wheelhouse/fathom-0.1.0-py3-none-any.whl",
             "docs/api/public-contract.json",
             "scripts/public_api_contract_qa.py",
+            "examples/python/pyproject.toml",
+            "examples/python/src/fathom.py",
         ],
     )
     if python_env_artifact_failures != [
@@ -3971,16 +3990,20 @@ def self_test():
         "wheelhouse/fathom-0.1.0-py3-none-any.whl: Python virtualenv/dependency artifacts must not be tracked for public launch",
         "pip-wheel-metadata/fathom.json: Python virtualenv/dependency artifacts must not be tracked for public launch",
         "python/site-packages/fathom/__init__.py: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "examples/python/.pdm-build/fathom/wheel-data.json: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "examples/python/__pypackages__/3.12/lib/fathom/__init__.py: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "examples/python/.uv-cache/archive-v0/package: Python virtualenv/dependency artifacts must not be tracked for public launch",
+        "examples/python/wheelhouse/fathom-0.1.0-py3-none-any.whl: Python virtualenv/dependency artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Python virtualenv/dependency artifacts")
     allowed_python_env_artifact_gitignore = "\n".join(sorted(required_python_env_artifact_gitignore_patterns)) + "\n"
     if gitignore_python_env_artifact_failures(allowed_python_env_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Python virtualenv/dependency artifact ignore patterns")
     python_env_artifact_gitignore_failures = gitignore_python_env_artifact_failures(
-        allowed_python_env_artifact_gitignore.replace("/__pypackages__/\n", "")
+        allowed_python_env_artifact_gitignore.replace("site-packages/\n", "")
     )
     if python_env_artifact_gitignore_failures != [
-        ".gitignore: missing local Python virtualenv/dependency artifact ignore patterns: /__pypackages__/"
+        ".gitignore: missing local Python virtualenv/dependency artifact ignore patterns: site-packages/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Python virtualenv/dependency artifact ignore patterns")
     ruby_bundle_artifact_failures = tracked_ruby_bundle_artifact_file_failures(
