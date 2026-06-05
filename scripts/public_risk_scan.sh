@@ -599,8 +599,12 @@ required_php_composer_artifact_gitignore_patterns = {
     "/vendor/autoload.php",
     "/vendor/bin/",
     "/vendor/composer/",
+    ".phpunit.cache/",
     ".phpunit.result.cache",
     "composer.phar",
+    "**/vendor/autoload.php",
+    "**/vendor/bin/",
+    "**/vendor/composer/",
 }
 required_r_artifact_gitignore_patterns = {
     "/.Rproj.user/",
@@ -2713,10 +2717,16 @@ def tracked_php_composer_artifact_file_failures(tracked_paths=None):
         if any(part in blocked_tracked_php_composer_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: PHP Composer dependency/test artifacts must not be tracked for public launch")
             continue
-        if len(path.parts) >= 2 and tuple(path.parts[:2]) in blocked_tracked_php_composer_vendor_artifact_dirs:
+        if any(
+            tuple(path.parts[index : index + 2]) in blocked_tracked_php_composer_vendor_artifact_dirs
+            for index in range(max(len(path.parts) - 1, 0))
+        ):
             failures.append(f"{rel}: PHP Composer dependency artifacts must not be tracked for public launch")
             continue
-        if len(path.parts) >= 2 and tuple(path.parts[:2]) in blocked_tracked_php_composer_vendor_artifact_paths:
+        if any(
+            tuple(path.parts[index : index + 2]) in blocked_tracked_php_composer_vendor_artifact_paths
+            for index in range(max(len(path.parts) - 1, 0))
+        ):
             failures.append(f"{rel}: PHP Composer dependency artifacts must not be tracked for public launch")
             continue
         if path.name in blocked_tracked_php_composer_artifact_filenames:
@@ -4006,10 +4016,17 @@ def self_test():
             "vendor/bin/phpunit",
             "vendor/composer/installed.json",
             ".phpunit.cache/test-results",
+            "examples/php/vendor/autoload.php",
+            "examples/php/vendor/bin/phpunit",
+            "examples/php/vendor/composer/installed.json",
+            "examples/php/.phpunit.cache/test-results",
             ".phpunit.result.cache",
             "composer.phar",
             "composer.json",
             "composer.lock",
+            "examples/php/composer.json",
+            "examples/php/composer.lock",
+            "examples/php/src/Fathom.php",
             "src/Fathom.php",
             "vendor/local-source/README.md",
         ],
@@ -4019,6 +4036,10 @@ def self_test():
         "vendor/bin/phpunit: PHP Composer dependency artifacts must not be tracked for public launch",
         "vendor/composer/installed.json: PHP Composer dependency artifacts must not be tracked for public launch",
         ".phpunit.cache/test-results: PHP Composer dependency/test artifacts must not be tracked for public launch",
+        "examples/php/vendor/autoload.php: PHP Composer dependency artifacts must not be tracked for public launch",
+        "examples/php/vendor/bin/phpunit: PHP Composer dependency artifacts must not be tracked for public launch",
+        "examples/php/vendor/composer/installed.json: PHP Composer dependency artifacts must not be tracked for public launch",
+        "examples/php/.phpunit.cache/test-results: PHP Composer dependency/test artifacts must not be tracked for public launch",
         ".phpunit.result.cache: PHP Composer dependency/test artifacts must not be tracked for public launch",
         "composer.phar: PHP Composer dependency/test artifacts must not be tracked for public launch",
     ]:
@@ -4027,10 +4048,10 @@ def self_test():
     if gitignore_php_composer_artifact_failures(allowed_php_composer_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local PHP Composer dependency/test artifact ignore patterns")
     php_composer_artifact_gitignore_failures = gitignore_php_composer_artifact_failures(
-        allowed_php_composer_artifact_gitignore.replace("/vendor/composer/\n", "")
+        allowed_php_composer_artifact_gitignore.replace("**/vendor/composer/\n", "")
     )
     if php_composer_artifact_gitignore_failures != [
-        ".gitignore: missing local PHP Composer dependency/test artifact ignore patterns: /vendor/composer/"
+        ".gitignore: missing local PHP Composer dependency/test artifact ignore patterns: **/vendor/composer/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local PHP Composer dependency/test artifact ignore patterns")
     r_artifact_failures = tracked_r_artifact_file_failures(

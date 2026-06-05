@@ -246,9 +246,13 @@ site-packages/
 
 # Local PHP Composer dependency/test artifacts
 /vendor/autoload.php
+**/vendor/autoload.php
 /vendor/bin/
+**/vendor/bin/
 /vendor/composer/
+**/vendor/composer/
 /.phpunit.cache/
+.phpunit.cache/
 .phpunit.result.cache
 composer.phar
 

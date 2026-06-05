@@ -166,7 +166,7 @@ The Lua/LuaRocks artifact guard also rejects tracked local dependency/build/pack
 
 The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/`, with matching root `.gitignore` coverage.
 
-The PHP Composer guard also rejects tracked local dependency/test artifacts such as `vendor/autoload.php`, `vendor/bin/`, `vendor/composer/`, `.phpunit.cache/`, `.phpunit.result.cache`, and `composer.phar`, with matching root `.gitignore` coverage.
+The PHP Composer guard also rejects tracked local dependency/test artifacts such as `vendor/autoload.php`, `vendor/bin/`, `vendor/composer/`, and `.phpunit.cache/` at any tree depth, plus `.phpunit.result.cache` and `composer.phar`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Composer files such as `composer.json`, `composer.lock`, PHP source files, or PHP docs as local dependency/test artifacts.
 
 The R/RStudio artifact guard also rejects tracked local session and dependency artifacts such as `.Rproj.user/` and `renv/library/` at any tree depth, plus `.Rhistory`, `.RData`, and `.Ruserdata`, with matching root `.gitignore` coverage for local R/RStudio artifacts.
 
