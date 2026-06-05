@@ -886,6 +886,14 @@ required_test_report_artifact_gitignore_patterns = {
     "/reports/",
     "/test-reports/",
     "/test-results/",
+    "**/.nyc_output/",
+    "**/.playwright/",
+    "**/blob-report/",
+    "**/htmlcov/",
+    "**/playwright-report/",
+    "**/reports/",
+    "**/test-reports/",
+    "**/test-results/",
     ".coverage",
     ".coverage.*",
     "*.lcov",
@@ -3370,7 +3378,7 @@ def tracked_test_report_artifact_file_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
-        if path.parts and path.parts[0] in blocked_tracked_test_report_artifact_dirs:
+        if any(part in blocked_tracked_test_report_artifact_dirs for part in path.parts[:-1]):
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
             continue
         if any(
@@ -4972,6 +4980,9 @@ def self_test():
             "playwright-report/index.html",
             "blob-report/report.zip",
             ".playwright/screenshots/home.png",
+            "examples/web/playwright-report/index.html",
+            "examples/web/blob-report/report.zip",
+            "examples/web/.playwright/screenshots/home.png",
             "cypress/screenshots/chat/refusal.png",
             "cypress/videos/chat/refusal.mp4",
             "cypress/downloads/public-contract-summary.json",
@@ -4984,6 +4995,11 @@ def self_test():
             "reports/public-risk/index.html",
             "htmlcov/index.html",
             ".nyc_output/processinfo/index.json",
+            "services/api/test-results/junit.xml",
+            "services/api/test-reports/backend.xml",
+            "services/api/reports/public-risk/index.html",
+            "services/api/htmlcov/index.html",
+            "services/api/.nyc_output/processinfo/index.json",
             ".coverage",
             ".coverage.public-risk",
             "coverage.xml",
@@ -5001,6 +5017,9 @@ def self_test():
         "playwright-report/index.html: local test report artifacts must not be tracked for public launch",
         "blob-report/report.zip: local test report artifacts must not be tracked for public launch",
         ".playwright/screenshots/home.png: local test report artifacts must not be tracked for public launch",
+        "examples/web/playwright-report/index.html: local test report artifacts must not be tracked for public launch",
+        "examples/web/blob-report/report.zip: local test report artifacts must not be tracked for public launch",
+        "examples/web/.playwright/screenshots/home.png: local test report artifacts must not be tracked for public launch",
         "cypress/screenshots/chat/refusal.png: local browser-test artifacts must not be tracked for public launch",
         "cypress/videos/chat/refusal.mp4: local browser-test artifacts must not be tracked for public launch",
         "cypress/downloads/public-contract-summary.json: local browser-test artifacts must not be tracked for public launch",
@@ -5013,6 +5032,11 @@ def self_test():
         "reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",
         "htmlcov/index.html: local test report artifacts must not be tracked for public launch",
         ".nyc_output/processinfo/index.json: local test report artifacts must not be tracked for public launch",
+        "services/api/test-results/junit.xml: local test report artifacts must not be tracked for public launch",
+        "services/api/test-reports/backend.xml: local test report artifacts must not be tracked for public launch",
+        "services/api/reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",
+        "services/api/htmlcov/index.html: local test report artifacts must not be tracked for public launch",
+        "services/api/.nyc_output/processinfo/index.json: local test report artifacts must not be tracked for public launch",
         ".coverage: local test report artifacts must not be tracked for public launch",
         ".coverage.public-risk: local test report artifacts must not be tracked for public launch",
         "coverage.xml: local test report artifacts must not be tracked for public launch",

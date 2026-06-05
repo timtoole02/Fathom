@@ -393,6 +393,9 @@ lua_modules/
 /playwright-report/
 /blob-report/
 /.playwright/
+**/playwright-report/
+**/blob-report/
+**/.playwright/
 /cypress/screenshots/
 /cypress/videos/
 /cypress/downloads/
@@ -407,6 +410,11 @@ frontend/cypress/downloads/
 /reports/
 /htmlcov/
 /.nyc_output/
+**/test-results/
+**/test-reports/
+**/reports/
+**/htmlcov/
+**/.nyc_output/
 .coverage
 .coverage.*
 coverage.xml
