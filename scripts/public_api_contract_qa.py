@@ -989,7 +989,11 @@ def assert_boundary_docs() -> None:
         "launch checklist Dart/Flutter artifact ignore scope",
     )
     assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
-    assert_contains(launch_text, "root `.gitignore` coverage for local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "root, nested, Android-specific, and platform artifact `.gitignore` coverage for local mobile build outputs",
+        "launch checklist mobile build artifact ignore scope",
+    )
     assert_contains(launch_text, "Expo local project state such as `.expo/` and `.expo-shared/`", "launch checklist Expo local state scope")
     assert_contains(launch_text, "source-of-truth mobile app code, Expo config, Android Gradle project files, or iOS Xcode project files", "launch checklist Expo source allowance")
     assert_contains(launch_text, "Android native build intermediates such as `.cxx/` and `.externalNativeBuild/`", "launch checklist Android native build intermediate scope")
@@ -2294,7 +2298,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local mobile/Xcode/Android build artifacts",
+        "missing root, nested, Android-specific, and platform artifact `.gitignore` coverage for local mobile build outputs",
         "launch evidence mobile build artifact ignore examples",
     )
     assert_contains(
