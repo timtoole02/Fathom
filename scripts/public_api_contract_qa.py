@@ -1982,7 +1982,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local documentation build artifacts",
+        "root and nested `.gitignore` coverage for local documentation build artifacts",
         "launch checklist documentation build artifact ignore scope",
     )
     assert_contains(
@@ -2027,7 +2027,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local documentation build artifacts",
+        "missing root and nested `.gitignore` coverage for local documentation build artifacts",
         "launch evidence documentation build artifact ignore examples",
     )
     assert_contains(
