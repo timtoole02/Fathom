@@ -1898,7 +1898,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Julia depot/preference artifacts",
+        "missing root and nested `.gitignore` coverage for local Julia depot/preference artifacts",
         "launch evidence Julia artifact ignore examples",
     )
     assert_contains(
