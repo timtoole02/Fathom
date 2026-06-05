@@ -267,6 +267,7 @@ required_command_history_gitignore_patterns = {
 }
 required_local_ci_artifact_gitignore_patterns = {
     "/.act/",
+    ".act/",
     ".actrc",
 }
 required_credential_gitignore_patterns = {
@@ -3840,6 +3841,7 @@ def self_test():
         tracked_paths=[
             ".act/event.json",
             ".act/workflows/ci-1/container-options.json",
+            "services/api/.act/workflows/ci/container-options.json",
             ".actrc",
             "docs/api/public-contract.json",
         ],
@@ -3847,6 +3849,7 @@ def self_test():
     if local_ci_artifact_failures != [
         ".act/event.json: local CI runner artifacts must not be tracked for public launch",
         ".act/workflows/ci-1/container-options.json: local CI runner artifacts must not be tracked for public launch",
+        "services/api/.act/workflows/ci/container-options.json: local CI runner artifacts must not be tracked for public launch",
         ".actrc: local CI runner config must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local CI runner artifacts")
@@ -3854,10 +3857,10 @@ def self_test():
     if gitignore_local_ci_artifact_failures(allowed_local_ci_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local CI runner artifact ignore patterns")
     local_ci_artifact_gitignore_failures = gitignore_local_ci_artifact_failures(
-        allowed_local_ci_artifact_gitignore.replace("/.act/\n", "")
+        allowed_local_ci_artifact_gitignore.replace(".act/\n", "", 1)
     )
     if local_ci_artifact_gitignore_failures != [
-        ".gitignore: missing local CI runner artifact ignore patterns: /.act/"
+        ".gitignore: missing local CI runner artifact ignore patterns: .act/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local CI runner artifact ignore patterns")
     allowed_credential_gitignore = "\n".join(sorted(required_credential_gitignore_patterns)) + "\n"

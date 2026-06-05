@@ -629,6 +629,7 @@ USER.md
 
 # Local CI runner artifacts
 /.act/
+.act/
 .actrc
 
 # Local secrets and credentials
