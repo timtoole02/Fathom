@@ -114,7 +114,7 @@ It also blocks tracked local documentation build artifacts such as LaTeX auxilia
 
 It also blocks tracked local JVM dependency artifacts such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage for local JVM dependency artifacts.
 
-It also blocks tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, and `.shadow-cljs/` at any tree depth, plus `.nrepl-port`, with matching root `.gitignore` coverage for local Clojure/Leiningen artifacts. It does not treat source-of-truth Clojure files such as `project.clj`, `deps.edn`, `bb.edn`, `shadow-cljs.edn`, or Clojure/ClojureScript source files as local tool artifacts.
+It also blocks tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, and `.shadow-cljs/` at any tree depth, plus `.nrepl-port`, with matching root and nested `.gitignore` coverage for local Clojure/Leiningen artifacts. It does not treat source-of-truth Clojure files such as `project.clj`, `deps.edn`, `bb.edn`, `shadow-cljs.edn`, or Clojure/ClojureScript source files as local tool artifacts.
 
 It also blocks tracked local CI runner artifacts/config such as `.act/` and `.actrc`, with matching root and nested `.gitignore` coverage, so local `act` workflow state cannot be mistaken for launch evidence.
 
