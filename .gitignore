@@ -620,9 +620,13 @@ Voice Memo *
 /secrets/
 /private/
 /.aws/
+.aws/
 /.azure/
+.azure/
 /.config/gcloud/
+**/.config/gcloud/
 /.kube/
+.kube/
 *.pem
 *.key
 *.jks

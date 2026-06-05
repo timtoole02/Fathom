@@ -1454,7 +1454,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "root `.gitignore` local cloud SDK credential/config guard",
+        "root and nested `.gitignore` local cloud SDK credential/config guard",
         "launch evidence cloud SDK credential ignore risk-scan scope",
     )
     assert_contains(
@@ -1464,7 +1464,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local cloud SDK credential/config files",
+        "missing root and nested `.gitignore` coverage for local cloud SDK credential/config files",
         "launch evidence cloud SDK credential ignore examples",
     )
     assert_contains(
@@ -1474,7 +1474,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "root `.gitignore` local Kubernetes credential/config guard",
+        "root and nested `.gitignore` local Kubernetes credential/config guard",
         "launch evidence Kubernetes credential ignore risk-scan scope",
     )
     assert_contains(
@@ -1484,7 +1484,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Kubernetes credential/config files",
+        "missing root and nested `.gitignore` coverage for local Kubernetes credential/config files",
         "launch evidence Kubernetes credential ignore examples",
     )
     assert_contains(
@@ -1524,7 +1524,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local cloud SDK credential/config files",
+        "root and nested `.gitignore` coverage for local cloud SDK credential/config files",
         "launch checklist cloud SDK credential ignore scope",
     )
     assert_contains(
@@ -1534,7 +1534,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local Kubernetes credential/config files",
+        "root and nested `.gitignore` coverage for local Kubernetes credential/config files",
         "launch checklist Kubernetes credential ignore scope",
     )
     assert_contains(

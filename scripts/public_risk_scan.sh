@@ -287,6 +287,9 @@ required_cloud_credential_gitignore_patterns = {
     "/.aws/",
     "/.azure/",
     "/.config/gcloud/",
+    ".aws/",
+    ".azure/",
+    "**/.config/gcloud/",
     ".boto",
     "application_default_credentials.json",
     "boto.cfg",
@@ -296,6 +299,7 @@ required_cloud_credential_gitignore_patterns = {
 }
 required_kubernetes_credential_gitignore_patterns = {
     "/.kube/",
+    ".kube/",
     "kubeconfig",
     "kubeconfig.yaml",
     "kubeconfig.yml",
@@ -1724,7 +1728,10 @@ def tracked_cloud_credential_file_failures(tracked_paths=None):
         if any(part in blocked_tracked_cloud_credential_dirs for part in path.parts):
             failures.append(f"{rel}: cloud SDK credential/config files must not be tracked for public launch")
             continue
-        if len(path.parts) >= 2 and path.parts[0] == ".config" and path.parts[1] == "gcloud":
+        if any(
+            path.parts[index] == ".config" and path.parts[index + 1] == "gcloud"
+            for index in range(max(len(path.parts) - 1, 0))
+        ):
             failures.append(f"{rel}: cloud SDK credential/config files must not be tracked for public launch")
             continue
         if path.name in blocked_tracked_cloud_credential_filenames:
@@ -3638,6 +3645,9 @@ def self_test():
             ".config/gcloud",
             ".config/gcloud/application_default_credentials.json",
             ".config/gcloud/configurations/config_default",
+            "services/api/.aws/credentials",
+            "services/api/.azure/accessTokens.json",
+            "services/api/.config/gcloud/configurations/config_default",
             ".boto",
             "boto.cfg",
             "secrets/service-account.json",
@@ -3654,6 +3664,9 @@ def self_test():
         ".config/gcloud: cloud SDK credential/config files must not be tracked for public launch",
         ".config/gcloud/application_default_credentials.json: cloud SDK credential/config files must not be tracked for public launch",
         ".config/gcloud/configurations/config_default: cloud SDK credential/config files must not be tracked for public launch",
+        "services/api/.aws/credentials: cloud SDK credential/config files must not be tracked for public launch",
+        "services/api/.azure/accessTokens.json: cloud SDK credential/config files must not be tracked for public launch",
+        "services/api/.config/gcloud/configurations/config_default: cloud SDK credential/config files must not be tracked for public launch",
         ".boto: cloud SDK credential/config files must not be tracked for public launch",
         "boto.cfg: cloud SDK credential/config files must not be tracked for public launch",
         "secrets/service-account.json: cloud SDK credential/config files must not be tracked for public launch",
@@ -3665,6 +3678,7 @@ def self_test():
         tracked_paths=[
             ".kube/config",
             ".kube/cache/discovery/example.json",
+            "deploy/.kube/cache/discovery/example.json",
             "ops/kubeconfig",
             "ops/kubeconfig.yaml",
             "ops/kubeconfig.yml",
@@ -3675,6 +3689,7 @@ def self_test():
     if kubernetes_credential_file_failures != [
         ".kube/config: Kubernetes credential/config files must not be tracked for public launch",
         ".kube/cache/discovery/example.json: Kubernetes credential/config files must not be tracked for public launch",
+        "deploy/.kube/cache/discovery/example.json: Kubernetes credential/config files must not be tracked for public launch",
         "ops/kubeconfig: Kubernetes credential/config files must not be tracked for public launch",
         "ops/kubeconfig.yaml: Kubernetes credential/config files must not be tracked for public launch",
         "ops/kubeconfig.yml: Kubernetes credential/config files must not be tracked for public launch",
@@ -3792,20 +3807,20 @@ def self_test():
     if gitignore_cloud_credential_failures(allowed_cloud_credential_gitignore):
         raise AssertionError("public risk self-test rejected complete local cloud SDK credential/config ignore patterns")
     cloud_credential_gitignore_failures = gitignore_cloud_credential_failures(
-        allowed_cloud_credential_gitignore.replace("/.config/gcloud/\n", "")
+        allowed_cloud_credential_gitignore.replace("**/.config/gcloud/\n", "")
     )
     if cloud_credential_gitignore_failures != [
-        ".gitignore: missing local cloud SDK credential/config ignore patterns: /.config/gcloud/"
+        ".gitignore: missing local cloud SDK credential/config ignore patterns: **/.config/gcloud/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local cloud SDK credential/config ignore patterns")
     allowed_kubernetes_credential_gitignore = "\n".join(sorted(required_kubernetes_credential_gitignore_patterns)) + "\n"
     if gitignore_kubernetes_credential_failures(allowed_kubernetes_credential_gitignore):
         raise AssertionError("public risk self-test rejected complete local Kubernetes credential/config ignore patterns")
     kubernetes_credential_gitignore_failures = gitignore_kubernetes_credential_failures(
-        allowed_kubernetes_credential_gitignore.replace("/.kube/\n", "")
+        allowed_kubernetes_credential_gitignore.replace(".kube/\n", "", 1)
     )
     if kubernetes_credential_gitignore_failures != [
-        ".gitignore: missing local Kubernetes credential/config ignore patterns: /.kube/"
+        ".gitignore: missing local Kubernetes credential/config ignore patterns: .kube/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Kubernetes credential/config ignore patterns")
     allowed_model_artifact_gitignore = "\n".join(sorted(required_model_artifact_gitignore_patterns)) + "\n"
