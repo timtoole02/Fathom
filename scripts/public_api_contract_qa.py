@@ -1751,6 +1751,16 @@ def assert_boundary_docs() -> None:
         "launch evidence Playwright/browser-test report examples",
     )
     assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for Cypress outputs",
+        "launch checklist Cypress browser-test artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Cypress screenshot, video, and download output directories at any tree depth",
+        "launch evidence Cypress browser-test artifact examples",
+    )
+    assert_contains(
         evidence_text,
         "NYC/Istanbul coverage artifacts such as `.nyc_output/`, `coverage-final.json`, and `clover.xml`",
         "launch evidence JS coverage artifact examples",
