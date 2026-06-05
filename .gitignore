@@ -481,9 +481,13 @@ _minted-*/
 
 # Local ML experiment/tracking artifacts
 /.wandb/
+.wandb/
 /wandb/
+wandb/
 /mlruns/
+mlruns/
 /lightning_logs/
+lightning_logs/
 events.out.tfevents.*
 
 # Local Docker/container artifacts

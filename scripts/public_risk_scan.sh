@@ -386,9 +386,13 @@ required_model_artifact_gitignore_patterns = {
 }
 required_experiment_tracking_artifact_gitignore_patterns = {
     "/.wandb/",
+    ".wandb/",
     "/lightning_logs/",
+    "lightning_logs/",
     "/mlruns/",
+    "mlruns/",
     "/wandb/",
+    "wandb/",
     "events.out.tfevents.*",
 }
 required_container_artifact_gitignore_patterns = {
@@ -3178,7 +3182,7 @@ def tracked_experiment_tracking_artifact_file_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
-        if path.parts and path.parts[0] in blocked_tracked_experiment_tracking_artifact_root_names:
+        if any(part in blocked_tracked_experiment_tracking_artifact_root_names for part in path.parts):
             failures.append(f"{rel}: local ML experiment/tracking artifacts must not be tracked for public launch")
             continue
         if any(fnmatch.fnmatch(path.name, pattern) for pattern in blocked_tracked_experiment_tracking_artifact_filename_patterns):
@@ -5344,10 +5348,10 @@ def self_test():
     if gitignore_experiment_tracking_artifact_failures(allowed_experiment_tracking_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local ML experiment/tracking artifact ignore patterns")
     experiment_tracking_artifact_gitignore_failures = gitignore_experiment_tracking_artifact_failures(
-        allowed_experiment_tracking_artifact_gitignore.replace("/mlruns/\n", "")
+        allowed_experiment_tracking_artifact_gitignore.replace("\nmlruns/\n", "\n", 1)
     )
     if experiment_tracking_artifact_gitignore_failures != [
-        ".gitignore: missing local ML experiment/tracking artifact ignore patterns: /mlruns/"
+        ".gitignore: missing local ML experiment/tracking artifact ignore patterns: mlruns/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local ML experiment/tracking artifact ignore patterns")
     experiment_tracking_artifact_failures = tracked_experiment_tracking_artifact_file_failures(
@@ -5356,6 +5360,10 @@ def self_test():
             "wandb/latest-run/files/output.log",
             "mlruns/0/meta.yaml",
             "lightning_logs/version_0/events.out.tfevents.123456.local",
+            "services/api/.wandb/run-20260602_174300-fathom/files/config.yaml",
+            "services/api/wandb/latest-run/files/output.log",
+            "services/api/mlruns/0/meta.yaml",
+            "services/api/lightning_logs/version_0/events.out.tfevents.123456.local",
             "runs/events.out.tfevents.123456.local",
             "docs/research/performance-strategy.md",
             "docs/api/public-contract.json",
@@ -5366,6 +5374,10 @@ def self_test():
         "wandb/latest-run/files/output.log: local ML experiment/tracking artifacts must not be tracked for public launch",
         "mlruns/0/meta.yaml: local ML experiment/tracking artifacts must not be tracked for public launch",
         "lightning_logs/version_0/events.out.tfevents.123456.local: local ML experiment/tracking artifacts must not be tracked for public launch",
+        "services/api/.wandb/run-20260602_174300-fathom/files/config.yaml: local ML experiment/tracking artifacts must not be tracked for public launch",
+        "services/api/wandb/latest-run/files/output.log: local ML experiment/tracking artifacts must not be tracked for public launch",
+        "services/api/mlruns/0/meta.yaml: local ML experiment/tracking artifacts must not be tracked for public launch",
+        "services/api/lightning_logs/version_0/events.out.tfevents.123456.local: local ML experiment/tracking artifacts must not be tracked for public launch",
         "runs/events.out.tfevents.123456.local: local ML experiment/tracking artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local ML experiment/tracking artifacts")

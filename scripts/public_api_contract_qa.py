@@ -939,7 +939,7 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "tracked local ML experiment/tracking artifacts", "launch checklist ML experiment/tracking artifact risk-scan scope")
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local ML experiment/tracking artifacts",
+        "root and nested `.gitignore` coverage for local ML experiment/tracking artifacts",
         "launch checklist ML experiment/tracking artifact ignore scope",
     )
     assert_contains(launch_text, "tracked local Docker/container artifacts", "launch checklist Docker/container artifact risk-scan scope")
@@ -2054,7 +2054,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local ML experiment/tracking artifacts",
+        "missing root and nested `.gitignore` coverage for local ML experiment/tracking artifacts",
         "launch evidence ML experiment/tracking artifact ignore examples",
     )
     assert_contains(
