@@ -1781,6 +1781,21 @@ def assert_boundary_docs() -> None:
         "launch evidence Deno artifact ignore examples",
     )
     assert_contains(
+        launch_text,
+        "blocks tracked local `.cache/` directories at any tree depth",
+        "launch checklist local cache artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects tracked local `.cache/` directories at any tree depth",
+        "launch evidence local cache artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root and nested `.gitignore` coverage for local cache artifacts",
+        "launch evidence local cache artifact ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "preserving source-of-truth Deno project files such as `deno.json`, `deno.jsonc`, `deno.lock`, JavaScript files, and TypeScript files",
         "launch evidence Deno source allowance",
