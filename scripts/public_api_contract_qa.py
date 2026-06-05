@@ -1193,7 +1193,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local Elixir/Mix build/dependency artifacts",
+        "root and nested `.gitignore` coverage for local Elixir/Mix build/dependency artifacts",
         "launch checklist Elixir/Mix artifact ignore scope",
     )
     assert_contains(launch_text, "tracked local native/CMake build artifacts", "launch checklist native/CMake artifact risk-scan scope")
@@ -1799,12 +1799,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local Elixir/Mix build/dependency artifacts such as `.elixir_ls/`, `_build/`, and `deps/`",
+        "tracked local Elixir/Mix build/dependency artifacts such as `.elixir_ls/`, `_build/`, and `deps/` at any tree depth",
         "launch evidence Elixir/Mix artifact examples",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Elixir/Mix build/dependency artifacts",
+        "missing root and nested `.gitignore` coverage for local Elixir/Mix build/dependency artifacts",
         "launch evidence Elixir/Mix artifact ignore examples",
     )
     assert_contains(

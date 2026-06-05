@@ -4292,7 +4292,9 @@ def self_test():
             ".elixir_ls/build/manifest",
             "_build/dev/lib/fathom/ebin/Elixir.Fathom.beam",
             "deps/jason/mix.exs",
+            "apps/api/.elixir_ls/build/manifest",
             "apps/api/_build/test/lib/api/ebin/Elixir.Api.beam",
+            "apps/api/deps/jason/mix.exs",
             "mix.exs",
             "mix.lock",
             "lib/fathom.ex",
@@ -4303,7 +4305,9 @@ def self_test():
         ".elixir_ls/build/manifest: Elixir/Mix build/dependency artifacts must not be tracked for public launch",
         "_build/dev/lib/fathom/ebin/Elixir.Fathom.beam: Elixir/Mix build/dependency artifacts must not be tracked for public launch",
         "deps/jason/mix.exs: Elixir/Mix build/dependency artifacts must not be tracked for public launch",
+        "apps/api/.elixir_ls/build/manifest: Elixir/Mix build/dependency artifacts must not be tracked for public launch",
         "apps/api/_build/test/lib/api/ebin/Elixir.Api.beam: Elixir/Mix build/dependency artifacts must not be tracked for public launch",
+        "apps/api/deps/jason/mix.exs: Elixir/Mix build/dependency artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Elixir/Mix build/dependency artifacts")
     allowed_elixir_mix_artifact_gitignore = "\n".join(sorted(required_elixir_mix_artifact_gitignore_patterns)) + "\n"
