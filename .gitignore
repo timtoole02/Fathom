@@ -500,6 +500,7 @@ compose.override.yaml
 
 # Local infrastructure state
 /.terraform/
+.terraform/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*

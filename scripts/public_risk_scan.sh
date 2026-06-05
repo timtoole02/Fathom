@@ -376,6 +376,7 @@ required_deployment_platform_artifact_gitignore_patterns = {
 }
 required_infra_state_gitignore_patterns = {
     "/.terraform/",
+    ".terraform/",
     ".terraform.lock.hcl",
     "*.tfplan",
     "*.tfstate",
@@ -5349,6 +5350,7 @@ def self_test():
     infra_state_failures = tracked_infra_state_file_failures(
         tracked_paths=[
             ".terraform/providers/registry.terraform.io/example/provider",
+            "infra/.terraform/providers/registry.terraform.io/example/provider",
             ".terraform.lock.hcl",
             "infra/default.tfstate",
             "infra/default.tfstate.backup",
@@ -5362,6 +5364,7 @@ def self_test():
     )
     if infra_state_failures != [
         ".terraform/providers/registry.terraform.io/example/provider: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/.terraform/providers/registry.terraform.io/example/provider: local infrastructure state artifacts must not be tracked for public launch",
         ".terraform.lock.hcl: local infrastructure state artifacts must not be tracked for public launch",
         "infra/default.tfstate: local infrastructure state artifacts must not be tracked for public launch",
         "infra/default.tfstate.backup: local infrastructure state artifacts must not be tracked for public launch",

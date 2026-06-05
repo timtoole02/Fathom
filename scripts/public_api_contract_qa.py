@@ -951,7 +951,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local infrastructure state artifacts",
+        "root and nested `.gitignore` coverage for local infrastructure state artifacts",
         "launch checklist infrastructure state artifact ignore scope",
     )
     assert_contains(launch_text, "tracked local Nix build result artifacts", "launch checklist Nix artifact risk-scan scope")
@@ -2084,7 +2084,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local infrastructure state artifacts",
+        "missing root and nested `.gitignore` coverage for local infrastructure state artifacts",
         "launch evidence infrastructure state artifact ignore examples",
     )
     assert_contains(
