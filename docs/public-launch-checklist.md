@@ -146,7 +146,7 @@ The Rust/Cargo guard also rejects tracked Rust/Cargo cache/build artifacts such 
 
 The Meson build artifact guard also rejects tracked local Meson build artifacts such as `.mesonpy-*`, `meson-info/`, `meson-logs/`, and `meson-private/`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Meson files such as `meson.build`, `meson_options.txt`, or `meson.options` as local tool artifacts.
 
-The release/package artifact guard also rejects JVM package archives such as `.jar`, `.war`, and `.ear`, with matching root `.gitignore` coverage.
+The release/package artifact guard also rejects JVM package archives such as `.jar`, `.war`, and `.ear`, with matching root and nested `.gitignore` coverage.
 
 The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage.
 
