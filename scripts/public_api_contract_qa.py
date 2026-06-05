@@ -1763,7 +1763,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Deno cache artifacts",
+        "missing root and nested `.gitignore` coverage for local Deno cache artifacts",
         "launch evidence Deno artifact ignore examples",
     )
     assert_contains(
