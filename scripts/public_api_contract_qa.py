@@ -1042,7 +1042,7 @@ def assert_boundary_docs() -> None:
         "root `.gitignore` coverage for local audio/video capture/export artifacts",
         "launch checklist audio/video capture artifact ignore scope",
     )
-    assert_contains(launch_text, "root `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
+    assert_contains(launch_text, "root and nested `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
     assert_contains(
         launch_text,
         "Pyre/Pytype and mypy daemon state",
@@ -1607,12 +1607,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "root `.gitignore` local Python cache/build artifact guard",
+        "root and nested `.gitignore` local Python cache/build artifact guard",
         "launch evidence Python artifact ignore risk-scan scope",
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Python cache/build artifacts",
+        "missing root and nested `.gitignore` coverage for local Python cache/build artifacts",
         "launch evidence Python artifact ignore examples",
     )
     assert_contains(
