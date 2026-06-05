@@ -254,8 +254,11 @@ site-packages/
 
 # Local Ruby/Bundler dependency artifacts
 /.bundle/
+.bundle/
 /vendor/bundle/
+**/vendor/bundle/
 /vendor/cache/
+**/vendor/cache/
 
 # Local PHP Composer dependency/test artifacts
 /vendor/autoload.php

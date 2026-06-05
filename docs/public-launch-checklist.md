@@ -164,7 +164,7 @@ The OCaml/opam local switch artifact guard also rejects tracked local switch/dep
 
 The Lua/LuaRocks artifact guard also rejects tracked local dependency/build/package artifacts such as `.luarocks/`, `lua_modules/`, and `*.rock` at any tree depth, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Lua files such as `*.lua`, `*.rockspec`, LuaRocks lock files, or Lua config files as local tool artifacts.
 
-The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/`, with matching root `.gitignore` coverage.
+The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/` at any tree depth, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Ruby files such as `Gemfile`, `Gemfile.lock`, Ruby source files, Ruby docs, or non-artifact vendor paths as local Bundler dependency artifacts.
 
 The PHP Composer guard also rejects tracked local dependency/test artifacts such as `vendor/autoload.php`, `vendor/bin/`, `vendor/composer/`, and `.phpunit.cache/` at any tree depth, plus `.phpunit.result.cache` and `composer.phar`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Composer files such as `composer.json`, `composer.lock`, PHP source files, or PHP docs as local dependency/test artifacts.
 

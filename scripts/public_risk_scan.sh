@@ -606,6 +606,9 @@ required_ruby_bundle_artifact_gitignore_patterns = {
     "/.bundle/",
     "/vendor/bundle/",
     "/vendor/cache/",
+    ".bundle/",
+    "**/vendor/bundle/",
+    "**/vendor/cache/",
 }
 required_php_composer_artifact_gitignore_patterns = {
     "/.phpunit.cache/",
@@ -2717,7 +2720,10 @@ def tracked_ruby_bundle_artifact_file_failures(tracked_paths=None):
         if any(part in blocked_tracked_ruby_bundle_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: Ruby/Bundler dependency artifacts must not be tracked for public launch")
             continue
-        if len(path.parts) >= 2 and tuple(path.parts[:2]) in blocked_tracked_ruby_vendor_artifact_dirs:
+        if any(
+            tuple(path.parts[index : index + 2]) in blocked_tracked_ruby_vendor_artifact_dirs
+            for index in range(max(len(path.parts) - 1, 0))
+        ):
             failures.append(f"{rel}: Ruby/Bundler dependency artifacts must not be tracked for public launch")
     return failures
 
@@ -4011,9 +4017,15 @@ def self_test():
             ".bundle/config",
             "vendor/bundle/ruby/3.3.0/gems/rack-3.0.0/lib/rack.rb",
             "vendor/cache/rack-3.0.0.gem",
+            "examples/ruby/.bundle/config",
+            "examples/ruby/vendor/bundle/ruby/3.3.0/gems/rack-3.0.0/lib/rack.rb",
+            "examples/ruby/vendor/cache/rack-3.0.0.gem",
             "docs/api/public-contract.json",
             "Gemfile",
             "Gemfile.lock",
+            "examples/ruby/Gemfile",
+            "examples/ruby/Gemfile.lock",
+            "examples/ruby/lib/fathom.rb",
             "vendor/safe/README.md",
         ],
     )
@@ -4021,16 +4033,19 @@ def self_test():
         ".bundle/config: Ruby/Bundler dependency artifacts must not be tracked for public launch",
         "vendor/bundle/ruby/3.3.0/gems/rack-3.0.0/lib/rack.rb: Ruby/Bundler dependency artifacts must not be tracked for public launch",
         "vendor/cache/rack-3.0.0.gem: Ruby/Bundler dependency artifacts must not be tracked for public launch",
+        "examples/ruby/.bundle/config: Ruby/Bundler dependency artifacts must not be tracked for public launch",
+        "examples/ruby/vendor/bundle/ruby/3.3.0/gems/rack-3.0.0/lib/rack.rb: Ruby/Bundler dependency artifacts must not be tracked for public launch",
+        "examples/ruby/vendor/cache/rack-3.0.0.gem: Ruby/Bundler dependency artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Ruby/Bundler dependency artifacts")
     allowed_ruby_bundle_artifact_gitignore = "\n".join(sorted(required_ruby_bundle_artifact_gitignore_patterns)) + "\n"
     if gitignore_ruby_bundle_artifact_failures(allowed_ruby_bundle_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Ruby/Bundler dependency artifact ignore patterns")
     ruby_bundle_artifact_gitignore_failures = gitignore_ruby_bundle_artifact_failures(
-        allowed_ruby_bundle_artifact_gitignore.replace("/vendor/cache/\n", "")
+        allowed_ruby_bundle_artifact_gitignore.replace("**/vendor/cache/\n", "")
     )
     if ruby_bundle_artifact_gitignore_failures != [
-        ".gitignore: missing local Ruby/Bundler dependency artifact ignore patterns: /vendor/cache/"
+        ".gitignore: missing local Ruby/Bundler dependency artifact ignore patterns: **/vendor/cache/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Ruby/Bundler dependency artifact ignore patterns")
     php_composer_artifact_failures = tracked_php_composer_artifact_file_failures(
