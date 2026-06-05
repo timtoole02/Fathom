@@ -1789,7 +1789,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local Go cache/test artifacts",
+        "missing root and nested `.gitignore` coverage for local Go cache/test artifacts",
         "launch evidence Go artifact ignore examples",
     )
     assert_contains(
