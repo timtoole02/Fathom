@@ -1812,6 +1812,31 @@ def assert_boundary_docs() -> None:
         "launch evidence Elixir/Mix artifact ignore examples",
     )
     assert_contains(
+        launch_text,
+        "The Erlang/Rebar3 artifact guard also rejects tracked local cache and crash artifacts",
+        "launch checklist Erlang/Rebar3 artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist Erlang/Rebar3 artifact ignore examples",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Erlang/Rebar3 files such as `rebar.config`, `rebar.lock`, Erlang source files, or Erlang header files",
+        "launch checklist Erlang/Rebar3 source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Erlang/Rebar3 artifact guard rejects tracked local cache and crash artifacts such as `.rebar3/` at any tree depth, `rebar3.crashdump`, and `erl_crash.dump`",
+        "launch evidence Erlang/Rebar3 artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root and nested `.gitignore` coverage for local Erlang/Rebar3 artifacts",
+        "launch evidence Erlang/Rebar3 artifact ignore examples",
+    )
+    assert_contains(
         evidence_text,
         "JVM dependency artifact guard",
         "launch evidence JVM dependency artifact risk-scan scope",
