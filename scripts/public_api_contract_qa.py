@@ -1364,8 +1364,26 @@ def assert_boundary_docs() -> None:
         "source-of-truth Elixir/Mix files such as `mix.exs`, `mix.lock`, Elixir source files, or Elixir docs",
         "launch checklist Elixir/Mix source-file allowance",
     )
-    assert_contains(launch_text, "tracked local native/CMake build artifacts", "launch checklist native/CMake artifact risk-scan scope")
-    assert_contains(launch_text, "root and nested `.gitignore` coverage for local native/CMake build artifacts", "launch checklist native/CMake artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "native/CMake build artifact guard rejects tracked local native/CMake build/user-local artifacts",
+        "launch checklist native/CMake artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "CTest `Testing/Temporary/` output, CPack staging output such as `_CPack_Packages/`, generated CTest/Dart files such as `CTestTestfile.cmake` and `DartConfiguration.tcl`",
+        "launch checklist native/CMake artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "root and nested `.gitignore` coverage for local native/CMake build artifacts",
+        "launch checklist native/CMake artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth CMake files such as `CMakeLists.txt` and `CMakePresets.json`",
+        "launch checklist native/CMake source-file allowance",
+    )
     assert_contains(launch_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "launch checklist public contract artifact env")
     assert_contains(launch_text, "scripts/backend_acceptance_artifact_qa.py", "launch checklist backend acceptance artifact QA")
     assert_contains(launch_text, "backend acceptance smoke success/failure summaries", "launch checklist backend acceptance artifact QA scope")
