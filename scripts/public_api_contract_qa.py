@@ -1063,7 +1063,16 @@ def assert_boundary_docs() -> None:
         "root and nested `.gitignore` coverage for local Dart/Flutter artifacts",
         "launch checklist Dart/Flutter artifact ignore scope",
     )
-    assert_contains(launch_text, "tracked local mobile/Xcode/Android build artifacts", "launch checklist mobile build artifact risk-scan scope")
+    assert_contains(
+        launch_text,
+        "general mobile/Xcode/Android build artifact guard blocks tracked local build outputs",
+        "launch checklist mobile build artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as `DerivedData/`, `.gradle/`, `xcuserdata/`, `local.properties`, `.xcuserstate`, `.xcresult`, `.ipa`, `.apk`, `.aab`, and `.dSYM` files",
+        "launch checklist mobile build artifact examples",
+    )
     assert_contains(
         launch_text,
         "root, nested, Android-specific, and platform artifact `.gitignore` coverage for local mobile build outputs",

@@ -138,7 +138,7 @@ It also blocks tracked Carthage dependency outputs such as `Carthage/Build/` and
 
 It also blocks tracked Fastlane generated report/test artifacts such as `fastlane/report.xml`, `fastlane/Preview.html`, and `fastlane/test_output/`, with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard. It does not treat source-of-truth Fastlane configuration or App Store metadata such as `Fastfile`, `Appfile`, or `fastlane/metadata/` as local tool artifacts.
 
-The general mobile/Xcode/Android build artifact guard also requires root, nested, Android-specific, and platform artifact `.gitignore` coverage for local mobile build outputs.
+The general mobile/Xcode/Android build artifact guard blocks tracked local build outputs such as `DerivedData/`, `.gradle/`, `xcuserdata/`, `local.properties`, `.xcuserstate`, `.xcresult`, `.ipa`, `.apk`, `.aab`, and `.dSYM` files, and requires root, nested, Android-specific, and platform artifact `.gitignore` coverage for local mobile build outputs.
 
 It also blocks tracked local Bazel output symlinks/directories such as `bazel-bin/`, `bazel-out/`, `bazel-testlogs/`, and root `bazel-*` outputs, with matching root `.gitignore` coverage for local Bazel build artifacts. It does not treat source-of-truth Bazel files such as `BUILD`, `BUILD.bazel`, `MODULE.bazel`, or `.bzl` files as build artifacts.
 
