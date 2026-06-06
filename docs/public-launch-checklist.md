@@ -178,7 +178,7 @@ The Julia depot/preference artifact guard also rejects tracked local Julia depot
 
 The Go cache/test artifact guard also rejects tracked local generated outputs such as `.gocache/` and `.gomodcache/` at any tree depth, `coverage.out`, and `*.test`, with matching root and nested `.gitignore` coverage.
 
-The Elixir/Mix build/dependency artifact guard also rejects tracked local generated outputs such as `.elixir_ls/`, `_build/`, and `deps/` at any tree depth, with matching root and nested `.gitignore` coverage for local Elixir/Mix build/dependency artifacts.
+The Elixir/Mix build/dependency artifact guard also rejects tracked local generated outputs such as `.elixir_ls/`, `_build/`, and `deps/` at any tree depth, with matching root and nested `.gitignore` coverage for local Elixir/Mix build/dependency artifacts. It does not treat source-of-truth Elixir/Mix files such as `mix.exs`, `mix.lock`, Elixir source files, or Elixir docs as local tool artifacts.
 
 The Erlang/Rebar3 artifact guard also rejects tracked local cache and crash artifacts such as `.rebar3/` at any tree depth, `rebar3.crashdump`, and `erl_crash.dump`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Erlang/Rebar3 files such as `rebar.config`, `rebar.lock`, Erlang source files, or Erlang header files as local tool artifacts.
 
