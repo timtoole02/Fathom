@@ -1101,6 +1101,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Gradle/JVM build artifact guard also rejects tracked local Gradle cache/state",
+        "launch checklist Gradle/JVM artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for Gradle cache/state",
+        "launch checklist Gradle/JVM artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Gradle project files such as `build.gradle`, `settings.gradle`, `gradle.properties`, `gradlew`, or `gradle/wrapper/gradle-wrapper.properties`",
+        "launch checklist Gradle/JVM source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "tracked local JVM dependency artifacts",
         "launch checklist JVM dependency artifact risk-scan scope",
     )
@@ -2254,6 +2269,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root and nested `.gitignore` coverage for local Kotlin/Kotlin Native artifacts",
         "launch evidence Kotlin/Kotlin Native artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Gradle/JVM local build artifact guard",
+        "launch evidence Gradle/JVM artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Gradle cache/state and build outputs such as `.gradle/`, `examples/android/.gradle/`, `app/build/classes/`, `service/build/reports/`, `service/build/test-results/`, `service/build/tmp/`, `service/build/generated/`, and `service/build/libs/`",
+        "launch evidence Gradle/JVM artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root and nested `.gitignore` coverage for local Gradle/JVM cache/state artifacts",
+        "launch evidence Gradle/JVM artifact ignore examples",
     )
     assert_contains(
         evidence_text,
