@@ -981,6 +981,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "deployment platform artifact guard rejects tracked local Vercel and Netlify state directories",
+        "launch checklist deployment platform artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as `.vercel/` and `.netlify/` at any tree depth",
+        "launch checklist deployment platform artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage",
+        "launch checklist deployment platform artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "tracked local Terraform/OpenTofu state artifacts",
         "launch checklist infrastructure state artifact risk-scan scope",
     )
