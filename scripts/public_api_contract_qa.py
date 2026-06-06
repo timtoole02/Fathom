@@ -1226,6 +1226,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "R/RStudio artifact guard also rejects tracked local session and dependency artifacts",
+        "launch checklist R/RStudio artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        ".Rproj.user/` and `renv/library/` at any tree depth, plus `.Rhistory`, `.RData`, and `.Ruserdata`",
+        "launch checklist R/RStudio artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for local R/RStudio artifacts",
+        "launch checklist R/RStudio artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "matching root `.gitignore` coverage",
         "launch checklist PHP Composer artifact ignore scope",
     )
