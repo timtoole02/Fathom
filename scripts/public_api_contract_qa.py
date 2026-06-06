@@ -1176,6 +1176,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        ".gocache/` and `.gomodcache/` at any tree depth, `coverage.out`, and `*.test`",
+        "launch checklist Go artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist Go artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/` at any tree depth",
         "launch checklist Ruby/Bundler artifact risk-scan scope",
     )
