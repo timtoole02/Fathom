@@ -949,7 +949,16 @@ def assert_boundary_docs() -> None:
         "root `.gitignore` coverage for local model/checkpoint artifacts",
         "launch checklist model/checkpoint artifact ignore scope",
     )
-    assert_contains(launch_text, "tracked local ML experiment/tracking artifacts", "launch checklist ML experiment/tracking artifact risk-scan scope")
+    assert_contains(
+        launch_text,
+        "ML experiment/tracking artifact guard rejects tracked local W&B, MLflow, Lightning, and TensorBoard run outputs",
+        "launch checklist ML experiment/tracking artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as `.wandb/`, `wandb/`, `mlruns/`, `lightning_logs/`, and `events.out.tfevents.*`",
+        "launch checklist ML experiment/tracking artifact examples",
+    )
     assert_contains(
         launch_text,
         "root and nested `.gitignore` coverage for local ML experiment/tracking artifacts",
