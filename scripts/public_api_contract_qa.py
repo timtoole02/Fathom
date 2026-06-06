@@ -1176,6 +1176,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/` at any tree depth",
+        "launch checklist Ruby/Bundler artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist Ruby/Bundler artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Ruby files such as `Gemfile`, `Gemfile.lock`, Ruby source files, Ruby docs, or non-artifact vendor paths",
+        "launch checklist Ruby/Bundler source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "PHP Composer guard also rejects tracked local dependency/test artifacts",
         "launch checklist PHP Composer artifact risk-scan scope",
     )
@@ -1964,6 +1979,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, and Julia source files",
         "launch evidence Julia source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Ruby/Bundler dependency artifact guard",
+        "launch evidence Ruby/Bundler artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Bundler state/cache paths such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/` at any tree depth",
+        "launch evidence Ruby/Bundler artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local Ruby/Bundler dependency artifacts plus missing nested `.gitignore` coverage",
+        "launch evidence Ruby/Bundler artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Ruby files, Ruby docs, and non-artifact vendor paths",
+        "launch evidence Ruby/Bundler source allowance",
     )
     assert_contains(
         evidence_text,
