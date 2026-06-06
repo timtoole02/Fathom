@@ -1311,6 +1311,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        ".luarocks/`, `lua_modules/`, and `*.rock` at any tree depth",
+        "launch checklist Lua/LuaRocks artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage",
+        "launch checklist Lua/LuaRocks artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "source-of-truth Lua files such as `*.lua`, `*.rockspec`, LuaRocks lock files, or Lua config files",
         "launch checklist Lua/LuaRocks source-file allowance scope",
     )
@@ -1449,6 +1459,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Lua/LuaRocks artifact guard",
         "launch evidence Lua/LuaRocks artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Lua/LuaRocks local dependency/build/package artifact guard for `.luarocks/`, `lua_modules/`, and `*.rock` at any tree depth",
+        "launch evidence Lua/LuaRocks current-scope examples",
     )
     assert_contains(
         evidence_text,
