@@ -964,8 +964,21 @@ def assert_boundary_docs() -> None:
         "root and nested `.gitignore` coverage for local ML experiment/tracking artifacts",
         "launch checklist ML experiment/tracking artifact ignore scope",
     )
-    assert_contains(launch_text, "tracked local Docker/container artifacts", "launch checklist Docker/container artifact risk-scan scope")
-    assert_contains(launch_text, "root `.gitignore` coverage for local Docker/container artifacts", "launch checklist Docker/container artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "Docker/container artifact guard rejects tracked local container runtime and override artifacts",
+        "launch checklist Docker/container artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as top-level `.docker/`, `docker-data/`, `docker-volumes/`, `docker-compose.override.yml`, `docker-compose.override.yaml`, `compose.override.yml`, and `compose.override.yaml`",
+        "launch checklist Docker/container artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local Docker/container artifacts",
+        "launch checklist Docker/container artifact ignore scope",
+    )
     assert_contains(
         launch_text,
         "tracked local Terraform/OpenTofu state artifacts",

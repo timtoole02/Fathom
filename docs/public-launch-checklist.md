@@ -192,6 +192,8 @@ The Python cache/build artifact guard also rejects tracked local Pyre/Pytype and
 
 The ML experiment/tracking artifact guard rejects tracked local W&B, MLflow, Lightning, and TensorBoard run outputs such as `.wandb/`, `wandb/`, `mlruns/`, `lightning_logs/`, and `events.out.tfevents.*`, with matching root and nested `.gitignore` coverage.
 
+The Docker/container artifact guard rejects tracked local container runtime and override artifacts such as top-level `.docker/`, `docker-data/`, `docker-volumes/`, `docker-compose.override.yml`, `docker-compose.override.yaml`, `compose.override.yml`, and `compose.override.yaml`, with matching root `.gitignore` coverage.
+
 The backend acceptance artifact summaries reject local paths, secret markers, and request/payload text in shareable `summary.json` and `summary.md`; keep full JSON artifacts and logs on the manual review path before publishing.
 
 The browser-test artifact guard also blocks Cypress screenshot, video, and download output directories in addition to Playwright report directories, with matching root and nested `.gitignore` coverage for Cypress outputs.
