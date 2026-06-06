@@ -1291,6 +1291,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "_opam/` and `.opam-switch/` at any tree depth",
+        "launch checklist OCaml/opam artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage",
+        "launch checklist OCaml/opam artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "source-of-truth OCaml project files such as `dune`, `dune-project`, `*.opam`, or OCaml source files",
         "launch checklist OCaml/opam source-file allowance scope",
     )
@@ -1414,6 +1424,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "local OCaml/opam artifact guard",
         "launch evidence OCaml/opam artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local OCaml/opam artifact guard for `_opam/` and `.opam-switch/` at any tree depth",
+        "launch evidence OCaml/opam current-scope examples",
     )
     assert_contains(
         evidence_text,
