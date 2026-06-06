@@ -996,12 +996,17 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "tracked local Terraform/OpenTofu state artifacts",
+        "Terraform/OpenTofu infrastructure state artifact guard rejects tracked local infrastructure state artifacts",
         "launch checklist infrastructure state artifact risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "root and nested `.gitignore` coverage for local infrastructure state artifacts",
+        "such as `.terraform/`, `.terraform.lock.hcl`, `.tfstate`, `.tfvars`, `.tfvars.json`, and `.tfplan` files",
+        "launch checklist infrastructure state artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage for local infrastructure state artifacts",
         "launch checklist infrastructure state artifact ignore scope",
     )
     assert_contains(launch_text, "tracked local Nix build result artifacts", "launch checklist Nix artifact risk-scan scope")
