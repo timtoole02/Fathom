@@ -982,6 +982,21 @@ def assert_boundary_docs() -> None:
         "root and nested `.gitignore` coverage for local Swift Package Manager artifacts",
         "launch checklist SwiftPM artifact ignore scope",
     )
+    assert_contains(
+        launch_text,
+        "tracked local Zig build artifacts such as `.zig-cache/`, `zig-cache/`, and `zig-out/` at any tree depth",
+        "launch checklist Zig artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "root and nested `.gitignore` coverage for local Zig build artifacts",
+        "launch checklist Zig artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Zig files such as `build.zig`, `build.zig.zon`, or Zig source files",
+        "launch checklist Zig source-file allowance",
+    )
     assert_contains(launch_text, "tracked local Dart/Flutter artifacts", "launch checklist Dart/Flutter artifact risk-scan scope")
     assert_contains(
         launch_text,
@@ -2419,6 +2434,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving source-of-truth Swift package files such as `Package.swift` and Swift source files",
         "launch evidence SwiftPM source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Zig local build artifact guard for `.zig-cache/`, `zig-cache/`, and `zig-out/` at any tree depth",
+        "launch evidence Zig current-scope examples",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Zig build artifacts such as `.zig-cache/`, `zig-cache/`, and `zig-out/` at any tree depth",
+        "launch evidence Zig artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root and nested `.gitignore` coverage for local Zig build artifacts",
+        "launch evidence Zig artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Zig files such as `build.zig`, `build.zig.zon`, and Zig source files",
+        "launch evidence Zig source allowance",
     )
     assert_contains(
         evidence_text,
