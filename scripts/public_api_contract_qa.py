@@ -1226,6 +1226,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        ".julia/` at any tree depth, `LocalPreferences.toml`, `*.jl.cov`, and `*.jl.mem`",
+        "launch checklist Julia artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist Julia artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, or Julia source files",
+        "launch checklist Julia source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "R/RStudio artifact guard also rejects tracked local session and dependency artifacts",
         "launch checklist R/RStudio artifact risk-scan scope",
     )
