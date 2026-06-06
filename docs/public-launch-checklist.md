@@ -120,7 +120,7 @@ It also blocks tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpc
 
 It also blocks tracked local CI runner artifacts/config such as `.act/` and `.actrc`, with matching root and nested `.gitignore` coverage, so local `act` workflow state cannot be mistaken for launch evidence.
 
-It also blocks tracked local Swift Package Manager build/workspace artifacts such as `.build/` and `.swiftpm/` at any tree depth, with matching root and nested `.gitignore` coverage for local Swift Package Manager artifacts.
+It also blocks tracked local Swift Package Manager build/workspace artifacts such as `.build/` and `.swiftpm/` at any tree depth, with matching root and nested `.gitignore` coverage for local Swift Package Manager artifacts. It does not treat source-of-truth Swift package files such as `Package.swift` or Swift source files as local tool artifacts.
 
 It also blocks tracked local Zig build artifacts such as `.zig-cache/`, `zig-cache/`, and `zig-out/` at any tree depth, with matching root and nested `.gitignore` coverage for local Zig build artifacts. It does not treat source-of-truth Zig files such as `build.zig`, `build.zig.zon`, or Zig source files as local tool artifacts.
 
