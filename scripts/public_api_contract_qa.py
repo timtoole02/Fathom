@@ -1126,6 +1126,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`",
+        "launch checklist JVM compiler artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist JVM compiler artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth JVM project files such as `pom.xml`, `build.gradle`, `build.sbt`, Java source files, Kotlin source files, or Scala source files",
+        "launch checklist JVM compiler source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         ".NET/NuGet artifact guard also rejects tracked local dependency/build/user-state artifacts",
         "launch checklist .NET/NuGet artifact risk-scan scope",
     )
@@ -2284,6 +2299,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root and nested `.gitignore` coverage for local Gradle/JVM cache/state artifacts",
         "launch evidence Gradle/JVM artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "JVM compiler bytecode artifact guard",
+        "launch evidence JVM compiler artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local bytecode outputs such as `*.class` and `*.tasty`",
+        "launch evidence JVM compiler artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root and nested `.gitignore` coverage for local JVM compiler artifacts",
+        "launch evidence JVM compiler artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth JVM project files such as `pom.xml`, `build.gradle`, `build.sbt`, Java source files, Kotlin source files, and Scala source files",
+        "launch evidence JVM compiler source allowance",
     )
     assert_contains(
         evidence_text,
