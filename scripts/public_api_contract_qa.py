@@ -2220,6 +2220,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "backup and data dump artifacts such as root `backups/`, root `dumps/`, `*.bak`, `*.backup`, `*.dump`, and `*.sql`",
+        "launch checklist backup/dump artifact examples",
+    )
+    assert_contains(
+        launch_text,
         "root `.gitignore` coverage for local backup/dump artifacts",
         "launch checklist backup/dump artifact ignore scope",
     )
