@@ -934,8 +934,21 @@ def assert_boundary_docs() -> None:
         "tracked Git submodule metadata for local/relative, SSH-only, authenticated, secret, or private source URLs",
         "launch checklist Git submodule metadata risk-scan scope",
     )
-    assert_contains(launch_text, "tracked local model/checkpoint artifacts", "launch checklist model/checkpoint artifact risk-scan scope")
-    assert_contains(launch_text, "root `.gitignore` coverage for local model/checkpoint artifacts", "launch checklist model/checkpoint artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "model/checkpoint artifact guard also rejects tracked local model/checkpoint artifacts",
+        "launch checklist model/checkpoint artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "top-level `models/`, `model-store/`, `weights/`, `checkpoints/`, and model binary/data files including `.safetensors`, `.gguf`, `.onnx`, `.bin`, `.pt`, `.pth`, `.ckpt`, `.npz`, `.npy`, and `.tflite`",
+        "launch checklist model/checkpoint artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "root `.gitignore` coverage for local model/checkpoint artifacts",
+        "launch checklist model/checkpoint artifact ignore scope",
+    )
     assert_contains(launch_text, "tracked local ML experiment/tracking artifacts", "launch checklist ML experiment/tracking artifact risk-scan scope")
     assert_contains(
         launch_text,

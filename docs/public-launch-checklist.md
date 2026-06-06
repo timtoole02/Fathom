@@ -154,6 +154,8 @@ The release/package artifact guard also rejects tracked local release/package ar
 
 The backup/dump artifact guard also rejects tracked local backup and data dump artifacts such as root `backups/`, root `dumps/`, `*.bak`, `*.backup`, `*.dump`, and `*.sql`, with matching root `.gitignore` coverage.
 
+The model/checkpoint artifact guard also rejects tracked local model/checkpoint artifacts such as top-level `models/`, `model-store/`, `weights/`, `checkpoints/`, and model binary/data files including `.safetensors`, `.gguf`, `.onnx`, `.bin`, `.pt`, `.pth`, `.ckpt`, `.npz`, `.npy`, and `.tflite`, with matching root `.gitignore` coverage.
+
 The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage.
 
 The JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth JVM project files such as `pom.xml`, `build.gradle`, `build.sbt`, Java source files, Kotlin source files, or Scala source files as local tool artifacts.
