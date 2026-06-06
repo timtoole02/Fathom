@@ -1271,7 +1271,17 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "source-of-truth Haskell files",
+        ".stack-work/`, `dist-newstyle/`, `.cabal-sandbox/`, and `cabal.sandbox.config` at any tree depth",
+        "launch checklist Haskell Stack/Cabal artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage",
+        "launch checklist Haskell Stack/Cabal artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, or Haskell source files",
         "launch checklist Haskell Stack/Cabal source-file allowance scope",
     )
     assert_contains(
@@ -1387,8 +1397,18 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "tracked local build outputs such as `.stack-work/`, `dist-newstyle/`, `.cabal-sandbox/`, and `cabal.sandbox.config` at any tree depth",
+        "launch evidence Haskell Stack/Cabal artifact examples",
+    )
+    assert_contains(
+        evidence_text,
         "rejects missing root and nested `.gitignore` coverage for local Haskell Stack/Cabal build artifacts",
         "launch evidence Haskell Stack/Cabal artifact ignore scope",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, and Haskell source files",
+        "launch evidence Haskell Stack/Cabal source-file allowance scope",
     )
     assert_contains(
         evidence_text,
