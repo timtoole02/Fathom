@@ -1962,6 +1962,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        ".rebar3/` at any tree depth, `rebar3.crashdump`, and `erl_crash.dump`",
+        "launch checklist Erlang/Rebar3 artifact examples",
+    )
+    assert_contains(
+        launch_text,
         "matching root and nested `.gitignore` coverage",
         "launch checklist Erlang/Rebar3 artifact ignore examples",
     )
@@ -1977,8 +1982,18 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "Erlang/Rebar3 local cache/crash artifact guard for `.rebar3/`, `rebar3.crashdump`, and `erl_crash.dump`",
+        "launch evidence Erlang/Rebar3 current-scope examples",
+    )
+    assert_contains(
+        evidence_text,
         "missing root and nested `.gitignore` coverage for local Erlang/Rebar3 artifacts",
         "launch evidence Erlang/Rebar3 artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Erlang/Rebar3 files such as `rebar.config`, `rebar.lock`, Erlang source files, and Erlang header files",
+        "launch evidence Erlang/Rebar3 source allowance",
     )
     assert_contains(
         evidence_text,
