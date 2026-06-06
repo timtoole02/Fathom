@@ -2200,6 +2200,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked local release/package artifacts including common archive formats such as `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.7z`, `.rar`, and `.zst`",
+        "launch checklist release/package archive examples",
+    )
+    assert_contains(
+        launch_text,
+        "installer/package formats such as `.dmg`, `.pkg`, `.whl`, `.egg`, `.deb`, `.rpm`, and `.msi`",
+        "launch checklist release/package installer examples",
+    )
+    assert_contains(
+        launch_text,
+        "JVM package archives such as `.jar`, `.war`, and `.ear`; and root `artifacts/` outputs",
+        "launch checklist release/package JVM and artifact examples",
+    )
+    assert_contains(
+        launch_text,
         "root `.gitignore` coverage for local release/package artifacts",
         "launch checklist release/package artifact ignore scope",
     )
