@@ -183,6 +183,8 @@ summary.local.json
 # Local temporary/scratch artifacts
 /tmp/
 /temp/
+**/tmp/
+**/temp/
 *.tmp
 *.temp
 

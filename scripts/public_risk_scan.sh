@@ -868,6 +868,8 @@ required_local_cache_artifact_gitignore_patterns = {
 required_temp_artifact_gitignore_patterns = {
     "/temp/",
     "/tmp/",
+    "**/temp/",
+    "**/tmp/",
     "*.temp",
     "*.tmp",
 }
@@ -3085,7 +3087,7 @@ def tracked_temp_artifact_file_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
-        if path.parts and path.parts[0] in blocked_tracked_temp_artifact_dirs:
+        if any(part in blocked_tracked_temp_artifact_dirs for part in path.parts[:-1]):
             failures.append(f"{rel}: local temporary/scratch artifacts must not be tracked for public launch")
             continue
         if path.suffix.lower() in blocked_tracked_temp_artifact_suffixes:
@@ -4945,6 +4947,8 @@ def self_test():
         tracked_paths=[
             "tmp/public-contract-smoke-summary.json",
             "temp/model-registry.json",
+            "services/api/tmp/public-contract-smoke-summary.json",
+            "services/api/temp/model-registry.json",
             "docs/api/generated.tmp",
             "frontend/src/App.jsx",
         ],
@@ -4952,6 +4956,8 @@ def self_test():
     if temp_artifact_failures != [
         "tmp/public-contract-smoke-summary.json: local temporary/scratch artifacts must not be tracked for public launch",
         "temp/model-registry.json: local temporary/scratch artifacts must not be tracked for public launch",
+        "services/api/tmp/public-contract-smoke-summary.json: local temporary/scratch artifacts must not be tracked for public launch",
+        "services/api/temp/model-registry.json: local temporary/scratch artifacts must not be tracked for public launch",
         "docs/api/generated.tmp: local temporary/scratch artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local temporary/scratch artifacts")

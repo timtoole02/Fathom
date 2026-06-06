@@ -1697,7 +1697,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local temporary/scratch artifacts",
+        "root and nested `.gitignore` coverage for local temporary/scratch artifacts",
         "launch checklist temporary/scratch artifact ignore scope",
     )
     assert_contains(
@@ -1707,7 +1707,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "root `.gitignore` local temporary/scratch artifact guard",
+        "root and nested `.gitignore` local temporary/scratch artifact guard",
         "launch evidence temporary/scratch artifact ignore risk-scan scope",
     )
     assert_contains(
@@ -1732,7 +1732,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local temporary/scratch artifacts",
+        "missing root and nested `.gitignore` coverage for local temporary/scratch artifacts",
         "launch evidence temporary/scratch artifact ignore examples",
     )
     assert_contains(
