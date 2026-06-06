@@ -1196,6 +1196,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "vendor/autoload.php`, `vendor/bin/`, `vendor/composer/`, and `.phpunit.cache/` at any tree depth, plus `.phpunit.result.cache` and `composer.phar`",
+        "launch checklist PHP Composer artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist PHP Composer artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Composer files such as `composer.json`, `composer.lock`, PHP source files, or PHP docs",
+        "launch checklist PHP Composer source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "Julia depot/preference artifact guard also rejects tracked local Julia depot, preference, coverage, and allocation artifacts",
         "launch checklist Julia artifact risk-scan scope",
     )
@@ -2012,8 +2027,18 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root `.gitignore` coverage for local PHP Composer dependency/test artifacts",
+        "including Composer vendor/PHPUnit cache artifacts at any tree depth",
+        "launch evidence PHP Composer nested artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root `.gitignore` coverage for local PHP Composer dependency/test artifacts plus missing nested `.gitignore` coverage",
         "launch evidence PHP Composer artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Composer manifests, PHP source files, and PHP docs",
+        "launch evidence PHP Composer source allowance",
     )
     assert_contains(
         launch_text,
