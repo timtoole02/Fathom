@@ -1044,7 +1044,21 @@ def assert_boundary_docs() -> None:
         "It does not treat source-of-truth Bazel files such as `BUILD`, `BUILD.bazel`, `MODULE.bazel`, or `.bzl` files as build artifacts",
         "launch checklist Bazel source-file allowance",
     )
-    assert_contains(launch_text, "tracked local Buck/Buck2 build artifacts", "launch checklist Buck/Buck2 artifact risk-scan scope")
+    assert_contains(
+        launch_text,
+        "blocks tracked local Buck/Buck2 build artifacts",
+        "launch checklist Buck/Buck2 artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as `.buckd/` and `buck-out/`",
+        "launch checklist Buck/Buck2 artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage for local Buck/Buck2 build artifacts",
+        "launch checklist Buck/Buck2 artifact ignore scope",
+    )
     assert_contains(
         launch_text,
         "source-of-truth Buck files such as `BUCK`, `BUCK.v2`, or `.buckconfig`",
