@@ -2133,6 +2133,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "browser-test artifact guard also blocks Cypress screenshot, video, and download output directories",
+        "launch checklist Cypress browser-test artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "in addition to Playwright report directories",
+        "launch checklist Cypress browser-test artifact Playwright relation",
+    )
+    assert_contains(
+        launch_text,
         "matching root and nested `.gitignore` coverage for Cypress outputs",
         "launch checklist Cypress browser-test artifact ignore scope",
     )
