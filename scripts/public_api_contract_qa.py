@@ -1128,12 +1128,17 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "tracked local audio/video capture/export artifacts",
+        "audio/video capture/export artifact guard blocks tracked local captures and exports",
         "launch checklist audio/video capture artifact risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local audio/video capture/export artifacts",
+        "such as `Audio Recording *`, `Voice Memo *`, `*.m4a`, `*.mov`, `*.mp3`, `*.mp4`, and `*.wav`",
+        "launch checklist audio/video capture artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root `.gitignore` coverage for local audio/video capture/export artifacts",
         "launch checklist audio/video capture artifact ignore scope",
     )
     assert_contains(launch_text, "root and nested `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
