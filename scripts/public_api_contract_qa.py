@@ -1419,6 +1419,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked local Zig build artifacts such as `.zig-cache/`, `zig-cache/`, and `zig-out/` at any tree depth",
+        "launch checklist Zig build artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for local Zig build artifacts",
+        "launch checklist Zig build artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Zig files such as `build.zig`, `build.zig.zon`, or Zig source files",
+        "launch checklist Zig build source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "Go cache/test artifact guard also rejects tracked local generated outputs",
         "launch checklist Go artifact risk-scan scope",
     )
