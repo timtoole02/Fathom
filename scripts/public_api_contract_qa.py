@@ -1024,11 +1024,25 @@ def assert_boundary_docs() -> None:
         "with matching root `.gitignore` coverage for local Nix build result artifacts",
         "launch checklist Nix artifact ignore scope",
     )
-    assert_contains(launch_text, "tracked local Bazel build artifacts", "launch checklist Bazel artifact risk-scan scope")
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local Bazel build artifacts",
+        "blocks tracked local Bazel output symlinks/directories",
+        "launch checklist Bazel artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as `bazel-bin/`, `bazel-out/`, `bazel-testlogs/`, and root `bazel-*` outputs",
+        "launch checklist Bazel artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root `.gitignore` coverage for local Bazel build artifacts",
         "launch checklist Bazel artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "It does not treat source-of-truth Bazel files such as `BUILD`, `BUILD.bazel`, `MODULE.bazel`, or `.bzl` files as build artifacts",
+        "launch checklist Bazel source-file allowance",
     )
     assert_contains(launch_text, "tracked local Buck/Buck2 build artifacts", "launch checklist Buck/Buck2 artifact risk-scan scope")
     assert_contains(
