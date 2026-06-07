@@ -1524,6 +1524,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "source-of-truth R files such as `*.R`, `*.Rmd`, `.Rproj` project files, `renv.lock`, `DESCRIPTION`, or R docs",
+        "launch checklist R/RStudio source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "matching root `.gitignore` coverage",
         "launch checklist PHP Composer artifact ignore scope",
     )
@@ -2450,6 +2455,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root and nested `.gitignore` coverage for local R/RStudio artifacts",
         "launch evidence R/RStudio artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth R files such as `*.R`, `*.Rmd`, `.Rproj` project files, `renv.lock`, `DESCRIPTION`, and R docs",
+        "launch evidence R/RStudio source-file allowance",
     )
     assert_contains(
         evidence_text,

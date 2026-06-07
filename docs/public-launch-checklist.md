@@ -184,7 +184,7 @@ The Ruby/Bundler guard also rejects tracked local dependency artifacts such as `
 
 The PHP Composer guard also rejects tracked local dependency/test artifacts such as `vendor/autoload.php`, `vendor/bin/`, `vendor/composer/`, and `.phpunit.cache/` at any tree depth, plus `.phpunit.result.cache` and `composer.phar`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Composer files such as `composer.json`, `composer.lock`, PHP source files, or PHP docs as local dependency/test artifacts.
 
-The R/RStudio artifact guard also rejects tracked local session and dependency artifacts such as `.Rproj.user/` and `renv/library/` at any tree depth, plus `.Rhistory`, `.RData`, and `.Ruserdata`, with matching root and nested `.gitignore` coverage for local R/RStudio artifacts.
+The R/RStudio artifact guard also rejects tracked local session and dependency artifacts such as `.Rproj.user/` and `renv/library/` at any tree depth, plus `.Rhistory`, `.RData`, and `.Ruserdata`, with matching root and nested `.gitignore` coverage for local R/RStudio artifacts. It does not treat source-of-truth R files such as `*.R`, `*.Rmd`, `.Rproj` project files, `renv.lock`, `DESCRIPTION`, or R docs as local session/dependency artifacts.
 
 The Julia depot/preference artifact guard also rejects tracked local Julia depot, preference, coverage, and allocation artifacts such as `.julia/` at any tree depth, `LocalPreferences.toml`, `*.jl.cov`, and `*.jl.mem`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, or Julia source files as local tool artifacts.
 
