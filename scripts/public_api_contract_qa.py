@@ -2538,6 +2538,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "such as `.mesonpy-*`, `meson-info/`, `meson-logs/`, and `meson-private/`",
+        "launch checklist Meson build artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "`meson-private/`, with matching root and nested `.gitignore` coverage",
+        "launch checklist Meson build artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "source-of-truth Meson files such as `meson.build`, `meson_options.txt`, or `meson.options`",
         "launch checklist Meson source-file allowance scope",
     )
