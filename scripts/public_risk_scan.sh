@@ -4388,6 +4388,7 @@ def self_test():
             "coverage.out",
             "go.mod",
             "go.sum",
+            "cmd/fathom/main.go",
             "docs/go-testing.md",
         ],
     )
