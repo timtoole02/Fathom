@@ -1113,12 +1113,17 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "tracked local screenshot/screen-recording artifacts",
+        "screenshot/screen-recording artifact guard blocks tracked local captures with default macOS capture prefixes",
         "launch checklist screenshot/screen-recording artifact risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local screenshot/screen-recording artifacts",
+        "such as `Screenshot *`, `Screen Shot *`, and `Screen Recording *`",
+        "launch checklist screenshot/screen-recording artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root `.gitignore` coverage for local screenshot/screen-recording artifacts",
         "launch checklist screenshot/screen-recording artifact ignore scope",
     )
     assert_contains(

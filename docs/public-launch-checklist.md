@@ -142,6 +142,8 @@ The general mobile/Xcode/Android build artifact guard blocks tracked local build
 
 The mobile/Xcode/Android signing/provisioning artifact guard also blocks tracked local provisioning/build archives such as `*.mobileprovision`, `*.provisionprofile`, and `*.xcarchive`, with matching root `.gitignore` coverage for local mobile/Xcode/Android signing/provisioning artifacts.
 
+The screenshot/screen-recording artifact guard blocks tracked local captures with default macOS capture prefixes such as `Screenshot *`, `Screen Shot *`, and `Screen Recording *`, with matching root `.gitignore` coverage for local screenshot/screen-recording artifacts.
+
 It also blocks tracked local Bazel output symlinks/directories such as `bazel-bin/`, `bazel-out/`, `bazel-testlogs/`, and root `bazel-*` outputs, with matching root `.gitignore` coverage for local Bazel build artifacts. It does not treat source-of-truth Bazel files such as `BUILD`, `BUILD.bazel`, `MODULE.bazel`, or `.bzl` files as build artifacts.
 
 It also blocks tracked local Buck/Buck2 build artifacts such as `.buckd/` and `buck-out/`, with matching root and nested `.gitignore` coverage for local Buck/Buck2 build artifacts. It does not treat source-of-truth Buck files such as `BUCK`, `BUCK.v2`, or `.buckconfig` as local build artifacts.
