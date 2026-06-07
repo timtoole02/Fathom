@@ -1449,6 +1449,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "source-of-truth Go files such as `go.mod`, `go.sum`, Go source files, or Go docs",
+        "launch checklist Go source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "Ruby/Bundler guard also rejects tracked local dependency artifacts such as `.bundle/`, `vendor/bundle/`, and `vendor/cache/` at any tree depth",
         "launch checklist Ruby/Bundler artifact risk-scan scope",
     )
@@ -2320,6 +2325,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root and nested `.gitignore` coverage for local Go cache/test artifacts",
         "launch evidence Go artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth Go files such as `go.mod`, `go.sum`, Go source files, and Go docs",
+        "launch evidence Go source-file allowance",
     )
     assert_contains(
         evidence_text,
