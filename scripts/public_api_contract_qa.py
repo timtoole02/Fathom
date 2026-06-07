@@ -1404,6 +1404,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked local Swift Package Manager build/workspace artifacts such as `.build/` and `.swiftpm/` at any tree depth",
+        "launch checklist Swift Package Manager artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for local Swift Package Manager artifacts",
+        "launch checklist Swift Package Manager artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Swift package files such as `Package.swift` or Swift source files",
+        "launch checklist Swift Package Manager source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "Go cache/test artifact guard also rejects tracked local generated outputs",
         "launch checklist Go artifact risk-scan scope",
     )
