@@ -2872,6 +2872,11 @@ def assert_boundary_docs() -> None:
         "launch evidence Dart/Flutter artifact ignore examples",
     )
     assert_contains(
+        evidence_text,
+        "preserving source-of-truth project files such as `pubspec.yaml`, `pubspec.lock`, Dart source, Android Gradle project files, and iOS Xcode project files",
+        "launch evidence Dart/Flutter source-file allowance",
+    )
+    assert_contains(
         launch_text,
         "The Kotlin/Kotlin Native compiler artifact guard also rejects tracked local Kotlin/Kotlin Native compiler artifacts",
         "launch checklist Kotlin/Kotlin Native artifact risk-scan scope",
