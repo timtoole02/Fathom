@@ -1249,6 +1249,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "source-of-truth Python files such as `pyproject.toml`, `setup.py`, `setup.cfg`, `requirements*.txt`, `Pipfile`, `Pipfile.lock`, `poetry.lock`, `uv.lock`, Python source files, or Python docs",
+        "launch checklist Python source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "tracked local frontend/static-site framework caches and build outputs",
         "launch checklist frontend/static-site artifact risk-scan scope",
     )
@@ -2130,6 +2135,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root and nested `.gitignore` coverage for local Python virtualenv/dependency artifacts",
         "launch evidence Python virtualenv/dependency artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Python files such as `pyproject.toml`, `setup.py`, `setup.cfg`, `requirements*.txt`, `Pipfile`, `Pipfile.lock`, `poetry.lock`, `uv.lock`, Python source files, and Python docs",
+        "launch evidence Python source-file allowance",
     )
     assert_contains(
         evidence_text,
