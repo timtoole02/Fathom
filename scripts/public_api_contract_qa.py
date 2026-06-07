@@ -1309,6 +1309,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "common Gradle `build/` output subtrees such as `classes/`, `reports/`, `test-results/`, `tmp/`, `generated/`, `intermediates/`, and `libs/`",
+        "launch checklist Gradle/JVM artifact examples",
+    )
+    assert_contains(
+        launch_text,
         "matching root and nested `.gitignore` coverage for Gradle cache/state",
         "launch checklist Gradle/JVM artifact ignore scope",
     )
