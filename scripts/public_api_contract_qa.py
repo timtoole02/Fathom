@@ -1130,12 +1130,32 @@ def assert_boundary_docs() -> None:
         "launch checklist mobile build artifact ignore scope",
     )
     assert_contains(launch_text, "Expo local project state such as `.expo/` and `.expo-shared/`", "launch checklist Expo local state scope")
+    assert_contains(
+        launch_text,
+        "Expo local project state such as `.expo/` and `.expo-shared/` at any tree depth, with matching root and nested `.gitignore` coverage",
+        "launch checklist Expo local state ignore scope",
+    )
     assert_contains(launch_text, "source-of-truth mobile app code, Expo config, Android Gradle project files, or iOS Xcode project files", "launch checklist Expo source allowance")
     assert_contains(launch_text, "Android native build intermediates such as `.cxx/` and `.externalNativeBuild/`", "launch checklist Android native build intermediate scope")
+    assert_contains(
+        launch_text,
+        "including the same directories under `android/`, with matching root, nested, and `android/` `.gitignore` coverage",
+        "launch checklist Android native build intermediate ignore scope",
+    )
     assert_contains(launch_text, "source-of-truth Android Gradle project files, JNI/C++ source files, or checked-in native build configuration", "launch checklist Android native source allowance")
     assert_contains(launch_text, "CocoaPods dependency outputs such as root `Pods/` and `ios/Pods/`", "launch checklist CocoaPods dependency output scope")
+    assert_contains(
+        launch_text,
+        "CocoaPods dependency outputs such as root `Pods/` and `ios/Pods/`, with matching root `.gitignore` coverage",
+        "launch checklist CocoaPods dependency output ignore scope",
+    )
     assert_contains(launch_text, "source-of-truth CocoaPods files such as `Podfile` or `Podfile.lock`", "launch checklist CocoaPods source allowance")
     assert_contains(launch_text, "Carthage dependency outputs such as `Carthage/Build/` and `Carthage/Checkouts/`", "launch checklist Carthage dependency output scope")
+    assert_contains(
+        launch_text,
+        "Carthage dependency outputs such as `Carthage/Build/` and `Carthage/Checkouts/`, with matching root `.gitignore` coverage",
+        "launch checklist Carthage dependency output ignore scope",
+    )
     assert_contains(launch_text, "source-of-truth Carthage files such as `Cartfile` or `Cartfile.resolved`", "launch checklist Carthage source allowance")
     assert_contains(
         launch_text,
