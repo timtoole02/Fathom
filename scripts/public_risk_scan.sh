@@ -4482,6 +4482,9 @@ def self_test():
             "docs/.m2/repository/com/example/private-lib/1.0/private-lib-1.0.pom",
             "examples/java/.m2/repository/com/example/private-lib/1.0/private-lib-1.0.pom",
             "pom.xml",
+            "src/main/java/Fathom.java",
+            "src/main/kotlin/Fathom.kt",
+            "src/main/scala/Fathom.scala",
             "docs/java-build.md",
         ],
     )

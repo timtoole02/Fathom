@@ -114,7 +114,7 @@ It also blocks tracked local `.cache/` directories at any tree depth, with match
 
 It also blocks tracked local documentation build artifacts such as LaTeX auxiliary files (`*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`) and `_minted-*` caches, with matching root and nested `.gitignore` coverage for local documentation build artifacts. It intentionally does not block all PDFs because some PDFs can be source-of-truth public docs rather than rebuildable local output.
 
-It also blocks tracked local JVM dependency artifacts such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage for local JVM dependency artifacts.
+It also blocks tracked local JVM dependency artifacts such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage for local JVM dependency artifacts. It does not treat source-of-truth Maven/JVM project files such as `pom.xml`, Java source files, Kotlin source files, Scala source files, or JVM docs as local dependency artifacts.
 
 It also blocks tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, and `.shadow-cljs/` at any tree depth, plus `.nrepl-port`, with matching root and nested `.gitignore` coverage for local Clojure/Leiningen artifacts. It does not treat source-of-truth Clojure files such as `project.clj`, `deps.edn`, `bb.edn`, `shadow-cljs.edn`, or Clojure/ClojureScript source files as local tool artifacts.
 
@@ -162,7 +162,7 @@ The backup/dump artifact guard also rejects tracked local backup and data dump a
 
 The model/checkpoint artifact guard also rejects tracked local model/checkpoint artifacts such as top-level `models/`, `model-store/`, `weights/`, `checkpoints/`, and model binary/data files including `.safetensors`, `.gguf`, `.onnx`, `.bin`, `.pt`, `.pth`, `.ckpt`, `.npz`, `.npy`, and `.tflite`, with matching root `.gitignore` coverage.
 
-The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage.
+The JVM dependency artifact guard also rejects tracked local Maven repository/cache state such as `.m2/` at any tree depth, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Maven/JVM project files such as `pom.xml`, Java source files, Kotlin source files, Scala source files, or JVM docs as local dependency artifacts.
 
 The JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth JVM project files such as `pom.xml`, `build.gradle`, `build.sbt`, Java source files, Kotlin source files, or Scala source files as local tool artifacts.
 

@@ -1344,6 +1344,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "source-of-truth Maven/JVM project files such as `pom.xml`, Java source files, Kotlin source files, Scala source files, or JVM docs",
+        "launch checklist JVM dependency source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`",
         "launch checklist JVM compiler artifact risk-scan scope",
     )
@@ -2440,6 +2445,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root and nested `.gitignore` coverage for local JVM dependency artifacts",
         "launch evidence JVM dependency artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Maven/JVM project files such as `pom.xml`, Java source files, Kotlin source files, Scala source files, and JVM docs",
+        "launch evidence JVM dependency source allowance",
     )
     assert_contains(
         launch_text,
