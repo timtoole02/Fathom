@@ -1509,7 +1509,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, or Julia source files",
+        "source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, or Julia source files as local depot/preference artifacts by filename alone",
         "launch checklist Julia source-file allowance",
     )
     assert_contains(
@@ -2488,7 +2488,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "preserving source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, and Julia source files",
+        "preserving source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, and Julia source files by filename alone",
         "launch evidence Julia source allowance",
     )
     assert_contains(
