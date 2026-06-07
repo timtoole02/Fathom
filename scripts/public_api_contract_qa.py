@@ -1098,12 +1098,17 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "tracked local mobile/Xcode/Android signing/provisioning artifacts",
+        "mobile/Xcode/Android signing/provisioning artifact guard also blocks tracked local provisioning/build archives",
         "launch checklist mobile signing artifact risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local mobile/Xcode/Android signing/provisioning artifacts",
+        "such as `*.mobileprovision`, `*.provisionprofile`, and `*.xcarchive`",
+        "launch checklist mobile signing artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root `.gitignore` coverage for local mobile/Xcode/Android signing/provisioning artifacts",
         "launch checklist mobile signing artifact ignore scope",
     )
     assert_contains(
