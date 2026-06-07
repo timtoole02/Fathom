@@ -1354,6 +1354,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "such as `.nuget/`, `packages/`, `bin/Debug/`, `obj/Release/`, `project.assets.json`, `project.nuget.cache`, `*.nupkg`, `*.snupkg`, `*.csproj.user`, and `*.suo`",
+        "launch checklist .NET/NuGet artifact examples",
+    )
+    assert_contains(
+        launch_text,
         "with matching root `.gitignore` coverage",
         "launch checklist .NET/NuGet artifact ignore scope",
     )
