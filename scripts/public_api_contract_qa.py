@@ -2508,7 +2508,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "preserving source-of-truth Ruby files, Ruby docs, and non-artifact vendor paths",
+        "preserving source-of-truth Ruby files such as `Gemfile`, `Gemfile.lock`, Ruby source files, Ruby docs, and non-artifact vendor paths",
         "launch evidence Ruby/Bundler source allowance",
     )
     assert_contains(
@@ -2533,7 +2533,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "preserving source-of-truth Composer manifests, PHP source files, and PHP docs",
+        "preserving source-of-truth Composer files such as `composer.json`, `composer.lock`, PHP source files, and PHP docs",
         "launch evidence PHP Composer source allowance",
     )
     assert_contains(
