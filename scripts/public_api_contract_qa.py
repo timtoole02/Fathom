@@ -1094,11 +1094,25 @@ def assert_boundary_docs() -> None:
         "source-of-truth Zig files such as `build.zig`, `build.zig.zon`, or Zig source files",
         "launch checklist Zig source-file allowance",
     )
-    assert_contains(launch_text, "tracked local Dart/Flutter artifacts", "launch checklist Dart/Flutter artifact risk-scan scope")
+    assert_contains(
+        launch_text,
+        "blocks tracked local Dart/Flutter artifacts",
+        "launch checklist Dart/Flutter artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as `.dart_tool/`, `.pub-cache/`, `.pub/`, `.packages`, `.flutter-plugins`, and `.flutter-plugins-dependencies` at any tree depth",
+        "launch checklist Dart/Flutter artifact examples",
+    )
     assert_contains(
         launch_text,
         "root and nested `.gitignore` coverage for local Dart/Flutter artifacts",
         "launch checklist Dart/Flutter artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Dart/Flutter files such as `pubspec.yaml`, `pubspec.lock`, Dart source, Android Gradle project files, or iOS Xcode project files",
+        "launch checklist Dart/Flutter source-file allowance",
     )
     assert_contains(
         launch_text,
