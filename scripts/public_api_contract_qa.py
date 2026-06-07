@@ -2483,8 +2483,23 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "LaTeX auxiliary files (`*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`)",
+        "launch checklist documentation LaTeX artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "_minted-*` caches",
+        "launch checklist documentation minted artifact examples",
+    )
+    assert_contains(
+        launch_text,
         "root and nested `.gitignore` coverage for local documentation build artifacts",
         "launch checklist documentation build artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "It intentionally does not block all PDFs",
+        "launch checklist documentation PDF source allowance",
     )
     assert_contains(
         evidence_text,
