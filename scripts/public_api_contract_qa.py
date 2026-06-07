@@ -1329,6 +1329,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Maven repository/cache state such as `.m2/` at any tree depth",
+        "launch checklist JVM dependency artifact examples",
+    )
+    assert_contains(
+        launch_text,
         "root and nested `.gitignore` coverage for local JVM dependency artifacts",
         "launch checklist JVM dependency artifact ignore scope",
     )
@@ -1336,6 +1341,11 @@ def assert_boundary_docs() -> None:
         launch_text,
         "JVM compiler artifact guard also rejects tracked local bytecode outputs such as `*.class` and `*.tasty`",
         "launch checklist JVM compiler artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "tracked local bytecode outputs such as `*.class` and `*.tasty`",
+        "launch checklist JVM compiler artifact examples",
     )
     assert_contains(
         launch_text,
