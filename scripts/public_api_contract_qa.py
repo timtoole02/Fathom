@@ -1559,7 +1559,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, or Haskell source files",
+        "source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, or Haskell source files as local Stack/Cabal build artifacts by filename alone",
         "launch checklist Haskell Stack/Cabal source-file allowance scope",
     )
     assert_contains(
@@ -1758,7 +1758,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "preserving source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, and Haskell source files",
+        "preserving source-of-truth Haskell files such as `.cabal` files, `stack.yaml`, `cabal.project`, and Haskell source files by filename alone",
         "launch evidence Haskell Stack/Cabal source-file allowance scope",
     )
     assert_contains(
