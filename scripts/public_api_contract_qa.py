@@ -2983,6 +2983,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "preserving source-of-truth Kotlin files such as `build.gradle.kts`, `settings.gradle.kts`, Kotlin source files, and Gradle version catalog files",
+        "launch evidence Kotlin/Kotlin Native source allowance",
+    )
+    assert_contains(
+        evidence_text,
         "Gradle/JVM local build artifact guard",
         "launch evidence Gradle/JVM artifact risk-scan scope",
     )
