@@ -1217,25 +1217,34 @@ def assert_boundary_docs() -> None:
         "with matching root `.gitignore` coverage for local audio/video capture/export artifacts",
         "launch checklist audio/video capture artifact ignore scope",
     )
-    assert_contains(launch_text, "root and nested `.gitignore` coverage for local Python cache/build artifacts", "launch checklist Python artifact ignore scope")
     assert_contains(
         launch_text,
-        "Pyre/Pytype and mypy daemon state",
-        "launch checklist Python type-checker artifact scope",
+        "Python cache/build artifact guard also rejects tracked local Pyre/Pytype and mypy daemon state",
+        "launch checklist Python artifact risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "Python package metadata/build artifacts such as `.eggs/`, `*.egg-info/`, and `*.dist-info/`",
+        "such as `.pyre/`, `.pytype/`, and `.dmypy.json`",
+        "launch checklist Python type-checker artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "plus Python package metadata/build artifacts such as `.eggs/`, `*.egg-info/`, and `*.dist-info/`, with matching root and nested `.gitignore` coverage",
         "launch checklist Python package metadata artifact scope",
     )
     assert_contains(
         launch_text,
-        "tracked Python virtualenv/dependency artifacts",
+        "Python virtualenv/dependency artifact guard rejects local PDM/PEP 582 artifacts",
         "launch checklist Python virtualenv/dependency artifact risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "root and nested `.gitignore` coverage for local Python virtualenv/dependency artifacts",
+        "such as `.pdm-build/` and `__pypackages__/`",
+        "launch checklist Python virtualenv/dependency artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "plus virtualenv and package-manager cache directories at any tree depth, with matching root and nested `.gitignore` coverage",
         "launch checklist Python virtualenv/dependency artifact ignore scope",
     )
     assert_contains(launch_text, "root and nested `.gitignore` coverage for local frontend/Node cache/build artifacts", "launch checklist frontend artifact ignore scope")
