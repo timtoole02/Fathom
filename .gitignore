@@ -286,6 +286,19 @@ site-packages/
 .phpunit.result.cache
 composer.phar
 
+# Local Perl/CPAN build/dependency artifacts
+/.cpan/
+.cpan/
+/.cpanm/
+.cpanm/
+/blib/
+blib/
+/local/lib/perl5/
+**/local/lib/perl5/
+MYMETA.json
+MYMETA.yml
+pm_to_blib
+
 # Local R/RStudio artifacts
 /.Rproj.user/
 .Rproj.user/

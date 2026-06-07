@@ -664,6 +664,19 @@ required_php_composer_artifact_gitignore_patterns = {
     "**/vendor/bin/",
     "**/vendor/composer/",
 }
+required_perl_cpan_artifact_gitignore_patterns = {
+    "/.cpan/",
+    "/.cpanm/",
+    "/blib/",
+    "/local/lib/perl5/",
+    ".cpan/",
+    ".cpanm/",
+    "blib/",
+    "**/local/lib/perl5/",
+    "MYMETA.json",
+    "MYMETA.yml",
+    "pm_to_blib",
+}
 required_r_artifact_gitignore_patterns = {
     "/.Rproj.user/",
     "/renv/library/",
@@ -1039,6 +1052,19 @@ blocked_tracked_php_composer_artifact_filenames = {
 }
 blocked_tracked_php_composer_vendor_artifact_paths = {
     ("vendor", "autoload.php"),
+}
+blocked_tracked_perl_cpan_artifact_dirs = {
+    ".cpan",
+    ".cpanm",
+    "blib",
+}
+blocked_tracked_perl_cpan_artifact_paths = {
+    ("local", "lib", "perl5"),
+}
+blocked_tracked_perl_cpan_artifact_filenames = {
+    "MYMETA.json",
+    "MYMETA.yml",
+    "pm_to_blib",
 }
 blocked_tracked_r_artifact_dirs = {
     ".Rproj.user",
@@ -2364,6 +2390,22 @@ def gitignore_php_composer_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local PHP Composer dependency/test artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_perl_cpan_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Perl/CPAN build/dependency artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_perl_cpan_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Perl/CPAN build/dependency artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_r_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -2816,6 +2858,25 @@ def tracked_php_composer_artifact_file_failures(tracked_paths=None):
             continue
         if path.name in blocked_tracked_php_composer_artifact_filenames:
             failures.append(f"{rel}: PHP Composer dependency/test artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_perl_cpan_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_perl_cpan_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Perl/CPAN build/dependency artifacts must not be tracked for public launch")
+            continue
+        if any(
+            tuple(path.parts[index : index + 3]) in blocked_tracked_perl_cpan_artifact_paths
+            for index in range(max(len(path.parts) - 2, 0))
+        ):
+            failures.append(f"{rel}: Perl/CPAN build/dependency artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_perl_cpan_artifact_filenames:
+            failures.append(f"{rel}: Perl/CPAN build/dependency artifacts must not be tracked for public launch")
     return failures
 
 def tracked_r_artifact_file_failures(tracked_paths=None):
@@ -4204,6 +4265,52 @@ def self_test():
         ".gitignore: missing local PHP Composer dependency/test artifact ignore patterns: **/vendor/composer/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local PHP Composer dependency/test artifact ignore patterns")
+    perl_cpan_artifact_failures = tracked_perl_cpan_artifact_file_failures(
+        tracked_paths=[
+            ".cpan/build.log",
+            ".cpanm/work/metadata.json",
+            "blib/lib/Fathom.pm",
+            "local/lib/perl5/darwin-thread-multi/Config.pm",
+            "examples/perl/.cpan/build.log",
+            "examples/perl/.cpanm/work/metadata.json",
+            "examples/perl/blib/lib/Fathom.pm",
+            "examples/perl/local/lib/perl5/darwin-thread-multi/Config.pm",
+            "MYMETA.json",
+            "MYMETA.yml",
+            "pm_to_blib",
+            "cpanfile",
+            "cpanfile.snapshot",
+            "Makefile.PL",
+            "Build.PL",
+            "lib/Fathom.pm",
+            "docs/perl.md",
+            "local/lib/source.pm",
+        ],
+    )
+    if perl_cpan_artifact_failures != [
+        ".cpan/build.log: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        ".cpanm/work/metadata.json: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "blib/lib/Fathom.pm: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "local/lib/perl5/darwin-thread-multi/Config.pm: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "examples/perl/.cpan/build.log: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "examples/perl/.cpanm/work/metadata.json: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "examples/perl/blib/lib/Fathom.pm: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "examples/perl/local/lib/perl5/darwin-thread-multi/Config.pm: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "MYMETA.json: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "MYMETA.yml: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+        "pm_to_blib: Perl/CPAN build/dependency artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local Perl/CPAN build/dependency artifacts")
+    allowed_perl_cpan_artifact_gitignore = "\n".join(sorted(required_perl_cpan_artifact_gitignore_patterns)) + "\n"
+    if gitignore_perl_cpan_artifact_failures(allowed_perl_cpan_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Perl/CPAN build/dependency artifact ignore patterns")
+    perl_cpan_artifact_gitignore_failures = gitignore_perl_cpan_artifact_failures(
+        allowed_perl_cpan_artifact_gitignore.replace("**/local/lib/perl5/\n", "")
+    )
+    if perl_cpan_artifact_gitignore_failures != [
+        ".gitignore: missing local Perl/CPAN build/dependency artifact ignore patterns: **/local/lib/perl5/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Perl/CPAN build/dependency artifact ignore patterns")
     r_artifact_failures = tracked_r_artifact_file_failures(
         tracked_paths=[
             ".Rproj.user/123/session.json",
@@ -6027,6 +6134,7 @@ failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_ruby_bundle_artifact_failures())
 failures.extend(gitignore_php_composer_artifact_failures())
+failures.extend(gitignore_perl_cpan_artifact_failures())
 failures.extend(gitignore_r_artifact_failures())
 failures.extend(gitignore_julia_artifact_failures())
 failures.extend(gitignore_go_artifact_failures())
@@ -6055,6 +6163,7 @@ failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_python_env_artifact_file_failures())
 failures.extend(tracked_ruby_bundle_artifact_file_failures())
 failures.extend(tracked_php_composer_artifact_file_failures())
+failures.extend(tracked_perl_cpan_artifact_file_failures())
 failures.extend(tracked_r_artifact_file_failures())
 failures.extend(tracked_julia_artifact_file_failures())
 failures.extend(tracked_go_artifact_file_failures())

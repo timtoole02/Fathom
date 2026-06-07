@@ -1494,6 +1494,26 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Perl/CPAN build/dependency artifact guard rejects tracked local CPAN client, build, and local::lib outputs",
+        "launch checklist Perl/CPAN artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        ".cpan/`, `.cpanm/`, `blib/`, `local/lib/perl5/`, `MYMETA.json`, `MYMETA.yml`, and `pm_to_blib`",
+        "launch checklist Perl/CPAN artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist Perl/CPAN artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Perl files such as `cpanfile`, `cpanfile.snapshot`, `Makefile.PL`, `Build.PL`, Perl source files, or Perl docs",
+        "launch checklist Perl/CPAN source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "Julia depot/preference artifact guard also rejects tracked local Julia depot, preference, coverage, and allocation artifacts",
         "launch checklist Julia artifact risk-scan scope",
     )
@@ -2535,6 +2555,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving source-of-truth Composer files such as `composer.json`, `composer.lock`, PHP source files, and PHP docs",
         "launch evidence PHP Composer source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Perl/CPAN build/dependency artifact guard",
+        "launch evidence Perl/CPAN artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local CPAN client, build, and local::lib artifacts such as `.cpan/`, `.cpanm/`, `blib/`, `local/lib/perl5/`, `MYMETA.json`, `MYMETA.yml`, and `pm_to_blib`",
+        "launch evidence Perl/CPAN artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root and nested `.gitignore` coverage for local Perl/CPAN build/dependency artifacts",
+        "launch evidence Perl/CPAN artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth Perl files such as `cpanfile`, `cpanfile.snapshot`, `Makefile.PL`, `Build.PL`, Perl source files, and Perl docs",
+        "launch evidence Perl/CPAN source allowance",
     )
     assert_contains(
         launch_text,
