@@ -5643,6 +5643,12 @@ def self_test():
             "result-docs/share/doc/fathom/index.html",
             "docs/result-analysis.md",
             "frontend/src/result-card.jsx",
+            "flake.nix",
+            "flake.lock",
+            "default.nix",
+            "shell.nix",
+            "nix/fathom.nix",
+            "docs/nix-build.md",
         ],
     )
     if nix_artifact_failures != [

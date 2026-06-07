@@ -1026,6 +1026,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "source-of-truth Nix files such as `flake.nix`, `flake.lock`, `default.nix`, `shell.nix`, or `*.nix` files",
+        "launch checklist Nix source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "blocks tracked local Bazel output symlinks/directories",
         "launch checklist Bazel artifact risk-scan scope",
     )
@@ -2845,6 +2850,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "missing root `.gitignore` coverage for local Nix build result artifacts",
         "launch evidence Nix artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth Nix files such as `flake.nix`, `flake.lock`, `default.nix`, `shell.nix`, and `*.nix` files",
+        "launch evidence Nix source-file allowance",
     )
     assert_contains(
         evidence_text,
