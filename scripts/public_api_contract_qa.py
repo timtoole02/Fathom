@@ -2753,6 +2753,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "The Kotlin/Kotlin Native compiler artifact guard also rejects tracked local Kotlin/Kotlin Native compiler artifacts",
+        "launch checklist Kotlin/Kotlin Native artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
         "tracked local Kotlin/Kotlin Native compiler artifacts such as `.kotlin/` and `.konan/` at any tree depth",
         "launch checklist Kotlin/Kotlin Native artifact examples",
     )
