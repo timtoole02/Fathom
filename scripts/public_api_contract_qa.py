@@ -1394,6 +1394,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked local CI runner artifacts/config such as `.act/` and `.actrc`",
+        "launch checklist local CI runner artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage, so local `act` workflow state cannot be mistaken for launch evidence",
+        "launch checklist local CI runner artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Go cache/test artifact guard also rejects tracked local generated outputs",
         "launch checklist Go artifact risk-scan scope",
     )
@@ -1855,6 +1865,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "root and nested `.gitignore` local IDE workspace/config artifact guard",
         "launch evidence IDE workspace/config ignore risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "local `act` workflow runner state/config (`.act/` and `.actrc`) is blocked as tracked launch-facing material",
+        "launch evidence local CI runner artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "with matching root and nested `.gitignore` coverage",
+        "launch evidence local CI runner artifact ignore scope",
     )
     assert_contains(
         evidence_text,
