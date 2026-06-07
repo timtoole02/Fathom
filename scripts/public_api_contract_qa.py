@@ -2313,6 +2313,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "such as `.bloop/`, `.bsp/`, `.metals/`, and `.scala-build/` at any tree depth",
+        "launch checklist Scala/SBT artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Scala/SBT files",
+        "launch checklist Scala/SBT artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "It does not treat source-of-truth Scala/SBT files such as `build.sbt`, `project/build.properties`, or Scala source files as local tool artifacts.",
         "launch checklist Scala/SBT source-file allowance",
     )
