@@ -1609,6 +1609,26 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "The Erlang/Rebar3 artifact guard also rejects tracked local cache and crash artifacts",
+        "launch checklist Erlang/Rebar3 artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        ".rebar3/` at any tree depth, `rebar3.crashdump`, and `erl_crash.dump`",
+        "launch checklist Erlang/Rebar3 artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist Erlang/Rebar3 artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Erlang/Rebar3 files such as `rebar.config`, `rebar.lock`, Erlang source files, or Erlang header files",
+        "launch checklist Erlang/Rebar3 source-file allowance",
+    )
+    assert_contains(
+        launch_text,
         "native/CMake build artifact guard rejects tracked local native/CMake build/user-local artifacts",
         "launch checklist native/CMake artifact risk-scan scope",
     )
