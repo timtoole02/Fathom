@@ -2488,6 +2488,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "while preserving source-of-truth Scala/SBT files such as `build.sbt`, `project/build.properties`, and Scala source files",
+        "launch evidence Scala/SBT source allowance",
+    )
+    assert_contains(
+        evidence_text,
         "R/RStudio artifact guard",
         "launch evidence R/RStudio artifact risk-scan scope",
     )
