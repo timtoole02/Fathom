@@ -1247,7 +1247,11 @@ def assert_boundary_docs() -> None:
         "plus virtualenv and package-manager cache directories at any tree depth, with matching root and nested `.gitignore` coverage",
         "launch checklist Python virtualenv/dependency artifact ignore scope",
     )
-    assert_contains(launch_text, "root and nested `.gitignore` coverage for local frontend/Node cache/build artifacts", "launch checklist frontend artifact ignore scope")
+    assert_contains(
+        launch_text,
+        "tracked local frontend/static-site framework caches and build outputs",
+        "launch checklist frontend/static-site artifact risk-scan scope",
+    )
     assert_contains(
         launch_text,
         "Vite/Vitest cache/config timestamp artifacts",
@@ -1262,6 +1266,21 @@ def assert_boundary_docs() -> None:
         launch_text,
         "Astro `.astro/`, Docusaurus `.docusaurus/`, Hugo `resources/_gen/` and `.hugo_build.lock`, Jekyll `_site/`, `.jekyll-cache/`, and `.sass-cache/`, Vite `.vite/`, VitePress `.vitepress/cache/` and `.vitepress/dist/`, Metro `.metro-cache/`, Rollup TypeScript plugin `.rpt2_cache/`, Webpack `.webpack-cache/`, Next.js `.next/`, SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories",
         "launch checklist frontend framework artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage for those local frontend/static-site artifacts",
+        "launch checklist frontend/static-site artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "selected nested Yarn cache/state artifacts such as `.yarn/cache/`, `.yarn/unplugged/`, `.yarn/build-state.yml`, and `.yarn/install-state.gz`",
+        "launch checklist Yarn cache/state artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "while preserving source-of-truth lockfiles and package manifests",
+        "launch checklist frontend package source allowance",
     )
     assert_contains(
         launch_text,
