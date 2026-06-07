@@ -1009,10 +1009,19 @@ def assert_boundary_docs() -> None:
         "with matching root and nested `.gitignore` coverage for local infrastructure state artifacts",
         "launch checklist infrastructure state artifact ignore scope",
     )
-    assert_contains(launch_text, "tracked local Nix build result artifacts", "launch checklist Nix artifact risk-scan scope")
     assert_contains(
         launch_text,
-        "root `.gitignore` coverage for local Nix build result artifacts",
+        "Nix build result artifact guard rejects tracked local result symlinks/directories",
+        "launch checklist Nix artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as root `result` and `result-*` outputs",
+        "launch checklist Nix artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root `.gitignore` coverage for local Nix build result artifacts",
         "launch checklist Nix artifact ignore scope",
     )
     assert_contains(launch_text, "tracked local Bazel build artifacts", "launch checklist Bazel artifact risk-scan scope")
