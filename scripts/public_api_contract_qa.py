@@ -1559,6 +1559,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "generated CPack files such as `CPackConfig.cmake` and `CPackSourceConfig.cmake`",
+        "launch checklist native/CMake CPack artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "`CMakeCache.txt`, user-local `CMakeUserPresets.json`, `cmake_install.cmake`, `compile_commands.json`, `install_manifest.txt`",
+        "launch checklist native/CMake generated local file examples",
+    )
+    assert_contains(
+        launch_text,
+        "Ninja local state files such as `.ninja_deps` and `.ninja_log`",
+        "launch checklist native/CMake Ninja local state examples",
+    )
+    assert_contains(
+        launch_text,
         "root and nested `.gitignore` coverage for local native/CMake build artifacts",
         "launch checklist native/CMake artifact ignore scope",
     )
