@@ -6053,8 +6053,11 @@ def self_test():
     lockfile_failures = tracked_dependency_lock_source_failures(
         tracked_paths=[
             "Cargo.lock",
+            "Pipfile.lock",
             "package-lock.json",
             "pnpm-lock.yaml",
+            "poetry.lock",
+            "uv.lock",
             "yarn.lock",
             "docs/api/public-contract.json",
         ],
@@ -6070,11 +6073,33 @@ def self_test():
                 'name = "ssh-only"\n'
                 'source = "git+ssh://git@github.com/example/private#abc123"\n'
             ),
+            "Pipfile.lock": (
+                '{\n'
+                '  "default": {"safe": {"file": "https://files.pythonhosted.org/packages/source/s/safe/safe-1.0.tar.gz"},\n'
+                '  "local-helper": {"file": "file:../private-helper.tar.gz"}}\n'
+                '}\n'
+            ),
             "package-lock.json": (
                 '{"packages":{"node_modules/local":{"resolved":"file:../local.tgz"},'
                 '"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}'
             ),
             "pnpm-lock.yaml": "packages:\n  /private:\n    resolution: {tarball: /Users/example/private.tgz}\n",
+            "poetry.lock": (
+                '[[package]]\n'
+                'name = "safe"\n'
+                'files = [{file = "safe-1.0.tar.gz", url = "https://files.pythonhosted.org/packages/safe-1.0.tar.gz"}]\n'
+                '[[package]]\n'
+                'name = "local-helper"\n'
+                'url = "file:../private-helper.tar.gz"\n'
+            ),
+            "uv.lock": (
+                '[[package]]\n'
+                'name = "safe"\n'
+                'source = { registry = "https://pypi.org/simple" }\n'
+                '[[package]]\n'
+                'name = "local-helper"\n'
+                'source = { path = "../private-helper" }\n'
+            ),
             "yarn.lock": (
                 '"safe@npm:^1.0.0":\n'
                 '  resolution: "safe@npm:1.0.0"\n'
@@ -6089,9 +6114,12 @@ def self_test():
     if lockfile_failures != [
         'Cargo.lock:6: local file dependency source in lockfile: path = "../private-helper"',
         'Cargo.lock:9: SSH dependency source in lockfile: source = "git+ssh://git@github.com/example/private#abc123"',
+        'Pipfile.lock:3: local file dependency source in lockfile: "local-helper": {"file": "file:../private-helper.tar.gz"}}',
         'package-lock.json:1: local file dependency source in lockfile: {"packages":{"node_modules/local":{"resolved":"file:../local.tgz"},"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}',
         'package-lock.json:1: authenticated dependency URL in lockfile: {"packages":{"node_modules/local":{"resolved":"file:../local.tgz"},"node_modules/private":{"resolved":"https://user:token@example.invalid/private.tgz"}}}',
         "pnpm-lock.yaml:3: personal home path in dependency lockfile: resolution: {tarball: /Users/example/private.tgz}",
+        'poetry.lock:6: local file dependency source in lockfile: url = "file:../private-helper.tar.gz"',
+        'uv.lock:6: local file dependency source in lockfile: source = { path = "../private-helper" }',
         'yarn.lock:3: local file dependency source in lockfile: "portal-helper@portal:../private-helper":',
         'yarn.lock:4: local file dependency source in lockfile: resolution: "portal-helper@portal:../private-helper"',
         'yarn.lock:5: local file dependency source in lockfile: "patched@patch:patched@npm%3A1.0.0#./.yarn/patches/patched.patch":',
