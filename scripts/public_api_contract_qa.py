@@ -1144,6 +1144,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "with matching root `.gitignore` coverage through the local mobile/Xcode/Android build artifact guard",
+        "launch checklist Fastlane report/test artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "source-of-truth Fastlane configuration or App Store metadata such as `Fastfile`, `Appfile`, or `fastlane/metadata/`",
         "launch checklist Fastlane source allowance",
     )
