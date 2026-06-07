@@ -2473,6 +2473,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked notebook execution outputs",
+        "launch checklist notebook execution-output risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
         "root and nested `.gitignore` coverage for local notebook artifacts",
         "launch checklist notebook artifact ignore scope",
     )
