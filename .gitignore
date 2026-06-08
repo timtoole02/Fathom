@@ -457,6 +457,7 @@ frontend/cypress/downloads/
 /reports/
 /surefire-reports/
 /failsafe-reports/
+/jacocoHtml/
 /htmlcov/
 /.nyc_output/
 **/test-results/
@@ -464,6 +465,7 @@ frontend/cypress/downloads/
 **/reports/
 **/surefire-reports/
 **/failsafe-reports/
+**/jacocoHtml/
 **/htmlcov/
 **/.nyc_output/
 .coverage
@@ -471,6 +473,9 @@ frontend/cypress/downloads/
 coverage.xml
 coverage-final.json
 clover.xml
+jacoco.exec
+jacoco.xml
+jacoco.csv
 lcov.info
 *.lcov
 junit.xml
