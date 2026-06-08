@@ -43,6 +43,16 @@ libtool
 *.la
 *.lo
 
+# Local SCons build artifacts
+.sconf_temp/
+**/.sconf_temp/
+sconf_temp/
+**/sconf_temp/
+.sconsign
+**/.sconsign
+.sconsign.dblite
+**/.sconsign.dblite
+
 # Local Swift Package Manager artifacts
 /.build/
 **/.build/

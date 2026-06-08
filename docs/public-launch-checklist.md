@@ -158,6 +158,8 @@ The Meson build artifact guard also rejects tracked local Meson build artifacts 
 
 The Autotools build artifact guard also rejects tracked local Autotools configure and Libtool outputs such as `autom4te.cache/`, `.deps/`, `.libs/`, `config.log`, `config.status`, generated `libtool` files, `*.lo`, and `*.la`, with matching root `.gitignore` coverage. It does not treat source-of-truth Autotools files such as `configure.ac`, `Makefile.am`, or Autotools docs as local build artifacts.
 
+The SCons build artifact guard also rejects tracked local SCons configuration/cache outputs such as `.sconf_temp/`, `sconf_temp/`, `.sconsign`, and `.sconsign.dblite`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth `SConstruct` or `SConscript` files as local build artifacts.
+
 The release/package artifact guard also rejects tracked local release/package artifacts including common archive formats such as `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.7z`, `.rar`, and `.zst`; installer/package formats such as `.dmg`, `.pkg`, `.whl`, `.egg`, `.deb`, `.rpm`, and `.msi`; JVM package archives such as `.jar`, `.war`, and `.ear`; and root `artifacts/` outputs, with matching root `.gitignore` coverage.
 
 The backup/dump artifact guard also rejects tracked local backup and data dump artifacts such as root `backups/`, root `dumps/`, `*.bak`, `*.backup`, `*.dump`, and `*.sql`, with matching root `.gitignore` coverage.
