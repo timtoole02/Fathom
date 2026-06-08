@@ -412,8 +412,13 @@ required_deployment_platform_artifact_gitignore_patterns = {
 }
 required_infra_state_gitignore_patterns = {
     "/.terraform/",
+    "/.terragrunt-cache/",
+    "/.tofu/",
     ".terraform/",
+    ".terragrunt-cache/",
+    ".tofu/",
     ".terraform.lock.hcl",
+    ".tofu.lock.hcl",
     "*.tfplan",
     "*.tfstate",
     "*.tfstate.*",
@@ -1405,9 +1410,12 @@ blocked_tracked_deployment_platform_artifact_dirs = {
 }
 blocked_tracked_infra_state_dirs = {
     ".terraform",
+    ".terragrunt-cache",
+    ".tofu",
 }
 blocked_tracked_infra_state_filenames = {
     ".terraform.lock.hcl",
+    ".tofu.lock.hcl",
 }
 blocked_tracked_infra_state_suffixes = {
     ".tfplan",
@@ -3990,9 +3998,11 @@ def self_test():
     if gitignore_infra_state_failures(allowed_infra_state_gitignore):
         raise AssertionError("public risk self-test rejected complete local infrastructure state ignore patterns")
     infra_state_gitignore_failures = gitignore_infra_state_failures(
-        allowed_infra_state_gitignore.replace("*.tfvars\n", "")
+        allowed_infra_state_gitignore.replace("/.terragrunt-cache/\n", "")
     )
-    if infra_state_gitignore_failures != [".gitignore: missing local infrastructure state ignore patterns: *.tfvars"]:
+    if infra_state_gitignore_failures != [
+        ".gitignore: missing local infrastructure state ignore patterns: /.terragrunt-cache/"
+    ]:
         raise AssertionError("public risk self-test did not reject missing local infrastructure state ignore patterns")
     runtime_artifact_failures = tracked_runtime_artifact_file_failures(
         tracked_paths=[
@@ -5608,7 +5618,12 @@ def self_test():
         tracked_paths=[
             ".terraform/providers/registry.terraform.io/example/provider",
             "infra/.terraform/providers/registry.terraform.io/example/provider",
+            ".tofu/providers/registry.opentofu.org/example/provider",
+            "infra/.tofu/providers/registry.opentofu.org/example/provider",
+            ".terragrunt-cache/example/module/main.tf",
+            "infra/.terragrunt-cache/example/module/main.tf",
             ".terraform.lock.hcl",
+            ".tofu.lock.hcl",
             "infra/default.tfstate",
             "infra/default.tfstate.backup",
             "infra/prod.tfvars",
@@ -5622,7 +5637,12 @@ def self_test():
     if infra_state_failures != [
         ".terraform/providers/registry.terraform.io/example/provider: local infrastructure state artifacts must not be tracked for public launch",
         "infra/.terraform/providers/registry.terraform.io/example/provider: local infrastructure state artifacts must not be tracked for public launch",
+        ".tofu/providers/registry.opentofu.org/example/provider: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/.tofu/providers/registry.opentofu.org/example/provider: local infrastructure state artifacts must not be tracked for public launch",
+        ".terragrunt-cache/example/module/main.tf: local infrastructure state artifacts must not be tracked for public launch",
+        "infra/.terragrunt-cache/example/module/main.tf: local infrastructure state artifacts must not be tracked for public launch",
         ".terraform.lock.hcl: local infrastructure state artifacts must not be tracked for public launch",
+        ".tofu.lock.hcl: local infrastructure state artifacts must not be tracked for public launch",
         "infra/default.tfstate: local infrastructure state artifacts must not be tracked for public launch",
         "infra/default.tfstate.backup: local infrastructure state artifacts must not be tracked for public launch",
         "infra/prod.tfvars: local infrastructure state artifacts must not be tracked for public launch",

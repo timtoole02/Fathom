@@ -1015,12 +1015,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "Terraform/OpenTofu infrastructure state artifact guard rejects tracked local infrastructure state artifacts",
+        "Terraform/OpenTofu/Terragrunt infrastructure state artifact guard rejects tracked local infrastructure state artifacts",
         "launch checklist infrastructure state artifact risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "such as `.terraform/`, `.terraform.lock.hcl`, `.tfstate`, `.tfvars`, `.tfvars.json`, and `.tfplan` files",
+        "such as `.terraform/`, `.tofu/`, `.terragrunt-cache/`, `.terraform.lock.hcl`, `.tofu.lock.hcl`, `.tfstate`, `.tfvars`, `.tfvars.json`, and `.tfplan` files",
         "launch checklist infrastructure state artifact examples",
     )
     assert_contains(
@@ -2848,12 +2848,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "local Terraform/OpenTofu infrastructure state artifact guard",
+        "local Terraform/OpenTofu/Terragrunt infrastructure state artifact guard",
         "launch evidence infrastructure state artifact risk-scan scope",
     )
     assert_contains(
         evidence_text,
-        "tracked local Terraform/OpenTofu infrastructure state artifacts such as `.terraform/`, `.terraform.lock.hcl`, `.tfstate`, `.tfvars`, `.tfvars.json`, and `.tfplan` files",
+        "tracked local Terraform/OpenTofu/Terragrunt infrastructure state artifacts such as `.terraform/`, `.tofu/`, `.terragrunt-cache/`, `.terraform.lock.hcl`, `.tofu.lock.hcl`, `.tfstate`, `.tfvars`, `.tfvars.json`, and `.tfplan` files",
         "launch evidence infrastructure state artifact examples",
     )
     assert_contains(

@@ -534,8 +534,13 @@ compose.override.yaml
 
 # Local infrastructure state
 /.terraform/
+/.terragrunt-cache/
+/.tofu/
 .terraform/
+.terragrunt-cache/
+.tofu/
 .terraform.lock.hcl
+.tofu.lock.hcl
 *.tfstate
 *.tfstate.*
 *.tfvars
