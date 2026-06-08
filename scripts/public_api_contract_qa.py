@@ -2337,6 +2337,11 @@ def assert_boundary_docs() -> None:
         "launch checklist Cobertura test report artifact risk-scan scope",
     )
     assert_contains(
+        launch_text,
+        "native compiler coverage outputs (`*.gcda`, `*.gcno`, and `*.gcov`) as local test report artifacts",
+        "launch checklist native compiler coverage artifact risk-scan scope",
+    )
+    assert_contains(
         evidence_text,
         "Cypress screenshot, video, and download output directories at any tree depth",
         "launch evidence Cypress browser-test artifact examples",
@@ -2355,6 +2360,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Cobertura coverage XML output (`cobertura.xml`)",
         "launch evidence Cobertura test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "native compiler coverage outputs such as `*.gcda`, `*.gcno`, and `*.gcov`",
+        "launch evidence native compiler coverage artifact examples",
     )
     assert_contains(
         evidence_text,

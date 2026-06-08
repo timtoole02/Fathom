@@ -6,6 +6,9 @@ target/
 **/*.rs.bk
 *.profraw
 *.profdata
+*.gcda
+*.gcno
+*.gcov
 
 # Local native/CMake build artifacts
 /cmake-build-*/
