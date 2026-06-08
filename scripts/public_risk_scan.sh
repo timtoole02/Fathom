@@ -699,6 +699,10 @@ required_python_env_artifact_gitignore_patterns = {
     "venv/",
     "wheelhouse/",
 }
+required_python_benchmark_artifact_gitignore_patterns = {
+    "/.benchmarks/",
+    "**/.benchmarks/",
+}
 required_ruby_bundle_artifact_gitignore_patterns = {
     "/.bundle/",
     "/vendor/bundle/",
@@ -1127,6 +1131,9 @@ blocked_tracked_python_env_artifact_dirs = {
     "uv-cache",
     "venv",
     "wheelhouse",
+}
+blocked_tracked_python_benchmark_artifact_dirs = {
+    ".benchmarks",
 }
 blocked_tracked_ruby_bundle_artifact_dirs = {
     ".bundle",
@@ -2545,6 +2552,22 @@ def gitignore_python_env_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Python virtualenv/dependency artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_python_benchmark_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Python benchmark artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_python_benchmark_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Python benchmark artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_ruby_bundle_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -3004,6 +3027,16 @@ def tracked_python_env_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_python_env_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: Python virtualenv/dependency artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_python_benchmark_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_python_benchmark_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Python benchmark artifacts must not be tracked for public launch")
     return failures
 
 def tracked_ruby_bundle_artifact_file_failures(tracked_paths=None):
@@ -4434,6 +4467,31 @@ def self_test():
         ".gitignore: missing local Python virtualenv/dependency artifact ignore patterns: site-packages/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Python virtualenv/dependency artifact ignore patterns")
+    python_benchmark_artifact_failures = tracked_python_benchmark_artifact_file_failures(
+        tracked_paths=[
+            ".benchmarks/Linux-CPython-3.12-64bit/0001_fathom.json",
+            "crates/fathom_py/.benchmarks/Darwin-CPython-3.12-64bit/0002_fathom.json",
+            "docs/benchmarks/2026-04-29-qwen25-api-acceptance.md",
+            "scripts/bench_backend.py",
+        ],
+    )
+    if python_benchmark_artifact_failures != [
+        ".benchmarks/Linux-CPython-3.12-64bit/0001_fathom.json: Python benchmark artifacts must not be tracked for public launch",
+        "crates/fathom_py/.benchmarks/Darwin-CPython-3.12-64bit/0002_fathom.json: Python benchmark artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Python benchmark artifacts")
+    allowed_python_benchmark_artifact_gitignore = (
+        "\n".join(sorted(required_python_benchmark_artifact_gitignore_patterns)) + "\n"
+    )
+    if gitignore_python_benchmark_artifact_failures(allowed_python_benchmark_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Python benchmark artifact ignore patterns")
+    python_benchmark_artifact_gitignore_failures = gitignore_python_benchmark_artifact_failures(
+        allowed_python_benchmark_artifact_gitignore.replace("**/.benchmarks/\n", "")
+    )
+    if python_benchmark_artifact_gitignore_failures != [
+        ".gitignore: missing local Python benchmark artifact ignore patterns: **/.benchmarks/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Python benchmark artifact ignore patterns")
     ruby_bundle_artifact_failures = tracked_ruby_bundle_artifact_file_failures(
         tracked_paths=[
             ".bundle/config",
@@ -6596,6 +6654,7 @@ failures.extend(gitignore_backup_artifact_failures())
 failures.extend(gitignore_diagnostic_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_python_env_artifact_failures())
+failures.extend(gitignore_python_benchmark_artifact_failures())
 failures.extend(gitignore_ruby_bundle_artifact_failures())
 failures.extend(gitignore_php_composer_artifact_failures())
 failures.extend(gitignore_perl_cpan_artifact_failures())
@@ -6625,6 +6684,7 @@ failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_diagnostic_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_python_env_artifact_file_failures())
+failures.extend(tracked_python_benchmark_artifact_file_failures())
 failures.extend(tracked_ruby_bundle_artifact_file_failures())
 failures.extend(tracked_php_composer_artifact_file_failures())
 failures.extend(tracked_perl_cpan_artifact_file_failures())

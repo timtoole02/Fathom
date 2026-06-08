@@ -1278,6 +1278,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "The Python benchmark artifact guard rejects tracked local pytest-benchmark output such as `.benchmarks/`",
+        "launch checklist Python benchmark artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root and nested `.gitignore` coverage for local Python benchmark artifacts",
+        "launch checklist Python benchmark artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "It does not treat curated benchmark evidence under `docs/benchmarks/` or source helpers such as `scripts/bench_backend.py` as local benchmark artifacts",
+        "launch checklist Python benchmark source/evidence allowance",
+    )
+    assert_contains(
+        launch_text,
         "tracked local frontend/static-site framework caches and build outputs",
         "launch checklist frontend/static-site artifact risk-scan scope",
     )
@@ -2190,6 +2205,26 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving source-of-truth Python files such as `pyproject.toml`, `setup.py`, `setup.cfg`, `requirements*.txt`, `Pipfile`, `Pipfile.lock`, `poetry.lock`, `uv.lock`, Python source files, and Python docs",
         "launch evidence Python source-file allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Python benchmark artifact guard",
+        "launch evidence Python benchmark artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local pytest-benchmark artifacts such as `.benchmarks/` at any tree depth",
+        "launch evidence Python benchmark artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "missing root and nested `.gitignore` coverage for local Python benchmark artifacts",
+        "launch evidence Python benchmark artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving curated benchmark evidence under `docs/benchmarks/` and source helpers such as `scripts/bench_backend.py`",
+        "launch evidence Python benchmark source/evidence allowance",
     )
     assert_contains(
         evidence_text,

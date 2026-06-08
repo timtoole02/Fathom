@@ -217,6 +217,10 @@ summary.local.json
 *.tmp
 *.temp
 
+# Local benchmark artifacts
+/.benchmarks/
+**/.benchmarks/
+
 .DS_Store
 __MACOSX/
 ._*
