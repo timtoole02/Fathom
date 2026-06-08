@@ -513,6 +513,7 @@ mochawesome.html
 mochawesome.json
 cucumber-report.html
 cucumber-report.ndjson
+cucumber.json
 cucumber-report.json
 cucumber.xml
 cucumber-report.xml
