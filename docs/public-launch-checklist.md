@@ -194,7 +194,7 @@ The R/RStudio artifact guard also rejects tracked local session and dependency a
 
 The Julia depot/preference artifact guard also rejects tracked local Julia depot, preference, coverage, and allocation artifacts such as `.julia/` at any tree depth, `LocalPreferences.toml`, `*.jl.cov`, and `*.jl.mem`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Julia project files such as `Project.toml`, `Manifest.toml`, `Artifacts.toml`, or Julia source files as local depot/preference artifacts by filename alone.
 
-The Go cache/test artifact guard also rejects tracked local generated outputs such as `.gocache/` and `.gomodcache/` at any tree depth, `coverage.out`, and `*.test`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Go files such as `go.mod`, `go.sum`, Go source files, or Go docs as local cache/test artifacts.
+The Go cache/test artifact guard also rejects tracked local generated outputs such as `.gocache/` and `.gomodcache/` at any tree depth, `cover.out`, `coverage.out`, `*.coverprofile`, and `*.test`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth Go files such as `go.mod`, `go.sum`, Go source files, or Go docs as local cache/test artifacts.
 
 The Elixir/Mix build/dependency artifact guard also rejects tracked local generated outputs such as `.elixir_ls/`, `_build/`, and `deps/` at any tree depth, with matching root and nested `.gitignore` coverage for local Elixir/Mix build/dependency artifacts. It does not treat source-of-truth Elixir/Mix files such as `mix.exs`, `mix.lock`, Elixir source files, or Elixir docs as local tool artifacts.
 

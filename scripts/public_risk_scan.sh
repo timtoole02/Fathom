@@ -753,7 +753,9 @@ required_go_artifact_gitignore_patterns = {
     "/.gomodcache/",
     ".gocache/",
     ".gomodcache/",
+    "*.coverprofile",
     "*.test",
+    "cover.out",
     "coverage.out",
 }
 required_elixir_mix_artifact_gitignore_patterns = {
@@ -1167,9 +1169,11 @@ blocked_tracked_go_artifact_dirs = {
     ".gomodcache",
 }
 blocked_tracked_go_artifact_filenames = {
+    "cover.out",
     "coverage.out",
 }
 blocked_tracked_go_artifact_suffixes = {
+    ".coverprofile",
     ".test",
 }
 blocked_tracked_elixir_mix_artifact_dirs = {
@@ -4597,7 +4601,9 @@ def self_test():
             "tools/.gocache/00/abcdef-b",
             "tools/.gomodcache/cache/download/example.com/fathom/@v/v0.2.0.mod",
             "cmd/fathom/fathom.test",
+            "cover.out",
             "coverage.out",
+            "cmd/fathom/unit.coverprofile",
             "go.mod",
             "go.sum",
             "cmd/fathom/main.go",
@@ -4610,17 +4616,19 @@ def self_test():
         "tools/.gocache/00/abcdef-b: Go cache/test artifacts must not be tracked for public launch",
         "tools/.gomodcache/cache/download/example.com/fathom/@v/v0.2.0.mod: Go cache/test artifacts must not be tracked for public launch",
         "cmd/fathom/fathom.test: Go cache/test artifacts must not be tracked for public launch",
+        "cover.out: Go cache/test artifacts must not be tracked for public launch",
         "coverage.out: Go cache/test artifacts must not be tracked for public launch",
+        "cmd/fathom/unit.coverprofile: Go cache/test artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local Go cache/test artifacts")
     allowed_go_artifact_gitignore = "\n".join(sorted(required_go_artifact_gitignore_patterns)) + "\n"
     if gitignore_go_artifact_failures(allowed_go_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Go cache/test artifact ignore patterns")
     go_artifact_gitignore_failures = gitignore_go_artifact_failures(
-        allowed_go_artifact_gitignore.replace("coverage.out\n", "")
+        allowed_go_artifact_gitignore.replace("cover.out\n", "")
     )
     if go_artifact_gitignore_failures != [
-        ".gitignore: missing local Go cache/test artifact ignore patterns: coverage.out"
+        ".gitignore: missing local Go cache/test artifact ignore patterns: cover.out"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Go cache/test artifact ignore patterns")
     elixir_mix_artifact_failures = tracked_elixir_mix_artifact_file_failures(

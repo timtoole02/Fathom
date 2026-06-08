@@ -348,7 +348,9 @@ LocalPreferences.toml
 .gocache/
 /.gomodcache/
 .gomodcache/
+cover.out
 coverage.out
+*.coverprofile
 *.test
 
 # Local Elixir/Mix build/dependency artifacts

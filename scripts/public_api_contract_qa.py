@@ -1473,7 +1473,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        ".gocache/` and `.gomodcache/` at any tree depth, `coverage.out`, and `*.test`",
+        ".gocache/` and `.gomodcache/` at any tree depth, `cover.out`, `coverage.out`, `*.coverprofile`, and `*.test`",
         "launch checklist Go artifact examples",
     )
     assert_contains(
@@ -2413,7 +2413,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "tracked local Go cache/test artifacts such as `.gocache/` and `.gomodcache/` at any tree depth, `coverage.out`, and `*.test`",
+        "tracked local Go cache/test artifacts such as `.gocache/` and `.gomodcache/` at any tree depth, `cover.out`, `coverage.out`, `*.coverprofile`, and `*.test`",
         "launch evidence Go artifact examples",
     )
     assert_contains(
