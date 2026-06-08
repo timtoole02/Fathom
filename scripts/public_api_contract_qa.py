@@ -3153,6 +3153,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "preserves source-of-truth mobile files such as `Package.swift`, `Podfile`, `Podfile.lock`, `*.xcodeproj/project.pbxproj`, Android Gradle build files, `AndroidManifest.xml`, Fastlane configuration, app-store metadata, and mobile docs",
+        "launch evidence mobile source allowance",
+    )
+    assert_contains(
+        evidence_text,
         "local native/CMake build artifact guard",
         "launch evidence native/CMake artifact risk-scan scope",
     )
