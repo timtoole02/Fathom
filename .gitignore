@@ -485,6 +485,7 @@ frontend/cypress/downloads/
 /TestResults/
 /surefire-reports/
 /failsafe-reports/
+/test-output/
 /jacocoHtml/
 /htmlcov/
 /lcov-report/
@@ -499,6 +500,7 @@ frontend/cypress/downloads/
 **/TestResults/
 **/surefire-reports/
 **/failsafe-reports/
+**/test-output/
 **/jacocoHtml/
 **/htmlcov/
 **/lcov-report/
@@ -540,6 +542,9 @@ lcov.info
 junit.xml
 *.junit.xml
 TEST-*.xml
+testng-results.xml
+testng-failed.xml
+emailable-report.html
 nunit.xml
 xunit.xml
 *.xunit.xml

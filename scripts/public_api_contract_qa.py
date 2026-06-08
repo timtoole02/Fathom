@@ -2431,6 +2431,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "TestNG generated report outputs such as `test-output/`, `testng-results.xml`, `testng-failed.xml`, and `emailable-report.html` as local test report artifacts",
+        "launch checklist TestNG test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for `test-output/` and root `.gitignore` coverage for generated TestNG report files",
+        "launch checklist TestNG test report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "VSTest/.NET test result outputs such as `TestResults/`, `*.trx`, `*.coverage`, and `*.coveragexml` as local test report artifacts",
         "launch checklist VSTest/.NET test result artifact risk-scan scope",
     )
@@ -2528,6 +2538,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "standalone JUnit XML suite report outputs (`TEST-*.xml`)",
         "launch evidence standalone JUnit XML suite report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "TestNG generated report outputs (`test-output/`, `testng-results.xml`, `testng-failed.xml`, `emailable-report.html`)",
+        "launch evidence TestNG test report artifact examples",
     )
     assert_contains(
         evidence_text,
