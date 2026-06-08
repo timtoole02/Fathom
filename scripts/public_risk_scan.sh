@@ -1001,6 +1001,8 @@ required_test_report_artifact_gitignore_patterns = {
     "jacoco.csv",
     "jacoco.exec",
     "jacoco.xml",
+    "tarpaulin-report.html",
+    "tarpaulin-report.json",
 }
 required_notebook_artifact_gitignore_patterns = {
     ".jupyter/",
@@ -1648,6 +1650,8 @@ blocked_tracked_test_report_artifact_filenames = {
     "jacoco.xml",
     "junit.xml",
     "lcov.info",
+    "tarpaulin-report.html",
+    "tarpaulin-report.json",
 }
 blocked_tracked_test_report_artifact_suffixes = {
     ".gcda",
@@ -5382,6 +5386,8 @@ def self_test():
             "crates/fathom-core/coverage.lcov",
             "junit.xml",
             "crates/fathom-core/test-output.junit.xml",
+            "tarpaulin-report.html",
+            "tarpaulin-report.json",
             "docs/api/public-contract.json",
             "docs/research/runtime-safety-policy.md",
         ],
@@ -5436,6 +5442,8 @@ def self_test():
         "crates/fathom-core/coverage.lcov: local test report artifacts must not be tracked for public launch",
         "junit.xml: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/test-output.junit.xml: local test report artifacts must not be tracked for public launch",
+        "tarpaulin-report.html: local test report artifacts must not be tracked for public launch",
+        "tarpaulin-report.json: local test report artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local test report artifacts")
     allowed_notebook_artifact_gitignore = "\n".join(sorted(required_notebook_artifact_gitignore_patterns)) + "\n"

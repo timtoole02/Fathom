@@ -2338,6 +2338,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "cargo-tarpaulin coverage report outputs (`tarpaulin-report.html` and `tarpaulin-report.json`) as local test report artifacts",
+        "launch checklist cargo-tarpaulin test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
         "native compiler coverage outputs (`*.gcda`, `*.gcno`, and `*.gcov`) as local test report artifacts",
         "launch checklist native compiler coverage artifact risk-scan scope",
     )
@@ -2360,6 +2365,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Cobertura coverage XML output (`cobertura.xml`)",
         "launch evidence Cobertura test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "cargo-tarpaulin coverage report outputs (`tarpaulin-report.html`, `tarpaulin-report.json`)",
+        "launch evidence cargo-tarpaulin test report artifact examples",
     )
     assert_contains(
         evidence_text,

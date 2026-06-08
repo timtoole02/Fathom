@@ -486,6 +486,8 @@ lcov.info
 *.lcov
 junit.xml
 *.junit.xml
+tarpaulin-report.html
+tarpaulin-report.json
 
 # Local notebook artifacts
 .ipynb_checkpoints/

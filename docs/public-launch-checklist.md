@@ -224,6 +224,8 @@ The test report artifact guard also blocks JaCoCo coverage outputs as local test
 
 The test report artifact guard also blocks Cobertura coverage XML output (`cobertura.xml`) as a local test report artifact, with matching root `.gitignore` coverage.
 
+The test report artifact guard also blocks cargo-tarpaulin coverage report outputs (`tarpaulin-report.html` and `tarpaulin-report.json`) as local test report artifacts, with matching root `.gitignore` coverage.
+
 The test report artifact guard also blocks native compiler coverage outputs (`*.gcda`, `*.gcno`, and `*.gcov`) as local test report artifacts, with matching root `.gitignore` coverage.
 
 ## What this launch currently proves
