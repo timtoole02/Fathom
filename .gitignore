@@ -458,6 +458,8 @@ lua_modules/
 /allure-results/
 /mochawesome-report/
 /newman/
+/robot-reports/
+/robot-results/
 /playwright-report/
 /blob-report/
 /.playwright/
@@ -467,6 +469,8 @@ lua_modules/
 **/allure-results/
 **/mochawesome-report/
 **/newman/
+**/robot-reports/
+**/robot-results/
 **/playwright-report/
 **/blob-report/
 **/.playwright/
@@ -533,6 +537,9 @@ mochawesome.json
 newman-report.html
 newman-report.json
 newman-report.xml
+robot-log.html
+robot-output.xml
+robot-report.html
 cucumber-report.html
 cucumber-report.ndjson
 cucumber.json

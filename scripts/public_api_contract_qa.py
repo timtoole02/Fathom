@@ -2471,6 +2471,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Robot Framework result/report outputs such as `robot-results/`, `robot-reports/`, `robot-output.xml`, `robot-log.html`, and `robot-report.html` as local test report artifacts",
+        "launch checklist Robot Framework test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "does not block generic default names such as `output.xml`, `log.html`, or `report.html` outside Robot-specific output directories",
+        "launch checklist Robot Framework generic report allowance",
+    )
+    assert_contains(
+        launch_text,
         "JaCoCo coverage outputs as local test report artifacts",
         "launch checklist JaCoCo test report artifact risk-scan scope",
     )
@@ -2568,6 +2578,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Postman/Newman API test report outputs (`newman/`, `newman-report.html`, `newman-report.json`, `newman-report.xml`)",
         "launch evidence Newman API test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Robot Framework result/report outputs (`robot-results/`, `robot-reports/`, `robot-output.xml`, `robot-log.html`, `robot-report.html`)",
+        "launch evidence Robot Framework test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving generic default names outside Robot-specific directories",
+        "launch evidence Robot Framework generic report allowance",
     )
     assert_contains(
         evidence_text,
