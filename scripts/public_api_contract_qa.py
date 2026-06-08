@@ -2451,7 +2451,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "Cobertura coverage XML output (`cobertura.xml`) as a local test report artifact",
+        "Cobertura/OpenCover coverage XML outputs (`cobertura.xml`, `*.cobertura.xml`, `opencover.xml`, and `*.opencover.xml`) as local test report artifacts",
         "launch checklist Cobertura test report artifact risk-scan scope",
     )
     assert_contains(
@@ -2526,7 +2526,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "Cobertura coverage XML output (`cobertura.xml`)",
+        "Cobertura/OpenCover coverage XML outputs (`cobertura.xml`, `*.cobertura.xml`, `opencover.xml`, `*.opencover.xml`)",
         "launch evidence Cobertura test report artifact examples",
     )
     assert_contains(

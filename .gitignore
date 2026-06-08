@@ -510,12 +510,15 @@ frontend/cypress/downloads/
 *.coverage
 *.coveragexml
 *.trx
+*.cobertura.xml
 *.nunit.xml
+*.opencover.xml
 coverage.xml
 coverage-final.json
 coverage-summary.json
 cobertura.xml
 clover.xml
+opencover.xml
 TestResult.xml
 TestResult-*.xml
 mutation-report.html
