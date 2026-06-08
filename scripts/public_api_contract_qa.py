@@ -1333,6 +1333,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked local Lighthouse/LHCI audit outputs such as `.lighthouseci/`, `lhci_reports/`, `lighthouse-report.html`, and `lighthouse-report.json`",
+        "launch checklist Lighthouse/LHCI artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for generated audit outputs",
+        "launch checklist Lighthouse/LHCI artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "preserving source-of-truth Lighthouse config files such as `.lighthouserc.*`",
+        "launch checklist Lighthouse config allowance",
+    )
+    assert_contains(
+        launch_text,
         "Deno local cache artifacts such as `.deno/` and `deno-dir/`",
         "launch checklist Deno artifact scope",
     )
@@ -2245,6 +2260,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Astro/Docusaurus/Hugo/Jekyll/VitePress/Metro/Nx/SWC/Next.js/SvelteKit/Nuxt/Angular framework cache/build outputs such as `.astro/`, `.docusaurus/`, `resources/_gen/`, `.hugo_build.lock`, `_site/`, `.jekyll-cache/`, `.sass-cache/`, `.vite/`, `.vitepress/cache/`, `.vitepress/dist/`, `.metro-cache/`, `.nx/`, `.swc/`, Rollup TypeScript plugin `.rpt2_cache/`, Webpack `.webpack-cache/`, `.next/`, `.svelte-kit/`, `.nuxt/`, `.output/`, and `.angular/cache/`",
         "launch evidence frontend framework artifact scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Lighthouse/LHCI audit outputs such as `.lighthouseci/`, `lhci_reports/`, `lighthouse-report.html`, `lighthouse-report.json`, and timestamped `lighthouse-report-*` files",
+        "launch evidence Lighthouse/LHCI artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root, nested, and `frontend/` `.gitignore` coverage for generated Lighthouse/LHCI audit outputs",
+        "launch evidence Lighthouse/LHCI artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth Lighthouse config files such as `.lighthouserc.*`",
+        "launch evidence Lighthouse config allowance",
     )
     assert_contains(
         launch_text,

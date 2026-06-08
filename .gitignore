@@ -93,6 +93,8 @@ frontend/.pnpm-store/
 frontend/.rpt2_cache/
 frontend/.swc/
 frontend/.svelte-kit/
+frontend/.lighthouseci/
+frontend/lhci_reports/
 frontend/.yarn/cache/
 frontend/.yarn/unplugged/
 frontend/.yarn/build-state.yml
@@ -127,6 +129,10 @@ deno-dir/
 .nx/
 .output/
 .pnpm-store/
+.lighthouseci/
+lhci_reports/
+**/.lighthouseci/
+**/lhci_reports/
 .svelte-kit/
 .swc/
 .yarn/cache/
@@ -160,6 +166,10 @@ coverage/
 *.tsbuildinfo
 vite.config.*.timestamp-*
 vitest.config.*.timestamp-*
+lighthouse-report.html
+lighthouse-report.json
+lighthouse-report-*.html
+lighthouse-report-*.json
 npm-debug.log
 bun-debug.log
 pnpm-debug.log
