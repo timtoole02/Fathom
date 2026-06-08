@@ -228,6 +228,8 @@ The test report artifact guard also blocks Cucumber/BDD report outputs such as `
 
 The test report artifact guard also blocks standalone xUnit XML report outputs such as `xunit.xml` and `*.xunit.xml` as local test report artifacts, with matching root `.gitignore` coverage.
 
+The test report artifact guard also blocks standalone JUnit XML suite report outputs such as `TEST-*.xml` as local test report artifacts, with matching root `.gitignore` coverage for generated JUnit suite report files.
+
 The test report artifact guard also blocks VSTest/.NET test result outputs such as `TestResults/`, `*.trx`, `*.coverage`, and `*.coveragexml` as local test report artifacts, with matching root and nested `.gitignore` coverage for `TestResults/` and root `.gitignore` coverage for generated report files.
 
 The test report artifact guard also blocks NUnit XML report outputs such as `nunit.xml`, `*.nunit.xml`, `TestResult.xml`, and `TestResult-*.xml` as local test report artifacts, with matching root `.gitignore` coverage for generated NUnit report files.

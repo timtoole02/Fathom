@@ -2421,6 +2421,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "standalone JUnit XML suite report outputs such as `TEST-*.xml` as local test report artifacts",
+        "launch checklist standalone JUnit XML suite report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root `.gitignore` coverage for generated JUnit suite report files",
+        "launch checklist standalone JUnit XML suite report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "VSTest/.NET test result outputs such as `TestResults/`, `*.trx`, `*.coverage`, and `*.coveragexml` as local test report artifacts",
         "launch checklist VSTest/.NET test result artifact risk-scan scope",
     )
@@ -2513,6 +2523,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "standalone xUnit XML report outputs (`xunit.xml`, `*.xunit.xml`)",
         "launch evidence standalone xUnit XML test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "standalone JUnit XML suite report outputs (`TEST-*.xml`)",
+        "launch evidence standalone JUnit XML suite report artifact examples",
     )
     assert_contains(
         evidence_text,
