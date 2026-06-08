@@ -1293,7 +1293,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "Astro `.astro/`, Docusaurus `.docusaurus/`, Hugo `resources/_gen/` and `.hugo_build.lock`, Jekyll `_site/`, `.jekyll-cache/`, and `.sass-cache/`, Vite `.vite/`, VitePress `.vitepress/cache/` and `.vitepress/dist/`, Metro `.metro-cache/`, Rollup TypeScript plugin `.rpt2_cache/`, Webpack `.webpack-cache/`, Next.js `.next/`, SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories",
+        "Astro `.astro/`, Docusaurus `.docusaurus/`, Hugo `resources/_gen/` and `.hugo_build.lock`, Jekyll `_site/`, `.jekyll-cache/`, and `.sass-cache/`, Vite `.vite/`, VitePress `.vitepress/cache/` and `.vitepress/dist/`, Metro `.metro-cache/`, Nx `.nx/`, SWC `.swc/`, Rollup TypeScript plugin `.rpt2_cache/`, Webpack `.webpack-cache/`, Next.js `.next/`, SvelteKit `.svelte-kit/`, Nuxt `.nuxt/` and `.output/`, and Angular `.angular/cache/` directories",
         "launch checklist frontend framework artifact scope",
     )
     assert_contains(
@@ -2208,7 +2208,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "Astro/Docusaurus/Hugo/Jekyll/VitePress/Metro/Next.js/SvelteKit/Nuxt/Angular framework cache/build outputs such as `.astro/`, `.docusaurus/`, `resources/_gen/`, `.hugo_build.lock`, `_site/`, `.jekyll-cache/`, `.sass-cache/`, `.vite/`, `.vitepress/cache/`, `.vitepress/dist/`, `.metro-cache/`, Rollup TypeScript plugin `.rpt2_cache/`, Webpack `.webpack-cache/`, `.next/`, `.svelte-kit/`, `.nuxt/`, `.output/`, and `.angular/cache/`",
+        "Astro/Docusaurus/Hugo/Jekyll/VitePress/Metro/Nx/SWC/Next.js/SvelteKit/Nuxt/Angular framework cache/build outputs such as `.astro/`, `.docusaurus/`, `resources/_gen/`, `.hugo_build.lock`, `_site/`, `.jekyll-cache/`, `.sass-cache/`, `.vite/`, `.vitepress/cache/`, `.vitepress/dist/`, `.metro-cache/`, `.nx/`, `.swc/`, Rollup TypeScript plugin `.rpt2_cache/`, Webpack `.webpack-cache/`, `.next/`, `.svelte-kit/`, `.nuxt/`, `.output/`, and `.angular/cache/`",
         "launch evidence frontend framework artifact scope",
     )
     assert_contains(

@@ -84,9 +84,11 @@ frontend/.deno/
 frontend/deno-dir/
 frontend/.npm/
 frontend/.nuxt/
+frontend/.nx/
 frontend/.output/
 frontend/.pnpm-store/
 frontend/.rpt2_cache/
+frontend/.swc/
 frontend/.svelte-kit/
 frontend/.yarn/cache/
 frontend/.yarn/unplugged/
@@ -119,9 +121,11 @@ deno-dir/
 .vite/
 .npm/
 .nuxt/
+.nx/
 .output/
 .pnpm-store/
 .svelte-kit/
+.swc/
 .yarn/cache/
 .yarn/unplugged/
 .yarn/build-state.yml
@@ -146,6 +150,8 @@ coverage/
 .vitepress/dist/
 **/.vitepress/cache/
 **/.vitepress/dist/
+**/.nx/
+**/.swc/
 .eslintcache
 .stylelintcache
 *.tsbuildinfo
