@@ -1020,6 +1020,7 @@ required_test_report_artifact_gitignore_patterns = {
     "*.gcov",
     "*.coverage",
     "*.coveragexml",
+    "*.clover.xml",
     "*.cobertura.xml",
     "*.lcov",
     "*.junit.xml",
@@ -1746,6 +1747,7 @@ blocked_tracked_test_report_artifact_suffixes = {
     ".gcda",
     ".gcno",
     ".gcov",
+    ".clover.xml",
     ".cobertura.xml",
     ".lcov",
     ".junit.xml",
@@ -5498,10 +5500,10 @@ def self_test():
     if gitignore_test_report_artifact_failures(allowed_test_report_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local test report artifact ignore patterns")
     test_report_artifact_gitignore_failures = gitignore_test_report_artifact_failures(
-        allowed_test_report_artifact_gitignore.replace("coverage-summary.json\n", "")
+        allowed_test_report_artifact_gitignore.replace("*.clover.xml\n", "")
     )
     if test_report_artifact_gitignore_failures != [
-        ".gitignore: missing local test report artifact ignore patterns: coverage-summary.json"
+        ".gitignore: missing local test report artifact ignore patterns: *.clover.xml"
     ]:
         raise AssertionError("public risk self-test did not reject missing local test report artifact ignore patterns")
     test_report_artifact_failures = tracked_test_report_artifact_file_failures(
@@ -5566,6 +5568,7 @@ def self_test():
             "coverage-final.json",
             "coverage-summary.json",
             "clover.xml",
+            "coverage.clover.xml",
             "cobertura.xml",
             "coverage.cobertura.xml",
             "opencover.xml",
@@ -5664,6 +5667,7 @@ def self_test():
         "coverage-final.json: local test report artifacts must not be tracked for public launch",
         "coverage-summary.json: local test report artifacts must not be tracked for public launch",
         "clover.xml: local test report artifacts must not be tracked for public launch",
+        "coverage.clover.xml: local test report artifacts must not be tracked for public launch",
         "cobertura.xml: local test report artifacts must not be tracked for public launch",
         "coverage.cobertura.xml: local test report artifacts must not be tracked for public launch",
         "opencover.xml: local test report artifacts must not be tracked for public launch",

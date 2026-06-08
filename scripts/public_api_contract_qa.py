@@ -2466,6 +2466,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Istanbul/nyc coverage outputs (`.nyc_output/`, `coverage-final.json`, `coverage-summary.json`, `clover.xml`, and `*.clover.xml`) as local test report artifacts",
+        "launch checklist Istanbul/nyc coverage artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for `.nyc_output/` and root `.gitignore` coverage for generated Istanbul/nyc report files",
+        "launch checklist Istanbul/nyc coverage artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "cargo-tarpaulin coverage report outputs (`tarpaulin-report.html` and `tarpaulin-report.json`) as local test report artifacts",
         "launch checklist cargo-tarpaulin test report artifact risk-scan scope",
     )
@@ -2556,7 +2566,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "NYC/Istanbul coverage artifacts such as `.nyc_output/`, `coverage-final.json`, `coverage-summary.json`, and `clover.xml`",
+        "NYC/Istanbul coverage artifacts such as `.nyc_output/`, `coverage-final.json`, `coverage-summary.json`, `clover.xml`, and `*.clover.xml`",
         "launch evidence JS coverage artifact examples",
     )
     assert_contains(

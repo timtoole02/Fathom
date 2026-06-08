@@ -240,7 +240,7 @@ The test report artifact guard also blocks JaCoCo coverage outputs as local test
 
 The test report artifact guard also blocks Cobertura/OpenCover coverage XML outputs (`cobertura.xml`, `*.cobertura.xml`, `opencover.xml`, and `*.opencover.xml`) as local test report artifacts, with matching root `.gitignore` coverage.
 
-The test report artifact guard also blocks standalone Istanbul/nyc coverage summary output (`coverage-summary.json`) as a local test report artifact, with matching root `.gitignore` coverage.
+The test report artifact guard also blocks Istanbul/nyc coverage outputs (`.nyc_output/`, `coverage-final.json`, `coverage-summary.json`, `clover.xml`, and `*.clover.xml`) as local test report artifacts, with matching root and nested `.gitignore` coverage for `.nyc_output/` and root `.gitignore` coverage for generated Istanbul/nyc report files.
 
 The test report artifact guard also blocks cargo-tarpaulin coverage report outputs (`tarpaulin-report.html` and `tarpaulin-report.json`) as local test report artifacts, with matching root `.gitignore` coverage.
 
