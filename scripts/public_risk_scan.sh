@@ -217,9 +217,15 @@ blocked_tracked_command_history_filenames = {
 }
 blocked_tracked_local_ci_artifact_dirs = {
     ".act",
+    "_diag",
+    "_work",
+    "actions-runner",
 }
 blocked_tracked_local_ci_artifact_filenames = {
     ".actrc",
+    ".credentials",
+    ".credentials_rsaparams",
+    ".runner",
 }
 required_workspace_gitignore_patterns = {
     "/.aider.chat.history.md",
@@ -272,8 +278,17 @@ required_command_history_gitignore_patterns = {
 }
 required_local_ci_artifact_gitignore_patterns = {
     "/.act/",
+    "/_diag/",
+    "/_work/",
+    "/actions-runner/",
     ".act/",
     ".actrc",
+    ".credentials",
+    ".credentials_rsaparams",
+    ".runner",
+    "_diag/",
+    "_work/",
+    "actions-runner/",
 }
 required_credential_gitignore_patterns = {
     "/.direnv/",
@@ -4029,6 +4044,12 @@ def self_test():
             ".act/workflows/ci-1/container-options.json",
             "services/api/.act/workflows/ci/container-options.json",
             ".actrc",
+            "actions-runner/_work/Fathom/Fathom/.git/config",
+            "actions-runner/_diag/Runner_20260607.log",
+            "services/api/_work/_temp/state.json",
+            ".runner",
+            ".credentials",
+            ".credentials_rsaparams",
             "docs/api/public-contract.json",
         ],
     )
@@ -4037,6 +4058,12 @@ def self_test():
         ".act/workflows/ci-1/container-options.json: local CI runner artifacts must not be tracked for public launch",
         "services/api/.act/workflows/ci/container-options.json: local CI runner artifacts must not be tracked for public launch",
         ".actrc: local CI runner config must not be tracked for public launch",
+        "actions-runner/_work/Fathom/Fathom/.git/config: local CI runner artifacts must not be tracked for public launch",
+        "actions-runner/_diag/Runner_20260607.log: local CI runner artifacts must not be tracked for public launch",
+        "services/api/_work/_temp/state.json: local CI runner artifacts must not be tracked for public launch",
+        ".runner: local CI runner config must not be tracked for public launch",
+        ".credentials: local CI runner config must not be tracked for public launch",
+        ".credentials_rsaparams: local CI runner config must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local CI runner artifacts")
     allowed_local_ci_artifact_gitignore = "\n".join(sorted(required_local_ci_artifact_gitignore_patterns)) + "\n"

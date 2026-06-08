@@ -686,6 +686,15 @@ USER.md
 /.act/
 .act/
 .actrc
+/actions-runner/
+actions-runner/
+/_diag/
+_diag/
+/_work/
+_work/
+.credentials
+.credentials_rsaparams
+.runner
 
 # Local secrets and credentials
 .env

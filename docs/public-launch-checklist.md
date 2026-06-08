@@ -118,7 +118,7 @@ It also blocks tracked local JVM dependency artifacts such as `.m2/` at any tree
 
 It also blocks tracked local Clojure/Leiningen artifacts such as `.lein/`, `.cpcache/`, and `.shadow-cljs/` at any tree depth, plus `.nrepl-port`, with matching root and nested `.gitignore` coverage for local Clojure/Leiningen artifacts. It does not treat source-of-truth Clojure files such as `project.clj`, `deps.edn`, `bb.edn`, `shadow-cljs.edn`, or Clojure/ClojureScript source files as local tool artifacts.
 
-It also blocks tracked local CI runner artifacts/config such as `.act/` and `.actrc`, with matching root and nested `.gitignore` coverage, so local `act` workflow state cannot be mistaken for launch evidence.
+It also blocks tracked local CI runner artifacts/config such as `.act/`, `.actrc`, `actions-runner/`, `_work/`, `_diag/`, `.runner`, `.credentials`, and `.credentials_rsaparams`, with matching root and nested `.gitignore` coverage, so local workflow runner state cannot be mistaken for launch evidence.
 
 It also blocks tracked local Swift Package Manager build/workspace artifacts such as `.build/` and `.swiftpm/` at any tree depth, with matching root and nested `.gitignore` coverage for local Swift Package Manager artifacts. It does not treat source-of-truth Swift package files such as `Package.swift` or Swift source files as local tool artifacts.
 

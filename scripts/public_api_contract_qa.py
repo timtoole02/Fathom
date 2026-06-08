@@ -1428,12 +1428,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "tracked local CI runner artifacts/config such as `.act/` and `.actrc`",
+        "tracked local CI runner artifacts/config such as `.act/`, `.actrc`, `actions-runner/`, `_work/`, `_diag/`, `.runner`, `.credentials`, and `.credentials_rsaparams`",
         "launch checklist local CI runner artifact risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "with matching root and nested `.gitignore` coverage, so local `act` workflow state cannot be mistaken for launch evidence",
+        "with matching root and nested `.gitignore` coverage, so local workflow runner state cannot be mistaken for launch evidence",
         "launch checklist local CI runner artifact ignore scope",
     )
     assert_contains(
@@ -1983,7 +1983,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "local `act` workflow runner state/config (`.act/` and `.actrc`) is blocked as tracked launch-facing material",
+        "local `act` workflow runner state/config (`.act/` and `.actrc`) and GitHub Actions self-hosted runner state/config (`actions-runner/`, `_work/`, `_diag/`, `.runner`, `.credentials`, and `.credentials_rsaparams`) are blocked as tracked launch-facing material",
         "launch evidence local CI runner artifact risk-scan scope",
     )
     assert_contains(
