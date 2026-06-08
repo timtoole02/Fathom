@@ -2322,9 +2322,19 @@ def assert_boundary_docs() -> None:
         "launch checklist Cypress browser-test artifact ignore scope",
     )
     assert_contains(
+        launch_text,
+        "Allure report/result directories as local test report artifacts",
+        "launch checklist Allure test report artifact risk-scan scope",
+    )
+    assert_contains(
         evidence_text,
         "Cypress screenshot, video, and download output directories at any tree depth",
         "launch evidence Cypress browser-test artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Allure report/result directories (`allure-report/`, `allure-results/`)",
+        "launch evidence Allure test report artifact examples",
     )
     assert_contains(
         evidence_text,

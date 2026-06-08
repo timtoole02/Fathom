@@ -433,9 +433,13 @@ lua_modules/
 *.rock
 
 # Local test report artifacts
+/allure-report/
+/allure-results/
 /playwright-report/
 /blob-report/
 /.playwright/
+**/allure-report/
+**/allure-results/
 **/playwright-report/
 **/blob-report/
 **/.playwright/
