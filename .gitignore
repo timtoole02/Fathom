@@ -472,6 +472,7 @@ frontend/cypress/downloads/
 .coverage.*
 coverage.xml
 coverage-final.json
+cobertura.xml
 clover.xml
 jacoco.exec
 jacoco.xml

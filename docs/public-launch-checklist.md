@@ -222,6 +222,8 @@ The test report artifact guard also blocks Maven Surefire/Failsafe report direct
 
 The test report artifact guard also blocks JaCoCo coverage outputs as local test report artifacts, with matching root and nested `.gitignore` coverage for `jacocoHtml/` and root `.gitignore` coverage for `jacoco.exec`, `jacoco.xml`, and `jacoco.csv`.
 
+The test report artifact guard also blocks Cobertura coverage XML output (`cobertura.xml`) as a local test report artifact, with matching root `.gitignore` coverage.
+
 ## What this launch currently proves
 
 - The documented no-download public `/v1` contract routes and refusal envelopes work against the real backend process.
