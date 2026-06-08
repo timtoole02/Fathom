@@ -438,11 +438,15 @@ lua_modules/
 *.rock
 
 # Local test report artifacts
+/.mutmut-cache/
+/.stryker-tmp/
 /allure-report/
 /allure-results/
 /playwright-report/
 /blob-report/
 /.playwright/
+**/.mutmut-cache/
+**/.stryker-tmp/
 **/allure-report/
 **/allure-results/
 **/playwright-report/
@@ -464,6 +468,8 @@ frontend/cypress/downloads/
 /failsafe-reports/
 /jacocoHtml/
 /htmlcov/
+/mutation-report/
+/pit-reports/
 /.nyc_output/
 **/test-results/
 **/test-reports/
@@ -473,12 +479,16 @@ frontend/cypress/downloads/
 **/jacocoHtml/
 **/htmlcov/
 **/.nyc_output/
+**/mutation-report/
+**/pit-reports/
 .coverage
 .coverage.*
 coverage.xml
 coverage-final.json
 cobertura.xml
 clover.xml
+mutation-report.html
+mutmut.sqlite
 jacoco.exec
 jacoco.xml
 jacoco.csv

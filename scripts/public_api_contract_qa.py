@@ -2347,6 +2347,16 @@ def assert_boundary_docs() -> None:
         "launch checklist native compiler coverage artifact risk-scan scope",
     )
     assert_contains(
+        launch_text,
+        "mutation-testing report/cache outputs such as `.mutmut-cache/`, `.stryker-tmp/`, `mutation-report/`, `pit-reports/`, `mutation-report.html`, and `mutmut.sqlite`",
+        "launch checklist mutation-testing artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist mutation-testing artifact ignore scope",
+    )
+    assert_contains(
         evidence_text,
         "Cypress screenshot, video, and download output directories at any tree depth",
         "launch evidence Cypress browser-test artifact examples",
@@ -2375,6 +2385,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "native compiler coverage outputs such as `*.gcda`, `*.gcno`, and `*.gcov`",
         "launch evidence native compiler coverage artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "mutation-testing report/cache outputs (`.mutmut-cache/`, `.stryker-tmp/`, `mutation-report/`, `pit-reports/`, `mutation-report.html`, and `mutmut.sqlite`)",
+        "launch evidence mutation-testing artifact examples",
     )
     assert_contains(
         evidence_text,
