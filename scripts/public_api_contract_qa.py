@@ -2802,6 +2802,46 @@ def assert_boundary_docs() -> None:
         "launch evidence Meson source allowance",
     )
     assert_contains(
+        launch_text,
+        "Autotools build artifact guard also rejects tracked local Autotools configure and Libtool outputs",
+        "launch checklist Autotools build artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as `autom4te.cache/`, `.deps/`, `.libs/`, `config.log`, `config.status`, generated `libtool` files, `*.lo`, and `*.la`",
+        "launch checklist Autotools build artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "with matching root `.gitignore` coverage",
+        "launch checklist Autotools build artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Autotools files such as `configure.ac`, `Makefile.am`, or Autotools docs",
+        "launch checklist Autotools source-file allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Autotools local configure/Libtool output guard",
+        "launch evidence Autotools build artifact risk-scan scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Autotools configure/Libtool outputs (`autom4te.cache/`, `.deps/`, `.libs/`, `config.log`, `config.status`, generated `libtool` files, `*.lo`, `*.la`)",
+        "launch evidence Autotools hardening detail examples",
+    )
+    assert_contains(
+        evidence_text,
+        "tracked local Autotools configure and Libtool outputs such as `autom4te.cache/`, `.deps/`, `.libs/`, `config.log`, `config.status`, generated `libtool` files, `*.lo`, and `*.la`",
+        "launch evidence Autotools build artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth Autotools files such as `configure.ac`, `Makefile.am`, and Autotools docs",
+        "launch evidence Autotools source allowance",
+    )
+    assert_contains(
         evidence_text,
         "local model/checkpoint artifact guard",
         "launch evidence model/checkpoint artifact risk-scan scope",

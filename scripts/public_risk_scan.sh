@@ -552,6 +552,10 @@ required_meson_build_artifact_gitignore_patterns = {
     "meson-private/",
 }
 required_autotools_build_artifact_gitignore_patterns = {
+    ".deps/",
+    ".libs/",
+    "*.la",
+    "*.lo",
     "autom4te.cache/",
     "config.log",
     "config.status",
@@ -1336,12 +1340,18 @@ blocked_tracked_meson_build_artifact_dir_patterns = {
     ".mesonpy-*",
 }
 blocked_tracked_autotools_build_artifact_dirs = {
+    ".deps",
+    ".libs",
     "autom4te.cache",
 }
 blocked_tracked_autotools_build_artifact_filenames = {
     "config.log",
     "config.status",
     "libtool",
+}
+blocked_tracked_autotools_build_artifact_suffixes = {
+    ".la",
+    ".lo",
 }
 blocked_tracked_package_artifact_suffixes = {
     ".7z",
@@ -3255,6 +3265,9 @@ def tracked_autotools_build_artifact_file_failures(tracked_paths=None):
             failures.append(f"{rel}: Autotools build artifacts must not be tracked for public launch")
             continue
         if path.name in blocked_tracked_autotools_build_artifact_filenames:
+            failures.append(f"{rel}: Autotools build artifacts must not be tracked for public launch")
+            continue
+        if path.suffix.lower() in blocked_tracked_autotools_build_artifact_suffixes:
             failures.append(f"{rel}: Autotools build artifacts must not be tracked for public launch")
     return failures
 
@@ -5438,9 +5451,13 @@ def self_test():
         tracked_paths=[
             "autom4te.cache/requests",
             "native/autom4te.cache/output.0",
+            ".deps/fathom.Po",
+            "native/.libs/libfathom.la",
+            "fathom.lo",
             "config.log",
             "native/config.status",
             "libtool",
+            "src/libfathom.la",
             "configure.ac",
             "Makefile.am",
             "docs/autotools.md",
@@ -5449,9 +5466,13 @@ def self_test():
     if autotools_build_artifact_failures != [
         "autom4te.cache/requests: Autotools build artifacts must not be tracked for public launch",
         "native/autom4te.cache/output.0: Autotools build artifacts must not be tracked for public launch",
+        ".deps/fathom.Po: Autotools build artifacts must not be tracked for public launch",
+        "native/.libs/libfathom.la: Autotools build artifacts must not be tracked for public launch",
+        "fathom.lo: Autotools build artifacts must not be tracked for public launch",
         "config.log: Autotools build artifacts must not be tracked for public launch",
         "native/config.status: Autotools build artifacts must not be tracked for public launch",
         "libtool: Autotools build artifacts must not be tracked for public launch",
+        "src/libfathom.la: Autotools build artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Autotools build artifacts")
     allowed_autotools_build_artifact_gitignore = (
