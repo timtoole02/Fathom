@@ -1031,6 +1031,7 @@ required_test_report_artifact_gitignore_patterns = {
     "frontend/cypress/videos/",
     "lcov.info",
     "junit.xml",
+    "xunit.xml",
     "jacoco.csv",
     "jacoco.exec",
     "jacoco.xml",
@@ -1038,6 +1039,7 @@ required_test_report_artifact_gitignore_patterns = {
     "mochawesome.json",
     "mutation-report.html",
     "mutmut.sqlite",
+    "*.xunit.xml",
     "tarpaulin-report.html",
     "tarpaulin-report.json",
 }
@@ -1715,6 +1717,7 @@ blocked_tracked_test_report_artifact_filenames = {
     "mutmut.sqlite",
     "tarpaulin-report.html",
     "tarpaulin-report.json",
+    "xunit.xml",
 }
 blocked_tracked_test_report_artifact_suffixes = {
     ".gcda",
@@ -1722,6 +1725,7 @@ blocked_tracked_test_report_artifact_suffixes = {
     ".gcov",
     ".lcov",
     ".junit.xml",
+    ".xunit.xml",
 }
 blocked_tracked_cypress_artifact_dirs = {
     "downloads",
@@ -5532,6 +5536,8 @@ def self_test():
             "crates/fathom-core/coverage.lcov",
             "junit.xml",
             "crates/fathom-core/test-output.junit.xml",
+            "xunit.xml",
+            "crates/fathom-core/test-output.xunit.xml",
             "mochawesome.html",
             "mochawesome.json",
             "cucumber-report.html",
@@ -5612,6 +5618,8 @@ def self_test():
         "crates/fathom-core/coverage.lcov: local test report artifacts must not be tracked for public launch",
         "junit.xml: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/test-output.junit.xml: local test report artifacts must not be tracked for public launch",
+        "xunit.xml: local test report artifacts must not be tracked for public launch",
+        "crates/fathom-core/test-output.xunit.xml: local test report artifacts must not be tracked for public launch",
         "mochawesome.html: local test report artifacts must not be tracked for public launch",
         "mochawesome.json: local test report artifacts must not be tracked for public launch",
         "cucumber-report.html: local test report artifacts must not be tracked for public launch",

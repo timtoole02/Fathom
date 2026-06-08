@@ -2408,6 +2408,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "standalone xUnit XML report outputs such as `xunit.xml` and `*.xunit.xml` as local test report artifacts",
+        "launch checklist standalone xUnit XML test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root `.gitignore` coverage",
+        "launch checklist standalone xUnit XML test report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Allure report/result directories as local test report artifacts",
         "launch checklist Allure test report artifact risk-scan scope",
     )
@@ -2455,6 +2465,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Cucumber/BDD report outputs (`cucumber-report/`, `cucumber-reports/`, `cucumber-report.html`, `cucumber-report.ndjson`, `cucumber.json`, `cucumber-report.json`, `cucumber-report.xml`, `cucumber.xml`)",
         "launch evidence Cucumber/BDD test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "standalone xUnit XML report outputs (`xunit.xml`, `*.xunit.xml`)",
+        "launch evidence standalone xUnit XML test report artifact examples",
     )
     assert_contains(
         evidence_text,
