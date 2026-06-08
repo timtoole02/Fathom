@@ -118,6 +118,8 @@ blocked_tracked_ide_artifact_filenames = {
 blocked_tracked_ide_artifact_suffixes = {
     ".code-workspace",
     ".iml",
+    ".ipr",
+    ".iws",
 }
 allowed_tracked_credential_filenames = {".env.example"}
 blocked_tracked_credential_filenames = {
@@ -373,6 +375,8 @@ required_ide_artifact_gitignore_patterns = {
     ".settings/",
     "*.code-workspace",
     "*.iml",
+    "*.ipr",
+    "*.iws",
 }
 required_model_artifact_gitignore_patterns = {
     "/checkpoints/",
@@ -3727,6 +3731,8 @@ def self_test():
             ".project",
             "fathom.code-workspace",
             "fathom.iml",
+            "fathom.ipr",
+            "fathom.iws",
         ],
     )
     if blocked_file_failures != [
@@ -3762,6 +3768,8 @@ def self_test():
         ".project: IDE workspace/config artifacts must not be tracked for public launch",
         "fathom.code-workspace: IDE workspace/config artifacts must not be tracked for public launch",
         "fathom.iml: IDE workspace/config artifacts must not be tracked for public launch",
+        "fathom.ipr: IDE workspace/config artifacts must not be tracked for public launch",
+        "fathom.iws: IDE workspace/config artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked OS/platform metadata, backup/swap, or IDE config files")
     allowed_os_metadata_gitignore = "\n".join(sorted(required_os_metadata_gitignore_patterns)) + "\n"
@@ -3781,8 +3789,8 @@ def self_test():
     allowed_ide_artifact_gitignore = "\n".join(sorted(required_ide_artifact_gitignore_patterns)) + "\n"
     if gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local IDE workspace/config ignore patterns")
-    ide_artifact_gitignore_failures = gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore.replace(".zed/\n", "", 1))
-    if ide_artifact_gitignore_failures != [".gitignore: missing local IDE workspace/config ignore patterns: .zed/"]:
+    ide_artifact_gitignore_failures = gitignore_ide_artifact_failures(allowed_ide_artifact_gitignore.replace("*.ipr\n", "", 1))
+    if ide_artifact_gitignore_failures != [".gitignore: missing local IDE workspace/config ignore patterns: *.ipr"]:
         raise AssertionError("public risk self-test did not reject missing local IDE workspace/config ignore patterns")
     credential_file_failures = tracked_credential_file_failures(
         tracked_paths=[

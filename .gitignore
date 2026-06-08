@@ -230,6 +230,8 @@ $RECYCLE.BIN/
 .project
 *.code-workspace
 *.iml
+*.ipr
+*.iws
 
 # Local Python cache/build artifacts
 __pycache__/
