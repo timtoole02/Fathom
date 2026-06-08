@@ -218,6 +218,8 @@ The browser-test artifact guard also blocks Cypress screenshot, video, and downl
 
 The test report artifact guard also blocks Allure report/result directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `allure-report/` and `allure-results/`.
 
+The test report artifact guard also blocks Maven Surefire/Failsafe report directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `surefire-reports/` and `failsafe-reports/`.
+
 ## What this launch currently proves
 
 - The documented no-download public `/v1` contract routes and refusal envelopes work against the real backend process.

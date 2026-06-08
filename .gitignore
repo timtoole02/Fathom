@@ -455,11 +455,15 @@ frontend/cypress/downloads/
 /test-results/
 /test-reports/
 /reports/
+/surefire-reports/
+/failsafe-reports/
 /htmlcov/
 /.nyc_output/
 **/test-results/
 **/test-reports/
 **/reports/
+**/surefire-reports/
+**/failsafe-reports/
 **/htmlcov/
 **/.nyc_output/
 .coverage
