@@ -2428,6 +2428,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "NUnit XML report outputs such as `nunit.xml`, `*.nunit.xml`, `TestResult.xml`, and `TestResult-*.xml` as local test report artifacts",
+        "launch checklist NUnit XML test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root `.gitignore` coverage for generated NUnit report files",
+        "launch checklist NUnit XML test report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Allure report/result directories as local test report artifacts",
         "launch checklist Allure test report artifact risk-scan scope",
     )
@@ -2485,6 +2495,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "VSTest/.NET test result outputs (`TestResults/`, `*.trx`, `*.coverage`, `*.coveragexml`)",
         "launch evidence VSTest/.NET test result artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "NUnit XML report outputs (`nunit.xml`, `*.nunit.xml`, `TestResult.xml`, `TestResult-*.xml`)",
+        "launch evidence NUnit XML test report artifact examples",
     )
     assert_contains(
         evidence_text,

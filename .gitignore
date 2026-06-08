@@ -508,10 +508,13 @@ frontend/cypress/downloads/
 *.coverage
 *.coveragexml
 *.trx
+*.nunit.xml
 coverage.xml
 coverage-final.json
 cobertura.xml
 clover.xml
+TestResult.xml
+TestResult-*.xml
 mutation-report.html
 mutmut.sqlite
 mochawesome.html
@@ -529,6 +532,7 @@ lcov.info
 *.lcov
 junit.xml
 *.junit.xml
+nunit.xml
 xunit.xml
 *.xunit.xml
 tarpaulin-report.html

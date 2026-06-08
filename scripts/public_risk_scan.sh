@@ -1020,6 +1020,7 @@ required_test_report_artifact_gitignore_patterns = {
     "*.coveragexml",
     "*.lcov",
     "*.junit.xml",
+    "*.nunit.xml",
     "*.trx",
     "clover.xml",
     "coverage-final.json",
@@ -1036,6 +1037,7 @@ required_test_report_artifact_gitignore_patterns = {
     "frontend/cypress/videos/",
     "lcov.info",
     "junit.xml",
+    "nunit.xml",
     "xunit.xml",
     "jacoco.csv",
     "jacoco.exec",
@@ -1044,6 +1046,8 @@ required_test_report_artifact_gitignore_patterns = {
     "mochawesome.json",
     "mutation-report.html",
     "mutmut.sqlite",
+    "TestResult.xml",
+    "TestResult-*.xml",
     "*.xunit.xml",
     "tarpaulin-report.html",
     "tarpaulin-report.json",
@@ -1721,8 +1725,10 @@ blocked_tracked_test_report_artifact_filenames = {
     "mochawesome.json",
     "mutation-report.html",
     "mutmut.sqlite",
+    "nunit.xml",
     "tarpaulin-report.html",
     "tarpaulin-report.json",
+    "TestResult.xml",
     "xunit.xml",
 }
 blocked_tracked_test_report_artifact_suffixes = {
@@ -1733,8 +1739,12 @@ blocked_tracked_test_report_artifact_suffixes = {
     ".gcov",
     ".lcov",
     ".junit.xml",
+    ".nunit.xml",
     ".trx",
     ".xunit.xml",
+}
+blocked_tracked_test_report_artifact_filename_patterns = {
+    "TestResult-*.xml",
 }
 blocked_tracked_cypress_artifact_dirs = {
     "downloads",
@@ -3757,6 +3767,9 @@ def tracked_test_report_artifact_file_failures(tracked_paths=None):
         if path.name in blocked_tracked_test_report_artifact_filenames:
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
             continue
+        if any(fnmatch.fnmatchcase(path.name, pattern) for pattern in blocked_tracked_test_report_artifact_filename_patterns):
+            failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
+            continue
         if path.name.startswith(".coverage."):
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
             continue
@@ -5550,6 +5563,10 @@ def self_test():
             "crates/fathom-core/results.trx",
             "junit.xml",
             "crates/fathom-core/test-output.junit.xml",
+            "nunit.xml",
+            "crates/fathom-core/test-output.nunit.xml",
+            "TestResult.xml",
+            "crates/fathom-core/TestResult-public-risk.xml",
             "xunit.xml",
             "crates/fathom-core/test-output.xunit.xml",
             "mochawesome.html",
@@ -5637,6 +5654,10 @@ def self_test():
         "crates/fathom-core/results.trx: local test report artifacts must not be tracked for public launch",
         "junit.xml: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/test-output.junit.xml: local test report artifacts must not be tracked for public launch",
+        "nunit.xml: local test report artifacts must not be tracked for public launch",
+        "crates/fathom-core/test-output.nunit.xml: local test report artifacts must not be tracked for public launch",
+        "TestResult.xml: local test report artifacts must not be tracked for public launch",
+        "crates/fathom-core/TestResult-public-risk.xml: local test report artifacts must not be tracked for public launch",
         "xunit.xml: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/test-output.xunit.xml: local test report artifacts must not be tracked for public launch",
         "mochawesome.html: local test report artifacts must not be tracked for public launch",

@@ -228,6 +228,8 @@ The test report artifact guard also blocks standalone xUnit XML report outputs s
 
 The test report artifact guard also blocks VSTest/.NET test result outputs such as `TestResults/`, `*.trx`, `*.coverage`, and `*.coveragexml` as local test report artifacts, with matching root and nested `.gitignore` coverage for `TestResults/` and root `.gitignore` coverage for generated report files.
 
+The test report artifact guard also blocks NUnit XML report outputs such as `nunit.xml`, `*.nunit.xml`, `TestResult.xml`, and `TestResult-*.xml` as local test report artifacts, with matching root `.gitignore` coverage for generated NUnit report files.
+
 The test report artifact guard also blocks Allure report/result directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `allure-report/` and `allure-results/`.
 
 The test report artifact guard also blocks Maven Surefire/Failsafe report directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `surefire-reports/` and `failsafe-reports/`.
