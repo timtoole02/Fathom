@@ -482,6 +482,7 @@ frontend/cypress/downloads/
 /reports/
 /cucumber-report/
 /cucumber-reports/
+/TestResults/
 /surefire-reports/
 /failsafe-reports/
 /jacocoHtml/
@@ -494,6 +495,7 @@ frontend/cypress/downloads/
 **/reports/
 **/cucumber-report/
 **/cucumber-reports/
+**/TestResults/
 **/surefire-reports/
 **/failsafe-reports/
 **/jacocoHtml/
@@ -503,6 +505,9 @@ frontend/cypress/downloads/
 **/pit-reports/
 .coverage
 .coverage.*
+*.coverage
+*.coveragexml
+*.trx
 coverage.xml
 coverage-final.json
 cobertura.xml

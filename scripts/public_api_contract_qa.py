@@ -2418,6 +2418,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "VSTest/.NET test result outputs such as `TestResults/`, `*.trx`, `*.coverage`, and `*.coveragexml` as local test report artifacts",
+        "launch checklist VSTest/.NET test result artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for `TestResults/` and root `.gitignore` coverage for generated report files",
+        "launch checklist VSTest/.NET test result artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Allure report/result directories as local test report artifacts",
         "launch checklist Allure test report artifact risk-scan scope",
     )
@@ -2470,6 +2480,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "standalone xUnit XML report outputs (`xunit.xml`, `*.xunit.xml`)",
         "launch evidence standalone xUnit XML test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "VSTest/.NET test result outputs (`TestResults/`, `*.trx`, `*.coverage`, `*.coveragexml`)",
+        "launch evidence VSTest/.NET test result artifact examples",
     )
     assert_contains(
         evidence_text,
