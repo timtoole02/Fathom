@@ -2453,6 +2453,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "LCOV HTML report directories such as `lcov-report/` at any tree depth",
+        "launch checklist LCOV HTML coverage artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for LCOV HTML report directories",
+        "launch checklist LCOV HTML coverage artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "cargo-tarpaulin coverage report outputs (`tarpaulin-report.html` and `tarpaulin-report.json`) as local test report artifacts",
         "launch checklist cargo-tarpaulin test report artifact risk-scan scope",
     )
@@ -2515,6 +2525,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Cobertura coverage XML output (`cobertura.xml`)",
         "launch evidence Cobertura test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "LCOV HTML report directories (`lcov-report/`)",
+        "launch evidence LCOV HTML coverage artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root and nested `.gitignore` coverage for those local coverage report artifacts",
+        "launch evidence LCOV HTML coverage artifact ignore examples",
     )
     assert_contains(
         evidence_text,

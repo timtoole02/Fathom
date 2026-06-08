@@ -152,6 +152,8 @@ It also blocks tracked local Bazel output symlinks/directories such as `bazel-bi
 
 It also blocks tracked local Buck/Buck2 build artifacts such as `.buckd/` and `buck-out/`, with matching root and nested `.gitignore` coverage for local Buck/Buck2 build artifacts. It does not treat source-of-truth Buck files such as `BUCK`, `BUCK.v2`, or `.buckconfig` as local build artifacts.
 
+It also blocks tracked LCOV HTML report directories such as `lcov-report/` at any tree depth, with matching root and nested `.gitignore` coverage for LCOV HTML report directories. It does not treat source-of-truth coverage configuration files as local report artifacts.
+
 For Yarn lockfiles, local `portal:` dependencies and local `patch:` references count as local/private dependency sources.
 
 The Rust/Cargo guard also rejects tracked Rust/Cargo cache/build artifacts such as `.cargo/`, `target/`, compiler outputs, and coverage profiles, with matching root and nested `.gitignore` coverage.

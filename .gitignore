@@ -487,6 +487,7 @@ frontend/cypress/downloads/
 /failsafe-reports/
 /jacocoHtml/
 /htmlcov/
+/lcov-report/
 /mutation-report/
 /pit-reports/
 /.nyc_output/
@@ -500,6 +501,7 @@ frontend/cypress/downloads/
 **/failsafe-reports/
 **/jacocoHtml/
 **/htmlcov/
+**/lcov-report/
 **/.nyc_output/
 **/mutation-report/
 **/pit-reports/
