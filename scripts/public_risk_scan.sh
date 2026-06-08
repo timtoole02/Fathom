@@ -1026,6 +1026,7 @@ required_test_report_artifact_gitignore_patterns = {
     "*.trx",
     "clover.xml",
     "coverage-final.json",
+    "coverage-summary.json",
     "coverage.xml",
     "cobertura.xml",
     "cucumber-report.html",
@@ -1712,6 +1713,7 @@ blocked_tracked_test_report_artifact_filenames = {
     "clover.xml",
     "cobertura.xml",
     "coverage-final.json",
+    "coverage-summary.json",
     "coverage.xml",
     "cucumber-report.html",
     "cucumber-report.ndjson",
@@ -5490,10 +5492,10 @@ def self_test():
     if gitignore_test_report_artifact_failures(allowed_test_report_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local test report artifact ignore patterns")
     test_report_artifact_gitignore_failures = gitignore_test_report_artifact_failures(
-        allowed_test_report_artifact_gitignore.replace("mutation-report.html\n", "")
+        allowed_test_report_artifact_gitignore.replace("coverage-summary.json\n", "")
     )
     if test_report_artifact_gitignore_failures != [
-        ".gitignore: missing local test report artifact ignore patterns: mutation-report.html"
+        ".gitignore: missing local test report artifact ignore patterns: coverage-summary.json"
     ]:
         raise AssertionError("public risk self-test did not reject missing local test report artifact ignore patterns")
     test_report_artifact_failures = tracked_test_report_artifact_file_failures(
@@ -5549,12 +5551,14 @@ def self_test():
             "services/api/mutation-report/index.html",
             "services/api/pit-reports/20260608/index.html",
             "services/api/.nyc_output/processinfo/index.json",
+            "services/api/coverage-summary.json",
             ".coverage",
             ".coverage.public-risk",
             "fathom.coverage",
             "fathom.coveragexml",
             "coverage.xml",
             "coverage-final.json",
+            "coverage-summary.json",
             "clover.xml",
             "cobertura.xml",
             "jacoco.exec",
@@ -5642,12 +5646,14 @@ def self_test():
         "services/api/mutation-report/index.html: local test report artifacts must not be tracked for public launch",
         "services/api/pit-reports/20260608/index.html: local test report artifacts must not be tracked for public launch",
         "services/api/.nyc_output/processinfo/index.json: local test report artifacts must not be tracked for public launch",
+        "services/api/coverage-summary.json: local test report artifacts must not be tracked for public launch",
         ".coverage: local test report artifacts must not be tracked for public launch",
         ".coverage.public-risk: local test report artifacts must not be tracked for public launch",
         "fathom.coverage: local test report artifacts must not be tracked for public launch",
         "fathom.coveragexml: local test report artifacts must not be tracked for public launch",
         "coverage.xml: local test report artifacts must not be tracked for public launch",
         "coverage-final.json: local test report artifacts must not be tracked for public launch",
+        "coverage-summary.json: local test report artifacts must not be tracked for public launch",
         "clover.xml: local test report artifacts must not be tracked for public launch",
         "cobertura.xml: local test report artifacts must not be tracked for public launch",
         "jacoco.exec: local test report artifacts must not be tracked for public launch",

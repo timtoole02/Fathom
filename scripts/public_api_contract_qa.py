@@ -2553,7 +2553,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "NYC/Istanbul coverage artifacts such as `.nyc_output/`, `coverage-final.json`, and `clover.xml`",
+        "NYC/Istanbul coverage artifacts such as `.nyc_output/`, `coverage-final.json`, `coverage-summary.json`, and `clover.xml`",
         "launch evidence JS coverage artifact examples",
     )
     assert_contains(

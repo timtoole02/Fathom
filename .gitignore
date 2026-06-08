@@ -513,6 +513,7 @@ frontend/cypress/downloads/
 *.nunit.xml
 coverage.xml
 coverage-final.json
+coverage-summary.json
 cobertura.xml
 clover.xml
 TestResult.xml
