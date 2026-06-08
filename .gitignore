@@ -457,6 +457,7 @@ lua_modules/
 /allure-report/
 /allure-results/
 /mochawesome-report/
+/newman/
 /playwright-report/
 /blob-report/
 /.playwright/
@@ -465,6 +466,7 @@ lua_modules/
 **/allure-report/
 **/allure-results/
 **/mochawesome-report/
+**/newman/
 **/playwright-report/
 **/blob-report/
 **/.playwright/
@@ -528,6 +530,9 @@ mutation-report.html
 mutmut.sqlite
 mochawesome.html
 mochawesome.json
+newman-report.html
+newman-report.json
+newman-report.xml
 cucumber-report.html
 cucumber-report.ndjson
 cucumber.json

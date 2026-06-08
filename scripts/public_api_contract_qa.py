@@ -2466,6 +2466,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Postman/Newman API test report outputs such as `newman/`, `newman-report.html`, `newman-report.json`, and `newman-report.xml` as local test report artifacts",
+        "launch checklist Newman API test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
         "JaCoCo coverage outputs as local test report artifacts",
         "launch checklist JaCoCo test report artifact risk-scan scope",
     )
@@ -2558,6 +2563,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Allure report/result directories (`allure-report/`, `allure-results/`)",
         "launch evidence Allure test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Postman/Newman API test report outputs (`newman/`, `newman-report.html`, `newman-report.json`, `newman-report.xml`)",
+        "launch evidence Newman API test report artifact examples",
     )
     assert_contains(
         evidence_text,
