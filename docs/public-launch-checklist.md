@@ -216,6 +216,8 @@ The backend acceptance artifact summaries reject local paths, secret markers, an
 
 The browser-test artifact guard also blocks Cypress screenshot, video, and download output directories in addition to Playwright report directories, with matching root and nested `.gitignore` coverage for Cypress outputs.
 
+The test report artifact guard also blocks Mochawesome report outputs such as `mochawesome-report/`, `mochawesome.html`, and `mochawesome.json` as local test report artifacts, with matching root and nested `.gitignore` coverage.
+
 The test report artifact guard also blocks Allure report/result directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `allure-report/` and `allure-results/`.
 
 The test report artifact guard also blocks Maven Surefire/Failsafe report directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `surefire-reports/` and `failsafe-reports/`.

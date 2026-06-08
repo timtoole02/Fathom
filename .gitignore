@@ -442,6 +442,7 @@ lua_modules/
 /.stryker-tmp/
 /allure-report/
 /allure-results/
+/mochawesome-report/
 /playwright-report/
 /blob-report/
 /.playwright/
@@ -449,6 +450,7 @@ lua_modules/
 **/.stryker-tmp/
 **/allure-report/
 **/allure-results/
+**/mochawesome-report/
 **/playwright-report/
 **/blob-report/
 **/.playwright/
@@ -489,6 +491,8 @@ cobertura.xml
 clover.xml
 mutation-report.html
 mutmut.sqlite
+mochawesome.html
+mochawesome.json
 jacoco.exec
 jacoco.xml
 jacoco.csv

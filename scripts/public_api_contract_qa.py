@@ -2323,6 +2323,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Mochawesome report outputs such as `mochawesome-report/`, `mochawesome.html`, and `mochawesome.json` as local test report artifacts",
+        "launch checklist Mochawesome test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage",
+        "launch checklist Mochawesome test report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Allure report/result directories as local test report artifacts",
         "launch checklist Allure test report artifact risk-scan scope",
     )
@@ -2360,6 +2370,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Cypress screenshot, video, and download output directories at any tree depth",
         "launch evidence Cypress browser-test artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Mochawesome report outputs (`mochawesome-report/`, `mochawesome.html`, `mochawesome.json`)",
+        "launch evidence Mochawesome test report artifact examples",
     )
     assert_contains(
         evidence_text,
