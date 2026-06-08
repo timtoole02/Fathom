@@ -690,6 +690,9 @@ USER.md
 .env.*
 .envrc
 !.env.example
+.git-credentials
+.gitconfig
+.gitconfig.local
 /.direnv/
 .direnv/
 /.ssh/

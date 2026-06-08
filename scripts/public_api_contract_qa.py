@@ -1998,12 +1998,12 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "credential/config filename guard including SSH private-key filenames, `.ssh/` directories, direnv config/state, generic secret material paths, and TLS certificate/request artifacts",
+        "credential/config filename guard including SSH private-key filenames, `.ssh/` directories, direnv config/state, Git credential/config files, generic secret material paths, and TLS certificate/request artifacts",
         "launch evidence credential/config SSH risk-scan scope",
     )
     assert_contains(
         evidence_text,
-        "root and nested `.gitignore` local credential/config guard including SSH private-key filenames, `.ssh/`, direnv config/state, generic secret material patterns, and TLS certificate/request artifact patterns",
+        "root and nested `.gitignore` local credential/config guard including SSH private-key filenames, `.ssh/`, direnv config/state, Git credential/config files, generic secret material patterns, and TLS certificate/request artifact patterns",
         "launch evidence credential/config SSH ignore risk-scan scope",
     )
     assert_contains(
@@ -2063,17 +2063,17 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "missing root and nested `.gitignore` coverage for local credential/config files including `/.ssh/`, SSH private-key filenames, `/.direnv/`, `.envrc`, `/secrets/`, `/private/`, and generic secret material patterns",
+        "missing root and nested `.gitignore` coverage for local credential/config files including `.git-credentials`, `.gitconfig`, `.gitconfig.local`, `/.ssh/`, SSH private-key filenames, `/.direnv/`, `.envrc`, `/secrets/`, `/private/`, and generic secret material patterns",
         "launch evidence credential/config ignore examples",
     )
     assert_contains(
         launch_text,
-        "tracked credential/config filenames including SSH private-key filenames, `.ssh/` directories, direnv config/state, generic secret material paths, TLS certificate/request artifacts, and Java/Android/Apple signing key material",
+        "tracked credential/config filenames including SSH private-key filenames, `.ssh/` directories, direnv config/state, Git credential/config files, generic secret material paths, TLS certificate/request artifacts, and Java/Android/Apple signing key material",
         "launch checklist credential/config SSH risk-scan scope",
     )
     assert_contains(
         launch_text,
-        "root and nested `.gitignore` coverage for local credential/config files including SSH private-key filenames, `.ssh/`, direnv config/state, generic secret material patterns, TLS certificate/request artifact patterns, and Java/Android/Apple signing key material patterns",
+        "root and nested `.gitignore` coverage for local credential/config files including SSH private-key filenames, `.ssh/`, direnv config/state, Git credential/config files, generic secret material patterns, TLS certificate/request artifact patterns, and Java/Android/Apple signing key material patterns",
         "launch checklist credential/config SSH ignore scope",
     )
     assert_contains(
