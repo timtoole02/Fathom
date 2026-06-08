@@ -407,8 +407,13 @@ required_container_artifact_gitignore_patterns = {
 required_deployment_platform_artifact_gitignore_patterns = {
     "/.netlify/",
     "/.vercel/",
+    "/.wrangler/",
     ".netlify/",
     ".vercel/",
+    ".wrangler/",
+    ".dev.vars",
+    ".dev.vars.*",
+    "!.dev.vars.example",
 }
 required_infra_state_gitignore_patterns = {
     "/.terraform/",
@@ -1431,6 +1436,13 @@ blocked_tracked_container_artifact_filenames = {
 blocked_tracked_deployment_platform_artifact_dirs = {
     ".netlify",
     ".vercel",
+    ".wrangler",
+}
+allowed_tracked_deployment_platform_artifact_filenames = {
+    ".dev.vars.example",
+}
+blocked_tracked_deployment_platform_artifact_filenames = {
+    ".dev.vars",
 }
 blocked_tracked_infra_state_dirs = {
     ".terraform",
@@ -3351,6 +3363,15 @@ def tracked_deployment_platform_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         if any(part in blocked_tracked_deployment_platform_artifact_dirs for part in path.parts):
             failures.append(f"{rel}: local deployment platform artifacts must not be tracked for public launch")
+            continue
+        if (
+            path.name in blocked_tracked_deployment_platform_artifact_filenames
+            or (
+                path.name.startswith(".dev.vars.")
+                and path.name not in allowed_tracked_deployment_platform_artifact_filenames
+            )
+        ):
+            failures.append(f"{rel}: local deployment platform secret/config files must not be tracked for public launch")
     return failures
 
 def tracked_infra_state_file_failures(tracked_paths=None):
@@ -5682,10 +5703,10 @@ def self_test():
     if gitignore_deployment_platform_artifact_failures(allowed_deployment_platform_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local deployment platform artifact ignore patterns")
     deployment_platform_artifact_gitignore_failures = gitignore_deployment_platform_artifact_failures(
-        allowed_deployment_platform_artifact_gitignore.replace("/.vercel/\n", "")
+        allowed_deployment_platform_artifact_gitignore.replace("/.wrangler/\n", "")
     )
     if deployment_platform_artifact_gitignore_failures != [
-        ".gitignore: missing local deployment platform artifact ignore patterns: /.vercel/"
+        ".gitignore: missing local deployment platform artifact ignore patterns: /.wrangler/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local deployment platform artifact ignore patterns")
     deployment_platform_artifact_failures = tracked_deployment_platform_artifact_file_failures(
@@ -5694,10 +5715,17 @@ def self_test():
             ".vercel/output/config.json",
             ".netlify/state.json",
             ".netlify/functions-internal/manifest.json",
+            ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/example.sqlite",
+            ".dev.vars",
+            ".dev.vars.production",
             "apps/web/.vercel/project.json",
             "apps/web/.netlify/state.json",
+            "apps/web/.wrangler/tmp/pages.json",
+            "apps/web/.dev.vars.preview",
+            ".dev.vars.example",
             "netlify.toml",
             "vercel.json",
+            "wrangler.toml",
             "docs/api/public-contract.json",
         ],
     )
@@ -5706,8 +5734,13 @@ def self_test():
         ".vercel/output/config.json: local deployment platform artifacts must not be tracked for public launch",
         ".netlify/state.json: local deployment platform artifacts must not be tracked for public launch",
         ".netlify/functions-internal/manifest.json: local deployment platform artifacts must not be tracked for public launch",
+        ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/example.sqlite: local deployment platform artifacts must not be tracked for public launch",
+        ".dev.vars: local deployment platform secret/config files must not be tracked for public launch",
+        ".dev.vars.production: local deployment platform secret/config files must not be tracked for public launch",
         "apps/web/.vercel/project.json: local deployment platform artifacts must not be tracked for public launch",
         "apps/web/.netlify/state.json: local deployment platform artifacts must not be tracked for public launch",
+        "apps/web/.wrangler/tmp/pages.json: local deployment platform artifacts must not be tracked for public launch",
+        "apps/web/.dev.vars.preview: local deployment platform secret/config files must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local deployment platform artifacts")
     infra_state_failures = tracked_infra_state_file_failures(

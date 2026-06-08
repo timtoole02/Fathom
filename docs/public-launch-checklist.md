@@ -204,7 +204,7 @@ The ML experiment/tracking artifact guard rejects tracked local W&B, MLflow, Lig
 
 The Docker/container artifact guard rejects tracked local container runtime and override artifacts such as top-level `.docker/`, `docker-data/`, `docker-volumes/`, `docker-compose.override.yml`, `docker-compose.override.yaml`, `compose.override.yml`, and `compose.override.yaml`, with matching root `.gitignore` coverage.
 
-The deployment platform artifact guard rejects tracked local Vercel and Netlify state directories such as `.vercel/` and `.netlify/` at any tree depth, with matching root and nested `.gitignore` coverage.
+The deployment platform artifact guard rejects tracked local Vercel and Netlify state directories such as `.vercel/` and `.netlify/` at any tree depth, plus Cloudflare Workers local state and secret/config files such as `.wrangler/`, `.dev.vars`, and `.dev.vars.*`, with matching root and nested `.gitignore` coverage. It does not treat source-of-truth deployment config such as `vercel.json`, `netlify.toml`, `wrangler.toml`, or `.dev.vars.example` as local platform state.
 
 The Terraform/OpenTofu/Terragrunt infrastructure state artifact guard rejects tracked local infrastructure state artifacts such as `.terraform/`, `.tofu/`, `.terragrunt-cache/`, `.terraform.lock.hcl`, `.tofu.lock.hcl`, `.tfstate`, `.tfvars`, `.tfvars.json`, and `.tfplan` files, with matching root and nested `.gitignore` coverage for local infrastructure state artifacts.
 

@@ -541,6 +541,11 @@ compose.override.yaml
 .vercel/
 /.netlify/
 .netlify/
+/.wrangler/
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 
 # Local infrastructure state
 /.terraform/
