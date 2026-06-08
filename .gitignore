@@ -512,7 +512,9 @@ mutmut.sqlite
 mochawesome.html
 mochawesome.json
 cucumber-report.html
+cucumber-report.ndjson
 cucumber-report.json
+cucumber.xml
 cucumber-report.xml
 jacoco.exec
 jacoco.xml

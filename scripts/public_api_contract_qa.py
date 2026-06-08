@@ -2398,7 +2398,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "Cucumber/BDD report outputs such as `cucumber-report/`, `cucumber-reports/`, `cucumber-report.html`, `cucumber-report.json`, and `cucumber-report.xml` as local test report artifacts",
+        "Cucumber/BDD report outputs such as `cucumber-report/`, `cucumber-reports/`, `cucumber-report.html`, `cucumber-report.ndjson`, `cucumber-report.json`, `cucumber-report.xml`, and `cucumber.xml` as local test report artifacts",
         "launch checklist Cucumber/BDD test report artifact risk-scan scope",
     )
     assert_contains(
@@ -2453,7 +2453,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "Cucumber/BDD report outputs (`cucumber-report/`, `cucumber-reports/`, `cucumber-report.html`, `cucumber-report.json`, `cucumber-report.xml`)",
+        "Cucumber/BDD report outputs (`cucumber-report/`, `cucumber-reports/`, `cucumber-report.html`, `cucumber-report.ndjson`, `cucumber-report.json`, `cucumber-report.xml`, `cucumber.xml`)",
         "launch evidence Cucumber/BDD test report artifact examples",
     )
     assert_contains(
