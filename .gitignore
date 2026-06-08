@@ -33,6 +33,12 @@ meson-info/
 meson-logs/
 meson-private/
 
+# Local Autotools build artifacts
+autom4te.cache/
+config.log
+config.status
+libtool
+
 # Local Swift Package Manager artifacts
 /.build/
 **/.build/

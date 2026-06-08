@@ -551,6 +551,12 @@ required_meson_build_artifact_gitignore_patterns = {
     "meson-logs/",
     "meson-private/",
 }
+required_autotools_build_artifact_gitignore_patterns = {
+    "autom4te.cache/",
+    "config.log",
+    "config.status",
+    "libtool",
+}
 required_package_artifact_gitignore_patterns = {
     "/artifacts/",
     "/release/",
@@ -1328,6 +1334,14 @@ blocked_tracked_meson_build_artifact_dirs = {
 }
 blocked_tracked_meson_build_artifact_dir_patterns = {
     ".mesonpy-*",
+}
+blocked_tracked_autotools_build_artifact_dirs = {
+    "autom4te.cache",
+}
+blocked_tracked_autotools_build_artifact_filenames = {
+    "config.log",
+    "config.status",
+    "libtool",
 }
 blocked_tracked_package_artifact_suffixes = {
     ".7z",
@@ -2286,6 +2300,22 @@ def gitignore_meson_build_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local Meson build artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_autotools_build_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local Autotools build artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_autotools_build_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local Autotools build artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_package_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -3213,6 +3243,19 @@ def tracked_meson_build_artifact_file_failures(tracked_paths=None):
             for pattern in blocked_tracked_meson_build_artifact_dir_patterns
         ):
             failures.append(f"{rel}: Meson build artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_autotools_build_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_autotools_build_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: Autotools build artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_autotools_build_artifact_filenames:
+            failures.append(f"{rel}: Autotools build artifacts must not be tracked for public launch")
     return failures
 
 def tracked_package_artifact_file_failures(tracked_paths=None):
@@ -5391,6 +5434,38 @@ def self_test():
         ".gitignore: missing local Meson build artifact ignore patterns: **/.mesonpy-*/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Meson build artifact ignore patterns")
+    autotools_build_artifact_failures = tracked_autotools_build_artifact_file_failures(
+        tracked_paths=[
+            "autom4te.cache/requests",
+            "native/autom4te.cache/output.0",
+            "config.log",
+            "native/config.status",
+            "libtool",
+            "configure.ac",
+            "Makefile.am",
+            "docs/autotools.md",
+        ],
+    )
+    if autotools_build_artifact_failures != [
+        "autom4te.cache/requests: Autotools build artifacts must not be tracked for public launch",
+        "native/autom4te.cache/output.0: Autotools build artifacts must not be tracked for public launch",
+        "config.log: Autotools build artifacts must not be tracked for public launch",
+        "native/config.status: Autotools build artifacts must not be tracked for public launch",
+        "libtool: Autotools build artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked Autotools build artifacts")
+    allowed_autotools_build_artifact_gitignore = (
+        "\n".join(sorted(required_autotools_build_artifact_gitignore_patterns)) + "\n"
+    )
+    if gitignore_autotools_build_artifact_failures(allowed_autotools_build_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local Autotools build artifact ignore patterns")
+    autotools_build_artifact_gitignore_failures = gitignore_autotools_build_artifact_failures(
+        allowed_autotools_build_artifact_gitignore.replace("config.log\n", "")
+    )
+    if autotools_build_artifact_gitignore_failures != [
+        ".gitignore: missing local Autotools build artifact ignore patterns: config.log"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local Autotools build artifact ignore patterns")
     package_artifact_failures = tracked_package_artifact_file_failures(
         tracked_paths=[
             "artifacts/public-contract-smoke-summary.json",
@@ -6190,6 +6265,7 @@ failures.extend(gitignore_media_capture_failures())
 failures.extend(gitignore_rust_artifact_failures())
 failures.extend(gitignore_native_build_artifact_failures())
 failures.extend(gitignore_meson_build_artifact_failures())
+failures.extend(gitignore_autotools_build_artifact_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_backup_artifact_failures())
 failures.extend(gitignore_diagnostic_artifact_failures())
@@ -6248,6 +6324,7 @@ failures.extend(tracked_temp_artifact_file_failures())
 failures.extend(tracked_rust_artifact_file_failures())
 failures.extend(tracked_native_build_artifact_file_failures())
 failures.extend(tracked_meson_build_artifact_file_failures())
+failures.extend(tracked_autotools_build_artifact_file_failures())
 failures.extend(tracked_package_artifact_file_failures())
 failures.extend(tracked_backup_artifact_file_failures())
 failures.extend(tracked_model_artifact_file_failures())
