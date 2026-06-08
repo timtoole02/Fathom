@@ -52,6 +52,14 @@ EXAMPLES_DIR = ROOT / "examples" / "api"
 DOC_PATHS = [V1_CONTRACT, CLIENT_EXAMPLES, BACKEND_QUICKSTART, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE, REFUSAL_MATRIX, README]
 OPTIONAL_DOC_PATHS = [MINILM_OPTIONAL_ACCEPTANCE, SMOLLM2_OPTIONAL_ACCEPTANCE, QWEN25_OPTIONAL_ACCEPTANCE]
 EXAMPLE_PATHS = sorted(EXAMPLES_DIR.glob("*"))
+PUBLIC_BASE_URL_PATHS = (
+    V1_CONTRACT,
+    CLIENT_EXAMPLES,
+    BACKEND_QUICKSTART,
+    LAUNCH_CHECKLIST,
+    README,
+    *EXAMPLE_PATHS,
+)
 TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [
     CI,
     API_CONTRACT_ISSUE_TEMPLATE,
@@ -859,6 +867,17 @@ def assert_endpoint_docs(manifest: dict[str, Any]) -> None:
     for code in REQUIRED_ERROR_CODES:
         combined_docs = "\n".join(read(path) for path in DOC_PATHS)
         assert_contains(combined_docs, code, "public docs error-code set")
+
+
+def assert_manifest_base_url_alignment(manifest: dict[str, Any], texts: dict[str, str] | None = None) -> None:
+    base_url = manifest.get("base_url")
+    assert_non_empty_string(base_url, "manifest.base_url")
+
+    if texts is None:
+        texts = {str(path.relative_to(ROOT)): read(path) for path in PUBLIC_BASE_URL_PATHS}
+
+    for label, text in texts.items():
+        assert_contains(text, base_url, f"{label} public API base URL")
 
 
 def assert_boundary_docs() -> None:
@@ -1754,6 +1773,7 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")
     assert_contains(evidence_text, "manifest-to-`/v1` docs boundary coverage", "launch evidence manifest docs boundary gate")
+    assert_contains(evidence_text, "manifest `base_url` alignment across public docs/examples", "launch evidence manifest base URL gate")
     assert_contains(
         evidence_text,
         "request hints for status/code refusal boundaries to be exposed in the refusal matrix",
@@ -3558,6 +3578,26 @@ body:
     else:
         raise AssertionError("refusal matrix row-set self-test did not reject an unexpected boundary row")
 
+    base_url_manifest = {"base_url": "http://127.0.0.1:8180"}
+    valid_base_url_texts = {
+        "docs/api/v1-contract.md": "Base URL in local development: `http://127.0.0.1:8180`.",
+        "examples/api/python-no-deps.py": 'BASE_URL = "http://127.0.0.1:8180"',
+    }
+    assert_manifest_base_url_alignment(base_url_manifest, valid_base_url_texts)
+    try:
+        assert_manifest_base_url_alignment(
+            base_url_manifest,
+            {
+                **valid_base_url_texts,
+                "docs/api/client-examples.md": "Use http://127.0.0.1:8280 as the local base URL.",
+            },
+        )
+    except AssertionError as exc:
+        if "public API base URL" not in str(exc):
+            raise AssertionError("manifest base URL self-test failed for the wrong reason") from exc
+    else:
+        raise AssertionError("manifest base URL self-test did not reject stale public docs/examples")
+
     required_python = {"scripts/public_api_contract_qa.py", "examples/api/python-no-deps.py"}
     valid_python_gate = "python3 -m py_compile scripts/public_api_contract_qa.py examples/api/python-no-deps.py\n"
     assert_python_syntax_paths(valid_python_gate, "synthetic Python syntax gate", required_python)
@@ -3988,6 +4028,7 @@ def main() -> int:
     assert_manifest_shape(manifest)
     assert_gitattributes_text_normalization()
     assert_endpoint_docs(manifest)
+    assert_manifest_base_url_alignment(manifest)
     assert_roadmap_last_updated_freshness()
     assert_license_metadata()
     assert_tracked_python_syntax_coverage()
