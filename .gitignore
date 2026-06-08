@@ -480,6 +480,8 @@ frontend/cypress/downloads/
 /test-results/
 /test-reports/
 /reports/
+/cucumber-report/
+/cucumber-reports/
 /surefire-reports/
 /failsafe-reports/
 /jacocoHtml/
@@ -490,6 +492,8 @@ frontend/cypress/downloads/
 **/test-results/
 **/test-reports/
 **/reports/
+**/cucumber-report/
+**/cucumber-reports/
 **/surefire-reports/
 **/failsafe-reports/
 **/jacocoHtml/
@@ -507,6 +511,9 @@ mutation-report.html
 mutmut.sqlite
 mochawesome.html
 mochawesome.json
+cucumber-report.html
+cucumber-report.json
+cucumber-report.xml
 jacoco.exec
 jacoco.xml
 jacoco.csv

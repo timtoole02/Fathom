@@ -222,6 +222,8 @@ The browser-test artifact guard also blocks Cypress screenshot, video, and downl
 
 The test report artifact guard also blocks Mochawesome report outputs such as `mochawesome-report/`, `mochawesome.html`, and `mochawesome.json` as local test report artifacts, with matching root and nested `.gitignore` coverage.
 
+The test report artifact guard also blocks Cucumber/BDD report outputs such as `cucumber-report/`, `cucumber-reports/`, `cucumber-report.html`, `cucumber-report.json`, and `cucumber-report.xml` as local test report artifacts, with matching root and nested `.gitignore` coverage where directory-shaped.
+
 The test report artifact guard also blocks Allure report/result directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `allure-report/` and `allure-results/`.
 
 The test report artifact guard also blocks Maven Surefire/Failsafe report directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `surefire-reports/` and `failsafe-reports/`.

@@ -2398,6 +2398,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Cucumber/BDD report outputs such as `cucumber-report/`, `cucumber-reports/`, `cucumber-report.html`, `cucumber-report.json`, and `cucumber-report.xml` as local test report artifacts",
+        "launch checklist Cucumber/BDD test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage where directory-shaped",
+        "launch checklist Cucumber/BDD test report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Allure report/result directories as local test report artifacts",
         "launch checklist Allure test report artifact risk-scan scope",
     )
@@ -2440,6 +2450,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Mochawesome report outputs (`mochawesome-report/`, `mochawesome.html`, `mochawesome.json`)",
         "launch evidence Mochawesome test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Cucumber/BDD report outputs (`cucumber-report/`, `cucumber-reports/`, `cucumber-report.html`, `cucumber-report.json`, `cucumber-report.xml`)",
+        "launch evidence Cucumber/BDD test report artifact examples",
     )
     assert_contains(
         evidence_text,
