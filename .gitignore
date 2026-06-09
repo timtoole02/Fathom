@@ -532,6 +532,7 @@ frontend/cypress/downloads/
 coverage.xml
 coverage-final.json
 coverage-summary.json
+coverage.json
 cobertura.xml
 clover.xml
 opencover.xml
