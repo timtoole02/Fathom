@@ -258,6 +258,8 @@ The test report artifact guard also blocks Istanbul/nyc coverage outputs (`.nyc_
 
 The test report artifact guard also blocks coverage.py JSON report output (`coverage.json`) as a local coverage artifact, with matching root `.gitignore` coverage.
 
+The test report artifact guard also blocks coverage upload JSON exports such as `codecov.json`, `coveralls.json`, `*.codecov.json`, and `*.coveralls.json` as local coverage artifacts, with matching root `.gitignore` coverage. It does not treat service configuration files such as `codecov.yml`, `.codecov.yml`, or `.coveralls.yml` as local report artifacts.
+
 The test report artifact guard also blocks cargo-tarpaulin coverage report outputs (`tarpaulin-report.html` and `tarpaulin-report.json`) as local test report artifacts, with matching root `.gitignore` coverage.
 
 The test report artifact guard also blocks native compiler coverage outputs (`*.gcda`, `*.gcno`, and `*.gcov`) as local test report artifacts, with matching root `.gitignore` coverage.

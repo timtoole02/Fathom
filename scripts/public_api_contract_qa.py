@@ -2554,6 +2554,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "coverage upload JSON exports such as `codecov.json`, `coveralls.json`, `*.codecov.json`, and `*.coveralls.json` as local coverage artifacts",
+        "launch checklist coverage upload JSON artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "does not treat service configuration files such as `codecov.yml`, `.codecov.yml`, or `.coveralls.yml` as local report artifacts",
+        "launch checklist coverage upload config allowance",
+    )
+    assert_contains(
+        launch_text,
         "cargo-tarpaulin coverage report outputs (`tarpaulin-report.html` and `tarpaulin-report.json`) as local test report artifacts",
         "launch checklist cargo-tarpaulin test report artifact risk-scan scope",
     )
@@ -2694,6 +2704,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "coverage upload JSON exports (`codecov.json`, `coveralls.json`, `*.codecov.json`, `*.coveralls.json`)",
+        "launch evidence coverage upload JSON artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving service configuration files such as `codecov.yml`, `.codecov.yml`, and `.coveralls.yml`",
+        "launch evidence coverage upload config allowance",
+    )
+    assert_contains(
+        evidence_text,
         "LCOV HTML report directories (`lcov-report/`)",
         "launch evidence LCOV HTML coverage artifact examples",
     )
@@ -2736,6 +2756,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "coverage.py JSON report output (`coverage.json`)",
         "launch evidence coverage.py JSON hardening detail",
+    )
+    assert_contains(
+        evidence_text,
+        "coverage upload JSON exports (`codecov.json`, `coveralls.json`, `*.codecov.json`, `*.coveralls.json`)",
+        "launch evidence coverage upload JSON hardening detail",
     )
     assert_contains(
         evidence_text,
