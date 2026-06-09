@@ -465,6 +465,8 @@ lua_modules/
 /jmeter-report/
 /jmeter-reports/
 /jmeter-results/
+/jest-html-reporters-attach/
+/jest-stare/
 /tap-report/
 /tap-reports/
 /playwright-report/
@@ -481,6 +483,8 @@ lua_modules/
 **/jmeter-report/
 **/jmeter-reports/
 **/jmeter-results/
+**/jest-html-reporters-attach/
+**/jest-stare/
 **/tap-report/
 **/tap-reports/
 **/playwright-report/
@@ -583,6 +587,9 @@ cucumber-report.xml
 jacoco.exec
 jacoco.xml
 jacoco.csv
+jest-junit.xml
+jest-results.json
+jest_html_reporters.html
 lcov.info
 *.lcov
 junit.xml

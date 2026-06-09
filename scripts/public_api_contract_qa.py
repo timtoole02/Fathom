@@ -2504,6 +2504,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Jest generated report outputs such as `jest-stare/`, `jest-html-reporters-attach/`, `jest_html_reporters.html`, `jest-junit.xml`, and `jest-results.json` as local test report artifacts",
+        "launch checklist Jest test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "does not block source-of-truth Jest configuration files such as `jest.config.js`",
+        "launch checklist Jest config allowance",
+    )
+    assert_contains(
+        launch_text,
         "TAP generated report outputs such as `tap-report/`, `tap-reports/`, `tap-report.html`, `tap-report.json`, `tap-report.xml`, `tap-report.tap`, and `tap-results.tap` as local test report artifacts",
         "launch checklist TAP test report artifact risk-scan scope",
     )
@@ -2676,6 +2686,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving source-of-truth JMeter test plans such as `*.jmx`",
         "launch evidence JMeter source test plan allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Jest generated report outputs (`jest-stare/`, `jest-html-reporters-attach/`, `jest_html_reporters.html`, `jest-junit.xml`, `jest-results.json`)",
+        "launch evidence Jest test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Jest configuration such as `jest.config.js`",
+        "launch evidence Jest config allowance",
     )
     assert_contains(
         evidence_text,
