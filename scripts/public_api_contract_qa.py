@@ -2481,6 +2481,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Apache JMeter generated result/report outputs such as `jmeter-report/`, `jmeter-reports/`, `jmeter-results/`, and `*.jtl` as local test report artifacts",
+        "launch checklist JMeter test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "does not block source-of-truth JMeter test plans such as `*.jmx`",
+        "launch checklist JMeter source test plan allowance",
+    )
+    assert_contains(
+        launch_text,
         "JaCoCo coverage outputs as local test report artifacts",
         "launch checklist JaCoCo test report artifact risk-scan scope",
     )
@@ -2588,6 +2598,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving generic default names outside Robot-specific directories",
         "launch evidence Robot Framework generic report allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Apache JMeter generated result/report outputs (`jmeter-report/`, `jmeter-reports/`, `jmeter-results/`, `*.jtl`)",
+        "launch evidence JMeter test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth JMeter test plans such as `*.jmx`",
+        "launch evidence JMeter source test plan allowance",
     )
     assert_contains(
         evidence_text,

@@ -460,6 +460,9 @@ lua_modules/
 /newman/
 /robot-reports/
 /robot-results/
+/jmeter-report/
+/jmeter-reports/
+/jmeter-results/
 /playwright-report/
 /blob-report/
 /.playwright/
@@ -471,6 +474,9 @@ lua_modules/
 **/newman/
 **/robot-reports/
 **/robot-results/
+**/jmeter-report/
+**/jmeter-reports/
+**/jmeter-results/
 **/playwright-report/
 **/blob-report/
 **/.playwright/
@@ -520,6 +526,7 @@ frontend/cypress/downloads/
 *.trx
 *.clover.xml
 *.cobertura.xml
+*.jtl
 *.nunit.xml
 *.opencover.xml
 coverage.xml

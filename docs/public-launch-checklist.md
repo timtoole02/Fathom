@@ -242,6 +242,8 @@ The test report artifact guard also blocks Postman/Newman API test report output
 
 The test report artifact guard also blocks Robot Framework result/report outputs such as `robot-results/`, `robot-reports/`, `robot-output.xml`, `robot-log.html`, and `robot-report.html` as local test report artifacts, with matching root and nested `.gitignore` coverage for directory-shaped Robot outputs and root `.gitignore` coverage for explicitly Robot-named report files. It intentionally does not block generic default names such as `output.xml`, `log.html`, or `report.html` outside Robot-specific output directories.
 
+The test report artifact guard also blocks Apache JMeter generated result/report outputs such as `jmeter-report/`, `jmeter-reports/`, `jmeter-results/`, and `*.jtl` as local test report artifacts, with matching root and nested `.gitignore` coverage for directory-shaped JMeter outputs and root `.gitignore` coverage for generated JMeter result logs. It intentionally does not block source-of-truth JMeter test plans such as `*.jmx`.
+
 The test report artifact guard also blocks Maven Surefire/Failsafe report directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `surefire-reports/` and `failsafe-reports/`.
 
 The test report artifact guard also blocks JaCoCo coverage outputs as local test report artifacts, with matching root and nested `.gitignore` coverage for `jacocoHtml/` and root `.gitignore` coverage for `jacoco.exec`, `jacoco.xml`, and `jacoco.csv`.
