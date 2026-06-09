@@ -1060,6 +1060,7 @@ required_test_report_artifact_gitignore_patterns = {
     "lcov.info",
     "junit.xml",
     "TEST-*.xml",
+    "TESTS-*.xml",
     "testng-failed.xml",
     "testng-results.xml",
     "nunit.xml",
@@ -1800,6 +1801,7 @@ blocked_tracked_test_report_artifact_suffixes = {
 }
 blocked_tracked_test_report_artifact_filename_patterns = {
     "TEST-*.xml",
+    "TESTS-*.xml",
     "TestResult-*.xml",
 }
 blocked_tracked_cypress_artifact_dirs = {
@@ -5640,6 +5642,8 @@ def self_test():
             "crates/fathom-core/test-output.junit.xml",
             "TEST-fathom.xml",
             "crates/fathom-core/TEST-fathom.xml",
+            "TESTS-fathom.xml",
+            "crates/fathom-core/TESTS-fathom.xml",
             "testng-results.xml",
             "crates/fathom-core/testng-failed.xml",
             "emailable-report.html",
@@ -5764,6 +5768,8 @@ def self_test():
         "crates/fathom-core/test-output.junit.xml: local test report artifacts must not be tracked for public launch",
         "TEST-fathom.xml: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/TEST-fathom.xml: local test report artifacts must not be tracked for public launch",
+        "TESTS-fathom.xml: local test report artifacts must not be tracked for public launch",
+        "crates/fathom-core/TESTS-fathom.xml: local test report artifacts must not be tracked for public launch",
         "testng-results.xml: local test report artifacts must not be tracked for public launch",
         "crates/fathom-core/testng-failed.xml: local test report artifacts must not be tracked for public launch",
         "emailable-report.html: local test report artifacts must not be tracked for public launch",

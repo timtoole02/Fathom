@@ -561,6 +561,7 @@ lcov.info
 junit.xml
 *.junit.xml
 TEST-*.xml
+TESTS-*.xml
 testng-results.xml
 testng-failed.xml
 emailable-report.html

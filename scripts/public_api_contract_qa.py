@@ -145,6 +145,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
     r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
     r"Guard launch text normalization metadata|Guard .+ build artifacts|"
+    r"Guard .+ XML reports|"
     r"Guard .+ coverage artifacts|Guard .+ coverage profile artifacts|"
     r"Guard .+ coverage reports|Guard .+ report artifacts|Guard .+ test report artifacts|"
     r"Guard standalone .+ reports|"
@@ -2431,6 +2432,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "standalone JUnit XML aggregate suite report outputs such as `TESTS-*.xml` as local test report artifacts",
+        "launch checklist standalone JUnit XML aggregate suite report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root `.gitignore` coverage for generated JUnit aggregate suite report files",
+        "launch checklist standalone JUnit XML aggregate suite report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "TestNG generated report outputs such as `test-output/`, `testng-results.xml`, `testng-failed.xml`, and `emailable-report.html` as local test report artifacts",
         "launch checklist TestNG test report artifact risk-scan scope",
     )
@@ -2563,6 +2574,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "standalone JUnit XML suite report outputs (`TEST-*.xml`)",
         "launch evidence standalone JUnit XML suite report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "standalone JUnit XML aggregate suite report outputs (`TESTS-*.xml`)",
+        "launch evidence standalone JUnit XML aggregate suite report artifact examples",
     )
     assert_contains(
         evidence_text,

@@ -230,6 +230,8 @@ The test report artifact guard also blocks standalone xUnit XML report outputs s
 
 The test report artifact guard also blocks standalone JUnit XML suite report outputs such as `TEST-*.xml` as local test report artifacts, with matching root `.gitignore` coverage for generated JUnit suite report files.
 
+The test report artifact guard also blocks standalone JUnit XML aggregate suite report outputs such as `TESTS-*.xml` as local test report artifacts, with matching root `.gitignore` coverage for generated JUnit aggregate suite report files.
+
 The test report artifact guard also blocks TestNG generated report outputs such as `test-output/`, `testng-results.xml`, `testng-failed.xml`, and `emailable-report.html` as local test report artifacts, with matching root and nested `.gitignore` coverage for `test-output/` and root `.gitignore` coverage for generated TestNG report files.
 
 The test report artifact guard also blocks VSTest/.NET test result outputs such as `TestResults/`, `*.trx`, `*.coverage`, and `*.coveragexml` as local test report artifacts, with matching root and nested `.gitignore` coverage for `TestResults/` and root `.gitignore` coverage for generated report files.
