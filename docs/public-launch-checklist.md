@@ -266,6 +266,8 @@ The test report artifact guard also blocks pytest generated report outputs such 
 
 The test report artifact guard also blocks mutation-testing report/cache outputs such as `.mutmut-cache/`, `.stryker-tmp/`, `mutation-report/`, `pit-reports/`, `mutation-report.html`, and `mutmut.sqlite`, with matching root and nested `.gitignore` coverage.
 
+The test report artifact guard also blocks CTRF generated test report outputs such as `ctrf/`, `ctrf-report.json`, and `ctrf-report-*.json` as local test report artifacts, with matching root and nested `.gitignore` coverage for report directories and root `.gitignore` coverage for generated CTRF report files.
+
 ## What this launch currently proves
 
 - The documented no-download public `/v1` contract routes and refusal envelopes work against the real backend process.

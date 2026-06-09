@@ -2583,6 +2583,16 @@ def assert_boundary_docs() -> None:
         "launch checklist mutation-testing artifact ignore scope",
     )
     assert_contains(
+        launch_text,
+        "CTRF generated test report outputs such as `ctrf/`, `ctrf-report.json`, and `ctrf-report-*.json` as local test report artifacts",
+        "launch checklist CTRF test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for report directories and root `.gitignore` coverage for generated CTRF report files",
+        "launch checklist CTRF test report artifact ignore scope",
+    )
+    assert_contains(
         evidence_text,
         "Cypress screenshot, video, and download output directories at any tree depth",
         "launch evidence Cypress browser-test artifact examples",
@@ -2711,6 +2721,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "mutation-testing report/cache outputs (`.mutmut-cache/`, `.stryker-tmp/`, `mutation-report/`, `pit-reports/`, `mutation-report.html`, and `mutmut.sqlite`)",
         "launch evidence mutation-testing artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "CTRF generated test report outputs (`ctrf/`, `ctrf-report.json`, `ctrf-report-*.json`)",
+        "launch evidence CTRF test report artifact examples",
     )
     assert_contains(
         evidence_text,

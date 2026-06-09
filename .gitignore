@@ -489,9 +489,11 @@ lua_modules/
 /cypress/screenshots/
 /cypress/videos/
 /cypress/downloads/
+/ctrf/
 **/cypress/screenshots/
 **/cypress/videos/
 **/cypress/downloads/
+**/ctrf/
 frontend/cypress/screenshots/
 frontend/cypress/videos/
 frontend/cypress/downloads/
@@ -543,6 +545,8 @@ coverage.json
 cobertura.xml
 clover.xml
 opencover.xml
+ctrf-report.json
+ctrf-report-*.json
 TestResult.xml
 TestResult-*.xml
 mutation-report.html
