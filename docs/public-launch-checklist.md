@@ -246,6 +246,8 @@ The test report artifact guard also blocks Robot Framework result/report outputs
 
 The test report artifact guard also blocks Apache JMeter generated result/report outputs such as `jmeter-report/`, `jmeter-reports/`, `jmeter-results/`, and `*.jtl` as local test report artifacts, with matching root and nested `.gitignore` coverage for directory-shaped JMeter outputs and root `.gitignore` coverage for generated JMeter result logs. It intentionally does not block source-of-truth JMeter test plans such as `*.jmx`.
 
+The test report artifact guard also blocks TAP generated report outputs such as `tap-report/`, `tap-reports/`, `tap-report.html`, `tap-report.json`, `tap-report.xml`, `tap-report.tap`, and `tap-results.tap` as local test report artifacts, with matching root and nested `.gitignore` coverage for directory-shaped TAP reports and root `.gitignore` coverage for generated TAP report files. It intentionally does not block arbitrary `*.tap` files outside explicit TAP report names or directories.
+
 The test report artifact guard also blocks Maven Surefire/Failsafe report directories as local test report artifacts, with matching root and nested `.gitignore` coverage for `surefire-reports/` and `failsafe-reports/`.
 
 The test report artifact guard also blocks JaCoCo coverage outputs as local test report artifacts, with matching root and nested `.gitignore` coverage for `jacocoHtml/` and root `.gitignore` coverage for `jacoco.exec`, `jacoco.xml`, and `jacoco.csv`.

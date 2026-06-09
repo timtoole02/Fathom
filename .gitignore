@@ -465,6 +465,8 @@ lua_modules/
 /jmeter-report/
 /jmeter-reports/
 /jmeter-results/
+/tap-report/
+/tap-reports/
 /playwright-report/
 /blob-report/
 /.playwright/
@@ -479,6 +481,8 @@ lua_modules/
 **/jmeter-report/
 **/jmeter-reports/
 **/jmeter-results/
+**/tap-report/
+**/tap-reports/
 **/playwright-report/
 **/blob-report/
 **/.playwright/
@@ -557,6 +561,11 @@ newman-report.xml
 robot-log.html
 robot-output.xml
 robot-report.html
+tap-report.html
+tap-report.json
+tap-report.xml
+tap-report.tap
+tap-results.tap
 cucumber-report.html
 cucumber-report.ndjson
 cucumber.json

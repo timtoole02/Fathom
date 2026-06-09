@@ -2504,6 +2504,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "TAP generated report outputs such as `tap-report/`, `tap-reports/`, `tap-report.html`, `tap-report.json`, `tap-report.xml`, `tap-report.tap`, and `tap-results.tap` as local test report artifacts",
+        "launch checklist TAP test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "does not block arbitrary `*.tap` files outside explicit TAP report names or directories",
+        "launch checklist TAP source/data allowance",
+    )
+    assert_contains(
+        launch_text,
         "JaCoCo coverage outputs as local test report artifacts",
         "launch checklist JaCoCo test report artifact risk-scan scope",
     )
@@ -2646,6 +2656,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving source-of-truth JMeter test plans such as `*.jmx`",
         "launch evidence JMeter source test plan allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "TAP generated report outputs (`tap-report/`, `tap-reports/`, `tap-report.html`, `tap-report.json`, `tap-report.xml`, `tap-report.tap`, `tap-results.tap`)",
+        "launch evidence TAP test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving arbitrary `*.tap` files outside explicit TAP report names or directories",
+        "launch evidence TAP source/data allowance",
     )
     assert_contains(
         evidence_text,
