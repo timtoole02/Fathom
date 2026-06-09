@@ -145,6 +145,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
     r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
     r"Guard launch text normalization metadata|Guard .+ build artifacts|"
+    r"Guard .+benchmark artifacts|"
     r"Guard .+ benchmark artifacts|"
     r"Guard .+ XML reports|"
     r"Guard .+ coverage artifacts|Guard .+ coverage profile artifacts|"
