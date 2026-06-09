@@ -702,6 +702,8 @@ required_python_env_artifact_gitignore_patterns = {
 required_python_benchmark_artifact_gitignore_patterns = {
     "/.benchmarks/",
     "**/.benchmarks/",
+    "pytest-benchmark-*.json",
+    "pytest-benchmark.json",
 }
 required_ruby_bundle_artifact_gitignore_patterns = {
     "/.bundle/",
@@ -1198,6 +1200,10 @@ blocked_tracked_python_env_artifact_dirs = {
 }
 blocked_tracked_python_benchmark_artifact_dirs = {
     ".benchmarks",
+}
+blocked_tracked_python_benchmark_artifact_file_patterns = {
+    "pytest-benchmark-*.json",
+    "pytest-benchmark.json",
 }
 blocked_tracked_ruby_bundle_artifact_dirs = {
     ".bundle",
@@ -3151,7 +3157,10 @@ def tracked_python_benchmark_artifact_file_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
-        if any(part in blocked_tracked_python_benchmark_artifact_dirs for part in path.parts):
+        if any(part in blocked_tracked_python_benchmark_artifact_dirs for part in path.parts) or any(
+            fnmatch.fnmatch(path.name, pattern)
+            for pattern in blocked_tracked_python_benchmark_artifact_file_patterns
+        ):
             failures.append(f"{rel}: Python benchmark artifacts must not be tracked for public launch")
     return failures
 
@@ -4590,6 +4599,8 @@ def self_test():
         tracked_paths=[
             ".benchmarks/Linux-CPython-3.12-64bit/0001_fathom.json",
             "crates/fathom_py/.benchmarks/Darwin-CPython-3.12-64bit/0002_fathom.json",
+            "pytest-benchmark.json",
+            "crates/fathom_py/pytest-benchmark-public-risk.json",
             "docs/benchmarks/2026-04-29-qwen25-api-acceptance.md",
             "scripts/bench_backend.py",
         ],
@@ -4597,6 +4608,8 @@ def self_test():
     if python_benchmark_artifact_failures != [
         ".benchmarks/Linux-CPython-3.12-64bit/0001_fathom.json: Python benchmark artifacts must not be tracked for public launch",
         "crates/fathom_py/.benchmarks/Darwin-CPython-3.12-64bit/0002_fathom.json: Python benchmark artifacts must not be tracked for public launch",
+        "pytest-benchmark.json: Python benchmark artifacts must not be tracked for public launch",
+        "crates/fathom_py/pytest-benchmark-public-risk.json: Python benchmark artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked Python benchmark artifacts")
     allowed_python_benchmark_artifact_gitignore = (
@@ -4605,10 +4618,10 @@ def self_test():
     if gitignore_python_benchmark_artifact_failures(allowed_python_benchmark_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local Python benchmark artifact ignore patterns")
     python_benchmark_artifact_gitignore_failures = gitignore_python_benchmark_artifact_failures(
-        allowed_python_benchmark_artifact_gitignore.replace("**/.benchmarks/\n", "")
+        allowed_python_benchmark_artifact_gitignore.replace("pytest-benchmark.json\n", "")
     )
     if python_benchmark_artifact_gitignore_failures != [
-        ".gitignore: missing local Python benchmark artifact ignore patterns: **/.benchmarks/"
+        ".gitignore: missing local Python benchmark artifact ignore patterns: pytest-benchmark.json"
     ]:
         raise AssertionError("public risk self-test did not reject missing local Python benchmark artifact ignore patterns")
     ruby_bundle_artifact_failures = tracked_ruby_bundle_artifact_file_failures(

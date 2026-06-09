@@ -230,6 +230,8 @@ summary.local.json
 # Local benchmark artifacts
 /.benchmarks/
 **/.benchmarks/
+pytest-benchmark.json
+pytest-benchmark-*.json
 
 .DS_Store
 __MACOSX/
