@@ -260,6 +260,8 @@ The test report artifact guard also blocks cargo-tarpaulin coverage report outpu
 
 The test report artifact guard also blocks native compiler coverage outputs (`*.gcda`, `*.gcno`, and `*.gcov`) as local test report artifacts, with matching root `.gitignore` coverage.
 
+The test report artifact guard also blocks pytest generated report outputs such as `.report.json`, `pytest-report.html`, `pytest-report.json`, `pytest-report.xml`, and timestamped or named `pytest-report-*` variants as local test report artifacts, with matching root `.gitignore` coverage.
+
 The test report artifact guard also blocks mutation-testing report/cache outputs such as `.mutmut-cache/`, `.stryker-tmp/`, `mutation-report/`, `pit-reports/`, `mutation-report.html`, and `mutmut.sqlite`, with matching root and nested `.gitignore` coverage.
 
 ## What this launch currently proves

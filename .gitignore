@@ -523,6 +523,7 @@ frontend/cypress/downloads/
 **/pit-reports/
 .coverage
 .coverage.*
+.report.json
 *.coverage
 *.coveragexml
 *.trx
@@ -542,6 +543,12 @@ TestResult.xml
 TestResult-*.xml
 mutation-report.html
 mutmut.sqlite
+pytest-report.html
+pytest-report.json
+pytest-report.xml
+pytest-report-*.html
+pytest-report-*.json
+pytest-report-*.xml
 mochawesome.html
 mochawesome.json
 newman-report.html

@@ -2554,6 +2554,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "pytest generated report outputs such as `.report.json`, `pytest-report.html`, `pytest-report.json`, `pytest-report.xml`, and timestamped or named `pytest-report-*` variants",
+        "launch checklist pytest report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root `.gitignore` coverage",
+        "launch checklist pytest report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "mutation-testing report/cache outputs such as `.mutmut-cache/`, `.stryker-tmp/`, `mutation-report/`, `pit-reports/`, `mutation-report.html`, and `mutmut.sqlite`",
         "launch checklist mutation-testing artifact risk-scan scope",
     )
@@ -2674,6 +2684,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "pytest generated report outputs (`.report.json`, `pytest-report.html`, `pytest-report.json`, `pytest-report.xml`, and `pytest-report-*` variants)",
+        "launch evidence pytest report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
         "mutation-testing report/cache outputs (`.mutmut-cache/`, `.stryker-tmp/`, `mutation-report/`, `pit-reports/`, `mutation-report.html`, and `mutmut.sqlite`)",
         "launch evidence mutation-testing artifact examples",
     )
@@ -2686,6 +2701,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "coverage.py JSON report output (`coverage.json`)",
         "launch evidence coverage.py JSON hardening detail",
+    )
+    assert_contains(
+        evidence_text,
+        "pytest generated report outputs (`.report.json`, `pytest-report.html`, `pytest-report.json`, `pytest-report.xml`, and `pytest-report-*` variants)",
+        "launch evidence pytest report hardening detail",
     )
     assert_contains(
         evidence_text,
