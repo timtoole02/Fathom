@@ -2514,6 +2514,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Vitest generated report outputs such as `vitest-report/`, `vitest-report.html`, `vitest-report.json`, `vitest-report-*` variants, `vitest-junit.xml`, and `vitest-results.json` as local test report artifacts",
+        "launch checklist Vitest test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "does not block source-of-truth Vitest configuration files such as `vitest.config.js` or `vitest.config.ts`",
+        "launch checklist Vitest config allowance",
+    )
+    assert_contains(
+        launch_text,
         "TAP generated report outputs such as `tap-report/`, `tap-reports/`, `tap-report.html`, `tap-report.json`, `tap-report.xml`, `tap-report.tap`, and `tap-results.tap` as local test report artifacts",
         "launch checklist TAP test report artifact risk-scan scope",
     )
@@ -2696,6 +2706,16 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserving source-of-truth Jest configuration such as `jest.config.js`",
         "launch evidence Jest config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Vitest generated report outputs (`vitest-report/`, `vitest-report.html`, `vitest-report.json`, `vitest-report-*` variants, `vitest-junit.xml`, `vitest-results.json`)",
+        "launch evidence Vitest test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Vitest configuration such as `vitest.config.js` and `vitest.config.ts`",
+        "launch evidence Vitest config allowance",
     )
     assert_contains(
         evidence_text,

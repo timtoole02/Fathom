@@ -469,6 +469,7 @@ lua_modules/
 /jest-stare/
 /tap-report/
 /tap-reports/
+/vitest-report/
 /playwright-report/
 /blob-report/
 /.playwright/
@@ -487,6 +488,7 @@ lua_modules/
 **/jest-stare/
 **/tap-report/
 **/tap-reports/
+**/vitest-report/
 **/playwright-report/
 **/blob-report/
 **/.playwright/
@@ -590,6 +592,13 @@ jacoco.csv
 jest-junit.xml
 jest-results.json
 jest_html_reporters.html
+vitest-junit.xml
+vitest-report.html
+vitest-report.json
+vitest-report-*.html
+vitest-report-*.json
+vitest-report-*.xml
+vitest-results.json
 lcov.info
 *.lcov
 junit.xml
