@@ -2383,6 +2383,36 @@ def assert_boundary_docs() -> None:
         "launch evidence Lighthouse config allowance",
     )
     assert_contains(
+        launch_text,
+        "Axe/Pa11y accessibility audit outputs such as `axe-report/`, `axe-reports/`, `axe-report.html`, `axe-results.json`, `pa11y-report/`, `pa11y-reports/`, `pa11y-ci-report.json`, and `pa11y-results.json`",
+        "launch checklist Axe/Pa11y accessibility report artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for generated accessibility reports",
+        "launch checklist Axe/Pa11y accessibility report artifact ignore examples",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth accessibility configuration such as `axe.config.*`, `.pa11yci`, or `pa11yci.json`",
+        "launch checklist Axe/Pa11y config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Axe/Pa11y accessibility audit report guard rejects tracked local accessibility report outputs such as `axe-report/`, `axe-reports/`, `axe-report.html`, `axe-results.json`, `pa11y-report/`, `pa11y-reports/`, `pa11y-ci-report.json`, and `pa11y-results.json`",
+        "launch evidence Axe/Pa11y accessibility report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root and nested `.gitignore` coverage for generated accessibility reports",
+        "launch evidence Axe/Pa11y accessibility report artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth accessibility configuration such as `axe.config.*`, `.pa11yci`, and `pa11yci.json`",
+        "launch evidence Axe/Pa11y config allowance",
+    )
+    assert_contains(
         evidence_text,
         "ESLint report artifact guard rejects tracked local lint report outputs such as `eslint-report/`, `eslint-reports/`, `eslint-junit.xml`, `eslint-report.json`, `eslint-report.xml`, `eslint-results.json`, and timestamped `eslint-report-*` or `eslint-results-*` files",
         "launch evidence ESLint report artifact examples",

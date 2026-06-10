@@ -114,6 +114,8 @@ It also blocks tracked local frontend/static-site framework caches and build out
 
 It also blocks tracked local Lighthouse/LHCI audit outputs such as `.lighthouseci/`, `lhci_reports/`, `lighthouse-report.html`, and `lighthouse-report.json`, with matching root and nested `.gitignore` coverage for generated audit outputs while preserving source-of-truth Lighthouse config files such as `.lighthouserc.*`.
 
+It also blocks tracked Axe/Pa11y accessibility audit outputs such as `axe-report/`, `axe-reports/`, `axe-report.html`, `axe-results.json`, `pa11y-report/`, `pa11y-reports/`, `pa11y-ci-report.json`, and `pa11y-results.json`, with matching root and nested `.gitignore` coverage for generated accessibility reports. It does not treat source-of-truth accessibility configuration such as `axe.config.*`, `.pa11yci`, or `pa11yci.json` as a local report artifact.
+
 It also blocks tracked ESLint report outputs such as `eslint-report/`, `eslint-reports/`, `eslint-junit.xml`, `eslint-report.json`, and `eslint-results.xml`, with matching root and nested `.gitignore` coverage for generated lint report artifacts. It does not treat source-of-truth ESLint configuration such as `eslint.config.*` or `.eslintrc.*` as local report artifacts.
 
 It also blocks tracked Stylelint report outputs such as `stylelint-report/`, `stylelint-reports/`, `stylelint-junit.xml`, `stylelint-report.json`, and `stylelint-results.xml`, with matching root and nested `.gitignore` coverage for generated lint report artifacts. It does not treat source-of-truth Stylelint configuration such as `stylelint.config.*` or `.stylelintrc*` as local report artifacts.
