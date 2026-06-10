@@ -118,6 +118,8 @@ It also blocks tracked ESLint report outputs such as `eslint-report/`, `eslint-r
 
 It also blocks tracked Stylelint report outputs such as `stylelint-report/`, `stylelint-reports/`, `stylelint-junit.xml`, `stylelint-report.json`, and `stylelint-results.xml`, with matching root and nested `.gitignore` coverage for generated lint report artifacts. It does not treat source-of-truth Stylelint configuration such as `stylelint.config.*` or `.stylelintrc*` as local report artifacts.
 
+It also blocks tracked Biome report outputs such as `biome-report/`, `biome-reports/`, `biome-report.html`, `biome-report.json`, `biome-report.xml`, `biome-results.json`, and timestamped `biome-report-*` or `biome-results-*` files, with matching root and nested `.gitignore` coverage for generated lint/formatter report artifacts. It does not treat source-of-truth Biome configuration such as `biome.json` or `biome.jsonc` as local report artifacts.
+
 It also blocks tracked Watchman local state cookies such as `.watchman-cookie` and `.watchman-cookie-*`, with matching root and nested `.gitignore` coverage through the local cache artifact guard. It does not treat source-of-truth Watchman configuration such as `.watchmanconfig` as a local cache artifact.
 
 It also blocks tracked local `.cache/` directories at any tree depth, with matching root and nested `.gitignore` coverage through the local cache artifact guard.

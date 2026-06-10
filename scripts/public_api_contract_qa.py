@@ -1384,6 +1384,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked Biome report outputs such as `biome-report/`, `biome-reports/`, `biome-report.html`, `biome-report.json`, `biome-report.xml`, `biome-results.json`, and timestamped `biome-report-*` or `biome-results-*` files",
+        "launch checklist Biome report artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for generated lint/formatter report artifacts",
+        "launch checklist Biome report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Biome configuration such as `biome.json` or `biome.jsonc`",
+        "launch checklist Biome config allowance",
+    )
+    assert_contains(
+        launch_text,
         "Deno local cache artifacts such as `.deno/` and `deno-dir/`",
         "launch checklist Deno artifact scope",
     )
@@ -2381,6 +2396,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserves source-of-truth Stylelint configuration such as `stylelint.config.*` and `.stylelintrc*`",
         "launch evidence Stylelint config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Biome report artifact guard rejects tracked local lint/formatter report outputs such as `biome-report/`, `biome-reports/`, `biome-report.html`, `biome-report.json`, `biome-report.xml`, `biome-results.json`, and timestamped `biome-report-*` or `biome-results-*` files",
+        "launch evidence Biome report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root and nested `.gitignore` coverage for generated Biome reports",
+        "launch evidence Biome report artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth Biome configuration such as `biome.json` and `biome.jsonc`",
+        "launch evidence Biome config allowance",
     )
     assert_contains(
         launch_text,

@@ -464,6 +464,8 @@ lua_modules/
 /.stryker-tmp/
 /allure-report/
 /allure-results/
+/biome-report/
+/biome-reports/
 /mochawesome-report/
 /newman/
 /robot-reports/
@@ -487,6 +489,8 @@ lua_modules/
 **/.stryker-tmp/
 **/allure-report/
 **/allure-results/
+**/biome-report/
+**/biome-reports/
 **/mochawesome-report/
 **/newman/
 **/robot-reports/
@@ -569,6 +573,16 @@ coveralls.json
 cobertura.xml
 clover.xml
 opencover.xml
+biome-report.html
+biome-report.json
+biome-report.xml
+biome-report-*.html
+biome-report-*.json
+biome-report-*.xml
+biome-results.json
+biome-results.xml
+biome-results-*.json
+biome-results-*.xml
 ctrf-report.json
 ctrf-report-*.json
 TestResult.xml
