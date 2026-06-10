@@ -2474,6 +2474,31 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "security/dependency scan report outputs such as `snyk-report/`, `snyk-reports/`, `npm-audit-report/`, `pnpm-audit-report/`, `yarn-audit-report/`, `osv-scanner-report/`, `trivy-report/`, `grype-report/`, `dependency-check-report/`, `snyk-report.json`, `npm-audit.json`, `osv-scanner-results.json`, `trivy-results.json`, `grype-results.txt`, and `dependency-check-report.html`",
+        "launch checklist security/dependency scan report artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for generated security/dependency scan reports",
+        "launch checklist security/dependency scan report artifact ignore examples",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth dependency lockfiles or scanner configuration such as `Cargo.lock`, `package-lock.json`, `.snyk`, `osv-scanner.toml`, `trivy.yaml`, `grype.yaml`, or `dependency-check.properties`",
+        "launch checklist security/dependency scan config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "security/dependency scan report artifact guard for generated Snyk, npm audit, pnpm audit, Yarn audit, OSV Scanner, Trivy, Grype, and OWASP Dependency-Check outputs",
+        "launch evidence security/dependency scan report artifact scope",
+    )
+    assert_contains(
+        evidence_text,
+        "with matching root and nested `.gitignore` coverage while preserving source-of-truth lockfiles and scanner configuration such as `Cargo.lock`, `package-lock.json`, `.snyk`, `osv-scanner.toml`, `trivy.yaml`, `grype.yaml`, and `dependency-check.properties`",
+        "launch evidence security/dependency scan report artifact ignore and config allowance",
+    )
+    assert_contains(
+        launch_text,
         "Rollup TypeScript plugin `.rpt2_cache/`",
         "launch checklist Rollup TypeScript plugin cache scope",
     )

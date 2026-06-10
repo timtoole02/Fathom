@@ -1264,6 +1264,93 @@ required_test_report_artifact_gitignore_patterns = {
     "tarpaulin-report.html",
     "tarpaulin-report.json",
 }
+required_security_scan_report_artifact_gitignore_patterns = {
+    "/dependency-check-report/",
+    "/dependency-check-reports/",
+    "/grype-report/",
+    "/grype-reports/",
+    "/npm-audit-report/",
+    "/npm-audit-reports/",
+    "/osv-scanner-report/",
+    "/osv-scanner-reports/",
+    "/pnpm-audit-report/",
+    "/pnpm-audit-reports/",
+    "/snyk-report/",
+    "/snyk-reports/",
+    "/trivy-report/",
+    "/trivy-reports/",
+    "/yarn-audit-report/",
+    "/yarn-audit-reports/",
+    "**/dependency-check-report/",
+    "**/dependency-check-reports/",
+    "**/grype-report/",
+    "**/grype-reports/",
+    "**/npm-audit-report/",
+    "**/npm-audit-reports/",
+    "**/osv-scanner-report/",
+    "**/osv-scanner-reports/",
+    "**/pnpm-audit-report/",
+    "**/pnpm-audit-reports/",
+    "**/snyk-report/",
+    "**/snyk-reports/",
+    "**/trivy-report/",
+    "**/trivy-reports/",
+    "**/yarn-audit-report/",
+    "**/yarn-audit-reports/",
+    "dependency-check-report.html",
+    "dependency-check-report.json",
+    "dependency-check-report.xml",
+    "dependency-check-report.csv",
+    "dependency-check-report-*.html",
+    "dependency-check-report-*.json",
+    "dependency-check-report-*.xml",
+    "dependency-check-report-*.csv",
+    "grype-report.json",
+    "grype-report.txt",
+    "grype-report.xml",
+    "grype-report-*.json",
+    "grype-report-*.txt",
+    "grype-report-*.xml",
+    "grype-results.json",
+    "grype-results.txt",
+    "grype-results.xml",
+    "grype-results-*.json",
+    "grype-results-*.txt",
+    "grype-results-*.xml",
+    "npm-audit.json",
+    "npm-audit-report.json",
+    "npm-audit-report-*.json",
+    "osv-scanner-report.json",
+    "osv-scanner-results.json",
+    "osv-scanner-report-*.json",
+    "osv-scanner-results-*.json",
+    "pnpm-audit.json",
+    "pnpm-audit-report.json",
+    "pnpm-audit-report-*.json",
+    "snyk-report.html",
+    "snyk-report.json",
+    "snyk-report.xml",
+    "snyk-report-*.html",
+    "snyk-report-*.json",
+    "snyk-report-*.xml",
+    "snyk-results.json",
+    "snyk-results.xml",
+    "snyk-results-*.json",
+    "snyk-results-*.xml",
+    "trivy-report.html",
+    "trivy-report.json",
+    "trivy-report.xml",
+    "trivy-report-*.html",
+    "trivy-report-*.json",
+    "trivy-report-*.xml",
+    "trivy-results.json",
+    "trivy-results.xml",
+    "trivy-results-*.json",
+    "trivy-results-*.xml",
+    "yarn-audit.json",
+    "yarn-audit-report.json",
+    "yarn-audit-report-*.json",
+}
 required_notebook_artifact_gitignore_patterns = {
     ".jupyter/",
     ".ipynb_checkpoints/",
@@ -2137,6 +2224,81 @@ blocked_tracked_test_report_artifact_filename_patterns = {
     "vitest-report-*.html",
     "vitest-report-*.json",
     "vitest-report-*.xml",
+}
+blocked_tracked_security_scan_report_artifact_dirs = {
+    "dependency-check-report",
+    "dependency-check-reports",
+    "grype-report",
+    "grype-reports",
+    "npm-audit-report",
+    "npm-audit-reports",
+    "osv-scanner-report",
+    "osv-scanner-reports",
+    "pnpm-audit-report",
+    "pnpm-audit-reports",
+    "snyk-report",
+    "snyk-reports",
+    "trivy-report",
+    "trivy-reports",
+    "yarn-audit-report",
+    "yarn-audit-reports",
+}
+blocked_tracked_security_scan_report_artifact_filenames = {
+    "dependency-check-report.html",
+    "dependency-check-report.json",
+    "dependency-check-report.xml",
+    "dependency-check-report.csv",
+    "grype-report.json",
+    "grype-report.txt",
+    "grype-report.xml",
+    "grype-results.json",
+    "grype-results.txt",
+    "grype-results.xml",
+    "npm-audit.json",
+    "npm-audit-report.json",
+    "osv-scanner-report.json",
+    "osv-scanner-results.json",
+    "pnpm-audit.json",
+    "pnpm-audit-report.json",
+    "snyk-report.html",
+    "snyk-report.json",
+    "snyk-report.xml",
+    "snyk-results.json",
+    "snyk-results.xml",
+    "trivy-report.html",
+    "trivy-report.json",
+    "trivy-report.xml",
+    "trivy-results.json",
+    "trivy-results.xml",
+    "yarn-audit.json",
+    "yarn-audit-report.json",
+}
+blocked_tracked_security_scan_report_artifact_filename_patterns = {
+    "dependency-check-report-*.html",
+    "dependency-check-report-*.json",
+    "dependency-check-report-*.xml",
+    "dependency-check-report-*.csv",
+    "grype-report-*.json",
+    "grype-report-*.txt",
+    "grype-report-*.xml",
+    "grype-results-*.json",
+    "grype-results-*.txt",
+    "grype-results-*.xml",
+    "npm-audit-report-*.json",
+    "osv-scanner-report-*.json",
+    "osv-scanner-results-*.json",
+    "pnpm-audit-report-*.json",
+    "snyk-report-*.html",
+    "snyk-report-*.json",
+    "snyk-report-*.xml",
+    "snyk-results-*.json",
+    "snyk-results-*.xml",
+    "trivy-report-*.html",
+    "trivy-report-*.json",
+    "trivy-report-*.xml",
+    "trivy-results-*.json",
+    "trivy-results-*.xml",
+    "yarn-audit-report-*.json",
 }
 blocked_tracked_cypress_artifact_dirs = {
     "downloads",
@@ -3384,6 +3546,22 @@ def gitignore_test_report_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local test report artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_security_scan_report_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local security/dependency scan report artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_security_scan_report_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local security/dependency scan report artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_notebook_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -4196,6 +4374,25 @@ def tracked_test_report_artifact_file_failures(tracked_paths=None):
             continue
         if any(rel.endswith(suffix) for suffix in blocked_tracked_test_report_artifact_suffixes):
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_security_scan_report_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_security_scan_report_artifact_dirs for part in path.parts[:-1]):
+            failures.append(f"{rel}: local security/dependency scan report artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_security_scan_report_artifact_filenames:
+            failures.append(f"{rel}: local security/dependency scan report artifacts must not be tracked for public launch")
+            continue
+        if any(
+            fnmatch.fnmatchcase(path.name, pattern)
+            for pattern in blocked_tracked_security_scan_report_artifact_filename_patterns
+        ):
+            failures.append(f"{rel}: local security/dependency scan report artifacts must not be tracked for public launch")
     return failures
 
 def tracked_notebook_artifact_file_failures(tracked_paths=None, notebook_texts=None):
@@ -6510,6 +6707,106 @@ def self_test():
         "tarpaulin-report.json: local test report artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local test report artifacts")
+    allowed_security_scan_report_artifact_gitignore = (
+        "\n".join(sorted(required_security_scan_report_artifact_gitignore_patterns)) + "\n"
+    )
+    if gitignore_security_scan_report_artifact_failures(allowed_security_scan_report_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local security/dependency scan report artifact ignore patterns")
+    security_scan_report_artifact_gitignore_failures = gitignore_security_scan_report_artifact_failures(
+        allowed_security_scan_report_artifact_gitignore.replace("snyk-report.json\n", "")
+    )
+    if security_scan_report_artifact_gitignore_failures != [
+        ".gitignore: missing local security/dependency scan report artifact ignore patterns: snyk-report.json"
+    ]:
+        raise AssertionError(
+            "public risk self-test did not reject missing local security/dependency scan report artifact ignore patterns"
+        )
+    security_scan_report_artifact_failures = tracked_security_scan_report_artifact_file_failures(
+        tracked_paths=[
+            "snyk-report/index.html",
+            "snyk-reports/results.json",
+            "npm-audit-report/report.json",
+            "pnpm-audit-reports/results.json",
+            "yarn-audit-report/report.json",
+            "osv-scanner-report/results.json",
+            "trivy-report/report.html",
+            "trivy-reports/results.json",
+            "grype-report/report.json",
+            "grype-reports/results.txt",
+            "dependency-check-report/index.html",
+            "dependency-check-reports/dependency-check-report.xml",
+            "examples/web/snyk-report/index.html",
+            "examples/web/npm-audit-reports/results.json",
+            "examples/web/osv-scanner-report/report.json",
+            "examples/web/trivy-reports/results.xml",
+            "examples/web/dependency-check-report/dependency-check-report.csv",
+            "snyk-report.html",
+            "snyk-report-public-risk.json",
+            "snyk-results.json",
+            "npm-audit.json",
+            "npm-audit-report-public-risk.json",
+            "pnpm-audit.json",
+            "pnpm-audit-report-public-risk.json",
+            "yarn-audit.json",
+            "yarn-audit-report-public-risk.json",
+            "osv-scanner-report.json",
+            "osv-scanner-results-public-risk.json",
+            "trivy-report.html",
+            "trivy-report-public-risk.xml",
+            "trivy-results.json",
+            "grype-report.json",
+            "grype-report-public-risk.txt",
+            "grype-results.xml",
+            "dependency-check-report.html",
+            "dependency-check-report-public-risk.csv",
+            ".snyk",
+            "osv-scanner.toml",
+            "trivy.yaml",
+            "grype.yaml",
+            "dependency-check.properties",
+            "frontend/package-lock.json",
+            "Cargo.lock",
+        ],
+    )
+    if security_scan_report_artifact_failures != [
+        "snyk-report/index.html: local security/dependency scan report artifacts must not be tracked for public launch",
+        "snyk-reports/results.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "npm-audit-report/report.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "pnpm-audit-reports/results.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "yarn-audit-report/report.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "osv-scanner-report/results.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "trivy-report/report.html: local security/dependency scan report artifacts must not be tracked for public launch",
+        "trivy-reports/results.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "grype-report/report.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "grype-reports/results.txt: local security/dependency scan report artifacts must not be tracked for public launch",
+        "dependency-check-report/index.html: local security/dependency scan report artifacts must not be tracked for public launch",
+        "dependency-check-reports/dependency-check-report.xml: local security/dependency scan report artifacts must not be tracked for public launch",
+        "examples/web/snyk-report/index.html: local security/dependency scan report artifacts must not be tracked for public launch",
+        "examples/web/npm-audit-reports/results.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "examples/web/osv-scanner-report/report.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "examples/web/trivy-reports/results.xml: local security/dependency scan report artifacts must not be tracked for public launch",
+        "examples/web/dependency-check-report/dependency-check-report.csv: local security/dependency scan report artifacts must not be tracked for public launch",
+        "snyk-report.html: local security/dependency scan report artifacts must not be tracked for public launch",
+        "snyk-report-public-risk.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "snyk-results.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "npm-audit.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "npm-audit-report-public-risk.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "pnpm-audit.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "pnpm-audit-report-public-risk.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "yarn-audit.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "yarn-audit-report-public-risk.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "osv-scanner-report.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "osv-scanner-results-public-risk.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "trivy-report.html: local security/dependency scan report artifacts must not be tracked for public launch",
+        "trivy-report-public-risk.xml: local security/dependency scan report artifacts must not be tracked for public launch",
+        "trivy-results.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "grype-report.json: local security/dependency scan report artifacts must not be tracked for public launch",
+        "grype-report-public-risk.txt: local security/dependency scan report artifacts must not be tracked for public launch",
+        "grype-results.xml: local security/dependency scan report artifacts must not be tracked for public launch",
+        "dependency-check-report.html: local security/dependency scan report artifacts must not be tracked for public launch",
+        "dependency-check-report-public-risk.csv: local security/dependency scan report artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local security/dependency scan report artifacts")
     allowed_notebook_artifact_gitignore = "\n".join(sorted(required_notebook_artifact_gitignore_patterns)) + "\n"
     if gitignore_notebook_artifact_failures(allowed_notebook_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local notebook artifact ignore patterns")
@@ -7633,6 +7930,7 @@ failures.extend(gitignore_frontend_artifact_failures())
 failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_temp_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
+failures.extend(gitignore_security_scan_report_artifact_failures())
 failures.extend(gitignore_notebook_artifact_failures())
 failures.extend(gitignore_doc_build_artifact_failures())
 failures.extend(gitignore_runtime_artifact_failures())
@@ -7685,6 +7983,7 @@ failures.extend(tracked_mobile_build_file_failures())
 failures.extend(tracked_screen_capture_file_failures())
 failures.extend(tracked_media_capture_file_failures())
 failures.extend(tracked_test_report_artifact_file_failures())
+failures.extend(tracked_security_scan_report_artifact_file_failures())
 failures.extend(tracked_notebook_artifact_file_failures())
 failures.extend(tracked_doc_build_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
