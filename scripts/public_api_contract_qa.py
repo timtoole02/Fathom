@@ -2659,6 +2659,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "JUnit report directories and aggregate result files such as `junit-report/`, `junit-reports/`, and `junit-results.xml` as local test report artifacts",
+        "launch checklist JUnit report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for JUnit report directories and root `.gitignore` coverage for generated JUnit result files",
+        "launch checklist JUnit report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "TestNG generated report outputs such as `test-output/`, `testng-results.xml`, `testng-failed.xml`, and `emailable-report.html` as local test report artifacts",
         "launch checklist TestNG test report artifact risk-scan scope",
     )
@@ -2866,6 +2876,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "standalone JUnit XML aggregate suite report outputs (`TESTS-*.xml`)",
         "launch evidence standalone JUnit XML aggregate suite report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "JUnit report directories and aggregate result files (`junit-report/`, `junit-reports/`, `junit-results.xml`)",
+        "launch evidence JUnit report artifact examples",
     )
     assert_contains(
         evidence_text,

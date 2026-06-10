@@ -578,6 +578,8 @@ dependency-check-report-*.csv
 /jmeter-results/
 /jest-html-reporters-attach/
 /jest-stare/
+/junit-report/
+/junit-reports/
 /eslint-report/
 /eslint-reports/
 /stylelint-report/
@@ -619,6 +621,8 @@ dependency-check-report-*.csv
 **/jmeter-results/
 **/jest-html-reporters-attach/
 **/jest-stare/
+**/junit-report/
+**/junit-reports/
 **/eslint-report/
 **/eslint-reports/
 **/stylelint-report/
@@ -846,6 +850,7 @@ vitest-results.json
 lcov.info
 *.lcov
 junit.xml
+junit-results.xml
 *.junit.xml
 TEST-*.xml
 TESTS-*.xml
