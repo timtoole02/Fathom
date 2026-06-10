@@ -2569,6 +2569,31 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "frontend bundle-analysis outputs such as `bundle-analyzer-report.html`, `bundle-analysis.json`, `bundle-stats.html`, `webpack-stats.json`, `rollup-stats.html`, and `vite-bundle-visualizer.html`",
+        "launch checklist frontend bundle-analysis artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "It preserves source-of-truth bundler configuration and package metadata such as `webpack.config.*`, `rollup.config.*`, `vite.config.*`, and frontend package manifests",
+        "launch checklist frontend bundle-analysis source allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "frontend bundle-analysis output guard for `bundle-analyzer-report.html`, `bundle-analysis.json`, `bundle-stats.html`, `webpack-stats.json`, `rollup-stats.html`, `vite-bundle-visualizer.html`, and name-suffixed variants",
+        "launch evidence frontend bundle-analysis artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root and nested `.gitignore` coverage for those generated reports",
+        "launch evidence frontend bundle-analysis ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth bundler configuration and package metadata such as `webpack.config.*`, `rollup.config.*`, `vite.config.*`, and frontend package manifests",
+        "launch evidence frontend bundle-analysis source allowance",
+    )
+    assert_contains(
+        launch_text,
         "tracked local temporary/scratch artifacts",
         "launch checklist temporary/scratch artifact risk-scan scope",
     )
