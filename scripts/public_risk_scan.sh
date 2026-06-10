@@ -890,6 +890,7 @@ required_frontend_artifact_gitignore_patterns = {
     ".yarn/unplugged/",
     "**/.angular/cache/",
     "**/.lighthouseci/",
+    "**/lhci_reports/",
     "**/.nx/",
     "**/.swc/",
     "**/.vitepress/cache/",
@@ -5617,6 +5618,7 @@ def self_test():
             "frontend/.lighthouseci/manifest.json",
             "lhci_reports/manifest.json",
             "frontend/lhci_reports/manifest.json",
+            "examples/web/lhci_reports/manifest.json",
             "frontend/.npm/_logs/install.log",
             "frontend/.pnpm-store/v3/files/00/package",
             "frontend/.yarn/cache/vite-npm-5.0.0.zip",
@@ -5727,6 +5729,7 @@ def self_test():
         "frontend/.lighthouseci/manifest.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         "lhci_reports/manifest.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/lhci_reports/manifest.json: frontend/Node cache/build artifacts must not be tracked for public launch",
+        "examples/web/lhci_reports/manifest.json: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.npm/_logs/install.log: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.pnpm-store/v3/files/00/package: frontend/Node cache/build artifacts must not be tracked for public launch",
         "frontend/.yarn/cache/vite-npm-5.0.0.zip: frontend/Node cache/build artifacts must not be tracked for public launch",
@@ -5809,10 +5812,10 @@ def self_test():
     if gitignore_frontend_artifact_failures(allowed_frontend_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local frontend/Node cache/build artifact ignore patterns")
     frontend_artifact_gitignore_failures = gitignore_frontend_artifact_failures(
-        allowed_frontend_artifact_gitignore.replace("\n.webpack-cache/\n", "\n")
+        allowed_frontend_artifact_gitignore.replace("**/lhci_reports/\n", "")
     )
     if frontend_artifact_gitignore_failures != [
-        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: .webpack-cache/"
+        ".gitignore: missing local frontend/Node cache/build artifact ignore patterns: **/lhci_reports/"
     ]:
         raise AssertionError("public risk self-test did not reject missing local frontend/Node cache/build artifact ignore patterns")
     local_cache_artifact_failures = tracked_local_cache_artifact_file_failures(
