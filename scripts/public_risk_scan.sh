@@ -655,12 +655,84 @@ required_diagnostic_artifact_gitignore_patterns = {
     "*.trace",
 }
 required_code_quality_artifact_gitignore_patterns = {
+    "/mypy-report/",
+    "/mypy-reports/",
+    "/pylint-report/",
+    "/pylint-reports/",
+    "/pyright-report/",
+    "/pyright-reports/",
+    "/ruff-report/",
+    "/ruff-reports/",
+    "**/mypy-report/",
+    "**/mypy-reports/",
+    "**/pylint-report/",
+    "**/pylint-reports/",
+    "**/pyright-report/",
+    "**/pyright-reports/",
+    "**/ruff-report/",
+    "**/ruff-reports/",
     "/.scannerwork/",
     "/.semgrep/",
     ".scannerwork/",
     ".semgrep/",
     "/.sonar/",
     ".sonar/",
+    "mypy-report.html",
+    "mypy-report.json",
+    "mypy-report.txt",
+    "mypy-report.xml",
+    "mypy-report-*.html",
+    "mypy-report-*.json",
+    "mypy-report-*.txt",
+    "mypy-report-*.xml",
+    "mypy-results.json",
+    "mypy-results.txt",
+    "mypy-results.xml",
+    "mypy-results-*.json",
+    "mypy-results-*.txt",
+    "mypy-results-*.xml",
+    "pylint-report.html",
+    "pylint-report.json",
+    "pylint-report.txt",
+    "pylint-report.xml",
+    "pylint-report-*.html",
+    "pylint-report-*.json",
+    "pylint-report-*.txt",
+    "pylint-report-*.xml",
+    "pylint-results.json",
+    "pylint-results.txt",
+    "pylint-results.xml",
+    "pylint-results-*.json",
+    "pylint-results-*.txt",
+    "pylint-results-*.xml",
+    "pyright-report.html",
+    "pyright-report.json",
+    "pyright-report.txt",
+    "pyright-report.xml",
+    "pyright-report-*.html",
+    "pyright-report-*.json",
+    "pyright-report-*.txt",
+    "pyright-report-*.xml",
+    "pyright-results.json",
+    "pyright-results.txt",
+    "pyright-results.xml",
+    "pyright-results-*.json",
+    "pyright-results-*.txt",
+    "pyright-results-*.xml",
+    "ruff-report.html",
+    "ruff-report.json",
+    "ruff-report.txt",
+    "ruff-report.xml",
+    "ruff-report-*.html",
+    "ruff-report-*.json",
+    "ruff-report-*.txt",
+    "ruff-report-*.xml",
+    "ruff-results.json",
+    "ruff-results.txt",
+    "ruff-results.xml",
+    "ruff-results-*.json",
+    "ruff-results-*.txt",
+    "ruff-results-*.xml",
 }
 required_python_artifact_gitignore_patterns = {
     "__pycache__/",
@@ -1460,9 +1532,77 @@ blocked_tracked_diagnostic_artifact_suffixes = {
     ".trace",
 }
 blocked_tracked_code_quality_artifact_dirs = {
+    "mypy-report",
+    "mypy-reports",
+    "pylint-report",
+    "pylint-reports",
+    "pyright-report",
+    "pyright-reports",
+    "ruff-report",
+    "ruff-reports",
     ".scannerwork",
     ".semgrep",
     ".sonar",
+}
+blocked_tracked_code_quality_artifact_filenames = {
+    "mypy-report.html",
+    "mypy-report.json",
+    "mypy-report.txt",
+    "mypy-report.xml",
+    "mypy-results.json",
+    "mypy-results.txt",
+    "mypy-results.xml",
+    "pylint-report.html",
+    "pylint-report.json",
+    "pylint-report.txt",
+    "pylint-report.xml",
+    "pylint-results.json",
+    "pylint-results.txt",
+    "pylint-results.xml",
+    "pyright-report.html",
+    "pyright-report.json",
+    "pyright-report.txt",
+    "pyright-report.xml",
+    "pyright-results.json",
+    "pyright-results.txt",
+    "pyright-results.xml",
+    "ruff-report.html",
+    "ruff-report.json",
+    "ruff-report.txt",
+    "ruff-report.xml",
+    "ruff-results.json",
+    "ruff-results.txt",
+    "ruff-results.xml",
+}
+blocked_tracked_code_quality_artifact_filename_patterns = {
+    "mypy-report-*.html",
+    "mypy-report-*.json",
+    "mypy-report-*.txt",
+    "mypy-report-*.xml",
+    "mypy-results-*.json",
+    "mypy-results-*.txt",
+    "mypy-results-*.xml",
+    "pylint-report-*.html",
+    "pylint-report-*.json",
+    "pylint-report-*.txt",
+    "pylint-report-*.xml",
+    "pylint-results-*.json",
+    "pylint-results-*.txt",
+    "pylint-results-*.xml",
+    "pyright-report-*.html",
+    "pyright-report-*.json",
+    "pyright-report-*.txt",
+    "pyright-report-*.xml",
+    "pyright-results-*.json",
+    "pyright-results-*.txt",
+    "pyright-results-*.xml",
+    "ruff-report-*.html",
+    "ruff-report-*.json",
+    "ruff-report-*.txt",
+    "ruff-report-*.xml",
+    "ruff-results-*.json",
+    "ruff-results-*.txt",
+    "ruff-results-*.xml",
 }
 blocked_tracked_python_artifact_dirs = {
     "__pycache__",
@@ -3199,7 +3339,7 @@ def gitignore_code_quality_artifact_failures(gitignore_text=None):
         try:
             gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
         except FileNotFoundError:
-            return [".gitignore: missing local code-quality scanner artifact ignore patterns"]
+            return [".gitignore: missing local code-quality scanner/report artifact ignore patterns"]
     active_patterns = {
         line.strip()
         for line in gitignore_text.splitlines()
@@ -3207,7 +3347,7 @@ def gitignore_code_quality_artifact_failures(gitignore_text=None):
     }
     missing = sorted(required_code_quality_artifact_gitignore_patterns - active_patterns)
     if missing:
-        return [f".gitignore: missing local code-quality scanner artifact ignore patterns: {', '.join(missing)}"]
+        return [f".gitignore: missing local code-quality scanner/report artifact ignore patterns: {', '.join(missing)}"]
     return []
 
 def gitignore_python_artifact_failures(gitignore_text=None):
@@ -3712,8 +3852,12 @@ def tracked_code_quality_artifact_file_failures(tracked_paths=None):
     failures = []
     for rel in tracked_paths:
         path = pathlib.PurePosixPath(rel)
-        if any(part in blocked_tracked_code_quality_artifact_dirs for part in path.parts):
-            failures.append(f"{rel}: local code-quality scanner artifacts must not be tracked for public launch")
+        if (
+            any(part in blocked_tracked_code_quality_artifact_dirs for part in path.parts)
+            or path.name in blocked_tracked_code_quality_artifact_filenames
+            or any(fnmatch.fnmatch(path.name, pattern) for pattern in blocked_tracked_code_quality_artifact_filename_patterns)
+        ):
+            failures.append(f"{rel}: local code-quality scanner/report artifacts must not be tracked for public launch")
     return failures
 
 def tracked_python_artifact_file_failures(tracked_paths=None):
@@ -5108,14 +5252,14 @@ def self_test():
         raise AssertionError("public risk self-test did not reject tracked local log/trace/profiling/debug-output artifacts")
     allowed_code_quality_artifact_gitignore = "\n".join(sorted(required_code_quality_artifact_gitignore_patterns)) + "\n"
     if gitignore_code_quality_artifact_failures(allowed_code_quality_artifact_gitignore):
-        raise AssertionError("public risk self-test rejected complete local code-quality scanner artifact ignore patterns")
+        raise AssertionError("public risk self-test rejected complete local code-quality scanner/report artifact ignore patterns")
     code_quality_artifact_gitignore_failures = gitignore_code_quality_artifact_failures(
-        allowed_code_quality_artifact_gitignore.replace(".scannerwork/\n", "", 1)
+        allowed_code_quality_artifact_gitignore.replace("ruff-report.json\n", "", 1)
     )
     if code_quality_artifact_gitignore_failures != [
-        ".gitignore: missing local code-quality scanner artifact ignore patterns: .scannerwork/"
+        ".gitignore: missing local code-quality scanner/report artifact ignore patterns: ruff-report.json"
     ]:
-        raise AssertionError("public risk self-test did not reject missing local code-quality scanner artifact ignore patterns")
+        raise AssertionError("public risk self-test did not reject missing local code-quality scanner/report artifact ignore patterns")
     code_quality_artifact_failures = tracked_code_quality_artifact_file_failures(
         tracked_paths=[
             ".scannerwork/report-task.txt",
@@ -5125,22 +5269,48 @@ def self_test():
             "frontend/.sonar/cache/index.txt",
             ".semgrep/cache/rules.json",
             "frontend/.semgrep/cache/results.db",
+            "ruff-report.json",
+            "ruff-report-public-risk.html",
+            "services/api/ruff-reports/results.xml",
+            "pylint-report.txt",
+            "pylint-results-public-risk.json",
+            "mypy-report/index.html",
+            "mypy-results.xml",
+            "pyright-report.json",
+            "frontend/pyright-reports/results.json",
+            "pyright-results-public-risk.txt",
             ".semgrep.yml",
             "semgrep.yml",
             "sonar-project.properties",
+            "pyrightconfig.json",
+            "mypy.ini",
+            ".pylintrc",
+            "ruff.toml",
+            ".ruff.toml",
+            "pyproject.toml",
             "docs/research/runtime-safety-policy.md",
         ],
     )
     if code_quality_artifact_failures != [
-        ".scannerwork/report-task.txt: local code-quality scanner artifacts must not be tracked for public launch",
-        ".scannerwork/scanner-report/component-1.pb: local code-quality scanner artifacts must not be tracked for public launch",
-        "services/api/.scannerwork/report-task.txt: local code-quality scanner artifacts must not be tracked for public launch",
-        ".sonar/cache/_tmp/scanner.zip: local code-quality scanner artifacts must not be tracked for public launch",
-        "frontend/.sonar/cache/index.txt: local code-quality scanner artifacts must not be tracked for public launch",
-        ".semgrep/cache/rules.json: local code-quality scanner artifacts must not be tracked for public launch",
-        "frontend/.semgrep/cache/results.db: local code-quality scanner artifacts must not be tracked for public launch",
+        ".scannerwork/report-task.txt: local code-quality scanner/report artifacts must not be tracked for public launch",
+        ".scannerwork/scanner-report/component-1.pb: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "services/api/.scannerwork/report-task.txt: local code-quality scanner/report artifacts must not be tracked for public launch",
+        ".sonar/cache/_tmp/scanner.zip: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "frontend/.sonar/cache/index.txt: local code-quality scanner/report artifacts must not be tracked for public launch",
+        ".semgrep/cache/rules.json: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "frontend/.semgrep/cache/results.db: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "ruff-report.json: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "ruff-report-public-risk.html: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "services/api/ruff-reports/results.xml: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "pylint-report.txt: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "pylint-results-public-risk.json: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "mypy-report/index.html: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "mypy-results.xml: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "pyright-report.json: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "frontend/pyright-reports/results.json: local code-quality scanner/report artifacts must not be tracked for public launch",
+        "pyright-results-public-risk.txt: local code-quality scanner/report artifacts must not be tracked for public launch",
     ]:
-        raise AssertionError("public risk self-test did not reject tracked local code-quality scanner artifacts")
+        raise AssertionError("public risk self-test did not reject tracked local code-quality scanner/report artifacts")
     python_artifact_failures = tracked_python_artifact_file_failures(
         tracked_paths=[
             "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc",

@@ -2278,6 +2278,31 @@ def assert_boundary_docs() -> None:
         "launch evidence Semgrep config allowance",
     )
     assert_contains(
+        launch_text,
+        "Python static-analysis report outputs from Ruff, Pylint, Mypy, and Pyright",
+        "launch checklist Python static-analysis report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "such as `ruff-report/`, `ruff-report.json`, `pylint-report.txt`, `mypy-report/`, `mypy-results.xml`, `pyright-report.json`, and timestamped `*-report-*` or `*-results-*` files",
+        "launch checklist Python static-analysis report artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "preserving source-of-truth Python analysis configuration such as `pyproject.toml`, `ruff.toml`, `.ruff.toml`, `.pylintrc`, `mypy.ini`, and `pyrightconfig.json`",
+        "launch checklist Python static-analysis report config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Python static-analysis report outputs from Ruff, Pylint, Mypy, and Pyright (`ruff-report/`, `ruff-report.json`, `pylint-report.txt`, `mypy-report/`, `mypy-results.xml`, `pyright-report.json`, and timestamped `*-report-*` or `*-results-*` files) as local code-quality report artifacts",
+        "launch evidence Python static-analysis report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Python analysis configuration such as `pyproject.toml`, `ruff.toml`, `.ruff.toml`, `.pylintrc`, `mypy.ini`, and `pyrightconfig.json`",
+        "launch evidence Python static-analysis report config allowance",
+    )
+    assert_contains(
         evidence_text,
         "Python cache/build artifact guard",
         "launch evidence Python artifact risk-scan scope",
