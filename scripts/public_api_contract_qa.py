@@ -146,6 +146,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
     r"Guard launch text normalization metadata|Guard .+ build artifacts|"
     r"Guard .+benchmark artifacts|"
+    r"Guard .+ inventory artifacts|"
     r"Guard .+ benchmark artifacts|"
     r"Guard .+ XML reports|"
     r"Guard .+ coverage artifacts|Guard .+ coverage profile artifacts|"
@@ -2541,6 +2542,31 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "with matching root and nested `.gitignore` coverage while preserving source-of-truth lockfiles and scanner configuration such as `Cargo.lock`, `package-lock.json`, `.snyk`, `deny.toml`, `cargo-deny.toml`, `osv-scanner.toml`, `trivy.yaml`, `grype.yaml`, and `dependency-check.properties`",
         "launch evidence security/dependency scan report artifact ignore and config allowance",
+    )
+    assert_contains(
+        launch_text,
+        "generated SBOM/license inventory outputs such as `sbom/`, `sboms/`, `cyclonedx/`, `cyclonedx-reports/`, `license-report/`, `license-reports/`, `licenses-report/`, `licenses-reports/`, `syft-report/`, `syft-reports/`, `sbom.json`, `sbom.spdx.json`, `bom.json`, `cyclonedx.json`, `syft-report.json`, and `license-report.json`",
+        "launch checklist SBOM/license inventory artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for generated SBOM/license inventory outputs",
+        "launch checklist SBOM/license inventory ignore examples",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth SBOM or inventory tool configuration such as `cdxgen.yml`, `.cdxgenrc`, `syft.yaml`, and `.syft.yaml`",
+        "launch checklist SBOM/license inventory config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "SBOM/license inventory artifact guard for generated CycloneDX, SPDX, Syft, and license inventory outputs",
+        "launch evidence SBOM/license inventory artifact scope",
+    )
+    assert_contains(
+        evidence_text,
+        "with matching root and nested `.gitignore` coverage while preserving source-of-truth SBOM or inventory tool configuration such as `cdxgen.yml`, `.cdxgenrc`, `syft.yaml`, and `.syft.yaml`",
+        "launch evidence SBOM/license inventory ignore and config allowance",
     )
     assert_contains(
         launch_text,

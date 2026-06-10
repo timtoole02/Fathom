@@ -1569,6 +1569,74 @@ required_security_scan_report_artifact_gitignore_patterns = {
     "yarn-audit-report.json",
     "yarn-audit-report-*.json",
 }
+required_sbom_inventory_artifact_gitignore_patterns = {
+    "/cyclonedx/",
+    "/cyclonedx-reports/",
+    "/license-report/",
+    "/license-reports/",
+    "/licenses-report/",
+    "/licenses-reports/",
+    "/sbom/",
+    "/sboms/",
+    "/syft-report/",
+    "/syft-reports/",
+    "**/cyclonedx/",
+    "**/cyclonedx-reports/",
+    "**/license-report/",
+    "**/license-reports/",
+    "**/licenses-report/",
+    "**/licenses-reports/",
+    "**/sbom/",
+    "**/sboms/",
+    "**/syft-report/",
+    "**/syft-reports/",
+    "bom.cdx.json",
+    "bom.cyclonedx.json",
+    "bom.json",
+    "bom.xml",
+    "cyclonedx-report-*.json",
+    "cyclonedx-report-*.xml",
+    "cyclonedx-report.json",
+    "cyclonedx-report.xml",
+    "cyclonedx.json",
+    "cyclonedx.xml",
+    "license-report-*.html",
+    "license-report-*.json",
+    "license-report-*.txt",
+    "license-report-*.xml",
+    "license-report.html",
+    "license-report.json",
+    "license-report.txt",
+    "license-report.xml",
+    "licenses-report-*.html",
+    "licenses-report-*.json",
+    "licenses-report-*.txt",
+    "licenses-report-*.xml",
+    "licenses-report.html",
+    "licenses-report.json",
+    "licenses-report.txt",
+    "licenses-report.xml",
+    "sbom-*.json",
+    "sbom-*.spdx",
+    "sbom-*.spdx.json",
+    "sbom-*.xml",
+    "sbom.cdx.json",
+    "sbom.cyclonedx.json",
+    "sbom.json",
+    "sbom.spdx",
+    "sbom.spdx.json",
+    "sbom.xml",
+    "syft-report-*.json",
+    "syft-report-*.spdx",
+    "syft-report-*.spdx.json",
+    "syft-report-*.txt",
+    "syft-report-*.xml",
+    "syft-report.json",
+    "syft-report.spdx",
+    "syft-report.spdx.json",
+    "syft-report.txt",
+    "syft-report.xml",
+}
 required_notebook_artifact_gitignore_patterns = {
     ".jupyter/",
     ".ipynb_checkpoints/",
@@ -2734,6 +2802,68 @@ blocked_tracked_security_scan_report_artifact_filename_patterns = {
     "trivy-results-*.json",
     "trivy-results-*.xml",
     "yarn-audit-report-*.json",
+}
+blocked_tracked_sbom_inventory_artifact_dirs = {
+    "cyclonedx",
+    "cyclonedx-reports",
+    "license-report",
+    "license-reports",
+    "licenses-report",
+    "licenses-reports",
+    "sbom",
+    "sboms",
+    "syft-report",
+    "syft-reports",
+}
+blocked_tracked_sbom_inventory_artifact_filenames = {
+    "bom.cdx.json",
+    "bom.cyclonedx.json",
+    "bom.json",
+    "bom.xml",
+    "cyclonedx-report.json",
+    "cyclonedx-report.xml",
+    "cyclonedx.json",
+    "cyclonedx.xml",
+    "license-report.html",
+    "license-report.json",
+    "license-report.txt",
+    "license-report.xml",
+    "licenses-report.html",
+    "licenses-report.json",
+    "licenses-report.txt",
+    "licenses-report.xml",
+    "sbom.cdx.json",
+    "sbom.cyclonedx.json",
+    "sbom.json",
+    "sbom.spdx",
+    "sbom.spdx.json",
+    "sbom.xml",
+    "syft-report.json",
+    "syft-report.spdx",
+    "syft-report.spdx.json",
+    "syft-report.txt",
+    "syft-report.xml",
+}
+blocked_tracked_sbom_inventory_artifact_filename_patterns = {
+    "cyclonedx-report-*.json",
+    "cyclonedx-report-*.xml",
+    "license-report-*.html",
+    "license-report-*.json",
+    "license-report-*.txt",
+    "license-report-*.xml",
+    "licenses-report-*.html",
+    "licenses-report-*.json",
+    "licenses-report-*.txt",
+    "licenses-report-*.xml",
+    "sbom-*.json",
+    "sbom-*.spdx",
+    "sbom-*.spdx.json",
+    "sbom-*.xml",
+    "syft-report-*.json",
+    "syft-report-*.spdx",
+    "syft-report-*.spdx.json",
+    "syft-report-*.txt",
+    "syft-report-*.xml",
 }
 blocked_tracked_cypress_artifact_dirs = {
     "downloads",
@@ -4016,6 +4146,22 @@ def gitignore_security_scan_report_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local security/dependency scan report artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_sbom_inventory_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local SBOM/license inventory artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_sbom_inventory_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local SBOM/license inventory artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_notebook_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -4851,6 +4997,25 @@ def tracked_security_scan_report_artifact_file_failures(tracked_paths=None):
             for pattern in blocked_tracked_security_scan_report_artifact_filename_patterns
         ):
             failures.append(f"{rel}: local security/dependency scan report artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_sbom_inventory_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_sbom_inventory_artifact_dirs for part in path.parts[:-1]):
+            failures.append(f"{rel}: local SBOM/license inventory artifacts must not be tracked for public launch")
+            continue
+        if path.name in blocked_tracked_sbom_inventory_artifact_filenames:
+            failures.append(f"{rel}: local SBOM/license inventory artifacts must not be tracked for public launch")
+            continue
+        if any(
+            fnmatch.fnmatchcase(path.name, pattern)
+            for pattern in blocked_tracked_sbom_inventory_artifact_filename_patterns
+        ):
+            failures.append(f"{rel}: local SBOM/license inventory artifacts must not be tracked for public launch")
     return failures
 
 def tracked_notebook_artifact_file_failures(tracked_paths=None, notebook_texts=None):
@@ -7402,6 +7567,96 @@ def self_test():
         "dependency-check-report-public-risk.csv: local security/dependency scan report artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local security/dependency scan report artifacts")
+    allowed_sbom_inventory_artifact_gitignore = (
+        "\n".join(sorted(required_sbom_inventory_artifact_gitignore_patterns)) + "\n"
+    )
+    if gitignore_sbom_inventory_artifact_failures(allowed_sbom_inventory_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local SBOM/license inventory artifact ignore patterns")
+    sbom_inventory_artifact_gitignore_failures = gitignore_sbom_inventory_artifact_failures(
+        allowed_sbom_inventory_artifact_gitignore.replace("sbom.json\n", "")
+    )
+    if sbom_inventory_artifact_gitignore_failures != [
+        ".gitignore: missing local SBOM/license inventory artifact ignore patterns: sbom.json"
+    ]:
+        raise AssertionError(
+            "public risk self-test did not reject missing local SBOM/license inventory artifact ignore patterns"
+        )
+    sbom_inventory_artifact_failures = tracked_sbom_inventory_artifact_file_failures(
+        tracked_paths=[
+            "sbom/index.json",
+            "sboms/fathom.json",
+            "cyclonedx/bom.json",
+            "cyclonedx-reports/fathom.xml",
+            "license-report/index.html",
+            "license-reports/fathom.json",
+            "licenses-report/index.html",
+            "licenses-reports/fathom.txt",
+            "syft-report/fathom.json",
+            "syft-reports/fathom.spdx.json",
+            "examples/web/sbom/fathom.json",
+            "examples/web/cyclonedx-reports/bom.xml",
+            "examples/web/license-reports/fathom.txt",
+            "examples/web/syft-reports/fathom.json",
+            "sbom.json",
+            "sbom-public-risk.xml",
+            "sbom.spdx",
+            "sbom.spdx.json",
+            "sbom.cdx.json",
+            "sbom.cyclonedx.json",
+            "bom.json",
+            "bom.xml",
+            "bom.cdx.json",
+            "bom.cyclonedx.json",
+            "cyclonedx.json",
+            "cyclonedx-report-public-risk.xml",
+            "syft-report.json",
+            "syft-report-public-risk.spdx.json",
+            "license-report.html",
+            "license-report-public-risk.json",
+            "licenses-report.txt",
+            "licenses-report-public-risk.xml",
+            ".cdxgenrc",
+            "cdxgen.yml",
+            "syft.yaml",
+            ".syft.yaml",
+            "docs/api/public-contract.json",
+        ],
+    )
+    if sbom_inventory_artifact_failures != [
+        "sbom/index.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "sboms/fathom.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "cyclonedx/bom.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "cyclonedx-reports/fathom.xml: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "license-report/index.html: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "license-reports/fathom.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "licenses-report/index.html: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "licenses-reports/fathom.txt: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "syft-report/fathom.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "syft-reports/fathom.spdx.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "examples/web/sbom/fathom.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "examples/web/cyclonedx-reports/bom.xml: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "examples/web/license-reports/fathom.txt: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "examples/web/syft-reports/fathom.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "sbom.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "sbom-public-risk.xml: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "sbom.spdx: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "sbom.spdx.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "sbom.cdx.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "sbom.cyclonedx.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "bom.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "bom.xml: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "bom.cdx.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "bom.cyclonedx.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "cyclonedx.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "cyclonedx-report-public-risk.xml: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "syft-report.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "syft-report-public-risk.spdx.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "license-report.html: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "license-report-public-risk.json: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "licenses-report.txt: local SBOM/license inventory artifacts must not be tracked for public launch",
+        "licenses-report-public-risk.xml: local SBOM/license inventory artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local SBOM/license inventory artifacts")
     allowed_notebook_artifact_gitignore = "\n".join(sorted(required_notebook_artifact_gitignore_patterns)) + "\n"
     if gitignore_notebook_artifact_failures(allowed_notebook_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local notebook artifact ignore patterns")
@@ -8552,6 +8807,7 @@ failures.extend(gitignore_local_cache_artifact_failures())
 failures.extend(gitignore_temp_artifact_failures())
 failures.extend(gitignore_test_report_artifact_failures())
 failures.extend(gitignore_security_scan_report_artifact_failures())
+failures.extend(gitignore_sbom_inventory_artifact_failures())
 failures.extend(gitignore_notebook_artifact_failures())
 failures.extend(gitignore_doc_build_artifact_failures())
 failures.extend(gitignore_runtime_artifact_failures())
@@ -8605,6 +8861,7 @@ failures.extend(tracked_screen_capture_file_failures())
 failures.extend(tracked_media_capture_file_failures())
 failures.extend(tracked_test_report_artifact_file_failures())
 failures.extend(tracked_security_scan_report_artifact_file_failures())
+failures.extend(tracked_sbom_inventory_artifact_file_failures())
 failures.extend(tracked_notebook_artifact_file_failures())
 failures.extend(tracked_doc_build_artifact_file_failures())
 failures.extend(tracked_symlink_failures())
