@@ -2699,6 +2699,16 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "Go test runner report exports such as `gotestsum.json`, `gotestsum-report.xml`, `go-test-report.json`, and `go-test-results.xml` as local test report artifacts",
+        "launch checklist Go test report artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root `.gitignore` coverage for generated Go test report files",
+        "launch checklist Go test report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
         "Allure report/result directories as local test report artifacts",
         "launch checklist Allure test report artifact risk-scan scope",
     )
@@ -2896,6 +2906,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "NUnit XML report outputs (`nunit.xml`, `*.nunit.xml`, `TestResult.xml`, `TestResult-*.xml`)",
         "launch evidence NUnit XML test report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "Go test runner report exports (`gotestsum.json`, `gotestsum-report.xml`, `go-test-report.json`, `go-test-results.xml`)",
+        "launch evidence Go test report artifact examples",
     )
     assert_contains(
         evidence_text,

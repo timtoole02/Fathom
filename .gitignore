@@ -849,6 +849,13 @@ vitest-report-*.xml
 vitest-results.json
 lcov.info
 *.lcov
+gotestsum.json
+gotestsum-report.json
+gotestsum-report.xml
+go-test-report.json
+go-test-report.xml
+go-test-results.json
+go-test-results.xml
 junit.xml
 junit-results.xml
 *.junit.xml
