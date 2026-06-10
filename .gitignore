@@ -1004,6 +1004,18 @@ tarpaulin-report.json
 .nbhistory
 
 # Local documentation build artifacts
+/api-docs-generated/
+/openapi-generated/
+/openapi-generator/
+/redoc-static/
+/swagger-ui/
+/swagger-ui-dist/
+**/api-docs-generated/
+**/openapi-generated/
+**/openapi-generator/
+**/redoc-static/
+**/swagger-ui/
+**/swagger-ui-dist/
 *.aux
 *.bbl
 *.blg
@@ -1011,6 +1023,15 @@ tarpaulin-report.json
 *.fls
 *.synctex.gz
 _minted-*/
+openapi-bundle.html
+openapi-bundle.json
+openapi-bundle.yaml
+openapi-generated.html
+openapi-generated.json
+openapi-generated.yaml
+redoc-static.html
+swagger-ui-bundle.html
+swagger-ui.html
 
 # Local editor history artifacts
 .history/

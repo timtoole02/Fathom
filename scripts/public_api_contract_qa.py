@@ -3474,6 +3474,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "generated API documentation exports such as `swagger-ui/`, `swagger-ui-dist/`, `redoc-static/`, `openapi-generated/`, `api-docs-generated/`, `swagger-ui.html`, `redoc-static.html`, and `openapi-bundle.json`",
+        "launch checklist generated API documentation artifact examples",
+    )
+    assert_contains(
+        launch_text,
         "root and nested `.gitignore` coverage for local documentation build artifacts",
         "launch checklist documentation build artifact ignore scope",
     )
@@ -3481,6 +3486,11 @@ def assert_boundary_docs() -> None:
         launch_text,
         "It intentionally does not block all PDFs",
         "launch checklist documentation PDF source allowance",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth API specification/configuration files such as `openapi.yaml`, `openapi.json`, `.redocly.yaml`, `redocly.yaml`, `openapitools.json`, and `openapi-generator-config.*`",
+        "launch checklist API documentation source allowance",
     )
     assert_contains(
         evidence_text,
@@ -3519,13 +3529,23 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
-        "LaTeX/Pandoc-adjacent build byproducts such as `*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`, and `_minted-*` caches",
+        "LaTeX/Pandoc-adjacent build byproducts such as `*.aux`, `*.bbl`, `*.blg`, `*.fdb_latexmk`, `*.fls`, `*.synctex.gz`, `_minted-*` caches, and generated API documentation exports",
         "launch evidence documentation build artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "`swagger-ui/`, `swagger-ui-dist/`, `redoc-static/`, `openapi-generated/`, `api-docs-generated/`, `swagger-ui.html`, `redoc-static.html`, and `openapi-bundle.json`",
+        "launch evidence generated API documentation artifact examples",
     )
     assert_contains(
         evidence_text,
         "missing root and nested `.gitignore` coverage for local documentation build artifacts",
         "launch evidence documentation build artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth API specification/configuration files such as `openapi.yaml`, `openapi.json`, `.redocly.yaml`, `redocly.yaml`, `openapitools.json`, and `openapi-generator-config.*`",
+        "launch evidence API documentation source allowance",
     )
     assert_contains(
         launch_text,

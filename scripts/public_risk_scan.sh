@@ -1519,6 +1519,18 @@ required_notebook_artifact_gitignore_patterns = {
     ".nbhistory",
 }
 required_doc_build_artifact_gitignore_patterns = {
+    "/api-docs-generated/",
+    "/openapi-generated/",
+    "/openapi-generator/",
+    "/redoc-static/",
+    "/swagger-ui/",
+    "/swagger-ui-dist/",
+    "**/api-docs-generated/",
+    "**/openapi-generated/",
+    "**/openapi-generator/",
+    "**/redoc-static/",
+    "**/swagger-ui/",
+    "**/swagger-ui-dist/",
     "_minted-*/",
     "*.aux",
     "*.bbl",
@@ -1526,6 +1538,15 @@ required_doc_build_artifact_gitignore_patterns = {
     "*.fdb_latexmk",
     "*.fls",
     "*.synctex.gz",
+    "openapi-bundle.html",
+    "openapi-bundle.json",
+    "openapi-bundle.yaml",
+    "openapi-generated.html",
+    "openapi-generated.json",
+    "openapi-generated.yaml",
+    "redoc-static.html",
+    "swagger-ui-bundle.html",
+    "swagger-ui.html",
 }
 required_runtime_artifact_gitignore_patterns = {
     "*.db",
@@ -2625,6 +2646,25 @@ blocked_tracked_doc_build_artifact_suffixes = {
     ".fdb_latexmk",
     ".fls",
     ".synctex.gz",
+}
+blocked_tracked_doc_build_artifact_dirs = {
+    "api-docs-generated",
+    "openapi-generated",
+    "openapi-generator",
+    "redoc-static",
+    "swagger-ui",
+    "swagger-ui-dist",
+}
+blocked_tracked_doc_build_artifact_filenames = {
+    "openapi-bundle.html",
+    "openapi-bundle.json",
+    "openapi-bundle.yaml",
+    "openapi-generated.html",
+    "openapi-generated.json",
+    "openapi-generated.yaml",
+    "redoc-static.html",
+    "swagger-ui-bundle.html",
+    "swagger-ui.html",
 }
 tracked_symlink_mode = "120000"
 dependency_lockfile_names = {
@@ -4741,6 +4781,12 @@ def tracked_doc_build_artifact_file_failures(tracked_paths=None):
         path = pathlib.PurePosixPath(rel)
         lower_name = path.name.lower()
         if any(part.startswith("_minted-") for part in path.parts):
+            failures.append(f"{rel}: local documentation build artifacts must not be tracked for public launch")
+            continue
+        if any(part in blocked_tracked_doc_build_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local documentation build artifacts must not be tracked for public launch")
+            continue
+        if lower_name in blocked_tracked_doc_build_artifact_filenames:
             failures.append(f"{rel}: local documentation build artifacts must not be tracked for public launch")
             continue
         if any(lower_name.endswith(suffix) for suffix in blocked_tracked_doc_build_artifact_suffixes):
@@ -7249,14 +7295,24 @@ def self_test():
     if gitignore_doc_build_artifact_failures(allowed_doc_build_artifact_gitignore):
         raise AssertionError("public risk self-test rejected complete local documentation build artifact ignore patterns")
     doc_build_artifact_gitignore_failures = gitignore_doc_build_artifact_failures(
-        allowed_doc_build_artifact_gitignore.replace("*.fdb_latexmk\n", "")
+        allowed_doc_build_artifact_gitignore.replace("redoc-static.html\n", "")
     )
     if doc_build_artifact_gitignore_failures != [
-        ".gitignore: missing local documentation build artifact ignore patterns: *.fdb_latexmk"
+        ".gitignore: missing local documentation build artifact ignore patterns: redoc-static.html"
     ]:
         raise AssertionError("public risk self-test did not reject missing local documentation build artifact ignore patterns")
     doc_build_artifact_failures = tracked_doc_build_artifact_file_failures(
         tracked_paths=[
+            "docs/swagger-ui/index.html",
+            "docs/redoc-static/index.html",
+            "docs/api/openapi-generated/public-contract.html",
+            "docs/api/api-docs-generated/public-contract/index.html",
+            "sdk/openapi-generator/README.md",
+            "swagger-ui.html",
+            "swagger-ui-bundle.html",
+            "redoc-static.html",
+            "openapi-bundle.json",
+            "openapi-generated.yaml",
             "docs/paper.aux",
             "docs/paper.bbl",
             "docs/paper.blg",
@@ -7265,10 +7321,26 @@ def self_test():
             "docs/paper.synctex.gz",
             "docs/_minted-paper/default.pygstyle",
             "docs/paper.tex",
+            "docs/api/openapi.yaml",
+            "docs/api/openapi.json",
+            ".redocly.yaml",
+            "redocly.yaml",
+            "openapitools.json",
+            "openapi-generator-config.yaml",
             "docs/public-launch-checklist.md",
         ],
     )
     if doc_build_artifact_failures != [
+        "docs/swagger-ui/index.html: local documentation build artifacts must not be tracked for public launch",
+        "docs/redoc-static/index.html: local documentation build artifacts must not be tracked for public launch",
+        "docs/api/openapi-generated/public-contract.html: local documentation build artifacts must not be tracked for public launch",
+        "docs/api/api-docs-generated/public-contract/index.html: local documentation build artifacts must not be tracked for public launch",
+        "sdk/openapi-generator/README.md: local documentation build artifacts must not be tracked for public launch",
+        "swagger-ui.html: local documentation build artifacts must not be tracked for public launch",
+        "swagger-ui-bundle.html: local documentation build artifacts must not be tracked for public launch",
+        "redoc-static.html: local documentation build artifacts must not be tracked for public launch",
+        "openapi-bundle.json: local documentation build artifacts must not be tracked for public launch",
+        "openapi-generated.yaml: local documentation build artifacts must not be tracked for public launch",
         "docs/paper.aux: local documentation build artifacts must not be tracked for public launch",
         "docs/paper.bbl: local documentation build artifacts must not be tracked for public launch",
         "docs/paper.blg: local documentation build artifacts must not be tracked for public launch",
