@@ -120,6 +120,8 @@ It also blocks tracked Stylelint report outputs such as `stylelint-report/`, `st
 
 It also blocks tracked Biome report outputs such as `biome-report/`, `biome-reports/`, `biome-report.html`, `biome-report.json`, `biome-report.xml`, `biome-results.json`, and timestamped `biome-report-*` or `biome-results-*` files, with matching root and nested `.gitignore` coverage for generated lint/formatter report artifacts. It does not treat source-of-truth Biome configuration such as `biome.json` or `biome.jsonc` as local report artifacts.
 
+It also blocks tracked Markdown/prose lint report outputs such as `markdownlint-report/`, `markdownlint-reports/`, `markdownlint-junit.xml`, `markdownlint-report.json`, `markdownlint-results.xml`, `remark-report/`, `remark-reports/`, `remark-junit.xml`, `remark-report.json`, `remark-results.xml`, `proselint-report/`, `proselint-reports/`, `proselint-junit.xml`, `proselint-report.json`, and `proselint-results.xml`, with matching root and nested `.gitignore` coverage for generated documentation lint report artifacts. It does not treat source-of-truth Markdown/prose lint configuration such as `.markdownlint.*`, `.remarkrc`, `remark.config.*`, or `.proselintrc` as local report artifacts.
+
 It also blocks tracked Watchman local state cookies such as `.watchman-cookie` and `.watchman-cookie-*`, with matching root and nested `.gitignore` coverage through the local cache artifact guard. It does not treat source-of-truth Watchman configuration such as `.watchmanconfig` as a local cache artifact.
 
 It also blocks tracked local `.cache/` directories at any tree depth, with matching root and nested `.gitignore` coverage through the local cache artifact guard.

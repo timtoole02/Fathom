@@ -1399,6 +1399,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked Markdown/prose lint report outputs such as `markdownlint-report/`, `markdownlint-reports/`, `markdownlint-junit.xml`, `markdownlint-report.json`, `markdownlint-results.xml`, `remark-report/`, `remark-reports/`, `remark-junit.xml`, `remark-report.json`, `remark-results.xml`, `proselint-report/`, `proselint-reports/`, `proselint-junit.xml`, `proselint-report.json`, and `proselint-results.xml`",
+        "launch checklist Markdown/prose lint report artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for generated documentation lint report artifacts",
+        "launch checklist Markdown/prose lint report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Markdown/prose lint configuration such as `.markdownlint.*`, `.remarkrc`, `remark.config.*`, or `.proselintrc`",
+        "launch checklist Markdown/prose lint config allowance",
+    )
+    assert_contains(
+        launch_text,
         "Deno local cache artifacts such as `.deno/` and `deno-dir/`",
         "launch checklist Deno artifact scope",
     )
@@ -2411,6 +2426,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserves source-of-truth Biome configuration such as `biome.json` and `biome.jsonc`",
         "launch evidence Biome config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Markdown/prose lint report artifact guard rejects tracked local documentation lint report outputs such as `markdownlint-report/`, `markdownlint-reports/`, `markdownlint-junit.xml`, `markdownlint-report.json`, `markdownlint-results.xml`, `remark-report/`, `remark-reports/`, `remark-junit.xml`, `remark-report.json`, `remark-results.xml`, `proselint-report/`, `proselint-reports/`, `proselint-junit.xml`, `proselint-report.json`, and `proselint-results.xml`",
+        "launch evidence Markdown/prose lint report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root and nested `.gitignore` coverage for generated Markdown/prose lint reports",
+        "launch evidence Markdown/prose lint report artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth Markdown/prose lint configuration such as `.markdownlint.*`, `.remarkrc`, `remark.config.*`, and `.proselintrc`",
+        "launch evidence Markdown/prose lint config allowance",
     )
     assert_contains(
         launch_text,
