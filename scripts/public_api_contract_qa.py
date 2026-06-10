@@ -2303,6 +2303,26 @@ def assert_boundary_docs() -> None:
         "launch evidence Python static-analysis report config allowance",
     )
     assert_contains(
+        launch_text,
+        "TypeScript type-check report outputs such as `tsc-report/`, `tsc-report.txt`, `typecheck-report/`, `typecheck-results.json`, `typescript-report.xml`, and timestamped `tsc-report-*`, `typecheck-results-*`, or `typescript-results-*` files",
+        "launch checklist TypeScript type-check report artifact examples",
+    )
+    assert_contains(
+        launch_text,
+        "preserving source-of-truth TypeScript project configuration such as `tsconfig.json`, `tsconfig.*.json`, frontend package manifests, and JavaScript/TypeScript source files",
+        "launch checklist TypeScript type-check report config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "TypeScript type-check report artifact guard for `tsc-report/`, `tsc-report.txt`, `typecheck-report/`, `typecheck-results.json`, `typescript-report.xml`, and timestamped `tsc-report-*`, `typecheck-results-*`, or `typescript-results-*` files",
+        "launch evidence TypeScript type-check report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth TypeScript project configuration such as `tsconfig.json`, `tsconfig.*.json`, frontend package manifests, and JavaScript/TypeScript source files",
+        "launch evidence TypeScript type-check report config allowance",
+    )
+    assert_contains(
         evidence_text,
         "Python cache/build artifact guard",
         "launch evidence Python artifact risk-scan scope",
