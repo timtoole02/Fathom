@@ -475,6 +475,8 @@ lua_modules/
 /jest-stare/
 /eslint-report/
 /eslint-reports/
+/stylelint-report/
+/stylelint-reports/
 /tap-report/
 /tap-reports/
 /vitest-report/
@@ -496,6 +498,8 @@ lua_modules/
 **/jest-stare/
 **/eslint-report/
 **/eslint-reports/
+**/stylelint-report/
+**/stylelint-reports/
 **/tap-report/
 **/tap-reports/
 **/vitest-report/
@@ -613,6 +617,17 @@ eslint-results.json
 eslint-results.xml
 eslint-results-*.json
 eslint-results-*.xml
+stylelint-junit.xml
+stylelint-report.html
+stylelint-report.json
+stylelint-report.xml
+stylelint-report-*.html
+stylelint-report-*.json
+stylelint-report-*.xml
+stylelint-results.json
+stylelint-results.xml
+stylelint-results-*.json
+stylelint-results-*.xml
 vitest-junit.xml
 vitest-report.html
 vitest-report.json

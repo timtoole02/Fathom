@@ -1369,6 +1369,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked Stylelint report outputs such as `stylelint-report/`, `stylelint-reports/`, `stylelint-junit.xml`, `stylelint-report.json`, and `stylelint-results.xml`",
+        "launch checklist Stylelint report artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for generated lint report artifacts",
+        "launch checklist Stylelint report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth Stylelint configuration such as `stylelint.config.*` or `.stylelintrc*`",
+        "launch checklist Stylelint config allowance",
+    )
+    assert_contains(
+        launch_text,
         "Deno local cache artifacts such as `.deno/` and `deno-dir/`",
         "launch checklist Deno artifact scope",
     )
@@ -2351,6 +2366,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserves source-of-truth ESLint configuration such as `eslint.config.*` and `.eslintrc.*`",
         "launch evidence ESLint config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Stylelint report artifact guard rejects tracked local lint report outputs such as `stylelint-report/`, `stylelint-reports/`, `stylelint-junit.xml`, `stylelint-report.json`, `stylelint-report.xml`, `stylelint-results.json`, and timestamped `stylelint-report-*` or `stylelint-results-*` files",
+        "launch evidence Stylelint report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root and nested `.gitignore` coverage for generated Stylelint reports",
+        "launch evidence Stylelint report artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth Stylelint configuration such as `stylelint.config.*` and `.stylelintrc*`",
+        "launch evidence Stylelint config allowance",
     )
     assert_contains(
         launch_text,
