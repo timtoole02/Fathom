@@ -1354,6 +1354,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "tracked ESLint report outputs such as `eslint-report/`, `eslint-reports/`, `eslint-junit.xml`, `eslint-report.json`, and `eslint-results.xml`",
+        "launch checklist ESLint report artifact scope",
+    )
+    assert_contains(
+        launch_text,
+        "matching root and nested `.gitignore` coverage for generated lint report artifacts",
+        "launch checklist ESLint report artifact ignore scope",
+    )
+    assert_contains(
+        launch_text,
+        "source-of-truth ESLint configuration such as `eslint.config.*` or `.eslintrc.*`",
+        "launch checklist ESLint config allowance",
+    )
+    assert_contains(
+        launch_text,
         "Deno local cache artifacts such as `.deno/` and `deno-dir/`",
         "launch checklist Deno artifact scope",
     )
@@ -2321,6 +2336,21 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "preserves source-of-truth Lighthouse config files such as `.lighthouserc.*`",
         "launch evidence Lighthouse config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "ESLint report artifact guard rejects tracked local lint report outputs such as `eslint-report/`, `eslint-reports/`, `eslint-junit.xml`, `eslint-report.json`, `eslint-report.xml`, `eslint-results.json`, and timestamped `eslint-report-*` or `eslint-results-*` files",
+        "launch evidence ESLint report artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "rejects missing root and nested `.gitignore` coverage for generated ESLint reports",
+        "launch evidence ESLint report artifact ignore examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserves source-of-truth ESLint configuration such as `eslint.config.*` and `.eslintrc.*`",
+        "launch evidence ESLint config allowance",
     )
     assert_contains(
         launch_text,

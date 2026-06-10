@@ -473,6 +473,8 @@ lua_modules/
 /jmeter-results/
 /jest-html-reporters-attach/
 /jest-stare/
+/eslint-report/
+/eslint-reports/
 /tap-report/
 /tap-reports/
 /vitest-report/
@@ -492,6 +494,8 @@ lua_modules/
 **/jmeter-results/
 **/jest-html-reporters-attach/
 **/jest-stare/
+**/eslint-report/
+**/eslint-reports/
 **/tap-report/
 **/tap-reports/
 **/vitest-report/
@@ -598,6 +602,17 @@ jacoco.csv
 jest-junit.xml
 jest-results.json
 jest_html_reporters.html
+eslint-junit.xml
+eslint-report.html
+eslint-report.json
+eslint-report.xml
+eslint-report-*.html
+eslint-report-*.json
+eslint-report-*.xml
+eslint-results.json
+eslint-results.xml
+eslint-results-*.json
+eslint-results-*.xml
 vitest-junit.xml
 vitest-report.html
 vitest-report.json
