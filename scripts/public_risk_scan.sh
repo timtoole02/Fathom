@@ -656,7 +656,9 @@ required_diagnostic_artifact_gitignore_patterns = {
 }
 required_code_quality_artifact_gitignore_patterns = {
     "/.scannerwork/",
+    "/.semgrep/",
     ".scannerwork/",
+    ".semgrep/",
     "/.sonar/",
     ".sonar/",
 }
@@ -1208,6 +1210,7 @@ blocked_tracked_diagnostic_artifact_suffixes = {
 }
 blocked_tracked_code_quality_artifact_dirs = {
     ".scannerwork",
+    ".semgrep",
     ".sonar",
 }
 blocked_tracked_python_artifact_dirs = {
@@ -4620,6 +4623,10 @@ def self_test():
             "services/api/.scannerwork/report-task.txt",
             ".sonar/cache/_tmp/scanner.zip",
             "frontend/.sonar/cache/index.txt",
+            ".semgrep/cache/rules.json",
+            "frontend/.semgrep/cache/results.db",
+            ".semgrep.yml",
+            "semgrep.yml",
             "sonar-project.properties",
             "docs/research/runtime-safety-policy.md",
         ],
@@ -4630,6 +4637,8 @@ def self_test():
         "services/api/.scannerwork/report-task.txt: local code-quality scanner artifacts must not be tracked for public launch",
         ".sonar/cache/_tmp/scanner.zip: local code-quality scanner artifacts must not be tracked for public launch",
         "frontend/.sonar/cache/index.txt: local code-quality scanner artifacts must not be tracked for public launch",
+        ".semgrep/cache/rules.json: local code-quality scanner artifacts must not be tracked for public launch",
+        "frontend/.semgrep/cache/results.db: local code-quality scanner artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local code-quality scanner artifacts")
     python_artifact_failures = tracked_python_artifact_file_failures(

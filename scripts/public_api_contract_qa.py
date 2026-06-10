@@ -2198,6 +2198,26 @@ def assert_boundary_docs() -> None:
         "launch evidence code-quality scanner config allowance",
     )
     assert_contains(
+        launch_text,
+        "Semgrep local cache/state directories such as `.semgrep/`",
+        "launch checklist Semgrep code-quality scanner artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "does not treat source-of-truth Semgrep configuration such as `.semgrep.yml` or `semgrep.yml` as a local artifact",
+        "launch checklist Semgrep config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "Semgrep local cache/state directories (`.semgrep/`) as local code-quality scanner artifacts",
+        "launch evidence Semgrep code-quality scanner artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth Semgrep configuration such as `.semgrep.yml` and `semgrep.yml`",
+        "launch evidence Semgrep config allowance",
+    )
+    assert_contains(
         evidence_text,
         "Python cache/build artifact guard",
         "launch evidence Python artifact risk-scan scope",

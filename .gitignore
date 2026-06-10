@@ -222,6 +222,8 @@ summary.local.json
 .scannerwork/
 /.sonar/
 .sonar/
+/.semgrep/
+.semgrep/
 
 # Local temporary/scratch artifacts
 /tmp/
