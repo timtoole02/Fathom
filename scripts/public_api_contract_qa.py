@@ -2178,6 +2178,26 @@ def assert_boundary_docs() -> None:
         "launch evidence diagnostic artifact ignore examples",
     )
     assert_contains(
+        launch_text,
+        "SonarQube/SonarScanner local analysis outputs such as `.scannerwork/` and `.sonar/`",
+        "launch checklist code-quality scanner artifact risk-scan scope",
+    )
+    assert_contains(
+        launch_text,
+        "does not treat source-of-truth scanner configuration such as `sonar-project.properties` as a local artifact",
+        "launch checklist code-quality scanner config allowance",
+    )
+    assert_contains(
+        evidence_text,
+        "SonarQube/SonarScanner local analysis outputs (`.scannerwork/`, `.sonar/`) as local code-quality scanner artifacts",
+        "launch evidence code-quality scanner artifact examples",
+    )
+    assert_contains(
+        evidence_text,
+        "preserving source-of-truth scanner configuration such as `sonar-project.properties`",
+        "launch evidence code-quality scanner config allowance",
+    )
+    assert_contains(
         evidence_text,
         "Python cache/build artifact guard",
         "launch evidence Python artifact risk-scan scope",

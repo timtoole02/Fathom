@@ -218,6 +218,10 @@ summary.local.json
 *.ips
 *.sarif
 *.sarif.json
+/.scannerwork/
+.scannerwork/
+/.sonar/
+.sonar/
 
 # Local temporary/scratch artifacts
 /tmp/

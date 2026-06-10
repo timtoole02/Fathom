@@ -654,6 +654,12 @@ required_diagnostic_artifact_gitignore_patterns = {
     "*.sarif.json",
     "*.trace",
 }
+required_code_quality_artifact_gitignore_patterns = {
+    "/.scannerwork/",
+    ".scannerwork/",
+    "/.sonar/",
+    ".sonar/",
+}
 required_python_artifact_gitignore_patterns = {
     "__pycache__/",
     ".dmypy.json",
@@ -1199,6 +1205,10 @@ blocked_tracked_diagnostic_artifact_suffixes = {
     ".sarif",
     ".sarif.json",
     ".trace",
+}
+blocked_tracked_code_quality_artifact_dirs = {
+    ".scannerwork",
+    ".sonar",
 }
 blocked_tracked_python_artifact_dirs = {
     "__pycache__",
@@ -2716,6 +2726,22 @@ def gitignore_diagnostic_artifact_failures(gitignore_text=None):
         return [f".gitignore: missing local log/trace/profiling/debug-output artifact ignore patterns: {', '.join(missing)}"]
     return []
 
+def gitignore_code_quality_artifact_failures(gitignore_text=None):
+    if gitignore_text is None:
+        try:
+            gitignore_text = pathlib.Path(".gitignore").read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return [".gitignore: missing local code-quality scanner artifact ignore patterns"]
+    active_patterns = {
+        line.strip()
+        for line in gitignore_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    missing = sorted(required_code_quality_artifact_gitignore_patterns - active_patterns)
+    if missing:
+        return [f".gitignore: missing local code-quality scanner artifact ignore patterns: {', '.join(missing)}"]
+    return []
+
 def gitignore_python_artifact_failures(gitignore_text=None):
     if gitignore_text is None:
         try:
@@ -3194,6 +3220,16 @@ def tracked_diagnostic_artifact_file_failures(tracked_paths=None):
             continue
         if any(rel.endswith(suffix) for suffix in blocked_tracked_diagnostic_artifact_suffixes):
             failures.append(f"{rel}: local log/trace/profiling/debug-output artifacts must not be tracked for public launch")
+    return failures
+
+def tracked_code_quality_artifact_file_failures(tracked_paths=None):
+    if tracked_paths is None:
+        tracked_paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    failures = []
+    for rel in tracked_paths:
+        path = pathlib.PurePosixPath(rel)
+        if any(part in blocked_tracked_code_quality_artifact_dirs for part in path.parts):
+            failures.append(f"{rel}: local code-quality scanner artifacts must not be tracked for public launch")
     return failures
 
 def tracked_python_artifact_file_failures(tracked_paths=None):
@@ -4567,6 +4603,35 @@ def self_test():
         "reports/semgrep.sarif.json: local log/trace/profiling/debug-output artifacts must not be tracked for public launch",
     ]:
         raise AssertionError("public risk self-test did not reject tracked local log/trace/profiling/debug-output artifacts")
+    allowed_code_quality_artifact_gitignore = "\n".join(sorted(required_code_quality_artifact_gitignore_patterns)) + "\n"
+    if gitignore_code_quality_artifact_failures(allowed_code_quality_artifact_gitignore):
+        raise AssertionError("public risk self-test rejected complete local code-quality scanner artifact ignore patterns")
+    code_quality_artifact_gitignore_failures = gitignore_code_quality_artifact_failures(
+        allowed_code_quality_artifact_gitignore.replace(".scannerwork/\n", "", 1)
+    )
+    if code_quality_artifact_gitignore_failures != [
+        ".gitignore: missing local code-quality scanner artifact ignore patterns: .scannerwork/"
+    ]:
+        raise AssertionError("public risk self-test did not reject missing local code-quality scanner artifact ignore patterns")
+    code_quality_artifact_failures = tracked_code_quality_artifact_file_failures(
+        tracked_paths=[
+            ".scannerwork/report-task.txt",
+            ".scannerwork/scanner-report/component-1.pb",
+            "services/api/.scannerwork/report-task.txt",
+            ".sonar/cache/_tmp/scanner.zip",
+            "frontend/.sonar/cache/index.txt",
+            "sonar-project.properties",
+            "docs/research/runtime-safety-policy.md",
+        ],
+    )
+    if code_quality_artifact_failures != [
+        ".scannerwork/report-task.txt: local code-quality scanner artifacts must not be tracked for public launch",
+        ".scannerwork/scanner-report/component-1.pb: local code-quality scanner artifacts must not be tracked for public launch",
+        "services/api/.scannerwork/report-task.txt: local code-quality scanner artifacts must not be tracked for public launch",
+        ".sonar/cache/_tmp/scanner.zip: local code-quality scanner artifacts must not be tracked for public launch",
+        "frontend/.sonar/cache/index.txt: local code-quality scanner artifacts must not be tracked for public launch",
+    ]:
+        raise AssertionError("public risk self-test did not reject tracked local code-quality scanner artifacts")
     python_artifact_failures = tracked_python_artifact_file_failures(
         tracked_paths=[
             "scripts/__pycache__/public_api_contract_qa.cpython-312.pyc",
@@ -7068,6 +7133,7 @@ failures.extend(gitignore_scons_build_artifact_failures())
 failures.extend(gitignore_package_artifact_failures())
 failures.extend(gitignore_backup_artifact_failures())
 failures.extend(gitignore_diagnostic_artifact_failures())
+failures.extend(gitignore_code_quality_artifact_failures())
 failures.extend(gitignore_python_artifact_failures())
 failures.extend(gitignore_python_env_artifact_failures())
 failures.extend(gitignore_python_benchmark_artifact_failures())
@@ -7098,6 +7164,7 @@ failures.extend(gitignore_doc_build_artifact_failures())
 failures.extend(gitignore_runtime_artifact_failures())
 failures.extend(tracked_runtime_artifact_file_failures())
 failures.extend(tracked_diagnostic_artifact_file_failures())
+failures.extend(tracked_code_quality_artifact_file_failures())
 failures.extend(tracked_python_artifact_file_failures())
 failures.extend(tracked_python_env_artifact_file_failures())
 failures.extend(tracked_python_benchmark_artifact_file_failures())
