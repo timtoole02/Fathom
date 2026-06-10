@@ -2519,7 +2519,7 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "security/dependency scan report outputs such as `snyk-report/`, `snyk-reports/`, `npm-audit-report/`, `pnpm-audit-report/`, `yarn-audit-report/`, `osv-scanner-report/`, `trivy-report/`, `grype-report/`, `dependency-check-report/`, `snyk-report.json`, `npm-audit.json`, `osv-scanner-results.json`, `trivy-results.json`, `grype-results.txt`, and `dependency-check-report.html`",
+        "security/dependency scan report outputs such as `snyk-report/`, `snyk-reports/`, `cargo-audit-report/`, `cargo-deny-report/`, `npm-audit-report/`, `pnpm-audit-report/`, `yarn-audit-report/`, `osv-scanner-report/`, `trivy-report/`, `grype-report/`, `dependency-check-report/`, `snyk-report.json`, `cargo-audit-results.xml`, `cargo-deny-results.txt`, `npm-audit.json`, `osv-scanner-results.json`, `trivy-results.json`, `grype-results.txt`, and `dependency-check-report.html`",
         "launch checklist security/dependency scan report artifact examples",
     )
     assert_contains(
@@ -2529,17 +2529,17 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
-        "source-of-truth dependency lockfiles or scanner configuration such as `Cargo.lock`, `package-lock.json`, `.snyk`, `osv-scanner.toml`, `trivy.yaml`, `grype.yaml`, or `dependency-check.properties`",
+        "source-of-truth dependency lockfiles or scanner configuration such as `Cargo.lock`, `package-lock.json`, `.snyk`, `deny.toml`, `cargo-deny.toml`, `osv-scanner.toml`, `trivy.yaml`, `grype.yaml`, or `dependency-check.properties`",
         "launch checklist security/dependency scan config allowance",
     )
     assert_contains(
         evidence_text,
-        "security/dependency scan report artifact guard for generated Snyk, npm audit, pnpm audit, Yarn audit, OSV Scanner, Trivy, Grype, and OWASP Dependency-Check outputs",
+        "security/dependency scan report artifact guard for generated Snyk, Cargo Audit, Cargo Deny, npm audit, pnpm audit, Yarn audit, OSV Scanner, Trivy, Grype, and OWASP Dependency-Check outputs",
         "launch evidence security/dependency scan report artifact scope",
     )
     assert_contains(
         evidence_text,
-        "with matching root and nested `.gitignore` coverage while preserving source-of-truth lockfiles and scanner configuration such as `Cargo.lock`, `package-lock.json`, `.snyk`, `osv-scanner.toml`, `trivy.yaml`, `grype.yaml`, and `dependency-check.properties`",
+        "with matching root and nested `.gitignore` coverage while preserving source-of-truth lockfiles and scanner configuration such as `Cargo.lock`, `package-lock.json`, `.snyk`, `deny.toml`, `cargo-deny.toml`, `osv-scanner.toml`, `trivy.yaml`, `grype.yaml`, and `dependency-check.properties`",
         "launch evidence security/dependency scan report artifact ignore and config allowance",
     )
     assert_contains(
