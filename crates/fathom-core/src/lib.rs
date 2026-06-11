@@ -8022,6 +8022,7 @@ impl GgufBpeRegistry {
         })
     }
 
+    #[allow(dead_code)]
     fn encode_piece(&self, piece: &str) -> Result<Vec<u32>, GgufBpeError> {
         if piece.is_empty() {
             return Ok(Vec::new());
@@ -8064,6 +8065,7 @@ impl GgufBpeRegistry {
             .collect()
     }
 
+    #[allow(dead_code)]
     fn encode_pretokenized(&self, pieces: &[String]) -> Result<Vec<u32>, GgufBpeError> {
         let mut token_ids = Vec::new();
         for piece in pieces {
