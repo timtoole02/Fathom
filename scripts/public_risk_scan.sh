@@ -1149,6 +1149,7 @@ required_test_report_artifact_gitignore_patterns = {
     "/newman/",
     "/pa11y-report/",
     "/pa11y-reports/",
+    "/playwright/.auth/",
     "/robot-reports/",
     "/robot-results/",
     "/k6-report/",
@@ -1196,6 +1197,7 @@ required_test_report_artifact_gitignore_patterns = {
     "**/newman/",
     "**/pa11y-report/",
     "**/pa11y-reports/",
+    "**/playwright/.auth/",
     "**/robot-reports/",
     "**/robot-results/",
     "**/k6-report/",
@@ -4967,6 +4969,12 @@ def tracked_test_report_artifact_file_failures(tracked_paths=None):
         ):
             failures.append(f"{rel}: local browser-test artifacts must not be tracked for public launch")
             continue
+        if any(
+            tuple(path.parts[index : index + 2]) == ("playwright", ".auth")
+            for index in range(max(len(path.parts) - 1, 0))
+        ):
+            failures.append(f"{rel}: local browser-test auth artifacts must not be tracked for public launch")
+            continue
         if path.name in blocked_tracked_test_report_artifact_filenames:
             failures.append(f"{rel}: local test report artifacts must not be tracked for public launch")
             continue
@@ -6913,6 +6921,8 @@ def self_test():
             "services/api/cypress/screenshots/chat/refusal.png",
             "services/api/cypress/videos/chat/refusal.mp4",
             "services/api/cypress/downloads/public-contract-summary.json",
+            "playwright/.auth/user.json",
+            "frontend/playwright/.auth/admin.json",
             "test-results/junit.xml",
             "test-reports/backend.xml",
             "reports/public-risk/index.html",
@@ -7223,6 +7233,8 @@ def self_test():
         "services/api/cypress/screenshots/chat/refusal.png: local browser-test artifacts must not be tracked for public launch",
         "services/api/cypress/videos/chat/refusal.mp4: local browser-test artifacts must not be tracked for public launch",
         "services/api/cypress/downloads/public-contract-summary.json: local browser-test artifacts must not be tracked for public launch",
+        "playwright/.auth/user.json: local browser-test auth artifacts must not be tracked for public launch",
+        "frontend/playwright/.auth/admin.json: local browser-test auth artifacts must not be tracked for public launch",
         "test-results/junit.xml: local test report artifacts must not be tracked for public launch",
         "test-reports/backend.xml: local test report artifacts must not be tracked for public launch",
         "reports/public-risk/index.html: local test report artifacts must not be tracked for public launch",
