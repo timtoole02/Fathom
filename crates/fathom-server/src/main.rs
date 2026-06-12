@@ -5518,6 +5518,44 @@ mod catalog_tests {
     }
 
     #[tokio::test]
+    async fn v1_chat_refuses_unsupported_hf_chat_template_before_generation() {
+        let root = std::env::temp_dir().join(format!(
+            "fathom-server-unsupported-chat-template-{}",
+            Uuid::new_v4()
+        ));
+        tokio::fs::create_dir_all(&root).await.unwrap();
+        tokio::fs::write(root.join("tokenizer.json"), b"{}")
+            .await
+            .unwrap();
+        tokio::fs::write(
+            root.join("tokenizer_config.json"),
+            r#"{"chat_template":"{{ messages }}"}"#,
+        )
+        .await
+        .unwrap();
+
+        let mut model = test_model("unsupported-chat-template");
+        model.model_path = Some(root.to_string_lossy().to_string());
+        let state = test_state(vec![model], None);
+
+        let (status, Json(body)) = v1_chat_completions(
+            State(state),
+            Json(test_chat_request(Some("unsupported-chat-template"))),
+        )
+        .await;
+
+        assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
+        assert_v1_error_envelope(&body, "chat_template_not_supported");
+        assert_no_fake_chat_success(&body);
+        let message = body["error"]["message"].as_str().unwrap();
+        assert!(message.contains("chat_template_not_supported"));
+        assert!(message.contains("tokenizer_config.json"));
+        assert!(message.contains("only a small tested set"));
+
+        let _ = tokio::fs::remove_dir_all(root).await;
+    }
+
+    #[tokio::test]
     async fn v1_chat_sampling_validation_rejects_bad_temperature_before_generation() {
         let state = test_state(vec![test_model("local-gpt2")], None);
         let mut req = test_chat_request(Some("local-gpt2"));
