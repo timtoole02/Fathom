@@ -618,6 +618,11 @@ lua_modules/
 /cargo-audit-reports/
 /cargo-deny-report/
 /cargo-deny-reports/
+/codeql-database/
+/codeql-databases/
+/codeql-db/
+/codeql-dbs/
+/codeql-results/
 /npm-audit-report/
 /npm-audit-reports/
 /pnpm-audit-report/
@@ -638,6 +643,11 @@ lua_modules/
 **/cargo-audit-reports/
 **/cargo-deny-report/
 **/cargo-deny-reports/
+**/codeql-database/
+**/codeql-databases/
+**/codeql-db/
+**/codeql-dbs/
+**/codeql-results/
 **/npm-audit-report/
 **/npm-audit-reports/
 **/pnpm-audit-report/
@@ -686,6 +696,10 @@ cargo-deny-results.xml
 cargo-deny-results-*.json
 cargo-deny-results-*.txt
 cargo-deny-results-*.xml
+codeql-report.json
+codeql-report-*.json
+codeql-results.json
+codeql-results-*.json
 npm-audit.json
 npm-audit-report.json
 npm-audit-report-*.json
