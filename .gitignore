@@ -1397,6 +1397,10 @@ USER.md
 actions-runner/
 /_diag/
 _diag/
+/_temp/
+_temp/
+/_tool/
+_tool/
 /_work/
 _work/
 .credentials
