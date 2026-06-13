@@ -648,6 +648,26 @@ def run_self_check() -> None:
         else:
             raise AssertionError("markdown summary row consistency self-check did not fail")
 
+        missing_markdown_endpoint = root / "missing-markdown-endpoint"
+        write_sample(missing_markdown_endpoint, passed_sample())
+        first_endpoint = passed_sample()["endpoint_checks"][0]
+        (missing_markdown_endpoint / SUMMARY_MD).write_text(
+            (missing_markdown_endpoint / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace(
+                f"- {first_endpoint['method']} {first_endpoint['path']}: pass (synthetic-check)\n",
+                "",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(missing_markdown_endpoint)
+        except AssertionError as exc:
+            if "missing endpoint row" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown endpoint row consistency self-check did not fail")
+
         missing_markdown_status_code = root / "missing-markdown-status-code"
         write_sample(missing_markdown_status_code, passed_sample())
         (missing_markdown_status_code / SUMMARY_MD).write_text(
