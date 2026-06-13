@@ -160,6 +160,14 @@ NO_DOWNLOAD_REFUSAL_EVIDENCE_SUBJECT_PATTERN = (
     r"^(Promote GGUF refusal to public smoke|Standardize v1 unsupported endpoint refusals|"
     r"Standardize v1 malformed JSON refusals|Prove embeddings malformed JSON refusal)$"
 )
+PUBLIC_RISK_SCAN_HARDENING_SUBJECT_PATTERN = (
+    r"^(Guard .+ artifacts|Guard .+ report artifacts|Guard .+ test report artifacts|"
+    r"Guard .+ scan artifacts|Guard .+ scanner report artifacts|Guard .+ inventory artifacts|"
+    r"Guard .+ build artifacts|Guard .+ benchmark artifacts|Guard .+ coverage artifacts|"
+    r"Guard .+ coverage profile artifacts|Guard .+ coverage reports|"
+    r"Guard tracked credential config files|Guard tracked workspace instruction files|"
+    r"Guard tracked local runtime artifacts|Guard public risk scan .+)$"
+)
 ALLOWED_EXTRA_REFUSAL_MATRIX_ROWS = {
     "Production readiness, performance, quality, legal/license suitability",
     "Real external provider proxying",
@@ -751,7 +759,6 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 "scripts/ci_static_policy.py",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
-                "scripts/public_risk_scan.sh",
             ],
             cwd=ROOT,
             text=True,
@@ -779,6 +786,50 @@ def assert_latest_public_contract_qa_hardening_evidence(evidence_text: str) -> N
     if evidence_commit != latest_commit or evidence_subject != latest_subject:
         raise AssertionError(
             "launch evidence public-contract QA hardening commit is stale: "
+            f"expected `{latest_commit}` (`{latest_subject}`), found `{evidence_commit}` (`{evidence_subject}`)"
+        )
+
+
+def latest_public_risk_scan_hardening_commit() -> tuple[str, str]:
+    try:
+        output = subprocess.check_output(
+            [
+                "git",
+                "log",
+                "-1",
+                f"--grep={PUBLIC_RISK_SCAN_HARDENING_SUBJECT_PATTERN}",
+                "--extended-regexp",
+                "--format=%H%x00%s",
+                "--",
+                ".gitignore",
+                "scripts/public_risk_scan.sh",
+            ],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+    except subprocess.CalledProcessError as exc:
+        raise AssertionError("could not resolve latest public risk-scan hardening commit from local git history") from exc
+
+    if not output:
+        raise AssertionError("local git history has no recognized public risk-scan hardening commit")
+    commit, subject = output.split("\0", 1)
+    return commit, subject
+
+
+def assert_latest_public_risk_scan_hardening_evidence(evidence_text: str) -> None:
+    match = re.search(
+        r"^- Latest public risk-scan hardening commit: `([0-9a-f]{40})` \(`([^`]+)`\)$",
+        evidence_text,
+        re.MULTILINE,
+    )
+    if not match:
+        raise AssertionError("launch evidence latest public risk-scan hardening commit line is missing or malformed")
+
+    evidence_commit, evidence_subject = match.groups()
+    latest_commit, latest_subject = latest_public_risk_scan_hardening_commit()
+    if evidence_commit != latest_commit or evidence_subject != latest_subject:
+        raise AssertionError(
+            "launch evidence public risk-scan hardening commit is stale: "
             f"expected `{latest_commit}` (`{latest_subject}`), found `{evidence_commit}` (`{evidence_subject}`)"
         )
 
@@ -1842,6 +1893,7 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "e9195bc7462999284960f5631d3a74aa5391bffc", "launch evidence optional artifact QA CI commit")
     assert_latest_no_download_refusal_evidence(evidence_text)
     assert_latest_public_contract_qa_hardening_evidence(evidence_text)
+    assert_latest_public_risk_scan_hardening_evidence(evidence_text)
     assert_frontend_lockfile_evidence(evidence_text)
     assert_contains(evidence_text, "repository text-normalization metadata guard", "launch evidence text-normalization metadata scope")
     assert_contains(evidence_text, "root `.gitattributes` text-normalization metadata", "launch evidence text-normalization metadata proof")
