@@ -1881,6 +1881,16 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "backend acceptance artifact summaries reject local paths, secret markers, and request/payload text", "launch checklist backend acceptance artifact share-safety scope")
     assert_contains(
         launch_text,
+        "Keep `summary.local.json` private unless you have reviewed it",
+        "launch checklist backend acceptance local-path artifact privacy warning",
+    )
+    assert_contains(
+        launch_text,
+        "manually inspect logs/full payloads for local paths or request text",
+        "launch checklist backend acceptance manual artifact review warning",
+    )
+    assert_contains(
+        launch_text,
         "optional backend acceptance smoke itself remains networked",
         "launch checklist backend acceptance artifact QA non-runtime caveat",
     )
