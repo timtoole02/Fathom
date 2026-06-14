@@ -20,6 +20,13 @@ OPTIONAL_ACCEPTANCE_SMOKE_SCRIPTS = (
     "scripts/smollm2_optional_api_acceptance_smoke.sh",
     "scripts/qwen25_optional_api_acceptance_smoke.sh",
 )
+REQUIRED_ARTIFACT_QA_COMMANDS = (
+    "python3 scripts/public_contract_smoke_artifact_qa.py",
+    "python3 scripts/backend_acceptance_artifact_qa.py",
+    "python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
+    "python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py",
+    "python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+)
 WRITE_TOKEN_PERMISSION_PATTERN = re.compile(
     r"^\s*(?:"
     r"actions|attestations|checks|contents|deployments|discussions|id-token|"
@@ -72,6 +79,7 @@ def evaluate_ci_text(text: str) -> list[str]:
     saw_public_risk_scan_self_test = False
     saw_public_risk_scan = False
     saw_diff_check = False
+    saw_artifact_qa_commands = {command: False for command in REQUIRED_ARTIFACT_QA_COMMANDS}
     for line_number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
         if stripped in {"git diff --check", "run: git diff --check", "- run: git diff --check"}:
@@ -107,6 +115,9 @@ def evaluate_ci_text(text: str) -> list[str]:
             "- run: bash scripts/public_risk_scan.sh",
         }:
             saw_public_risk_scan = True
+        for command in saw_artifact_qa_commands:
+            if re.search(rf"\b{re.escape(command)}\b", stripped):
+                saw_artifact_qa_commands[command] = True
 
     if not saw_public_contract_smoke:
         failures.append("default CI must run the no-download public API contract smoke")
@@ -118,6 +129,9 @@ def evaluate_ci_text(text: str) -> list[str]:
         failures.append("default CI must run the public risk scan")
     if not saw_diff_check:
         failures.append("default CI must run git diff --check")
+    for command, saw_command in saw_artifact_qa_commands.items():
+        if not saw_command:
+            failures.append(f"default CI must run offline artifact QA: {command}")
 
     if re.search(r"FATHOM_ACCEPTANCE_KEEP_ARTIFACTS|FATHOM_ACCEPTANCE_PORT|backend_acceptance_smoke\.sh\s*$", text):
         failures.append("default CI must not invoke networked backend acceptance smoke")
@@ -157,6 +171,12 @@ jobs:
           bash -n scripts/backend_acceptance_smoke.sh
       - run: python3 scripts/ci_static_policy.py --self-test
       - run: git diff --check
+      - run: python3 scripts/public_contract_smoke_artifact_qa.py
+      - run: python3 scripts/backend_acceptance_artifact_qa.py
+      - run: |
+          python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py
+          python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py
+          python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py
       - run: bash scripts/public_risk_scan.sh --self-test
       - run: bash scripts/public_risk_scan.sh
       - run: echo done
@@ -182,6 +202,15 @@ jobs:
         "missing public risk scan self-test": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh",
         "missing public risk scan": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh --self-test",
         "missing diff check": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh --self-test\nrun: bash scripts/public_risk_scan.sh",
+        "missing public contract artifact QA": valid.replace(
+            "      - run: python3 scripts/public_contract_smoke_artifact_qa.py\n", ""
+        ),
+        "missing backend artifact QA": valid.replace(
+            "      - run: python3 scripts/backend_acceptance_artifact_qa.py\n", ""
+        ),
+        "missing optional artifact QA": valid.replace(
+            "          python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py\n", ""
+        ),
     }
     for label, text in cases.items():
         if not evaluate_ci_text(text):
