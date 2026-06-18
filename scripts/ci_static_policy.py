@@ -54,6 +54,11 @@ def top_level_permissions_block(text: str) -> list[str] | None:
 def evaluate_ci_text(text: str) -> list[str]:
     failures: list[str] = []
 
+    if re.search(r"(?m)^\s*-?\s*pull_request_target\s*:", text) or re.search(
+        r"(?m)^\s*on\s*:\s*\[[^\]]*\bpull_request_target\b", text
+    ):
+        failures.append("default CI must not use pull_request_target")
+
     permissions_block = top_level_permissions_block(text)
     if permissions_block is None:
         failures.append("default CI must set top-level permissions: contents: read")
@@ -89,6 +94,23 @@ def evaluate_ci_text(text: str) -> list[str]:
                     "default CI checkout must set persist-credentials: false, "
                     f"line {line_number}: {stripped}"
                 )
+        if re.match(r"uses:\s*actions/setup-node@v[0-9]+", stripped):
+            lookahead = "\n".join(text.splitlines()[line_number : line_number + 8])
+            if re.search(r"^\s*cache\s*:", lookahead, re.MULTILINE):
+                if not re.search(r"^\s*cache:\s*npm\s*(?:#.*)?$", lookahead, re.MULTILINE):
+                    failures.append(
+                        "default CI setup-node cache must use npm only, "
+                        f"line {line_number}: {stripped}"
+                    )
+                if not re.search(
+                    r"^\s*cache-dependency-path:\s*frontend/package-lock\.json\s*(?:#.*)?$",
+                    lookahead,
+                    re.MULTILINE,
+                ):
+                    failures.append(
+                        "default CI setup-node cache must be scoped to frontend/package-lock.json, "
+                        f"line {line_number}: {stripped}"
+                    )
         if stripped in {"git diff --check", "run: git diff --check", "- run: git diff --check"}:
             saw_diff_check = True
         if "scripts/backend_acceptance_smoke.sh" in line:
@@ -199,7 +221,12 @@ jobs:
         "read-all token permissions": "permissions: read-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
         "contents write token permission": "permissions:\n  contents: write\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
         "id-token write token permission": "permissions:\n  contents: read\n  id-token: write\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "privileged pull_request_target trigger": "permissions:\n  contents: read\non:\n  pull_request_target:\nrun: bash scripts/public_api_contract_smoke.sh",
+        "privileged pull_request_target list trigger": "permissions:\n  contents: read\non: [push, pull_request_target]\nrun: bash scripts/public_api_contract_smoke.sh",
         "checkout persisted credentials": "permissions:\n  contents: read\nuses: actions/checkout@v4\nrun: bash scripts/public_api_contract_smoke.sh",
+        "setup-node cache without dependency path": "permissions:\n  contents: read\nuses: actions/setup-node@v4\nwith:\n  cache: npm\nrun: bash scripts/public_api_contract_smoke.sh",
+        "setup-node broad dependency path": "permissions:\n  contents: read\nuses: actions/setup-node@v4\nwith:\n  cache: npm\n  cache-dependency-path: package-lock.json\nrun: bash scripts/public_api_contract_smoke.sh",
+        "setup-node non-npm cache": "permissions:\n  contents: read\nuses: actions/setup-node@v4\nwith:\n  cache: yarn\n  cache-dependency-path: frontend/package-lock.json\nrun: bash scripts/public_api_contract_smoke.sh",
         "onnx feature": "permissions:\n  contents: read\nrun: cargo test -q --features onnx-embeddings-ort\nrun: bash scripts/public_api_contract_smoke.sh",
         "networked acceptance": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/backend_acceptance_smoke.sh",
         "public contract artifacts": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nenv:\n  FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR: artifacts",
