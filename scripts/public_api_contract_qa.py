@@ -140,6 +140,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
     r"Guard public issue template privacy checks|Guard public issue template required fields|"
+    r"Guard public issue template routing metadata|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard CI checkout credential persistence|Guard CI Node cache scope|"
@@ -372,6 +373,45 @@ def read(path: Path) -> str:
 def assert_contains(text: str, needle: str, label: str) -> None:
     if needle not in text:
         raise AssertionError(f"{label} missing {needle!r}")
+
+
+def issue_template_header_value(template_text: str, key: str, label: str) -> str:
+    matches = re.findall(rf"(?m)^{re.escape(key)}:\s*(.+?)\s*$", template_text)
+    if len(matches) != 1:
+        raise AssertionError(f"{label} must contain exactly one top-level {key!r} metadata entry")
+    return matches[0].strip().strip("\"'")
+
+
+def issue_template_labels(template_text: str, label: str) -> list[str]:
+    raw_labels = issue_template_header_value(template_text, "labels", label)
+    if not raw_labels.startswith("[") or not raw_labels.endswith("]"):
+        raise AssertionError(f"{label} labels metadata must stay as an inline list")
+    return [item.strip().strip("\"'") for item in raw_labels[1:-1].split(",") if item.strip()]
+
+
+def assert_issue_template_metadata(
+    template_text: str,
+    label: str,
+    *,
+    expected_name: str,
+    expected_description: str,
+    expected_title: str,
+    expected_labels: tuple[str, ...],
+) -> None:
+    actual_name = issue_template_header_value(template_text, "name", label)
+    actual_description = issue_template_header_value(template_text, "description", label)
+    actual_title = issue_template_header_value(template_text, "title", label)
+    actual_labels = tuple(issue_template_labels(template_text, label))
+    if actual_name != expected_name:
+        raise AssertionError(f"{label} name metadata must remain {expected_name!r}; found {actual_name!r}")
+    if actual_description != expected_description:
+        raise AssertionError(
+            f"{label} description metadata must remain {expected_description!r}; found {actual_description!r}"
+        )
+    if actual_title != expected_title:
+        raise AssertionError(f"{label} title metadata must remain {expected_title!r}; found {actual_title!r}")
+    if actual_labels != expected_labels:
+        raise AssertionError(f"{label} labels metadata must remain {expected_labels!r}; found {actual_labels!r}")
 
 
 def issue_template_field_block(template_text: str, field_id: str, label: str) -> str:
@@ -4582,6 +4622,10 @@ POST {{base}}/v1/chat/completions
         )
 
     valid_issue_template = """
+name: API contract issue
+description: Report or request a narrow `/v1` API contract change.
+title: "api: "
+labels: [api]
 body:
   - type: input
     id: endpoint
@@ -4599,8 +4643,44 @@ body:
         - label: I used synthetic prompts.
           required: true
 """
+    assert_issue_template_metadata(
+        valid_issue_template,
+        "synthetic issue template",
+        expected_name="API contract issue",
+        expected_description="Report or request a narrow `/v1` API contract change.",
+        expected_title="api: ",
+        expected_labels=("api",),
+    )
     assert_issue_template_required_fields(valid_issue_template, "synthetic issue template", ("endpoint",))
     assert_issue_template_required_checkbox_options(valid_issue_template, "synthetic issue template", "privacy")
+    for text, expected in (
+        (valid_issue_template.replace("name: API contract issue", "name: General support"), "name metadata"),
+        (
+            valid_issue_template.replace(
+                "description: Report or request a narrow `/v1` API contract change.",
+                "description: Ask anything about Fathom.",
+            ),
+            "description metadata",
+        ),
+        (valid_issue_template.replace('title: "api: "', 'title: "question: "'), "title metadata"),
+        (valid_issue_template.replace("labels: [api]", "labels: [question]"), "labels metadata"),
+        (valid_issue_template.replace("labels: [api]", "labels: api"), "labels metadata must stay as an inline list"),
+    ):
+        try:
+            assert_issue_template_metadata(
+                text,
+                "synthetic bad issue template",
+                expected_name="API contract issue",
+                expected_description="Report or request a narrow `/v1` API contract change.",
+                expected_title="api: ",
+                expected_labels=("api",),
+            )
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("issue-template metadata self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("issue-template metadata self-test did not reject routing metadata drift")
+
     for text, expected in (
         (valid_issue_template.replace("    validations:\n      required: true\n", ""), "must remain required"),
         (
@@ -5056,6 +5136,14 @@ def assert_ci_wiring(manifest: dict[str, Any]) -> None:
 def assert_api_contract_issue_template(manifest: dict[str, Any]) -> None:
     template_text = read(API_CONTRACT_ISSUE_TEMPLATE)
     label = ".github/ISSUE_TEMPLATE/api_contract.yml"
+    assert_issue_template_metadata(
+        template_text,
+        label,
+        expected_name="API contract issue",
+        expected_description="Report or request a narrow `/v1` API contract change.",
+        expected_title="api: ",
+        expected_labels=("api",),
+    )
     required_phrases = [
         "docs/api/v1-contract.md",
         "docs/api/public-contract.json",
@@ -5086,6 +5174,14 @@ def assert_api_contract_issue_template(manifest: dict[str, Any]) -> None:
 def assert_model_runtime_issue_template() -> None:
     template_text = read(MODEL_RUNTIME_ISSUE_TEMPLATE)
     label = ".github/ISSUE_TEMPLATE/model_runtime_request.yml"
+    assert_issue_template_metadata(
+        template_text,
+        label,
+        expected_name="Model/runtime request",
+        expected_description="Request support for a specific model format, family, task, or artifact layout.",
+        expected_title="model/runtime: ",
+        expected_labels=("model-runtime",),
+    )
     required_phrases = [
         "does not imply broad GGUF runtime/tokenizer/generation support",
         "ONNX",
@@ -5115,6 +5211,14 @@ def assert_model_runtime_issue_template() -> None:
 def assert_bug_report_issue_template() -> None:
     template_text = read(BUG_REPORT_ISSUE_TEMPLATE)
     label = ".github/ISSUE_TEMPLATE/bug_report.yml"
+    assert_issue_template_metadata(
+        template_text,
+        label,
+        expected_name="Bug report",
+        expected_description="Report a reproducible issue without sharing private local data.",
+        expected_title="bug: ",
+        expected_labels=("bug",),
+    )
     required_phrases = [
         "synthetic prompts",
         "share-safe fixtures",
@@ -5143,6 +5247,14 @@ def assert_bug_report_issue_template() -> None:
 def assert_security_privacy_issue_template() -> None:
     template_text = read(SECURITY_PRIVACY_ISSUE_TEMPLATE)
     label = ".github/ISSUE_TEMPLATE/security_or_privacy.yml"
+    assert_issue_template_metadata(
+        template_text,
+        label,
+        expected_name="Security or privacy concern",
+        expected_description="Ask for a private channel or report a public-safe security/privacy concern.",
+        expected_title="security/privacy: ",
+        expected_labels=("security", "privacy"),
+    )
     required_phrases = [
         "SECURITY.md",
         "private channel",
