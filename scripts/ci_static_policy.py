@@ -48,6 +48,7 @@ SENSITIVE_ENV_PATTERN = re.compile(
     re.IGNORECASE,
 )
 MAX_JOB_TIMEOUT_MINUTES = 30
+REQUIRED_RUNS_ON = "ubuntu-latest"
 
 
 def top_level_concurrency_block(text: str) -> list[str] | None:
@@ -125,10 +126,55 @@ def job_timeout_failures(text: str) -> list[str]:
     return failures
 
 
+def job_runner_failures(text: str) -> list[str]:
+    failures: list[str] = []
+    lines = text.splitlines()
+    in_jobs = False
+    current_job: str | None = None
+    saw_runs_on = False
+
+    def finish_job() -> None:
+        if current_job is not None and not saw_runs_on:
+            failures.append(f"default CI job {current_job!r} must set runs-on: {REQUIRED_RUNS_ON}")
+
+    for line_number, line in enumerate(lines, start=1):
+        if re.match(r"^jobs:\s*(?:#.*)?$", line):
+            in_jobs = True
+            continue
+        if in_jobs and line and not line.startswith((" ", "\t")):
+            finish_job()
+            in_jobs = False
+            break
+        if not in_jobs:
+            continue
+
+        job_match = re.match(r"^  ([A-Za-z0-9_-]+):\s*(?:#.*)?$", line)
+        if job_match:
+            finish_job()
+            current_job = job_match.group(1)
+            saw_runs_on = False
+            continue
+
+        runner_match = re.match(r"^    runs-on:\s*(.+?)\s*(?:#.*)?$", line)
+        if runner_match and current_job is not None:
+            saw_runs_on = True
+            runner = runner_match.group(1).strip().strip("\"'")
+            if runner != REQUIRED_RUNS_ON:
+                failures.append(
+                    f"default CI job {current_job!r} must run on {REQUIRED_RUNS_ON}, "
+                    f"line {line_number}: {runner_match.group(1).strip()}"
+                )
+
+    if in_jobs:
+        finish_job()
+    return failures
+
+
 def evaluate_ci_text(text: str) -> list[str]:
     failures: list[str] = []
 
     failures.extend(job_timeout_failures(text))
+    failures.extend(job_runner_failures(text))
 
     if SECRET_CONTEXT_PATTERN.search(text):
         failures.append("default CI must not reference GitHub Actions secrets")
@@ -300,6 +346,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   rust:
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -308,6 +355,7 @@ jobs:
       run: cargo test -q
       run: bash scripts/public_api_contract_smoke.sh
   static-safety:
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - run: |
@@ -338,6 +386,14 @@ jobs:
             "  group: ${{ github.workflow }}\n",
         ),
         "missing concurrency cancellation": valid.replace("  cancel-in-progress: true\n", ""),
+        "missing job runner": valid.replace("    runs-on: ubuntu-latest\n", "", 1),
+        "self-hosted job runner": valid.replace("    runs-on: ubuntu-latest\n", "    runs-on: self-hosted\n", 1),
+        "macos job runner": valid.replace("    runs-on: ubuntu-latest\n", "    runs-on: macos-latest\n", 1),
+        "matrix job runner": valid.replace(
+            "    runs-on: ubuntu-latest\n",
+            "    runs-on: ${{ matrix.os }}\n",
+            1,
+        ),
         "missing job timeout": valid.replace("    timeout-minutes: 30\n", ""),
         "too-large job timeout": valid.replace("    timeout-minutes: 30\n", "    timeout-minutes: 60\n"),
         "secrets context": valid + "      - run: echo ${{ secrets.NPM_TOKEN }}\n",
