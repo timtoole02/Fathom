@@ -141,6 +141,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
     r"Guard public issue template privacy checks|Guard public issue template required fields|"
     r"Guard public issue template routing metadata|"
+    r"Guard issue template contact link routing|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard CI checkout credential persistence|Guard CI Node cache scope|"
@@ -4697,6 +4698,23 @@ body:
         else:
             raise AssertionError("issue-template required-field self-test did not reject optional public intake fields")
 
+    assert_issue_template_config_text("blank_issues_enabled: false\n", "synthetic issue template config")
+    for text, expected in (
+        ("blank_issues_enabled: true\n", "must set exactly one `blank_issues_enabled: false` entry"),
+        ("blank_issues_enabled: false\ncontact_links:\n", "must not add public contact links"),
+        (
+            "blank_issues_enabled: false\nblank_issues_enabled: false\n",
+            "must set exactly one `blank_issues_enabled: false` entry",
+        ),
+    ):
+        try:
+            assert_issue_template_config_text(text, "synthetic bad issue template config")
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("issue-template config self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("issue-template config self-test did not reject unsafe routing drift")
+
     manifest = {
         "expected_boundary_errors": [
             {"boundary": "streaming chat completions", "status": 501, "code": "not_implemented"},
@@ -5279,14 +5297,18 @@ def assert_security_privacy_issue_template() -> None:
     assert_issue_template_required_checkbox_options(template_text, label, "safety")
 
 
-def assert_issue_template_config() -> None:
-    config_text = read(ISSUE_TEMPLATE_CONFIG)
-    label = ".github/ISSUE_TEMPLATE/config.yml"
+def assert_issue_template_config_text(config_text: str, label: str) -> None:
     blank_issue_settings = re.findall(r"(?m)^\s*blank_issues_enabled\s*:\s*(true|false)\s*(?:#.*)?$", config_text)
     if blank_issue_settings != ["false"]:
         raise AssertionError(f"{label} must set exactly one `blank_issues_enabled: false` entry")
     if re.search(r"(?m)^\s*blank_issues_enabled\s*:\s*true\s*(?:#.*)?$", config_text):
         raise AssertionError(f"{label} must not enable blank public issues")
+    if re.search(r"(?m)^\s*contact_links\s*:\s*(?:#.*)?$", config_text):
+        raise AssertionError(f"{label} must not add public contact links without a reviewed routing guard")
+
+
+def assert_issue_template_config() -> None:
+    assert_issue_template_config_text(read(ISSUE_TEMPLATE_CONFIG), ".github/ISSUE_TEMPLATE/config.yml")
 
 
 def assert_pull_request_template() -> None:
