@@ -36,6 +36,20 @@ WRITE_TOKEN_PERMISSION_PATTERN = re.compile(
 MAX_JOB_TIMEOUT_MINUTES = 30
 
 
+def top_level_concurrency_block(text: str) -> list[str] | None:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if re.match(r"^concurrency:\s*(?:#.*)?$", line):
+            block: list[str] = []
+            for child in lines[index + 1 :]:
+                if child and not child.startswith((" ", "\t")):
+                    break
+                if child.strip():
+                    block.append(child)
+            return block
+    return None
+
+
 def top_level_permissions_block(text: str) -> list[str] | None:
     lines = text.splitlines()
     for index, line in enumerate(lines):
@@ -101,6 +115,20 @@ def evaluate_ci_text(text: str) -> list[str]:
     failures: list[str] = []
 
     failures.extend(job_timeout_failures(text))
+
+    concurrency_block = top_level_concurrency_block(text)
+    if concurrency_block is None:
+        failures.append("default CI must set top-level concurrency cancellation")
+    else:
+        concurrency_text = "\n".join(concurrency_block)
+        if not re.search(
+            r"^\s*group:\s*\$\{\{\s*github\.workflow\s*\}\}-\$\{\{\s*github\.ref\s*\}\}\s*(?:#.*)?$",
+            concurrency_text,
+            re.MULTILINE,
+        ):
+            failures.append("default CI concurrency group must scope to workflow and ref")
+        if not re.search(r"^\s*cancel-in-progress:\s*true\s*(?:#.*)?$", concurrency_text, re.MULTILINE):
+            failures.append("default CI concurrency must cancel in-progress runs")
 
     if re.search(r"(?m)^\s*-?\s*pull_request_target\s*:", text) or re.search(
         r"(?m)^\s*on\s*:\s*\[[^\]]*\bpull_request_target\b", text
@@ -236,6 +264,9 @@ def run_self_test() -> None:
 name: CI
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   rust:
     timeout-minutes: 30
@@ -267,6 +298,15 @@ jobs:
 
     cases = {
         "missing token permissions": "run: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "missing concurrency": valid.replace(
+            "concurrency:\n  group: ${{ github.workflow }}-${{ github.ref }}\n  cancel-in-progress: true\n",
+            "",
+        ),
+        "wrong concurrency group": valid.replace(
+            "  group: ${{ github.workflow }}-${{ github.ref }}\n",
+            "  group: ${{ github.workflow }}\n",
+        ),
+        "missing concurrency cancellation": valid.replace("  cancel-in-progress: true\n", ""),
         "missing job timeout": valid.replace("    timeout-minutes: 30\n", ""),
         "too-large job timeout": valid.replace("    timeout-minutes: 30\n", "    timeout-minutes: 60\n"),
         "write-all token permissions": "permissions: write-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
