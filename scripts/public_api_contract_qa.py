@@ -147,6 +147,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard REST Client example headers|Guard API example regression self-test|"
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
     r"Guard frontend package script safety|"
+    r"Guard Rust crate publish-safety|"
     r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
     r"Guard README clean install consistency|"
     r"Guard launch text normalization metadata|Guard public contract smoke endpoint rows|"
@@ -615,6 +616,25 @@ def assert_frontend_package_scripts(package: dict[str, Any] | None = None, label
         script = scripts[script_name]
         if "--host 0.0.0.0" in script or "--host ::" in script:
             raise AssertionError(f"{label} script {script_name!r} must not bind externally")
+
+
+def assert_cargo_publish_safety(manifests: dict[str, str] | None = None) -> None:
+    expected_paths = {
+        "crates/fathom-core/Cargo.toml": CORE_CARGO,
+        "crates/fathom-server/Cargo.toml": SERVER_CARGO,
+    }
+    if manifests is None:
+        manifests = {relative_path: read(path) for relative_path, path in expected_paths.items()}
+
+    for relative_path in expected_paths:
+        text = manifests.get(relative_path)
+        if not isinstance(text, str):
+            raise AssertionError(f"{relative_path} must be readable text")
+        package_match = re.search(r"(?ms)^\[package\]\n(?P<body>.*?)(?:\n\[|\Z)", text)
+        if package_match is None:
+            raise AssertionError(f"{relative_path} must contain a [package] section")
+        if not re.search(r"(?m)^publish\s*=\s*false\s*$", package_match.group("body")):
+            raise AssertionError(f"{relative_path} must keep explicit publish = false")
 
 
 def assert_public_security_docs() -> None:
@@ -4823,6 +4843,35 @@ npm --prefix frontend run qa:copy
         else:
             raise AssertionError("frontend package script self-test did not reject unsafe package drift")
 
+    valid_cargo_manifests = {
+        "crates/fathom-core/Cargo.toml": "[package]\nname = \"fathom-core\"\npublish = false\n\n[dependencies]\n",
+        "crates/fathom-server/Cargo.toml": "[package]\nname = \"fathom-server\"\npublish = false\n\n[dependencies]\n",
+    }
+    assert_cargo_publish_safety(valid_cargo_manifests)
+    for manifests, expected in (
+        (
+            {
+                **valid_cargo_manifests,
+                "crates/fathom-core/Cargo.toml": "[package]\nname = \"fathom-core\"\n\n[dependencies]\n",
+            },
+            "publish = false",
+        ),
+        (
+            {
+                **valid_cargo_manifests,
+                "crates/fathom-server/Cargo.toml": "[package]\nname = \"fathom-server\"\npublish = true\n\n[dependencies]\n",
+            },
+            "publish = false",
+        ),
+    ):
+        try:
+            assert_cargo_publish_safety(manifests)
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("Cargo publish-safety self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("Cargo publish-safety self-test did not reject unsafe manifest drift")
+
     assert_clean_install_gate("npm --prefix frontend ci\n", "synthetic clean install gate")
     for text, expected in (
         ("npm --prefix frontend install\n", "npm --prefix frontend ci"),
@@ -5198,6 +5247,7 @@ def main() -> int:
     assert_examples_static(manifest)
     assert_launch_checklist_frontend_gates()
     assert_frontend_package_scripts()
+    assert_cargo_publish_safety()
     assert_no_positive_overclaims()
     assert_smoke_manifest_wiring()
     assert_optional_acceptance_docs()
