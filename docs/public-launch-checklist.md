@@ -79,6 +79,8 @@ The optional `public-contract-smoke-summary.json` and `.md` files include commit
 
 The static QA also requires root `.gitattributes` text-normalization metadata so public diffs stay stable across platforms while binary model, package, mobile, media, and local plan artifact extensions remain marked as binary.
 
+The static QA also checks launch-facing relative Markdown links in `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `.github/pull_request_template.md`, public launch docs, and `docs/api/*.md` stay inside the repository and point at existing local files. External URLs and anchors remain outside this offline link-integrity guard.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:

@@ -71,6 +71,15 @@ TEXT_PATHS = DOC_PATHS + OPTIONAL_DOC_PATHS + EXAMPLE_PATHS + [
     ISSUE_TEMPLATE_CONFIG,
     PR_TEMPLATE,
 ]
+PUBLIC_DOC_LOCAL_LINK_PATHS = (
+    README,
+    CONTRIBUTING,
+    SECURITY,
+    PR_TEMPLATE,
+    LAUNCH_CHECKLIST,
+    LAUNCH_EVIDENCE,
+    *sorted((ROOT / "docs" / "api").glob("*.md")),
+)
 OFFLINE_QA_PYTHON_PATHS = (
     "scripts/api_client_examples_regression.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -141,6 +150,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
     r"Guard public issue template privacy checks|Guard public issue template required fields|"
     r"Guard public issue template routing metadata|"
+    r"Guard public docs link QA|"
     r"Guard issue template contact link routing|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
@@ -374,6 +384,48 @@ def read(path: Path) -> str:
 def assert_contains(text: str, needle: str, label: str) -> None:
     if needle not in text:
         raise AssertionError(f"{label} missing {needle!r}")
+
+
+def markdown_inline_link_targets(text: str) -> list[tuple[int, str]]:
+    targets = []
+    for line_no, line in enumerate(text.splitlines(), start=1):
+        for match in re.finditer(r"(?<!!)\[[^\]\n]+\]\(([^)\n]+)\)", line):
+            raw_target = match.group(1).strip()
+            if raw_target.startswith("<") and raw_target.endswith(">"):
+                raw_target = raw_target[1:-1].strip()
+            try:
+                target = shlex.split(raw_target)[0] if raw_target else ""
+            except ValueError as exc:
+                raise AssertionError(f"invalid Markdown link target quoting on line {line_no}: {raw_target!r}") from exc
+            targets.append((line_no, target))
+    return targets
+
+
+def public_doc_local_link_failures(path: Path, text: str) -> list[str]:
+    failures = []
+    root = ROOT.resolve()
+    label = str(path.relative_to(ROOT))
+    for line_no, target in markdown_inline_link_targets(text):
+        if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target, re.I) or target.startswith("#"):
+            continue
+        target_without_fragment = target.split("#", 1)[0].split("?", 1)[0]
+        if not target_without_fragment:
+            continue
+        resolved = (path.parent / target_without_fragment).resolve()
+        if resolved != root and root not in resolved.parents:
+            failures.append(f"{label}:{line_no}: local Markdown link escapes repository: {target}")
+            continue
+        if not resolved.exists():
+            failures.append(f"{label}:{line_no}: local Markdown link target does not exist: {target}")
+    return failures
+
+
+def assert_public_docs_local_links() -> None:
+    failures = []
+    for path in PUBLIC_DOC_LOCAL_LINK_PATHS:
+        failures.extend(public_doc_local_link_failures(path, read(path)))
+    if failures:
+        raise AssertionError(failures[0])
 
 
 def issue_template_header_value(template_text: str, key: str, label: str) -> str:
@@ -1169,6 +1221,11 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
     assert_contains(launch_text, "root `.gitattributes` text-normalization metadata", "launch checklist text-normalization metadata scope")
+    assert_contains(
+        launch_text,
+        "launch-facing relative Markdown links",
+        "launch checklist local Markdown link QA scope",
+    )
     assert_contains(
         launch_text,
         "tracked Git LFS pointer files that can hide external artifact downloads",
@@ -2074,6 +2131,11 @@ def assert_boundary_docs() -> None:
     assert_frontend_lockfile_evidence(evidence_text)
     assert_contains(evidence_text, "repository text-normalization metadata guard", "launch evidence text-normalization metadata scope")
     assert_contains(evidence_text, "root `.gitattributes` text-normalization metadata", "launch evidence text-normalization metadata proof")
+    assert_contains(
+        evidence_text,
+        "launch-facing relative Markdown links",
+        "launch evidence local Markdown link QA scope",
+    )
     assert_contains(evidence_text, "Git LFS pointer-file guard", "launch evidence Git LFS pointer risk-scan scope")
     assert_contains(
         evidence_text,
@@ -4622,6 +4684,29 @@ POST {{base}}/v1/chat/completions
             "public API contract QA self-test rejected allowed caveated examples:\n" + "\n".join(allowed_failures)
         )
 
+    good_links = "\n".join(
+        [
+            "[README](../README.md)",
+            "[contract](api/v1-contract.md#supported-endpoints)",
+            "[external](https://example.invalid/fathom)",
+            "[anchor](#local-section)",
+            "[mailto](mailto:security@example.invalid)",
+        ]
+    )
+    good_link_failures = public_doc_local_link_failures(ROOT / "docs" / "synthetic.md", good_links)
+    if good_link_failures:
+        raise AssertionError(
+            "public docs local-link self-test rejected allowed links:\n" + "\n".join(good_link_failures)
+        )
+
+    for text, expected in (
+        ("[missing](missing.md)", "target does not exist"),
+        ("[escape](../../outside.md)", "escapes repository"),
+    ):
+        failures = public_doc_local_link_failures(ROOT / "docs" / "synthetic.md", text)
+        if not any(expected in failure for failure in failures):
+            raise AssertionError(f"public docs local-link self-test did not reject {expected}: {failures}")
+
     valid_issue_template = """
 name: API contract issue
 description: Report or request a narrow `/v1` API contract change.
@@ -5386,6 +5471,7 @@ def main() -> int:
     assert_readme_clean_install_gate()
     assert_boundary_docs()
     assert_examples_static(manifest)
+    assert_public_docs_local_links()
     assert_launch_checklist_frontend_gates()
     assert_frontend_package_scripts()
     assert_cargo_publish_safety()
