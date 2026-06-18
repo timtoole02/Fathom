@@ -85,6 +85,8 @@ The static QA also keeps the public pull request template's reviewer prompts as 
 
 The static QA also keeps `docs/api/public-contract.json` non-contract example surfaces constrained to reviewed local catalog helper paths, so examples cannot silently bless `/v1` preview endpoints, external URLs, malformed methods, or broad internal API paths.
 
+The static QA also pins the public contract manifest identity metadata: launch contract name, narrow launch status, loopback base URL, and explicit non-parity scope note.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:

@@ -108,6 +108,15 @@ ALLOWED_NON_CONTRACT_EXAMPLE_SURFACES = {
     "GET /api/models/catalog",
     "POST /api/models/catalog/install",
 }
+EXPECTED_MANIFEST_METADATA = {
+    "name": "Fathom public launch API contract",
+    "status": "launch-supported-narrow-local-api",
+    "base_url": "http://127.0.0.1:8180",
+    "scope_note": (
+        "Machine-checkable launch contract for the public docs and examples. "
+        "This is intentionally smaller than OpenAPI and does not imply full OpenAI API parity."
+    ),
+}
 OFFLINE_QA_PYTHON_PATHS = (
     "scripts/api_client_examples_regression.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -181,6 +190,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard public issue template routing metadata|"
     r"Guard public docs link QA|"
     r"Guard non-contract example surface metadata|"
+    r"Guard public contract manifest identity|"
     r"Guard issue template contact link routing|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
@@ -309,6 +319,9 @@ def assert_non_contract_example_surfaces(allowed: Any) -> None:
 def assert_manifest_shape(manifest: dict[str, Any]) -> None:
     for key in ("name", "status", "base_url", "scope_note"):
         assert_non_empty_string(manifest.get(key), f"manifest.{key}")
+        expected = EXPECTED_MANIFEST_METADATA[key]
+        if manifest.get(key) != expected:
+            raise AssertionError(f"manifest.{key} must remain {expected!r}; found {manifest.get(key)!r}")
 
     endpoints = manifest.get("supported_endpoints")
     if not isinstance(endpoints, list) or not endpoints:
@@ -1280,6 +1293,11 @@ def assert_boundary_docs() -> None:
         "non-contract example surfaces constrained to reviewed local catalog helper paths",
         "launch checklist non-contract example surface metadata scope",
     )
+    assert_contains(
+        launch_text,
+        "pins the public contract manifest identity metadata",
+        "launch checklist manifest identity metadata scope",
+    )
     assert_contains(launch_text, "root `.gitattributes` text-normalization metadata", "launch checklist text-normalization metadata scope")
     assert_contains(
         launch_text,
@@ -2231,6 +2249,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")
+    assert_contains(
+        evidence_text,
+        "pins `docs/api/public-contract.json` identity metadata",
+        "launch evidence manifest identity metadata scope",
+    )
     assert_contains(
         evidence_text,
         "non-contract example surfaces constrained to reviewed local catalog helper paths",
@@ -4707,6 +4730,23 @@ def assert_no_positive_overclaims() -> None:
 
 def run_self_test() -> None:
     repo_manifest = load_manifest()
+    assert_manifest_shape(repo_manifest)
+    for key, replacement in (
+        ("name", "Fathom preview API contract"),
+        ("status", "experimental-preview"),
+        ("base_url", "https://example.invalid"),
+        ("scope_note", "Full OpenAI API parity."),
+    ):
+        bad_manifest = json.loads(json.dumps(repo_manifest))
+        bad_manifest[key] = replacement
+        try:
+            assert_manifest_shape(bad_manifest)
+        except AssertionError as exc:
+            if f"manifest.{key} must remain" not in str(exc):
+                raise AssertionError("manifest identity self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError(f"manifest identity self-test did not reject {key} drift")
+
     allowed_endpoints = allowed_example_endpoints(repo_manifest)
     good_example = """
 GET {{base}}/v1/health
