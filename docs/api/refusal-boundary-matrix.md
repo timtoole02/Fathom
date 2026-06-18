@@ -7,6 +7,7 @@ It is not a runtime expansion plan. It keeps these areas refused or unclaimed: s
 ## No-download checked boundaries
 
 These boundaries are exercised by `scripts/public_api_contract_smoke.sh` against a real isolated backend and summarized by `scripts/public_contract_smoke_artifact_qa.py`.
+Rows that list an HTTP status/code return the standard error envelope with `error.message`, `error.type`, `error.code`, and `error.param`; the table names status/code outcomes but does not imply bare top-level error fields.
 
 | Boundary | Request hint | Expected behavior | Evidence |
 | --- | --- | --- | --- |

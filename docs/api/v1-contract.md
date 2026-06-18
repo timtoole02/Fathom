@@ -24,6 +24,8 @@ All `/v1` application errors use this JSON shape:
 }
 ```
 
+The documented contract is the top-level `error` object with `error.message`, `error.type`, `error.code`, and `error.param`; public docs and examples should not describe bare top-level `message`, `type`, `code`, or `param` error fields.
+
 Common status/code pairs include:
 
 - `400 invalid_request` for malformed or unsupported request values.

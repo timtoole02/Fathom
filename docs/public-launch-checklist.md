@@ -91,6 +91,8 @@ The static QA also pins the public contract manifest's supported endpoint invent
 
 The static QA also pins the public contract manifest's refusal/boundary inventory, including request hints, status/code pairs, and non-claim expected behavior text for the no-download launch surface.
 
+The static QA also pins the standard error envelope documentation to the top-level `error` object with `error.message`, `error.type`, `error.code`, and `error.param`, and rejects bare/ad hoc JSON error shapes in launch-facing docs.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:

@@ -299,6 +299,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard public contract manifest identity|"
     r"Guard public contract endpoint metadata|"
     r"Guard public contract boundary metadata|"
+    r"Guard public contract error envelope docs|"
     r"Guard issue template contact link routing|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
@@ -1264,6 +1265,71 @@ def assert_endpoint_docs(manifest: dict[str, Any]) -> None:
     for code in REQUIRED_ERROR_CODES:
         combined_docs = "\n".join(read(path) for path in DOC_PATHS)
         assert_contains(combined_docs, code, "public docs error-code set")
+
+    assert_standard_error_envelope_docs(manifest)
+
+
+def json_code_blocks(text: str) -> list[Any]:
+    parsed: list[Any] = []
+    for match in re.finditer(r"```json\s*\n(.*?)\n```", text, re.S):
+        try:
+            parsed.append(json.loads(match.group(1)))
+        except json.JSONDecodeError:
+            continue
+    return parsed
+
+
+def assert_standard_error_envelope_docs(
+    manifest: dict[str, Any],
+    texts: dict[Path, str] | None = None,
+) -> None:
+    envelope = manifest.get("standard_error_envelope")
+    if not isinstance(envelope, dict):
+        raise AssertionError("manifest.standard_error_envelope must be an object")
+    top_level = envelope.get("top_level")
+    fields = envelope.get("error_fields")
+    if top_level != ["error"] or fields != ["message", "type", "code", "param"]:
+        raise AssertionError("manifest.standard_error_envelope must stay at error.message/type/code/param")
+
+    if texts is None:
+        texts = {
+            V1_CONTRACT: read(V1_CONTRACT),
+            REFUSAL_MATRIX: read(REFUSAL_MATRIX),
+            LAUNCH_CHECKLIST: read(LAUNCH_CHECKLIST),
+            LAUNCH_EVIDENCE: read(LAUNCH_EVIDENCE),
+        }
+
+    v1_text = texts.get(V1_CONTRACT, "")
+    assert_contains(v1_text, "Standard error envelope", "standard error envelope docs")
+    assert_contains(v1_text, '"error": {', "standard error envelope docs")
+    for field in fields:
+        assert_contains(v1_text, f"`error.{field}`", "standard error envelope docs")
+
+    for path in (REFUSAL_MATRIX, LAUNCH_CHECKLIST, LAUNCH_EVIDENCE):
+        text = texts.get(path, "")
+        assert_contains(text, "standard error envelope", f"{path.relative_to(ROOT)} standard error envelope docs")
+        for field in fields:
+            assert_contains(text, f"`error.{field}`", f"{path.relative_to(ROOT)} standard error envelope docs")
+
+    envelope_fields = set(fields)
+    for path, text in texts.items():
+        for block in json_code_blocks(text):
+            if not isinstance(block, dict):
+                continue
+            top_level_error_fields = envelope_fields.intersection(block)
+            if "error" not in block:
+                if top_level_error_fields:
+                    raise AssertionError(
+                        f"{path.relative_to(ROOT)} documents bare top-level error fields: "
+                        f"{sorted(top_level_error_fields)}"
+                    )
+                continue
+            error = block.get("error")
+            if not isinstance(error, dict):
+                raise AssertionError(f"{path.relative_to(ROOT)} documents a non-object top-level error envelope")
+            missing = [field for field in fields if field not in error]
+            if missing:
+                raise AssertionError(f"{path.relative_to(ROOT)} standard error envelope missing fields: {missing}")
 
 
 def backend_v1_router_block(server_text: str) -> str:
@@ -4926,6 +4992,53 @@ def run_self_test() -> None:
                 raise AssertionError("manifest boundary inventory self-test failed for the wrong reason") from exc
         else:
             raise AssertionError("manifest boundary inventory self-test did not reject boundary metadata drift")
+
+    valid_envelope_texts = {
+        V1_CONTRACT: """
+## Standard error envelope
+
+All application errors use `error.message`, `error.type`, `error.code`, and `error.param`.
+
+```json
+{"error": {"message": "Nope.", "type": "invalid_request", "code": "invalid_request", "param": null}}
+```
+""",
+        REFUSAL_MATRIX: "Rows use the standard error envelope with `error.message`, `error.type`, `error.code`, and `error.param`.",
+        LAUNCH_CHECKLIST: "Static QA pins standard error envelope fields (`error.message`, `error.type`, `error.code`, and `error.param`).",
+        LAUNCH_EVIDENCE: "Static QA pins standard error envelope fields (`error.message`, `error.type`, `error.code`, and `error.param`).",
+    }
+    assert_standard_error_envelope_docs(repo_manifest, valid_envelope_texts)
+    for texts, expected in (
+        (
+            {
+                **valid_envelope_texts,
+                LAUNCH_CHECKLIST: "Static QA pins standard error envelope fields (`error.message`, `error.type`, and `error.code`).",
+            },
+            "`error.param`",
+        ),
+        (
+            {
+                **valid_envelope_texts,
+                V1_CONTRACT: """
+## Standard error envelope
+
+All application errors use `"error": {` with `error.message`, `error.type`, `error.code`, and `error.param`.
+
+```json
+{"message": "Nope.", "type": "invalid_request", "code": "invalid_request", "param": null}
+```
+""",
+            },
+            "bare top-level error fields",
+        ),
+    ):
+        try:
+            assert_standard_error_envelope_docs(repo_manifest, texts)
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("standard error envelope docs self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("standard error envelope docs self-test did not reject docs drift")
 
     allowed_endpoints = allowed_example_endpoints(repo_manifest)
     good_example = """
