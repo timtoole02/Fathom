@@ -141,6 +141,88 @@ EXPECTED_SUPPORTED_ENDPOINTS = [
         "required_boundary": "encoding_format must be omitted or float",
     },
 ]
+EXPECTED_BOUNDARY_ERRORS = [
+    {
+        "boundary": "streaming chat completions",
+        "request_hint": "stream: true",
+        "status": 501,
+        "code": "not_implemented",
+    },
+    {
+        "boundary": "base64 embeddings",
+        "request_hint": "encoding_format: base64",
+        "status": 400,
+        "code": "invalid_request",
+    },
+    {
+        "boundary": "missing chat model",
+        "request_hint": "unknown local chat model id",
+        "status": 400,
+        "code": "model_not_found",
+    },
+    {
+        "boundary": "malformed /v1 JSON request body",
+        "request_hint": "malformed JSON body on /v1/chat/completions or /v1/embeddings",
+        "status": 400,
+        "code": "invalid_request",
+    },
+    {
+        "boundary": "unknown embedding model",
+        "request_hint": "unknown local embedding model id",
+        "status": 404,
+        "code": "embedding_model_not_found",
+    },
+    {
+        "boundary": "external placeholder chat or activation",
+        "request_hint": "external placeholder activation or chat model id",
+        "status": 501,
+        "code": "external_proxy_not_implemented",
+    },
+    {
+        "boundary": "embedding models in /v1/models",
+        "expected_behavior": "excluded from /v1/models because they are not chat/generation models",
+    },
+    {
+        "boundary": "GGUF metadata-only chat attempts",
+        "request_hint": "metadata-only GGUF model id in /v1/chat/completions",
+        "status": 501,
+        "code": "not_implemented",
+    },
+    {
+        "boundary": "PyTorch .bin execution",
+        "request_hint": "PyTorch .bin model id in /v1/chat/completions",
+        "status": 501,
+        "code": "not_implemented",
+    },
+    {
+        "boundary": "unsupported ONNX chat or general ONNX model execution",
+        "request_hint": "unsupported ONNX model id in /v1/chat/completions",
+        "status": 501,
+        "code": "not_implemented",
+    },
+    {
+        "boundary": "unverified SafeTensors/Hugging Face model execution",
+        "request_hint": "unverified SafeTensors/Hugging Face model id in /v1/chat/completions",
+        "status": 501,
+        "code": "not_implemented",
+    },
+    {
+        "boundary": "unsupported /v1 endpoint",
+        "request_hint": "POST /v1/responses",
+        "status": 404,
+        "code": "not_found",
+    },
+    {
+        "boundary": "unsupported /v1 method",
+        "request_hint": "GET /v1/chat/completions",
+        "status": 405,
+        "code": "method_not_allowed",
+    },
+    {
+        "boundary": "full OpenAI API parity",
+        "expected_behavior": "not claimed",
+    },
+]
 OFFLINE_QA_PYTHON_PATHS = (
     "scripts/api_client_examples_regression.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -216,6 +298,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard non-contract example surface metadata|"
     r"Guard public contract manifest identity|"
     r"Guard public contract endpoint metadata|"
+    r"Guard public contract boundary metadata|"
     r"Guard issue template contact link routing|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
@@ -418,6 +501,8 @@ def assert_manifest_shape(manifest: dict[str, Any]) -> None:
             raise AssertionError(f"manifest boundary must include status/code or expected_behavior: {boundary!r}")
         if "request_hint" in boundary and not has_status:
             assert_non_empty_string(boundary.get("request_hint"), f"manifest.expected_boundary_errors[{index}].request_hint")
+    if boundaries != EXPECTED_BOUNDARY_ERRORS:
+        raise AssertionError("manifest.expected_boundary_errors must match the narrow public launch boundary inventory")
 
     assert_non_contract_example_surfaces(manifest.get("non_contract_surfaces_allowed_in_examples"))
 
@@ -1329,6 +1414,11 @@ def assert_boundary_docs() -> None:
         launch_text,
         "pins the public contract manifest's supported endpoint inventory",
         "launch checklist manifest endpoint inventory scope",
+    )
+    assert_contains(
+        launch_text,
+        "pins the public contract manifest's refusal/boundary inventory",
+        "launch checklist manifest boundary inventory scope",
     )
     assert_contains(launch_text, "root `.gitattributes` text-normalization metadata", "launch checklist text-normalization metadata scope")
     assert_contains(
@@ -2290,6 +2380,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "pins `docs/api/public-contract.json` supported endpoint inventory",
         "launch evidence manifest endpoint inventory scope",
+    )
+    assert_contains(
+        evidence_text,
+        "pins `docs/api/public-contract.json` refusal/boundary inventory",
+        "launch evidence manifest boundary inventory scope",
     )
     assert_contains(
         evidence_text,
@@ -4802,6 +4897,35 @@ def run_self_test() -> None:
                 raise AssertionError("manifest endpoint inventory self-test failed for the wrong reason") from exc
         else:
             raise AssertionError("manifest endpoint inventory self-test did not reject endpoint metadata drift")
+
+    for mutate in (
+        lambda manifest: manifest["expected_boundary_errors"].append(
+            {
+                "boundary": "preview responses API",
+                "request_hint": "POST /v1/responses",
+                "status": 501,
+                "code": "not_implemented",
+            }
+        ),
+        lambda manifest: manifest["expected_boundary_errors"].pop(),
+        lambda manifest: manifest["expected_boundary_errors"][0].update({"status": 200}),
+        lambda manifest: manifest["expected_boundary_errors"][1].update({"code": "not_implemented"}),
+        lambda manifest: manifest["expected_boundary_errors"][11].update({"request_hint": "GET /v1/responses"}),
+        lambda manifest: manifest["expected_boundary_errors"][13].update({"expected_behavior": "preview"}),
+    ):
+        bad_manifest = json.loads(json.dumps(repo_manifest))
+        mutate(bad_manifest)
+        try:
+            assert_manifest_shape(bad_manifest)
+        except AssertionError as exc:
+            message = str(exc)
+            if (
+                "narrow public launch boundary inventory" not in message
+                and "manifest boundary status must be a 4xx/5xx integer" not in message
+            ):
+                raise AssertionError("manifest boundary inventory self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("manifest boundary inventory self-test did not reject boundary metadata drift")
 
     allowed_endpoints = allowed_example_endpoints(repo_manifest)
     good_example = """

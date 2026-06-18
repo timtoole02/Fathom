@@ -89,6 +89,8 @@ The static QA also pins the public contract manifest identity metadata: launch c
 
 The static QA also pins the public contract manifest's supported endpoint inventory, including method, path, purpose, and required-boundary text for the narrow `/v1` launch surface.
 
+The static QA also pins the public contract manifest's refusal/boundary inventory, including request hints, status/code pairs, and non-claim expected behavior text for the no-download launch surface.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:
