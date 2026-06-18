@@ -144,6 +144,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
     r"Guard CI checkout credential persistence|Guard CI Node cache scope|"
     r"Guard CI PR trigger and cache scope|"
+    r"Guard CI concurrency cancellation|"
     r"Guard CI privileged PR triggers|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard API example stdout share safety|"
