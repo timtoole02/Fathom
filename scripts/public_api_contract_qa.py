@@ -142,6 +142,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard public issue template privacy checks|Guard public issue template required fields|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
+    r"Guard CI checkout credential persistence|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard API example regression self-test|"

@@ -82,6 +82,13 @@ def evaluate_ci_text(text: str) -> list[str]:
     saw_artifact_qa_commands = {command: False for command in REQUIRED_ARTIFACT_QA_COMMANDS}
     for line_number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
+        if re.match(r"uses:\s*actions/checkout@v[0-9]+", stripped):
+            lookahead = "\n".join(text.splitlines()[line_number : line_number + 8])
+            if not re.search(r"^\s*persist-credentials:\s*false\s*(?:#.*)?$", lookahead, re.MULTILINE):
+                failures.append(
+                    "default CI checkout must set persist-credentials: false, "
+                    f"line {line_number}: {stripped}"
+                )
         if stripped in {"git diff --check", "run: git diff --check", "- run: git diff --check"}:
             saw_diff_check = True
         if "scripts/backend_acceptance_smoke.sh" in line:
@@ -162,6 +169,9 @@ permissions:
 jobs:
   rust:
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       run: cargo test -q
       run: bash scripts/public_api_contract_smoke.sh
   static-safety:
@@ -189,6 +199,7 @@ jobs:
         "read-all token permissions": "permissions: read-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
         "contents write token permission": "permissions:\n  contents: write\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
         "id-token write token permission": "permissions:\n  contents: read\n  id-token: write\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "checkout persisted credentials": "permissions:\n  contents: read\nuses: actions/checkout@v4\nrun: bash scripts/public_api_contract_smoke.sh",
         "onnx feature": "permissions:\n  contents: read\nrun: cargo test -q --features onnx-embeddings-ort\nrun: bash scripts/public_api_contract_smoke.sh",
         "networked acceptance": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: bash scripts/backend_acceptance_smoke.sh",
         "public contract artifacts": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nenv:\n  FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR: artifacts",
