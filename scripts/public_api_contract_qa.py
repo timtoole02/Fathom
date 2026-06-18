@@ -145,6 +145,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard REST Client example headers|Guard API example regression self-test|"
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
     r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
+    r"Guard README clean install consistency|"
     r"Guard launch text normalization metadata|Guard public contract smoke endpoint rows|"
     r"Guard backend v1 router manifest drift|"
     r"Guard .+ build artifacts|"
@@ -534,6 +535,10 @@ def assert_clean_install_gate(text: str, label: str) -> None:
 
 def assert_launch_checklist_clean_install_gate() -> None:
     assert_clean_install_gate(read(LAUNCH_CHECKLIST), "launch checklist clean install gate")
+
+
+def assert_readme_clean_install_gate() -> None:
+    assert_clean_install_gate(read(README), "README clean install gate")
 
 
 def assert_frontend_lockfile_evidence(evidence_text: str) -> None:
@@ -4743,6 +4748,7 @@ npm --prefix frontend run qa:copy
     for text, expected in (
         ("npm --prefix frontend install\n", "npm --prefix frontend ci"),
         ("npm --prefix frontend ci\nnpm --prefix frontend install\n", "npm ci"),
+        ("## Quick start\nnpm --prefix frontend install\n", "npm --prefix frontend ci"),
     ):
         try:
             assert_clean_install_gate(text, "synthetic bad clean install gate")
@@ -5108,6 +5114,7 @@ def main() -> int:
     assert_tracked_python_syntax_coverage()
     assert_tracked_shell_syntax_coverage()
     assert_launch_checklist_clean_install_gate()
+    assert_readme_clean_install_gate()
     assert_boundary_docs()
     assert_examples_static(manifest)
     assert_launch_checklist_frontend_gates()

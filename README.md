@@ -41,7 +41,7 @@ Supported today means narrow: a compatible HF package must include `config.json`
 ```bash
 git clone https://github.com/timtoole02/Fathom/ fathom
 cd fathom
-npm --prefix frontend install
+npm --prefix frontend ci
 cargo test
 bash scripts/start.sh
 ```
