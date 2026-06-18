@@ -87,6 +87,8 @@ The static QA also keeps `docs/api/public-contract.json` non-contract example su
 
 The static QA also pins the public contract manifest identity metadata: launch contract name, narrow launch status, loopback base URL, and explicit non-parity scope note.
 
+The static QA also pins the public contract manifest's supported endpoint inventory, including method, path, purpose, and required-boundary text for the narrow `/v1` launch surface.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:

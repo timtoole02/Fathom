@@ -117,6 +117,30 @@ EXPECTED_MANIFEST_METADATA = {
         "This is intentionally smaller than OpenAPI and does not imply full OpenAI API parity."
     ),
 }
+EXPECTED_SUPPORTED_ENDPOINTS = [
+    {
+        "method": "GET",
+        "path": "/v1/health",
+        "purpose": "local API health and chat-generation readiness",
+    },
+    {
+        "method": "GET",
+        "path": "/v1/models",
+        "purpose": "runnable local chat/generation models only",
+    },
+    {
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "purpose": "non-streaming local chat completion for verified runnable SafeTensors/Hugging Face chat lanes",
+        "required_boundary": "stream must be omitted or false",
+    },
+    {
+        "method": "POST",
+        "path": "/v1/embeddings",
+        "purpose": "narrow OpenAI-style float embeddings for verified local MiniLM embedding runtimes",
+        "required_boundary": "encoding_format must be omitted or float",
+    },
+]
 OFFLINE_QA_PYTHON_PATHS = (
     "scripts/api_client_examples_regression.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -191,6 +215,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard public docs link QA|"
     r"Guard non-contract example surface metadata|"
     r"Guard public contract manifest identity|"
+    r"Guard public contract endpoint metadata|"
     r"Guard issue template contact link routing|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
@@ -346,6 +371,8 @@ def assert_manifest_shape(manifest: dict[str, Any]) -> None:
         seen_endpoints.add(endpoint_key)
         if "required_boundary" in endpoint:
             assert_non_empty_string(endpoint.get("required_boundary"), f"manifest.supported_endpoints[{index}].required_boundary")
+    if endpoints != EXPECTED_SUPPORTED_ENDPOINTS:
+        raise AssertionError("manifest.supported_endpoints must match the narrow public launch endpoint inventory")
 
     envelope = manifest.get("standard_error_envelope")
     if not isinstance(envelope, dict):
@@ -1297,6 +1324,11 @@ def assert_boundary_docs() -> None:
         launch_text,
         "pins the public contract manifest identity metadata",
         "launch checklist manifest identity metadata scope",
+    )
+    assert_contains(
+        launch_text,
+        "pins the public contract manifest's supported endpoint inventory",
+        "launch checklist manifest endpoint inventory scope",
     )
     assert_contains(launch_text, "root `.gitattributes` text-normalization metadata", "launch checklist text-normalization metadata scope")
     assert_contains(
@@ -2253,6 +2285,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "pins `docs/api/public-contract.json` identity metadata",
         "launch evidence manifest identity metadata scope",
+    )
+    assert_contains(
+        evidence_text,
+        "pins `docs/api/public-contract.json` supported endpoint inventory",
+        "launch evidence manifest endpoint inventory scope",
     )
     assert_contains(
         evidence_text,
@@ -4746,6 +4783,25 @@ def run_self_test() -> None:
                 raise AssertionError("manifest identity self-test failed for the wrong reason") from exc
         else:
             raise AssertionError(f"manifest identity self-test did not reject {key} drift")
+
+    for mutate in (
+        lambda manifest: manifest["supported_endpoints"].append(
+            {"method": "POST", "path": "/v1/responses", "purpose": "Responses API preview"}
+        ),
+        lambda manifest: manifest["supported_endpoints"].pop(),
+        lambda manifest: manifest["supported_endpoints"][0].update({"method": "POST"}),
+        lambda manifest: manifest["supported_endpoints"][2].update({"purpose": "full OpenAI-compatible streaming chat"}),
+        lambda manifest: manifest["supported_endpoints"][3].update({"required_boundary": "any encoding_format"}),
+    ):
+        bad_manifest = json.loads(json.dumps(repo_manifest))
+        mutate(bad_manifest)
+        try:
+            assert_manifest_shape(bad_manifest)
+        except AssertionError as exc:
+            if "narrow public launch endpoint inventory" not in str(exc):
+                raise AssertionError("manifest endpoint inventory self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("manifest endpoint inventory self-test did not reject endpoint metadata drift")
 
     allowed_endpoints = allowed_example_endpoints(repo_manifest)
     good_example = """
