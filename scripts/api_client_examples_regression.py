@@ -466,6 +466,134 @@ def assert_openai_sdk_stdout(stdout: str, *, embeddings: bool) -> None:
     )
 
 
+def parse_headed_json_stdout_sections(stdout: str, label: str) -> list[tuple[str, Any]]:
+    sections: list[tuple[str, list[str]]] = []
+    current_title: str | None = None
+    current_lines: list[str] = []
+    for line in stdout.splitlines():
+        heading = re.fullmatch(r"==\s+(.+?)\s+==", line.strip())
+        if heading:
+            if current_title is not None:
+                sections.append((current_title, current_lines))
+            current_title = heading.group(1)
+            current_lines = []
+            continue
+        if current_title is None:
+            if line.strip():
+                raise AssertionError(f"{label} stdout contains text before first heading: {line!r}")
+            continue
+        current_lines.append(line)
+
+    if current_title is not None:
+        sections.append((current_title, current_lines))
+    if not sections:
+        raise AssertionError(f"{label} stdout did not contain headed JSON sections")
+
+    parsed_sections: list[tuple[str, Any]] = []
+    for title, lines in sections:
+        payload_text = "\n".join(lines).strip()
+        values = parse_json_stdout_values(payload_text)
+        if len(values) != 1:
+            raise AssertionError(f"{label} stdout section {title!r} expected one JSON payload, got {len(values)}")
+        parsed_sections.append((title, values[0]))
+    return parsed_sections
+
+
+def assert_share_safe_stdout(stdout: str, label: str) -> None:
+    forbidden_patterns = (
+        (r"(?i)\bapi[_-]?key\b", "API key"),
+        (r"(?i)\bauthorization\b", "authorization header"),
+        (r"(?i)\bbearer\b", "bearer token"),
+        (r"(?i)\bsecret\b", "secret"),
+        (r"(?i)\btoken\b", "token"),
+        (r"(?i)(^|[\s`'\"])/" + r"Users/[^ \n`'\"]+", "absolute macOS user path"),
+        (r"(?i)(^|[\s`'\"])/" + r"private/[^ \n`'\"]+", "absolute private path"),
+        (r"(?i)(^|[\s`'\"])[A-Z]:\\[^ \n`'\"]+", "absolute Windows path"),
+        (r"(?i)\bproduction[- ]ready\b", "production-readiness overclaim"),
+        (r"(?i)\bfull\s+OpenAI\s+(API\s+)?parity\b", "OpenAI parity overclaim"),
+        (r"(?i)\bstreaming\s+(chat\s+)?(is\s+)?supported\b", "streaming overclaim"),
+        (r"(?i)\bbase64\s+embeddings\s+(are\s+)?supported\b", "base64 embeddings overclaim"),
+    )
+    for pattern, description in forbidden_patterns:
+        if re.search(pattern, stdout):
+            raise AssertionError(f"{label} stdout must not expose {description}")
+
+
+def assert_cli_example_stdout(stdout: str, *, embeddings: bool, label: str) -> None:
+    assert_share_safe_stdout(stdout, label)
+    sections = parse_headed_json_stdout_sections(stdout, label)
+    expected_titles = [
+        "Fathom health",
+        "Install pinned tiny Phi SafeTensors fixture, if not already present",
+        "Runnable chat models",
+        "Non-streaming chat completion",
+    ]
+    if embeddings:
+        expected_titles.extend(
+            [
+                "Install pinned MiniLM SafeTensors embedding fixture, if not already present",
+                "Float embeddings from verified local MiniLM runtime",
+            ]
+        )
+    actual_titles = [title for title, _value in sections]
+    assert_true(actual_titles == expected_titles, f"{label} stdout headings drifted: expected {expected_titles}, got {actual_titles}")
+
+    health = sections[0][1]
+    assert_true(isinstance(health, dict), f"{label} health stdout payload must be an object")
+    assert_true(health.get("ok") is True, f"{label} health stdout ok flag drifted")
+    assert_true(health.get("engine") == "fathom", f"{label} health stdout engine drifted")
+
+    install = sections[1][1]
+    assert_true(isinstance(install, dict), f"{label} install stdout payload must be an object")
+    assert_true(install.get("ok") is True, f"{label} install stdout ok flag drifted")
+    install_model = install.get("model")
+    assert_true(isinstance(install_model, dict), f"{label} install stdout model missing")
+    assert_true(install_model.get("id") == CHAT_MODEL_ID, f"{label} install stdout model id drifted")
+
+    models = sections[2][1]
+    assert_true(isinstance(models, dict), f"{label} models stdout payload must be an object")
+    assert_true(models.get("object") == "list", f"{label} models stdout object drifted")
+    model_data = models.get("data")
+    assert_true(isinstance(model_data, list) and model_data, f"{label} models stdout data missing")
+    first_model = model_data[0]
+    assert_true(isinstance(first_model, dict), f"{label} models stdout item must be an object")
+    assert_true(first_model.get("id") == CHAT_MODEL_ID, f"{label} models stdout model id drifted")
+
+    chat = sections[3][1]
+    assert_true(isinstance(chat, dict), f"{label} chat stdout payload must be an object")
+    assert_true(chat.get("object") == "chat.completion", f"{label} chat stdout object drifted")
+    assert_true(chat.get("model") == CHAT_MODEL_ID, f"{label} chat stdout model drifted")
+    choices = chat.get("choices")
+    assert_true(isinstance(choices, list) and choices, f"{label} chat stdout choices missing")
+
+    if not embeddings:
+        return
+
+    embedding_install = sections[4][1]
+    assert_true(isinstance(embedding_install, dict), f"{label} embedding install stdout payload must be an object")
+    assert_true(embedding_install.get("ok") is True, f"{label} embedding install stdout ok flag drifted")
+    embedding_install_model = embedding_install.get("model")
+    assert_true(isinstance(embedding_install_model, dict), f"{label} embedding install stdout model missing")
+    assert_true(
+        embedding_install_model.get("id") == EMBEDDING_MODEL_ID,
+        f"{label} embedding install stdout model id drifted",
+    )
+
+    embeddings_payload = sections[5][1]
+    assert_true(isinstance(embeddings_payload, dict), f"{label} embeddings stdout payload must be an object")
+    assert_true(embeddings_payload.get("object") == "list", f"{label} embeddings stdout object drifted")
+    assert_true(embeddings_payload.get("model") == EMBEDDING_MODEL_ID, f"{label} embeddings stdout model drifted")
+    data = embeddings_payload.get("data")
+    assert_true(isinstance(data, list) and data, f"{label} embeddings stdout data missing")
+    first_embedding = data[0]
+    assert_true(isinstance(first_embedding, dict), f"{label} embeddings stdout item must be an object")
+    vector = first_embedding.get("embedding")
+    assert_true(
+        isinstance(vector, list) and vector and all(isinstance(item, float) for item in vector),
+        f"{label} embeddings stdout vector must be a non-empty float list",
+    )
+
+
 def parse_json_stdout_values(stdout: str) -> list[Any]:
     decoder = json.JSONDecoder()
     values: list[Any] = []
@@ -709,6 +837,31 @@ Content-Type: application/json
         else:
             raise AssertionError(f"REST Client self-test did not reject drift: {expected}")
 
+    safe_cli_stdout = """
+== Fathom health ==
+{"ok": true, "engine": "fathom", "generation_ready": true}
+
+== Install pinned tiny Phi SafeTensors fixture, if not already present ==
+{"ok": true, "model": {"id": "echarlaix-tiny-random-phiforcausallm-model-safetensors"}}
+
+== Runnable chat models ==
+{"object": "list", "data": [{"id": "echarlaix-tiny-random-phiforcausallm-model-safetensors"}]}
+
+== Non-streaming chat completion ==
+{"object": "chat.completion", "model": "echarlaix-tiny-random-phiforcausallm-model-safetensors", "choices": [{"message": {"role": "assistant", "content": "hello"}}]}
+"""
+    assert_cli_example_stdout(safe_cli_stdout, embeddings=False, label="synthetic CLI stdout")
+    unsafe_cli_stdout = safe_cli_stdout.replace(
+        '"content": "hello"',
+        '"content": "hello", "authorization": "Bearer local-secret"',
+    )
+    try:
+        assert_cli_example_stdout(unsafe_cli_stdout, embeddings=False, label="synthetic unsafe CLI stdout")
+    except AssertionError as exc:
+        assert_true("authorization header" in str(exc), f"CLI stdout self-test failed for the wrong reason: {exc}")
+    else:
+        raise AssertionError("CLI stdout self-test did not reject unsafe stdout")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Regression-test public API client examples")
@@ -720,11 +873,27 @@ def main() -> int:
         return 0
 
     static_checks()
-    run_example(["bash", "examples/api/curl-quickstart.sh"], embeddings=False)
-    run_example(["python3", "examples/api/python-no-deps.py"], embeddings=False)
+    run_example(
+        ["bash", "examples/api/curl-quickstart.sh"],
+        embeddings=False,
+        stdout_checker=lambda stdout: assert_cli_example_stdout(stdout, embeddings=False, label="curl-quickstart.sh"),
+    )
+    run_example(
+        ["python3", "examples/api/python-no-deps.py"],
+        embeddings=False,
+        stdout_checker=lambda stdout: assert_cli_example_stdout(stdout, embeddings=False, label="python-no-deps.py"),
+    )
     run_openai_sdk_example_with_stub(embeddings=False)
-    run_example(["bash", "examples/api/curl-quickstart.sh"], embeddings=True)
-    run_example(["python3", "examples/api/python-no-deps.py"], embeddings=True)
+    run_example(
+        ["bash", "examples/api/curl-quickstart.sh"],
+        embeddings=True,
+        stdout_checker=lambda stdout: assert_cli_example_stdout(stdout, embeddings=True, label="curl-quickstart.sh"),
+    )
+    run_example(
+        ["python3", "examples/api/python-no-deps.py"],
+        embeddings=True,
+        stdout_checker=lambda stdout: assert_cli_example_stdout(stdout, embeddings=True, label="python-no-deps.py"),
+    )
     run_openai_sdk_example_with_stub(embeddings=True)
     print("API client examples regression passed")
     return 0
