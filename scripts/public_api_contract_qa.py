@@ -40,6 +40,7 @@ ROOT_CARGO = ROOT / "Cargo.toml"
 SERVER_CARGO = ROOT / "crates" / "fathom-server" / "Cargo.toml"
 CORE_CARGO = ROOT / "crates" / "fathom-core" / "Cargo.toml"
 SERVER_MAIN = ROOT / "crates" / "fathom-server" / "src" / "main.rs"
+FRONTEND_PACKAGE = ROOT / "frontend" / "package.json"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contract.yml"
 MODEL_RUNTIME_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "model_runtime_request.yml"
@@ -145,6 +146,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard API example regression self-test|"
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
+    r"Guard frontend package script safety|"
     r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
     r"Guard README clean install consistency|"
     r"Guard launch text normalization metadata|Guard public contract smoke endpoint rows|"
@@ -586,6 +588,33 @@ def assert_frontend_launch_gates(text: str, label: str) -> None:
         "npm --prefix frontend run qa:copy",
     ):
         assert_contains(text, command, label)
+
+
+def assert_frontend_package_scripts(package: dict[str, Any] | None = None, label: str = "frontend/package.json") -> None:
+    if package is None:
+        package = json.loads(read(FRONTEND_PACKAGE))
+    if not isinstance(package, dict):
+        raise AssertionError(f"{label} must be a JSON object")
+    if package.get("private") is not True:
+        raise AssertionError(f"{label} must keep private: true")
+
+    scripts = package.get("scripts")
+    if not isinstance(scripts, dict):
+        raise AssertionError(f"{label} scripts must be an object")
+    expected_scripts = {
+        "dev": "vite --host 127.0.0.1 --port 4185",
+        "preview": "vite preview --host 127.0.0.1 --port 4185",
+        "build": "vite build",
+        "qa:copy": "node scripts/ui-copy-qa.mjs",
+    }
+    for script_name, expected in expected_scripts.items():
+        actual = scripts.get(script_name)
+        if actual != expected:
+            raise AssertionError(f"{label} script {script_name!r} must remain {expected!r}; found {actual!r}")
+    for script_name in ("dev", "preview"):
+        script = scripts[script_name]
+        if "--host 0.0.0.0" in script or "--host ::" in script:
+            raise AssertionError(f"{label} script {script_name!r} must not bind externally")
 
 
 def assert_public_security_docs() -> None:
@@ -4745,6 +4774,55 @@ npm --prefix frontend run qa:copy
         else:
             raise AssertionError("frontend launch gate self-test did not reject command drift")
 
+    valid_frontend_package = {
+        "private": True,
+        "scripts": {
+            "dev": "vite --host 127.0.0.1 --port 4185",
+            "preview": "vite preview --host 127.0.0.1 --port 4185",
+            "build": "vite build",
+            "qa:copy": "node scripts/ui-copy-qa.mjs",
+        },
+    }
+    assert_frontend_package_scripts(valid_frontend_package, "synthetic frontend package")
+    for package, expected in (
+        ({**valid_frontend_package, "private": False}, "private: true"),
+        (
+            {
+                **valid_frontend_package,
+                "scripts": {**valid_frontend_package["scripts"], "dev": "vite --host 0.0.0.0 --port 4185"},
+            },
+            "127.0.0.1",
+        ),
+        (
+            {
+                **valid_frontend_package,
+                "scripts": {**valid_frontend_package["scripts"], "preview": "vite preview --port 4185"},
+            },
+            "127.0.0.1",
+        ),
+        (
+            {
+                **valid_frontend_package,
+                "scripts": {**valid_frontend_package["scripts"], "build": "vite build --mode production"},
+            },
+            "vite build",
+        ),
+        (
+            {
+                **valid_frontend_package,
+                "scripts": {**valid_frontend_package["scripts"], "qa:copy": "node scripts/other.mjs"},
+            },
+            "ui-copy-qa.mjs",
+        ),
+    ):
+        try:
+            assert_frontend_package_scripts(package, "synthetic bad frontend package")
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("frontend package script self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("frontend package script self-test did not reject unsafe package drift")
+
     assert_clean_install_gate("npm --prefix frontend ci\n", "synthetic clean install gate")
     for text, expected in (
         ("npm --prefix frontend install\n", "npm --prefix frontend ci"),
@@ -5119,6 +5197,7 @@ def main() -> int:
     assert_boundary_docs()
     assert_examples_static(manifest)
     assert_launch_checklist_frontend_gates()
+    assert_frontend_package_scripts()
     assert_no_positive_overclaims()
     assert_smoke_manifest_wiring()
     assert_optional_acceptance_docs()
