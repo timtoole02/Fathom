@@ -93,6 +93,8 @@ The static QA also pins the public contract manifest's refusal/boundary inventor
 
 The static QA also pins the standard error envelope documentation to the top-level `error` object with `error.message`, `error.type`, `error.code`, and `error.param`, and rejects bare/ad hoc JSON error shapes in launch-facing docs.
 
+The static QA also pins concrete JSON examples in `docs/api/v1-contract.md` to the narrow launch boundary: chat examples stay non-streaming, embedding examples stay float-only, `/v1/models` examples stay chat-runnable, and response examples do not mix chat, embedding, or error shapes.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:

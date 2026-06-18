@@ -300,6 +300,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard public contract endpoint metadata|"
     r"Guard public contract boundary metadata|"
     r"Guard public contract error envelope docs|"
+    r"Guard v1 example JSON boundary docs|"
     r"Guard issue template contact link routing|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
@@ -1267,6 +1268,7 @@ def assert_endpoint_docs(manifest: dict[str, Any]) -> None:
         assert_contains(combined_docs, code, "public docs error-code set")
 
     assert_standard_error_envelope_docs(manifest)
+    assert_v1_contract_json_examples(manifest)
 
 
 def json_code_blocks(text: str) -> list[Any]:
@@ -1330,6 +1332,103 @@ def assert_standard_error_envelope_docs(
             missing = [field for field in fields if field not in error]
             if missing:
                 raise AssertionError(f"{path.relative_to(ROOT)} standard error envelope missing fields: {missing}")
+
+
+def assert_v1_contract_json_examples(manifest: dict[str, Any], text: str | None = None) -> None:
+    if text is None:
+        text = read(V1_CONTRACT)
+    blocks = [block for block in json_code_blocks(text) if isinstance(block, dict)]
+
+    for block in blocks:
+        if block.get("stream") is True:
+            raise AssertionError("docs/api/v1-contract.md JSON examples must not show streaming chat requests")
+        if block.get("encoding_format") == "base64":
+            raise AssertionError("docs/api/v1-contract.md JSON examples must not show base64 embeddings requests")
+        if "error" not in block and set(block).intersection({"message", "type", "code", "param"}):
+            raise AssertionError("docs/api/v1-contract.md JSON examples must not show bare error fields")
+
+    health_examples = [block for block in blocks if {"ok", "engine", "generation_ready"}.issubset(block)]
+    if len(health_examples) != 1:
+        raise AssertionError("docs/api/v1-contract.md must keep exactly one /v1/health response JSON example")
+    health = health_examples[0]
+    if health.get("engine") != "fathom" or not isinstance(health.get("generation_ready"), bool):
+        raise AssertionError("docs/api/v1-contract.md /v1/health example must stay on the Fathom readiness shape")
+
+    model_list_examples = [
+        block
+        for block in blocks
+        if block.get("object") == "list"
+        and isinstance(block.get("data"), list)
+        and block["data"]
+        and isinstance(block["data"][0], dict)
+        and isinstance(block["data"][0].get("fathom"), dict)
+    ]
+    if len(model_list_examples) != 1:
+        raise AssertionError("docs/api/v1-contract.md must keep exactly one /v1/models response JSON example")
+    model_entry = model_list_examples[0]["data"][0]
+    fathom_model = model_entry["fathom"]
+    if fathom_model.get("provider_kind") != "local":
+        raise AssertionError("docs/api/v1-contract.md /v1/models example must not show external provider placeholders")
+    if fathom_model.get("capability_status") != "Runnable":
+        raise AssertionError("docs/api/v1-contract.md /v1/models example must show only runnable chat/generation models")
+    if "safetensors-hf" not in fathom_model.get("backend_lanes", []):
+        raise AssertionError("docs/api/v1-contract.md /v1/models example must remain a verified SafeTensors/HF chat lane")
+    forbidden_model_keys = {"embedding_dimension", "embedding", "metadata_only", "external_api"}
+    if forbidden_model_keys.intersection(fathom_model) or forbidden_model_keys.intersection(model_entry):
+        raise AssertionError("docs/api/v1-contract.md /v1/models example must not show embedding, metadata-only, or external models")
+
+    chat_requests = [block for block in blocks if isinstance(block.get("messages"), list)]
+    if len(chat_requests) != 1:
+        raise AssertionError("docs/api/v1-contract.md must keep exactly one chat request JSON example")
+    chat_request = chat_requests[0]
+    if chat_request.get("stream") is not False:
+        raise AssertionError("docs/api/v1-contract.md chat request example must keep stream false")
+    assert_non_empty_string(chat_request.get("model"), "docs/api/v1-contract.md chat request model")
+    if not chat_request.get("messages"):
+        raise AssertionError("docs/api/v1-contract.md chat request example must keep non-empty messages")
+    if "encoding_format" in chat_request:
+        raise AssertionError("docs/api/v1-contract.md chat request example must not include embedding fields")
+
+    chat_responses = [block for block in blocks if isinstance(block.get("choices"), list)]
+    if len(chat_responses) != 1:
+        raise AssertionError("docs/api/v1-contract.md must keep exactly one chat response JSON example")
+    chat_response = chat_responses[0]
+    if "data" in chat_response or "error" in chat_response:
+        raise AssertionError("docs/api/v1-contract.md chat response example must not mix embedding data or errors")
+    if not chat_response["choices"] or not isinstance(chat_response["choices"][0].get("message"), dict):
+        raise AssertionError("docs/api/v1-contract.md chat response example must keep assistant message choices")
+
+    embedding_requests = [block for block in blocks if "input" in block]
+    if len(embedding_requests) != 1:
+        raise AssertionError("docs/api/v1-contract.md must keep exactly one embeddings request JSON example")
+    embedding_request = embedding_requests[0]
+    assert_non_empty_string(embedding_request.get("model"), "docs/api/v1-contract.md embeddings request model")
+    if embedding_request.get("encoding_format") != "float":
+        raise AssertionError("docs/api/v1-contract.md embeddings request example must keep encoding_format float")
+    if "messages" in embedding_request:
+        raise AssertionError("docs/api/v1-contract.md embeddings request example must not include chat fields")
+
+    embedding_responses = [
+        block
+        for block in blocks
+        if block.get("object") == "list"
+        and isinstance(block.get("data"), list)
+        and block["data"]
+        and isinstance(block["data"][0], dict)
+        and "embedding" in block["data"][0]
+    ]
+    if len(embedding_responses) != 1:
+        raise AssertionError("docs/api/v1-contract.md must keep exactly one embeddings response JSON example")
+    embedding_response = embedding_responses[0]
+    if "choices" in embedding_response or "error" in embedding_response:
+        raise AssertionError("docs/api/v1-contract.md embeddings response example must not mix chat choices or errors")
+    fathom_embedding = embedding_response.get("fathom")
+    if not isinstance(fathom_embedding, dict) or fathom_embedding.get("scope") != "verified local embedding runtime only":
+        raise AssertionError("docs/api/v1-contract.md embeddings response example must keep verified local embedding scope")
+
+    supported_paths = {(endpoint["method"], endpoint["path"]) for endpoint in manifest.get("supported_endpoints", [])}
+    if ("POST", "/v1/chat/completions") not in supported_paths or ("POST", "/v1/embeddings") not in supported_paths:
+        raise AssertionError("manifest must keep chat and embeddings endpoints for /v1 JSON example QA")
 
 
 def backend_v1_router_block(server_text: str) -> str:
@@ -1485,6 +1584,11 @@ def assert_boundary_docs() -> None:
         launch_text,
         "pins the public contract manifest's refusal/boundary inventory",
         "launch checklist manifest boundary inventory scope",
+    )
+    assert_contains(
+        launch_text,
+        "pins concrete JSON examples in `docs/api/v1-contract.md` to the narrow launch boundary",
+        "launch checklist v1 JSON example boundary scope",
     )
     assert_contains(launch_text, "root `.gitattributes` text-normalization metadata", "launch checklist text-normalization metadata scope")
     assert_contains(
@@ -2451,6 +2555,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "pins `docs/api/public-contract.json` refusal/boundary inventory",
         "launch evidence manifest boundary inventory scope",
+    )
+    assert_contains(
+        evidence_text,
+        "pins concrete JSON examples in `docs/api/v1-contract.md` to the narrow launch boundary",
+        "launch evidence v1 JSON example boundary scope",
     )
     assert_contains(
         evidence_text,
@@ -5039,6 +5148,79 @@ All application errors use `"error": {` with `error.message`, `error.type`, `err
                 raise AssertionError("standard error envelope docs self-test failed for the wrong reason") from exc
         else:
             raise AssertionError("standard error envelope docs self-test did not reject docs drift")
+
+    valid_v1_json_examples = """
+```json
+{"error": {"message": "Nope.", "type": "invalid_request", "code": "invalid_request", "param": null}}
+```
+
+```json
+{"ok": true, "engine": "fathom", "generation_ready": true}
+```
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "chat-model",
+      "object": "model",
+      "created": 0,
+      "owned_by": "fathom",
+      "fathom": {
+        "provider_kind": "local",
+        "status": "available",
+        "capability_status": "Runnable",
+        "capability_summary": "Real local generation is available through a verified backend lane.",
+        "backend_lanes": ["safetensors-hf"]
+      }
+    }
+  ]
+}
+```
+
+```json
+{"model": "chat-model", "messages": [{"role": "user", "content": "Hi"}], "stream": false}
+```
+
+```json
+{"id": "chatcmpl-1", "object": "chat.completion", "created": 1, "model": "chat-model", "choices": [{"index": 0, "message": {"role": "assistant", "content": "Hi"}, "finish_reason": "stop"}]}
+```
+
+```json
+{"model": "embedding-model", "input": ["hello"], "encoding_format": "float"}
+```
+
+```json
+{"object": "list", "data": [{"object": "embedding", "embedding": [0.1], "index": 0}], "model": "embedding-model", "usage": {"prompt_tokens": 0, "total_tokens": 0}, "fathom": {"runtime": "candle-bert-embeddings", "embedding_dimension": 384, "scope": "verified local embedding runtime only"}}
+```
+"""
+    assert_v1_contract_json_examples(repo_manifest, valid_v1_json_examples)
+    for text, expected in (
+        (
+            valid_v1_json_examples.replace('"stream": false', '"stream": true'),
+            "streaming chat requests",
+        ),
+        (
+            valid_v1_json_examples.replace('"encoding_format": "float"', '"encoding_format": "base64"'),
+            "base64 embeddings requests",
+        ),
+        (
+            valid_v1_json_examples.replace('"capability_status": "Runnable"', '"capability_status": "EmbeddingOnly"'),
+            "runnable chat/generation models",
+        ),
+        (
+            valid_v1_json_examples.replace('"choices": [', '"data": [], "choices": ['),
+            "mix embedding data or errors",
+        ),
+    ):
+        try:
+            assert_v1_contract_json_examples(repo_manifest, text)
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("v1 JSON examples self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("v1 JSON examples self-test did not reject docs drift")
 
     allowed_endpoints = allowed_example_endpoints(repo_manifest)
     good_example = """
