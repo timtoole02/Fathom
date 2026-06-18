@@ -39,6 +39,7 @@ GITATTRIBUTES = ROOT / ".gitattributes"
 ROOT_CARGO = ROOT / "Cargo.toml"
 SERVER_CARGO = ROOT / "crates" / "fathom-server" / "Cargo.toml"
 CORE_CARGO = ROOT / "crates" / "fathom-core" / "Cargo.toml"
+SERVER_MAIN = ROOT / "crates" / "fathom-server" / "src" / "main.rs"
 CI = ROOT / ".github" / "workflows" / "ci.yml"
 API_CONTRACT_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "api_contract.yml"
 MODEL_RUNTIME_ISSUE_TEMPLATE = ROOT / ".github" / "ISSUE_TEMPLATE" / "model_runtime_request.yml"
@@ -145,6 +146,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
     r"Guard contributing syntax gate consistency|Guard launch clean install consistency|"
     r"Guard launch text normalization metadata|Guard public contract smoke endpoint rows|"
+    r"Guard backend v1 router manifest drift|"
     r"Guard .+ build artifacts|"
     r"Guard .+benchmark artifacts|"
     r"Guard .+ inventory artifacts|"
@@ -759,6 +761,7 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 "scripts/ci_static_policy.py",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
+                "crates/fathom-server/src/main.rs",
             ],
             cwd=ROOT,
             text=True,
@@ -926,6 +929,67 @@ def assert_endpoint_docs(manifest: dict[str, Any]) -> None:
     for code in REQUIRED_ERROR_CODES:
         combined_docs = "\n".join(read(path) for path in DOC_PATHS)
         assert_contains(combined_docs, code, "public docs error-code set")
+
+
+def backend_v1_router_block(server_text: str) -> str:
+    match = re.search(
+        r"let\s+v1_router\s*=\s*Router::new\(\)(?P<router>.*?)\n\s*Router::new\(\)",
+        server_text,
+        re.S,
+    )
+    if not match:
+        raise AssertionError("crates/fathom-server/src/main.rs is missing the v1_router Router::new() block")
+    return match.group("router")
+
+
+def assert_backend_v1_router_matches_manifest(manifest: dict[str, Any], server_text: str | None = None) -> None:
+    if server_text is None:
+        server_text = read(SERVER_MAIN)
+    router_text = backend_v1_router_block(server_text)
+
+    method_helpers = {
+        "GET": "get",
+        "POST": "post",
+    }
+    for endpoint in manifest.get("supported_endpoints", []):
+        method = endpoint.get("method")
+        path = endpoint.get("path")
+        if not isinstance(method, str) or not isinstance(path, str):
+            raise AssertionError("manifest supported_endpoints entries must include string method/path")
+        if method not in method_helpers:
+            raise AssertionError(f"unsupported backend router method in manifest: {method!r}")
+        if not path.startswith("/v1/"):
+            raise AssertionError(f"backend v1 router check only supports /v1 endpoints: {method} {path}")
+
+        nested_path = path.removeprefix("/v1")
+        route_pattern = re.compile(
+            rf'\.route\(\s*"{re.escape(nested_path)}"\s*,\s*'
+            rf"{method_helpers[method]}\([^)]+\)\.fallback\(v1_method_not_allowed\)",
+            re.S,
+        )
+        if not route_pattern.search(router_text):
+            raise AssertionError(
+                "backend v1 router is missing manifest endpoint with method fallback: "
+                f"{method} {path}"
+            )
+
+    if ".fallback(v1_not_found)" not in router_text:
+        raise AssertionError("backend v1 router must keep v1_not_found fallback for unsupported /v1 routes")
+
+    if 'nest("/v1", v1_router)' not in server_text:
+        raise AssertionError("backend app router must keep the /v1 router nested at /v1")
+
+    for function_name, expected_code in (
+        ("v1_json_rejection_error", "invalid_request"),
+        ("v1_not_found", "not_found"),
+        ("v1_method_not_allowed", "method_not_allowed"),
+    ):
+        function_match = re.search(rf"fn\s+{function_name}\b|async\s+fn\s+{function_name}\b", server_text)
+        if not function_match:
+            raise AssertionError(f"backend is missing {function_name}")
+        snippet = server_text[function_match.start() : function_match.start() + 900]
+        if f'"{expected_code}"' not in snippet:
+            raise AssertionError(f"backend {function_name} must keep {expected_code!r} error envelope code")
 
 
 def assert_manifest_base_url_alignment(manifest: dict[str, Any], texts: dict[str, str] | None = None) -> None:
@@ -4543,6 +4607,70 @@ body:
     else:
         raise AssertionError("manifest base URL self-test did not reject stale public docs/examples")
 
+    router_manifest = {
+        "supported_endpoints": [
+            {"method": "GET", "path": "/v1/health"},
+            {"method": "POST", "path": "/v1/chat/completions"},
+        ]
+    }
+    valid_router = """
+fn app_router(state: AppState) -> Router {
+    let v1_router = Router::new()
+        .route("/health", get(v1_health).fallback(v1_method_not_allowed))
+        .route(
+            "/chat/completions",
+            post(v1_chat_completions_route).fallback(v1_method_not_allowed),
+        )
+        .fallback(v1_not_found);
+
+    Router::new()
+        .nest("/v1", v1_router)
+        .with_state(state)
+}
+
+fn v1_json_rejection_error(rejection: JsonRejection) -> (StatusCode, Json<serde_json::Value>) {
+    error_json(StatusCode::BAD_REQUEST, "Malformed JSON request body", "invalid_request")
+}
+
+async fn v1_not_found(uri: Uri) -> ApiError {
+    error_json(StatusCode::NOT_FOUND, "missing", "not_found")
+}
+
+async fn v1_method_not_allowed(method: Method, uri: Uri) -> ApiError {
+    error_json(StatusCode::METHOD_NOT_ALLOWED, "wrong method", "method_not_allowed")
+}
+"""
+    assert_backend_v1_router_matches_manifest(router_manifest, valid_router)
+    for text, expected in (
+        (
+            valid_router.replace('.route("/health", get(v1_health).fallback(v1_method_not_allowed))\n', ""),
+            "GET /v1/health",
+        ),
+        (
+            valid_router.replace(".fallback(v1_method_not_allowed)", ".fallback(other_method_not_allowed)", 1),
+            "GET /v1/health",
+        ),
+        (
+            valid_router.replace(".fallback(v1_not_found);", ";"),
+            "v1_not_found fallback",
+        ),
+        (
+            valid_router.replace('.nest("/v1", v1_router)', '.nest("/api/v1", v1_router)'),
+            "nested at /v1",
+        ),
+        (
+            valid_router.replace('"method_not_allowed"', '"invalid_request"'),
+            "method_not_allowed",
+        ),
+    ):
+        try:
+            assert_backend_v1_router_matches_manifest(router_manifest, text)
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("backend v1 router self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("backend v1 router self-test did not reject manifest/router drift")
+
     required_python = {"scripts/public_api_contract_qa.py", "examples/api/python-no-deps.py"}
     valid_python_gate = "python3 -m py_compile scripts/public_api_contract_qa.py examples/api/python-no-deps.py\n"
     assert_python_syntax_paths(valid_python_gate, "synthetic Python syntax gate", required_python)
@@ -4973,6 +5101,7 @@ def main() -> int:
     assert_manifest_shape(manifest)
     assert_gitattributes_text_normalization()
     assert_endpoint_docs(manifest)
+    assert_backend_v1_router_matches_manifest(manifest)
     assert_manifest_base_url_alignment(manifest)
     assert_roadmap_last_updated_freshness()
     assert_license_metadata()
