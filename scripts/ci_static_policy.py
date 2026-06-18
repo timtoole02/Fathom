@@ -33,6 +33,15 @@ WRITE_TOKEN_PERMISSION_PATTERN = re.compile(
     r"issues|models|packages|pages|pull-requests|security-events|statuses"
     r")\s*:\s*write\s*(?:#.*)?$"
 )
+SECRET_CONTEXT_PATTERN = re.compile(r"\$\{\{\s*secrets\.", re.IGNORECASE)
+TOKEN_CONTEXT_PATTERN = re.compile(r"\$\{\{\s*github\.token\s*\}\}", re.IGNORECASE)
+SENSITIVE_ENV_PATTERN = re.compile(
+    r"^\s*(?:"
+    r"GITHUB_TOKEN|GH_TOKEN|NPM_TOKEN|CARGO_REGISTRY_TOKEN|"
+    r"HF_TOKEN|HUGGING_FACE_HUB_TOKEN|OPENAI_API_KEY"
+    r")\s*:",
+    re.IGNORECASE,
+)
 MAX_JOB_TIMEOUT_MINUTES = 30
 
 
@@ -115,6 +124,16 @@ def evaluate_ci_text(text: str) -> list[str]:
     failures: list[str] = []
 
     failures.extend(job_timeout_failures(text))
+
+    if SECRET_CONTEXT_PATTERN.search(text):
+        failures.append("default CI must not reference GitHub Actions secrets")
+    if TOKEN_CONTEXT_PATTERN.search(text):
+        failures.append("default CI must not reference github.token directly")
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if SENSITIVE_ENV_PATTERN.match(line):
+            failures.append(
+                f"default CI must not define sensitive token environment variables, line {line_number}: {line.strip()}"
+            )
 
     concurrency_block = top_level_concurrency_block(text)
     if concurrency_block is None:
@@ -309,6 +328,9 @@ jobs:
         "missing concurrency cancellation": valid.replace("  cancel-in-progress: true\n", ""),
         "missing job timeout": valid.replace("    timeout-minutes: 30\n", ""),
         "too-large job timeout": valid.replace("    timeout-minutes: 30\n", "    timeout-minutes: 60\n"),
+        "secrets context": valid + "      - run: echo ${{ secrets.NPM_TOKEN }}\n",
+        "github token context": valid + "      - run: echo ${{ github.token }}\n",
+        "sensitive token env": valid + "env:\n  CARGO_REGISTRY_TOKEN: placeholder\n",
         "write-all token permissions": "permissions: write-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
         "read-all token permissions": "permissions: read-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
         "contents write token permission": "permissions:\n  contents: write\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
