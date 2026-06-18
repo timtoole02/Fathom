@@ -33,6 +33,7 @@ WRITE_TOKEN_PERMISSION_PATTERN = re.compile(
     r"issues|models|packages|pages|pull-requests|security-events|statuses"
     r")\s*:\s*write\s*(?:#.*)?$"
 )
+MAX_JOB_TIMEOUT_MINUTES = 30
 
 
 def top_level_permissions_block(text: str) -> list[str] | None:
@@ -51,8 +52,55 @@ def top_level_permissions_block(text: str) -> list[str] | None:
     return None
 
 
+def job_timeout_failures(text: str) -> list[str]:
+    failures: list[str] = []
+    lines = text.splitlines()
+    in_jobs = False
+    current_job: str | None = None
+    saw_timeout = False
+
+    def finish_job() -> None:
+        if current_job is not None and not saw_timeout:
+            failures.append(f"default CI job {current_job!r} must set timeout-minutes")
+
+    for line_number, line in enumerate(lines, start=1):
+        if re.match(r"^jobs:\s*(?:#.*)?$", line):
+            in_jobs = True
+            continue
+        if in_jobs and line and not line.startswith((" ", "\t")):
+            finish_job()
+            in_jobs = False
+            break
+        if not in_jobs:
+            continue
+
+        job_match = re.match(r"^  ([A-Za-z0-9_-]+):\s*(?:#.*)?$", line)
+        if job_match:
+            finish_job()
+            current_job = job_match.group(1)
+            saw_timeout = False
+            continue
+
+        timeout_match = re.match(r"^    timeout-minutes:\s*([0-9]+)\s*(?:#.*)?$", line)
+        if timeout_match and current_job is not None:
+            saw_timeout = True
+            timeout_minutes = int(timeout_match.group(1))
+            if timeout_minutes <= 0 or timeout_minutes > MAX_JOB_TIMEOUT_MINUTES:
+                failures.append(
+                    "default CI job "
+                    f"{current_job!r} timeout-minutes must be 1-{MAX_JOB_TIMEOUT_MINUTES}, "
+                    f"line {line_number}: {timeout_minutes}"
+                )
+
+    if in_jobs:
+        finish_job()
+    return failures
+
+
 def evaluate_ci_text(text: str) -> list[str]:
     failures: list[str] = []
+
+    failures.extend(job_timeout_failures(text))
 
     if re.search(r"(?m)^\s*-?\s*pull_request_target\s*:", text) or re.search(
         r"(?m)^\s*on\s*:\s*\[[^\]]*\bpull_request_target\b", text
@@ -190,6 +238,7 @@ permissions:
   contents: read
 jobs:
   rust:
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -197,6 +246,7 @@ jobs:
       run: cargo test -q
       run: bash scripts/public_api_contract_smoke.sh
   static-safety:
+    timeout-minutes: 15
     steps:
       - run: |
           bash -n scripts/public_api_contract_smoke.sh
@@ -217,6 +267,8 @@ jobs:
 
     cases = {
         "missing token permissions": "run: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
+        "missing job timeout": valid.replace("    timeout-minutes: 30\n", ""),
+        "too-large job timeout": valid.replace("    timeout-minutes: 30\n", "    timeout-minutes: 60\n"),
         "write-all token permissions": "permissions: write-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
         "read-all token permissions": "permissions: read-all\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
         "contents write token permission": "permissions:\n  contents: write\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test",
