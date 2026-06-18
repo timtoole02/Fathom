@@ -80,6 +80,30 @@ PUBLIC_DOC_LOCAL_LINK_PATHS = (
     LAUNCH_EVIDENCE,
     *sorted((ROOT / "docs" / "api").glob("*.md")),
 )
+PR_TEMPLATE_REQUIRED_CHECKBOXES = (
+    "This PR does not fake inference, embeddings, installs, downloads, readiness, benchmark results, or runtime availability.",
+    "Any new/changed support is described narrowly by format, family, task, feature flag, fixture, endpoint, and known blockers.",
+    "This PR does not imply broad GGUF runtime/tokenizer/generation support, ONNX chat/general ONNX support, PyTorch `.bin` loading, arbitrary SafeTensors execution, streaming/full OpenAI parity, GPU support, batching, or performance claims unless implemented and verified here.",
+    "Public text, logs, screenshots, fixtures, and generated artifacts were reviewed for private prompts, credentials, usernames, hostnames, absolute local paths, and model-store details.",
+    "Attached evidence uses synthetic/share-safe prompts and minimal local context.",
+    "`bash scripts/public_risk_scan.sh` was run when public-facing text or artifacts changed; this is a guardrail, not a complete privacy audit.",
+    "README, CONTRIBUTING, SECURITY, API docs, UI copy, and tests tell the same capability story where relevant.",
+    "`/v1` behavior changes are reflected in `docs/api/v1-contract.md` when relevant.",
+    "User-facing copy distinguishes runnable, planned, blocked, metadata-only, and unavailable states truthfully.",
+    "`git diff --check`",
+    "Python syntax gate from `docs/public-launch-checklist.md` was run: `python3 -m py_compile ...`",
+    "Shell syntax gate from `docs/public-launch-checklist.md` was run: `bash -n ...`",
+    "`python3 scripts/public_api_contract_qa.py`",
+    "`python3 scripts/public_api_contract_qa.py --self-test`",
+    "`python3 scripts/ci_static_policy.py`",
+    "`python3 scripts/ci_static_policy.py --self-test`",
+    "`bash scripts/public_risk_scan.sh --self-test`",
+    "`bash scripts/public_risk_scan.sh`",
+    "Not applicable / explained below",
+    "For backend/API changes, I considered the optional networked acceptance smoke. It remains non-default CI and should be run only as a targeted manual check when appropriate: `FATHOM_ACCEPTANCE_KEEP_ARTIFACTS=1 bash scripts/backend_acceptance_smoke.sh`.",
+    "For ONNX embedding changes, I considered the targeted/manual feature gate: `cargo test -q --features onnx-embeddings-ort`.",
+    "Release-facing claims include exact evidence and caveats: commit, feature flags, model or fixture, request shape, warm/cold state, and what the evidence does not prove.",
+)
 OFFLINE_QA_PYTHON_PATHS = (
     "scripts/api_client_examples_regression.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -148,6 +172,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Tighten public smoke .+|Guard refusal matrix row drift|Guard failed public smoke .+ drift|"
     r"Standardize v1 unsupported endpoint refusals|Standardize v1 malformed JSON refusals|"
     r"Harden API contract issue privacy checks|Guard PR template truthfulness privacy checks|"
+    r"Guard PR template checkbox integrity|"
     r"Guard public issue template privacy checks|Guard public issue template required fields|"
     r"Guard public issue template routing metadata|"
     r"Guard public docs link QA|"
@@ -384,6 +409,19 @@ def read(path: Path) -> str:
 def assert_contains(text: str, needle: str, label: str) -> None:
     if needle not in text:
         raise AssertionError(f"{label} missing {needle!r}")
+
+
+def assert_required_unchecked_task_list_items(text: str, label: str, required_items: tuple[str, ...]) -> None:
+    checklist_items = {
+        match.group(2).strip(): match.group(1)
+        for match in re.finditer(r"(?m)^- \[([ xX])\]\s+(.+?)\s*$", text)
+    }
+    for item in required_items:
+        state = checklist_items.get(item)
+        if state is None:
+            raise AssertionError(f"{label} must keep unchecked task-list item: {item!r}")
+        if state != " ":
+            raise AssertionError(f"{label} task-list item must remain unchecked: {item!r}")
 
 
 def markdown_inline_link_targets(text: str) -> list[tuple[int, str]]:
@@ -1225,6 +1263,11 @@ def assert_boundary_docs() -> None:
         launch_text,
         "launch-facing relative Markdown links",
         "launch checklist local Markdown link QA scope",
+    )
+    assert_contains(
+        launch_text,
+        "unchecked Markdown task-list items",
+        "launch checklist PR template checkbox QA scope",
     )
     assert_contains(
         launch_text,
@@ -2135,6 +2178,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "launch-facing relative Markdown links",
         "launch evidence local Markdown link QA scope",
+    )
+    assert_contains(
+        evidence_text,
+        "unchecked Markdown task-list items",
+        "launch evidence PR template checkbox QA scope",
     )
     assert_contains(evidence_text, "Git LFS pointer-file guard", "launch evidence Git LFS pointer risk-scan scope")
     assert_contains(
@@ -4707,6 +4755,28 @@ POST {{base}}/v1/chat/completions
         if not any(expected in failure for failure in failures):
             raise AssertionError(f"public docs local-link self-test did not reject {expected}: {failures}")
 
+    synthetic_pr_template = "- [ ] Keep public claims narrow.\n- [ ] Run static QA.\n"
+    assert_required_unchecked_task_list_items(
+        synthetic_pr_template,
+        "synthetic PR template",
+        ("Keep public claims narrow.", "Run static QA."),
+    )
+    for text, expected in (
+        ("- [x] Keep public claims narrow.\n- [ ] Run static QA.\n", "must remain unchecked"),
+        ("- Keep public claims narrow.\n- [ ] Run static QA.\n", "must keep unchecked task-list item"),
+    ):
+        try:
+            assert_required_unchecked_task_list_items(
+                text,
+                "synthetic bad PR template",
+                ("Keep public claims narrow.", "Run static QA."),
+            )
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("PR template checkbox self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("PR template checkbox self-test did not reject checklist drift")
+
     valid_issue_template = """
 name: API contract issue
 description: Report or request a narrow `/v1` API contract change.
@@ -5446,6 +5516,7 @@ def assert_pull_request_template() -> None:
     ]
     for phrase in required_phrases:
         assert_contains(template_text, phrase, label)
+    assert_required_unchecked_task_list_items(template_text, label, PR_TEMPLATE_REQUIRED_CHECKBOXES)
 
 
 def main() -> int:

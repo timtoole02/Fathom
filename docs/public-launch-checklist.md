@@ -81,6 +81,8 @@ The static QA also requires root `.gitattributes` text-normalization metadata so
 
 The static QA also checks launch-facing relative Markdown links in `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `.github/pull_request_template.md`, public launch docs, and `docs/api/*.md` stay inside the repository and point at existing local files. External URLs and anchors remain outside this offline link-integrity guard.
 
+The static QA also keeps the public pull request template's reviewer prompts as unchecked Markdown task-list items so launch truthfulness, privacy/artifact review, and gate-run acknowledgements cannot silently drift into plain bullets or pre-checked boxes.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:
