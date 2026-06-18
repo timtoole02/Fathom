@@ -104,6 +104,10 @@ PR_TEMPLATE_REQUIRED_CHECKBOXES = (
     "For ONNX embedding changes, I considered the targeted/manual feature gate: `cargo test -q --features onnx-embeddings-ort`.",
     "Release-facing claims include exact evidence and caveats: commit, feature flags, model or fixture, request shape, warm/cold state, and what the evidence does not prove.",
 )
+ALLOWED_NON_CONTRACT_EXAMPLE_SURFACES = {
+    "GET /api/models/catalog",
+    "POST /api/models/catalog/install",
+}
 OFFLINE_QA_PYTHON_PATHS = (
     "scripts/api_client_examples_regression.py",
     "scripts/backend_acceptance_artifact_qa.py",
@@ -176,6 +180,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard public issue template privacy checks|Guard public issue template required fields|"
     r"Guard public issue template routing metadata|"
     r"Guard public docs link QA|"
+    r"Guard non-contract example surface metadata|"
     r"Guard issue template contact link routing|"
     r"Guard issue template config privacy checks|"
     r"Guard OpenAI SDK example regression|Guard CI token permissions|Guard offline shell syntax coverage|"
@@ -281,6 +286,26 @@ def assert_non_empty_string(value: Any, label: str) -> None:
         raise AssertionError(f"{label} must be a non-empty string")
 
 
+def assert_non_contract_example_surfaces(allowed: Any) -> None:
+    if not isinstance(allowed, list):
+        raise AssertionError("manifest.non_contract_surfaces_allowed_in_examples must be a list")
+    seen_allowed: set[str] = set()
+    for index, item in enumerate(allowed):
+        assert_non_empty_string(item, f"manifest.non_contract_surfaces_allowed_in_examples[{index}]")
+        if item in seen_allowed:
+            raise AssertionError(f"manifest duplicate non-contract example surface: {item}")
+        seen_allowed.add(item)
+
+        match = re.fullmatch(r"(GET|POST) (/api/[A-Za-z0-9_./{}:-]+)", item)
+        if match is None:
+            raise AssertionError(
+                "manifest non-contract example surfaces must use uppercase GET/POST local /api paths: "
+                f"{item!r}"
+            )
+        if item not in ALLOWED_NON_CONTRACT_EXAMPLE_SURFACES:
+            raise AssertionError(f"manifest non-contract example surface is not reviewed for public examples: {item!r}")
+
+
 def assert_manifest_shape(manifest: dict[str, Any]) -> None:
     for key in ("name", "status", "base_url", "scope_note"):
         assert_non_empty_string(manifest.get(key), f"manifest.{key}")
@@ -354,15 +379,7 @@ def assert_manifest_shape(manifest: dict[str, Any]) -> None:
         if "request_hint" in boundary and not has_status:
             assert_non_empty_string(boundary.get("request_hint"), f"manifest.expected_boundary_errors[{index}].request_hint")
 
-    allowed = manifest.get("non_contract_surfaces_allowed_in_examples")
-    if not isinstance(allowed, list):
-        raise AssertionError("manifest.non_contract_surfaces_allowed_in_examples must be a list")
-    seen_allowed: set[str] = set()
-    for index, item in enumerate(allowed):
-        assert_non_empty_string(item, f"manifest.non_contract_surfaces_allowed_in_examples[{index}]")
-        if item in seen_allowed:
-            raise AssertionError(f"manifest duplicate non-contract example surface: {item}")
-        seen_allowed.add(item)
+    assert_non_contract_example_surfaces(manifest.get("non_contract_surfaces_allowed_in_examples"))
 
     ci_policy = manifest.get("ci_policy")
     if not isinstance(ci_policy, dict):
@@ -1258,6 +1275,11 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "api/public-contract.json", "launch checklist manifest link")
     assert_contains(launch_text, "api/v1-contract.md", "launch checklist v1 contract link")
     assert_contains(launch_text, "scripts/public_api_contract_smoke.sh", "launch checklist contract smoke")
+    assert_contains(
+        launch_text,
+        "non-contract example surfaces constrained to reviewed local catalog helper paths",
+        "launch checklist non-contract example surface metadata scope",
+    )
     assert_contains(launch_text, "root `.gitattributes` text-normalization metadata", "launch checklist text-normalization metadata scope")
     assert_contains(
         launch_text,
@@ -2209,6 +2231,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")
+    assert_contains(
+        evidence_text,
+        "non-contract example surfaces constrained to reviewed local catalog helper paths",
+        "launch evidence non-contract example surface metadata scope",
+    )
     assert_contains(evidence_text, "manifest-to-`/v1` docs boundary coverage", "launch evidence manifest docs boundary gate")
     assert_contains(evidence_text, "manifest `base_url` alignment across public docs/examples", "launch evidence manifest base URL gate")
     assert_contains(
@@ -4703,6 +4730,25 @@ POST {{base}}/v1/chat/completions
                 raise
         else:
             raise AssertionError("examples/api static self-test did not reject unsafe example drift")
+
+    assert_non_contract_example_surfaces(
+        ["GET /api/models/catalog", "POST /api/models/catalog/install"]
+    )
+    for surfaces, expected in (
+        (["get /api/models/catalog"], "uppercase GET/POST local /api paths"),
+        (["GET /v1/responses"], "uppercase GET/POST local /api paths"),
+        (["GET https://example.invalid/catalog"], "uppercase GET/POST local /api paths"),
+        (["GET /api/admin/debug"], "not reviewed for public examples"),
+        (["DELETE /api/models/catalog"], "uppercase GET/POST local /api paths"),
+        (["GET /api/models/catalog", "GET /api/models/catalog"], "duplicate non-contract example surface"),
+    ):
+        try:
+            assert_non_contract_example_surfaces(surfaces)
+        except AssertionError as exc:
+            if expected not in str(exc):
+                raise AssertionError("non-contract example surface self-test failed for the wrong reason") from exc
+        else:
+            raise AssertionError("non-contract example surface self-test did not reject unsafe manifest drift")
 
     bad_lines = [
         ("docs/api/example.md", "Fathom supports streaming chat completions for clients."),

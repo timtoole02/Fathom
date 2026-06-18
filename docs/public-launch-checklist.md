@@ -83,6 +83,8 @@ The static QA also checks launch-facing relative Markdown links in `README.md`, 
 
 The static QA also keeps the public pull request template's reviewer prompts as unchecked Markdown task-list items so launch truthfulness, privacy/artifact review, and gate-run acknowledgements cannot silently drift into plain bullets or pre-checked boxes.
 
+The static QA also keeps `docs/api/public-contract.json` non-contract example surfaces constrained to reviewed local catalog helper paths, so examples cannot silently bless `/v1` preview endpoints, external URLs, malformed methods, or broad internal API paths.
+
 ## 3. Backend/API quick smoke
 
 For a backend-only manual pass:
