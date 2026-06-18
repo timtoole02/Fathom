@@ -27,6 +27,11 @@ REQUIRED_ARTIFACT_QA_COMMANDS = (
     "python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py",
     "python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py",
 )
+ALLOWED_ACTION_USES = {
+    "actions/checkout@v4",
+    "actions/setup-node@v4",
+    "dtolnay/rust-toolchain@stable",
+}
 WRITE_TOKEN_PERMISSION_PATTERN = re.compile(
     r"^\s*(?:"
     r"actions|attestations|checks|contents|deployments|discussions|id-token|"
@@ -182,14 +187,21 @@ def evaluate_ci_text(text: str) -> list[str]:
     saw_artifact_qa_commands = {command: False for command in REQUIRED_ARTIFACT_QA_COMMANDS}
     for line_number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
-        if re.match(r"uses:\s*actions/checkout@v[0-9]+", stripped):
+        uses_match = re.match(r"-?\s*uses:\s*([^\s#]+)\s*(?:#.*)?$", stripped)
+        if uses_match:
+            action_ref = uses_match.group(1)
+            if action_ref not in ALLOWED_ACTION_USES:
+                failures.append(
+                    f"default CI action must be explicitly allowlisted, line {line_number}: {action_ref}"
+                )
+        if re.match(r"-?\s*uses:\s*actions/checkout@v[0-9]+", stripped):
             lookahead = "\n".join(text.splitlines()[line_number : line_number + 8])
             if not re.search(r"^\s*persist-credentials:\s*false\s*(?:#.*)?$", lookahead, re.MULTILINE):
                 failures.append(
                     "default CI checkout must set persist-credentials: false, "
                     f"line {line_number}: {stripped}"
                 )
-        if re.match(r"uses:\s*actions/setup-node@v[0-9]+", stripped):
+        if re.match(r"-?\s*uses:\s*actions/setup-node@v[0-9]+", stripped):
             lookahead = "\n".join(text.splitlines()[line_number : line_number + 8])
             if re.search(r"^\s*cache\s*:", lookahead, re.MULTILINE):
                 if not re.search(r"^\s*cache:\s*npm\s*(?:#.*)?$", lookahead, re.MULTILINE):
@@ -354,6 +366,9 @@ jobs:
         "missing public risk scan self-test": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh",
         "missing public risk scan": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh --self-test",
         "missing diff check": "permissions:\n  contents: read\nrun: bash scripts/public_api_contract_smoke.sh\nrun: python3 scripts/ci_static_policy.py --self-test\nrun: bash scripts/public_risk_scan.sh --self-test\nrun: bash scripts/public_risk_scan.sh",
+        "unallowlisted third-party action": valid
+        + "      - uses: vendor/unreviewed-action@v1\n",
+        "mutable checkout action ref": valid.replace("actions/checkout@v4", "actions/checkout@main"),
         "missing public contract artifact QA": valid.replace(
             "      - run: python3 scripts/public_contract_smoke_artifact_qa.py\n", ""
         ),
