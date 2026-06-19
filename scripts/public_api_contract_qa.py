@@ -273,6 +273,17 @@ OPTIONAL_ACCEPTANCE_DOCS = (
         "scripts/minilm_embeddings_optional_api_acceptance_smoke.sh",
         "scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
         "embedding quality",
+        (
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_PORT",
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_WAIT_SECONDS",
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_REQUEST_TIMEOUT",
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_KEEP_ARTIFACTS",
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_ROOT",
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_MODELS_DIR",
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_STATE_DIR",
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_ARTIFACT_DIR",
+            "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_LOG_DIR",
+        ),
     ),
     (
         SMOLLM2_OPTIONAL_ACCEPTANCE,
@@ -280,6 +291,17 @@ OPTIONAL_ACCEPTANCE_DOCS = (
         "scripts/smollm2_optional_api_acceptance_smoke.sh",
         "scripts/smollm2_optional_api_acceptance_artifact_qa.py",
         "larger-demo evidence only",
+        (
+            "FATHOM_SMOLLM2_ACCEPTANCE_PORT",
+            "FATHOM_SMOLLM2_ACCEPTANCE_WAIT_SECONDS",
+            "FATHOM_SMOLLM2_ACCEPTANCE_REQUEST_TIMEOUT",
+            "FATHOM_SMOLLM2_ACCEPTANCE_KEEP_ARTIFACTS",
+            "FATHOM_SMOLLM2_ACCEPTANCE_ROOT",
+            "FATHOM_SMOLLM2_ACCEPTANCE_MODELS_DIR",
+            "FATHOM_SMOLLM2_ACCEPTANCE_STATE_DIR",
+            "FATHOM_SMOLLM2_ACCEPTANCE_ARTIFACT_DIR",
+            "FATHOM_SMOLLM2_ACCEPTANCE_LOG_DIR",
+        ),
     ),
     (
         QWEN25_OPTIONAL_ACCEPTANCE,
@@ -287,6 +309,17 @@ OPTIONAL_ACCEPTANCE_DOCS = (
         "scripts/qwen25_optional_api_acceptance_smoke.sh",
         "scripts/qwen25_optional_api_acceptance_artifact_qa.py",
         "larger-demo evidence only",
+        (
+            "FATHOM_QWEN25_ACCEPTANCE_PORT",
+            "FATHOM_QWEN25_ACCEPTANCE_WAIT_SECONDS",
+            "FATHOM_QWEN25_ACCEPTANCE_REQUEST_TIMEOUT",
+            "FATHOM_QWEN25_ACCEPTANCE_KEEP_ARTIFACTS",
+            "FATHOM_QWEN25_ACCEPTANCE_ROOT",
+            "FATHOM_QWEN25_ACCEPTANCE_MODELS_DIR",
+            "FATHOM_QWEN25_ACCEPTANCE_STATE_DIR",
+            "FATHOM_QWEN25_ACCEPTANCE_ARTIFACT_DIR",
+            "FATHOM_QWEN25_ACCEPTANCE_LOG_DIR",
+        ),
     ),
 )
 PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
@@ -320,6 +353,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard API Client Example Defaults|"
     r"Guard API client dependency boundaries|"
     r"Guard API Client Environment Overrides|"
+    r"Guard optional acceptance env docs|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
     r"Guard API example regression self-test|"
@@ -5848,7 +5882,7 @@ def assert_optional_acceptance_docs() -> None:
         "streaming",
         "full OpenAI API parity",
     ]
-    for path, opt_in_env, smoke_script, artifact_qa_script, evidence_scope in OPTIONAL_ACCEPTANCE_DOCS:
+    for path, opt_in_env, smoke_script, artifact_qa_script, evidence_scope, env_vars in OPTIONAL_ACCEPTANCE_DOCS:
         text = read(path)
         label = str(path.relative_to(ROOT))
         for phrase in required_boundaries:
@@ -5857,6 +5891,8 @@ def assert_optional_acceptance_docs() -> None:
         assert_contains(text, smoke_script, label)
         assert_contains(text, artifact_qa_script, label)
         assert_contains(text, evidence_scope, label)
+        for env_var in env_vars:
+            assert_contains(text, env_var, label)
 
 
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:

@@ -33,6 +33,21 @@ python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py /path/to/artifacts
 
 With no arguments, the artifact QA runs a dependency-free synthetic self-test.
 
+## Harness overrides
+
+The opt-in harness accepts these variables when you need an isolated path, a different local port, or longer local timing:
+
+- `FATHOM_QWEN25_ACCEPTANCE_ROOT`
+- `FATHOM_QWEN25_ACCEPTANCE_MODELS_DIR`
+- `FATHOM_QWEN25_ACCEPTANCE_STATE_DIR`
+- `FATHOM_QWEN25_ACCEPTANCE_LOG_DIR`
+- `FATHOM_QWEN25_ACCEPTANCE_ARTIFACT_DIR`
+- `FATHOM_QWEN25_ACCEPTANCE_PORT`
+- `FATHOM_QWEN25_ACCEPTANCE_WAIT_SECONDS`
+- `FATHOM_QWEN25_ACCEPTANCE_REQUEST_TIMEOUT`
+
+Set `FATHOM_QWEN25_ACCEPTANCE_KEEP_ARTIFACTS=1` when you want to review or preserve generated evidence.
+
 ## Isolated run skeleton
 
 Use isolated state/model directories so the acceptance pass cannot mutate your normal Fathom install:
