@@ -60,7 +60,7 @@ npm --prefix frontend run build
 npm --prefix frontend run qa:copy
 ```
 
-The offline API client example regression also keeps `docs/api/client-examples.md` aligned with the example script defaults for chat and embedding model ids, catalog repo ids, filenames, prompt/max-token defaults, opt-in embedding flag, and embedding input. It also parses the REST Client `.http` JSON bodies so catalog installs keep reviewed repo/filename pairs, chat bodies keep the `@model` variable with non-empty `messages` and no embedding fields, and embeddings bodies keep the `@embedding_model` variable with `encoding_format: "float"` and no chat fields.
+The offline API client example regression also keeps `docs/api/client-examples.md` aligned with the example script defaults for chat and embedding model ids, catalog repo ids, filenames, prompt/max-token defaults, opt-in embedding flag, and embedding input. It keeps the cURL quickstart dependency-light and the no-deps Python example on a standard-library import allow-list. It also parses the REST Client `.http` JSON bodies so catalog installs keep reviewed repo/filename pairs, chat bodies keep the `@model` variable with non-empty `messages` and no embedding fields, and embeddings bodies keep the `@embedding_model` variable with `encoding_format: "float"` and no chat fields.
 
 For the real backend no-download contract check, run:
 

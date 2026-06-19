@@ -787,6 +787,67 @@ def assert_api_client_example_defaults(texts: dict[str, str]) -> None:
         )
 
 
+def assert_dependency_light_examples(texts: dict[str, str]) -> None:
+    client_examples = texts.get("docs/api/client-examples.md", "")
+    assert_true(
+        "dependency-light script" in client_examples,
+        "client examples docs must describe curl-quickstart.sh as dependency-light",
+    )
+    assert_true(
+        "uses only the Python standard library" in client_examples,
+        "client examples docs must describe python-no-deps.py as standard-library only",
+    )
+
+    curl_text = texts.get("examples/api/curl-quickstart.sh", "")
+    forbidden_curl_terms = (
+        "pip install",
+        "python3 -m pip",
+        "npm install",
+        "npm ci",
+        "brew install",
+        "uv pip",
+        "requests",
+        "from openai",
+        "import openai",
+    )
+    for term in forbidden_curl_terms:
+        assert_true(term not in curl_text, f"curl-quickstart.sh must stay dependency-light and avoid {term!r}")
+
+    python_text = texts.get("examples/api/python-no-deps.py", "")
+    forbidden_python_terms = (
+        "import requests",
+        "from requests",
+        "import httpx",
+        "from httpx",
+        "from openai",
+        "import openai",
+        "subprocess",
+        "pip install",
+        "python3 -m pip",
+    )
+    for term in forbidden_python_terms:
+        assert_true(term not in python_text, f"python-no-deps.py must stay standard-library only and avoid {term!r}")
+
+    import_lines = [
+        line.strip()
+        for line in python_text.splitlines()
+        if re.match(r"^(import|from)\s+", line.strip())
+    ]
+    allowed_import_lines = {
+        "from __future__ import annotations",
+        "import json",
+        "import os",
+        "import sys",
+        "import urllib.error",
+        "import urllib.request",
+    }
+    unexpected_imports = [line for line in import_lines if line not in allowed_import_lines]
+    assert_true(
+        not unexpected_imports,
+        f"python-no-deps.py import surface drifted from standard-library allow-list: {unexpected_imports}",
+    )
+
+
 def static_checks() -> None:
     manifest = load_public_contract()
 
@@ -831,6 +892,16 @@ def static_checks() -> None:
                 "examples/api/curl-quickstart.sh",
                 "examples/api/python-no-deps.py",
                 "examples/api/openai-sdk.py",
+            )
+        }
+    )
+    assert_dependency_light_examples(
+        {
+            path: (ROOT / path).read_text(encoding="utf-8")
+            for path in (
+                "docs/api/client-examples.md",
+                "examples/api/curl-quickstart.sh",
+                "examples/api/python-no-deps.py",
             )
         }
     )
@@ -1065,6 +1136,36 @@ EMBEDDING_INPUT = os.environ.get(
         assert_true("API client defaults drifted" in str(exc), f"API client default self-test failed for the wrong reason: {exc}")
     else:
         raise AssertionError("API client default self-test did not reject documented prompt drift")
+
+    dependency_light_sources = {
+        "docs/api/client-examples.md": """
+This dependency-light script checks health.
+This version uses only the Python standard library.
+""",
+        "examples/api/curl-quickstart.sh": """
+#!/usr/bin/env bash
+curl -fsS "$BASE/v1/health"
+python3 -m json.tool
+""",
+        "examples/api/python-no-deps.py": """
+from __future__ import annotations
+
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+""",
+    }
+    assert_dependency_light_examples(dependency_light_sources)
+    drifted_dependency_sources = dict(dependency_light_sources)
+    drifted_dependency_sources["examples/api/python-no-deps.py"] += "\nimport requests\n"
+    try:
+        assert_dependency_light_examples(drifted_dependency_sources)
+    except AssertionError as exc:
+        assert_true("standard-library only" in str(exc), f"dependency-light self-test failed for the wrong reason: {exc}")
+    else:
+        raise AssertionError("dependency-light self-test did not reject a third-party Python import")
 
     safe_cli_stdout = """
 == Fathom health ==
