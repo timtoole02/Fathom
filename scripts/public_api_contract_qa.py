@@ -313,7 +313,8 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard CI privileged PR triggers|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard API example stdout share safety|"
-    r"Guard REST Client example headers|Guard API example regression self-test|"
+    r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
+    r"Guard API example regression self-test|"
     r"Guard CI frontend launch gates|Guard launch syntax checklist consistency|"
     r"Guard frontend package script safety|"
     r"Guard Rust crate publish-safety|"
@@ -1545,6 +1546,11 @@ def assert_boundary_docs() -> None:
     ]
     for gate in checklist_required_gates:
         assert_contains(launch_text, gate, "launch checklist no-download gates")
+    assert_contains(
+        launch_text,
+        "parses the REST Client `.http` JSON bodies",
+        "launch checklist REST Client body-boundary QA scope",
+    )
     assert_launch_checklist_python_syntax_gate()
     assert_launch_checklist_client_example_syntax_gates()
     assert_launch_checklist_artifact_qa_run_gates()
@@ -2538,6 +2544,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "backend acceptance artifact summary share-safety guard rejects local paths, secret markers, and request/payload text",
         "launch evidence backend acceptance artifact share-safety scope",
+    )
+    assert_contains(
+        evidence_text,
+        "parses POST JSON bodies so catalog installs keep reviewed repo/filename pairs",
+        "launch evidence REST Client body-boundary QA scope",
     )
     assert_contains(evidence_text, "public-contract smoke Markdown/status/proof-scope row consistency", "launch evidence public smoke row QA scope")
     assert_contains(evidence_text, "manifest shape validation", "launch evidence manifest shape gate")

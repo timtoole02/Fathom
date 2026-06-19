@@ -635,6 +635,58 @@ def rest_client_request_blocks(text: str) -> list[tuple[str, str, str]]:
     return blocks
 
 
+def rest_client_json_body(block: str, path: str) -> dict[str, Any]:
+    start = block.find("{")
+    assert_true(start >= 0, f"fathom.http POST {path} missing JSON body")
+    decoder = json.JSONDecoder()
+    try:
+        value, _index = decoder.raw_decode(block[start:])
+    except json.JSONDecodeError as exc:
+        raise AssertionError(f"fathom.http POST {path} has invalid JSON body: {exc}") from exc
+    assert_true(isinstance(value, dict), f"fathom.http POST {path} JSON body must be an object")
+    return value
+
+
+def assert_rest_client_json_bodies(http_blocks: list[tuple[str, str, str]]) -> None:
+    post_blocks = [(path, block) for method, path, block in http_blocks if method == "POST"]
+    install_bodies = [rest_client_json_body(block, path) for path, block in post_blocks if path == "/api/models/catalog/install"]
+    assert_true(len(install_bodies) == 2, f"fathom.http must keep exactly two catalog install request bodies, got {len(install_bodies)}")
+    expected_installs = [
+        {"repo_id": CHAT_REPO_ID, "filename": "model.safetensors"},
+        {"repo_id": EMBEDDING_REPO_ID, "filename": "model.safetensors"},
+    ]
+    assert_true(
+        install_bodies == expected_installs,
+        f"fathom.http catalog install bodies drifted: expected {expected_installs}, got {install_bodies}",
+    )
+
+    chat_bodies = [rest_client_json_body(block, path) for path, block in post_blocks if path == "/v1/chat/completions"]
+    assert_true(len(chat_bodies) == 1, f"fathom.http must keep exactly one chat request body, got {len(chat_bodies)}")
+    chat_body = chat_bodies[0]
+    assert_true(chat_body.get("model") == "{{model}}", "fathom.http chat body must use the @model variable")
+    messages = chat_body.get("messages")
+    assert_true(isinstance(messages, list) and messages, "fathom.http chat body must keep non-empty messages")
+    for message in messages:
+        assert_true(isinstance(message, dict), "fathom.http chat messages must be objects")
+        assert_true(isinstance(message.get("role"), str) and message["role"], "fathom.http chat messages need roles")
+        assert_true(isinstance(message.get("content"), str) and message["content"], "fathom.http chat messages need content")
+    assert_true(chat_body.get("stream") is not True, "fathom.http chat body must not request streaming")
+    assert_true("input" not in chat_body and "encoding_format" not in chat_body, "fathom.http chat body must not include embedding fields")
+
+    embedding_bodies = [rest_client_json_body(block, path) for path, block in post_blocks if path == "/v1/embeddings"]
+    assert_true(len(embedding_bodies) == 1, f"fathom.http must keep exactly one embeddings request body, got {len(embedding_bodies)}")
+    embedding_body = embedding_bodies[0]
+    assert_true(embedding_body.get("model") == "{{embedding_model}}", "fathom.http embeddings body must use the @embedding_model variable")
+    embedding_input = embedding_body.get("input")
+    assert_true(
+        isinstance(embedding_input, str)
+        or (isinstance(embedding_input, list) and embedding_input and all(isinstance(item, str) for item in embedding_input)),
+        "fathom.http embeddings body must keep a string or non-empty string-list input",
+    )
+    assert_true(embedding_body.get("encoding_format") == "float", "fathom.http embeddings body must request float encoding")
+    assert_true("messages" not in embedding_body and "stream" not in embedding_body, "fathom.http embeddings body must not include chat fields")
+
+
 def assert_rest_client_contract(http_text: str) -> None:
     for endpoint in (
         "GET {{base}}/v1/health",
@@ -668,6 +720,7 @@ def assert_rest_client_contract(http_text: str) -> None:
                 "Content-Type: application/json" in block,
                 f"fathom.http POST {path} missing JSON Content-Type header",
             )
+    assert_rest_client_json_bodies(http_blocks)
 
 
 def static_checks() -> None:
@@ -827,6 +880,29 @@ Content-Type: application/json
         (
             good_http.replace('"encoding_format": "float"', '"encoding_format": "base64"'),
             "embeddings must request float encoding",
+        ),
+        (
+            good_http.replace('"repo_id": "echarlaix/tiny-random-PhiForCausalLM"', '"repo_id": "example/other-chat-model"'),
+            "catalog install bodies drifted",
+        ),
+        (
+            good_http.replace('"model": "{{model}}", "messages"', '"model": "{{embedding_model}}", "messages"'),
+            "chat body must use the @model variable",
+        ),
+        (
+            good_http.replace('"model": "{{embedding_model}}"', '"model": "{{model}}"'),
+            "embeddings body must use the @embedding_model variable",
+        ),
+        (
+            good_http.replace(
+                '"model": "{{model}}", "messages": [{"role": "user", "content": "hello"}]',
+                '"model": "{{model}}", "messages": [{"role": "user", "content": "hello"}], "encoding_format": "float"',
+            ),
+            "chat body must not include embedding fields",
+        ),
+        (
+            good_http.replace('"model": "{{embedding_model}}", "input": "hello"', '"model": "{{embedding_model}}", "messages": [{"role": "user", "content": "hello"}], "input": "hello"'),
+            "embeddings body must not include chat fields",
         ),
     )
     for text, expected in bad_cases:
