@@ -25,8 +25,12 @@ from typing import Any, Callable
 ROOT = Path(__file__).resolve().parents[1]
 CHAT_MODEL_ID = "echarlaix-tiny-random-phiforcausallm-model-safetensors"
 CHAT_REPO_ID = "echarlaix/tiny-random-PhiForCausalLM"
+MODEL_FILENAME = "model.safetensors"
+DEFAULT_PROMPT = "Say hello from a local Fathom API smoke test."
+DEFAULT_MAX_TOKENS = "24"
 EMBEDDING_MODEL_ID = "sentence-transformers-all-minilm-l6-v2-model-safetensors"
 EMBEDDING_REPO_ID = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_EMBEDDING_INPUT = "Rust ownership keeps memory safety explicit."
 PUBLIC_CONTRACT = ROOT / "docs" / "api" / "public-contract.json"
 
 
@@ -723,6 +727,66 @@ def assert_rest_client_contract(http_text: str) -> None:
     assert_rest_client_json_bodies(http_blocks)
 
 
+def assert_api_client_example_defaults(texts: dict[str, str]) -> None:
+    expected_by_path = {
+        "docs/api/client-examples.md": (
+            "export FATHOM_BASE_URL=http://127.0.0.1:8180",
+            f"export FATHOM_MODEL_ID={CHAT_MODEL_ID}",
+            f"export FATHOM_REPO_ID={CHAT_REPO_ID}",
+            f"export FATHOM_FILENAME={MODEL_FILENAME}",
+            f"export FATHOM_PROMPT='{DEFAULT_PROMPT}'",
+            f"export FATHOM_MAX_TOKENS={DEFAULT_MAX_TOKENS}",
+            "export FATHOM_RUN_EMBEDDINGS=1",
+            f"export FATHOM_EMBEDDING_MODEL_ID={EMBEDDING_MODEL_ID}",
+            f"export FATHOM_EMBEDDING_REPO_ID={EMBEDDING_REPO_ID}",
+            f"export FATHOM_EMBEDDING_FILENAME={MODEL_FILENAME}",
+            f"export FATHOM_EMBEDDING_INPUT='{DEFAULT_EMBEDDING_INPUT}'",
+        ),
+        "examples/api/curl-quickstart.sh": (
+            f'MODEL_ID="${{FATHOM_MODEL_ID:-{CHAT_MODEL_ID}}}"',
+            f'REPO_ID="${{FATHOM_REPO_ID:-{CHAT_REPO_ID}}}"',
+            f'FILENAME="${{FATHOM_FILENAME:-{MODEL_FILENAME}}}"',
+            f'PROMPT="${{FATHOM_PROMPT:-{DEFAULT_PROMPT}}}"',
+            f'MAX_TOKENS="${{FATHOM_MAX_TOKENS:-{DEFAULT_MAX_TOKENS}}}"',
+            'RUN_EMBEDDINGS="${FATHOM_RUN_EMBEDDINGS:-0}"',
+            f'EMBEDDING_MODEL_ID="${{FATHOM_EMBEDDING_MODEL_ID:-{EMBEDDING_MODEL_ID}}}"',
+            f'EMBEDDING_REPO_ID="${{FATHOM_EMBEDDING_REPO_ID:-{EMBEDDING_REPO_ID}}}"',
+            f'EMBEDDING_FILENAME="${{FATHOM_EMBEDDING_FILENAME:-{MODEL_FILENAME}}}"',
+            f'EMBEDDING_INPUT="${{FATHOM_EMBEDDING_INPUT:-{DEFAULT_EMBEDDING_INPUT}}}"',
+        ),
+        "examples/api/python-no-deps.py": (
+            f'"FATHOM_MODEL_ID", "{CHAT_MODEL_ID}"',
+            f'os.environ.get("FATHOM_REPO_ID", "{CHAT_REPO_ID}")',
+            f'os.environ.get("FATHOM_FILENAME", "{MODEL_FILENAME}")',
+            f'os.environ.get("FATHOM_PROMPT", "{DEFAULT_PROMPT}")',
+            f'os.environ.get("FATHOM_MAX_TOKENS", "{DEFAULT_MAX_TOKENS}")',
+            'os.environ.get("FATHOM_RUN_EMBEDDINGS") == "1"',
+            f'"FATHOM_EMBEDDING_MODEL_ID", "{EMBEDDING_MODEL_ID}"',
+            f'"FATHOM_EMBEDDING_REPO_ID", "{EMBEDDING_REPO_ID}"',
+            f'os.environ.get("FATHOM_EMBEDDING_FILENAME", "{MODEL_FILENAME}")',
+            f'"FATHOM_EMBEDDING_INPUT", "{DEFAULT_EMBEDDING_INPUT}"',
+        ),
+        "examples/api/openai-sdk.py": (
+            f'"FATHOM_MODEL_ID", "{CHAT_MODEL_ID}"',
+            f'os.environ.get("FATHOM_PROMPT", "{DEFAULT_PROMPT}")',
+            f'os.environ.get("FATHOM_MAX_TOKENS", "{DEFAULT_MAX_TOKENS}")',
+            'os.environ.get("FATHOM_RUN_EMBEDDINGS") == "1"',
+            f'"FATHOM_EMBEDDING_MODEL_ID", "{EMBEDDING_MODEL_ID}"',
+            f'"FATHOM_EMBEDDING_REPO_ID", "{EMBEDDING_REPO_ID}"',
+            f'os.environ.get("FATHOM_EMBEDDING_FILENAME", "{MODEL_FILENAME}")',
+            f'"FATHOM_EMBEDDING_INPUT", "{DEFAULT_EMBEDDING_INPUT}"',
+        ),
+    }
+    for relative_path, expected_terms in expected_by_path.items():
+        text = texts.get(relative_path)
+        assert_true(text is not None, f"missing API client default source: {relative_path}")
+        missing_terms = [term for term in expected_terms if term not in text]
+        assert_true(
+            not missing_terms,
+            f"{relative_path} API client defaults drifted or are undocumented: {missing_terms}",
+        )
+
+
 def static_checks() -> None:
     manifest = load_public_contract()
 
@@ -758,6 +822,18 @@ def static_checks() -> None:
             re.search(pattern, text) is not None,
             f"{relative_path} must default to loopback {expected_loopback_default}",
         )
+
+    assert_api_client_example_defaults(
+        {
+            path: (ROOT / path).read_text(encoding="utf-8")
+            for path in (
+                "docs/api/client-examples.md",
+                "examples/api/curl-quickstart.sh",
+                "examples/api/python-no-deps.py",
+                "examples/api/openai-sdk.py",
+            )
+        }
+    )
 
     http_path = ROOT / "examples/api/fathom.http"
     http_text = http_path.read_text(encoding="utf-8")
@@ -912,6 +988,83 @@ Content-Type: application/json
             assert_true(expected in str(exc), f"REST Client self-test failed for the wrong reason: {exc}")
         else:
             raise AssertionError(f"REST Client self-test did not reject drift: {expected}")
+
+    default_sources = {
+        "docs/api/client-examples.md": f"""
+export FATHOM_BASE_URL=http://127.0.0.1:8180
+export FATHOM_MODEL_ID={CHAT_MODEL_ID}
+export FATHOM_REPO_ID={CHAT_REPO_ID}
+export FATHOM_FILENAME={MODEL_FILENAME}
+export FATHOM_PROMPT='{DEFAULT_PROMPT}'
+export FATHOM_MAX_TOKENS={DEFAULT_MAX_TOKENS}
+export FATHOM_RUN_EMBEDDINGS=1
+export FATHOM_EMBEDDING_MODEL_ID={EMBEDDING_MODEL_ID}
+export FATHOM_EMBEDDING_REPO_ID={EMBEDDING_REPO_ID}
+export FATHOM_EMBEDDING_FILENAME={MODEL_FILENAME}
+export FATHOM_EMBEDDING_INPUT='{DEFAULT_EMBEDDING_INPUT}'
+""",
+        "examples/api/curl-quickstart.sh": f"""
+MODEL_ID="${{FATHOM_MODEL_ID:-{CHAT_MODEL_ID}}}"
+REPO_ID="${{FATHOM_REPO_ID:-{CHAT_REPO_ID}}}"
+FILENAME="${{FATHOM_FILENAME:-{MODEL_FILENAME}}}"
+PROMPT="${{FATHOM_PROMPT:-{DEFAULT_PROMPT}}}"
+MAX_TOKENS="${{FATHOM_MAX_TOKENS:-{DEFAULT_MAX_TOKENS}}}"
+RUN_EMBEDDINGS="${{FATHOM_RUN_EMBEDDINGS:-0}}"
+EMBEDDING_MODEL_ID="${{FATHOM_EMBEDDING_MODEL_ID:-{EMBEDDING_MODEL_ID}}}"
+EMBEDDING_REPO_ID="${{FATHOM_EMBEDDING_REPO_ID:-{EMBEDDING_REPO_ID}}}"
+EMBEDDING_FILENAME="${{FATHOM_EMBEDDING_FILENAME:-{MODEL_FILENAME}}}"
+EMBEDDING_INPUT="${{FATHOM_EMBEDDING_INPUT:-{DEFAULT_EMBEDDING_INPUT}}}"
+""",
+        "examples/api/python-no-deps.py": f'''
+MODEL_ID = os.environ.get(
+    "FATHOM_MODEL_ID", "{CHAT_MODEL_ID}"
+)
+REPO_ID = os.environ.get("FATHOM_REPO_ID", "{CHAT_REPO_ID}")
+FILENAME = os.environ.get("FATHOM_FILENAME", "{MODEL_FILENAME}")
+PROMPT = os.environ.get("FATHOM_PROMPT", "{DEFAULT_PROMPT}")
+MAX_TOKENS = int(os.environ.get("FATHOM_MAX_TOKENS", "{DEFAULT_MAX_TOKENS}"))
+RUN_EMBEDDINGS = os.environ.get("FATHOM_RUN_EMBEDDINGS") == "1"
+EMBEDDING_MODEL_ID = os.environ.get(
+    "FATHOM_EMBEDDING_MODEL_ID", "{EMBEDDING_MODEL_ID}"
+)
+EMBEDDING_REPO_ID = os.environ.get(
+    "FATHOM_EMBEDDING_REPO_ID", "{EMBEDDING_REPO_ID}"
+)
+EMBEDDING_FILENAME = os.environ.get("FATHOM_EMBEDDING_FILENAME", "{MODEL_FILENAME}")
+EMBEDDING_INPUT = os.environ.get(
+    "FATHOM_EMBEDDING_INPUT", "{DEFAULT_EMBEDDING_INPUT}"
+)
+''',
+        "examples/api/openai-sdk.py": f'''
+MODEL_ID = os.environ.get(
+    "FATHOM_MODEL_ID", "{CHAT_MODEL_ID}"
+)
+PROMPT = os.environ.get("FATHOM_PROMPT", "{DEFAULT_PROMPT}")
+MAX_TOKENS = int(os.environ.get("FATHOM_MAX_TOKENS", "{DEFAULT_MAX_TOKENS}"))
+RUN_EMBEDDINGS = os.environ.get("FATHOM_RUN_EMBEDDINGS") == "1"
+EMBEDDING_MODEL_ID = os.environ.get(
+    "FATHOM_EMBEDDING_MODEL_ID", "{EMBEDDING_MODEL_ID}"
+)
+EMBEDDING_REPO_ID = os.environ.get(
+    "FATHOM_EMBEDDING_REPO_ID", "{EMBEDDING_REPO_ID}"
+)
+EMBEDDING_FILENAME = os.environ.get("FATHOM_EMBEDDING_FILENAME", "{MODEL_FILENAME}")
+EMBEDDING_INPUT = os.environ.get(
+    "FATHOM_EMBEDDING_INPUT", "{DEFAULT_EMBEDDING_INPUT}"
+)
+''',
+    }
+    assert_api_client_example_defaults(default_sources)
+    drifted_doc_sources = dict(default_sources)
+    drifted_doc_sources["docs/api/client-examples.md"] = drifted_doc_sources[
+        "docs/api/client-examples.md"
+    ].replace(DEFAULT_PROMPT, "Say hello from Fathom.")
+    try:
+        assert_api_client_example_defaults(drifted_doc_sources)
+    except AssertionError as exc:
+        assert_true("API client defaults drifted" in str(exc), f"API client default self-test failed for the wrong reason: {exc}")
+    else:
+        raise AssertionError("API client default self-test did not reject documented prompt drift")
 
     safe_cli_stdout = """
 == Fathom health ==

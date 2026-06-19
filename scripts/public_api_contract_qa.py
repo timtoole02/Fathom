@@ -312,6 +312,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard CI concurrency cancellation|"
     r"Guard CI privileged PR triggers|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
+    r"Guard API Client Example Defaults|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
     r"Guard API example regression self-test|"
@@ -1548,6 +1549,11 @@ def assert_boundary_docs() -> None:
         assert_contains(launch_text, gate, "launch checklist no-download gates")
     assert_contains(
         launch_text,
+        "keeps `docs/api/client-examples.md` aligned with the example script defaults",
+        "launch checklist API client default QA scope",
+    )
+    assert_contains(
+        launch_text,
         "parses the REST Client `.http` JSON bodies",
         "launch checklist REST Client body-boundary QA scope",
     )
@@ -2544,6 +2550,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "backend acceptance artifact summary share-safety guard rejects local paths, secret markers, and request/payload text",
         "launch evidence backend acceptance artifact share-safety scope",
+    )
+    assert_contains(
+        evidence_text,
+        "keeps `docs/api/client-examples.md` aligned with the example script defaults",
+        "launch evidence API client default QA scope",
     )
     assert_contains(
         evidence_text,

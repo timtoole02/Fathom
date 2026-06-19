@@ -36,7 +36,9 @@ All examples default to `http://127.0.0.1:8180` and can be configured with:
 ```bash
 export FATHOM_BASE_URL=http://127.0.0.1:8180
 export FATHOM_MODEL_ID=echarlaix-tiny-random-phiforcausallm-model-safetensors
-export FATHOM_PROMPT='Say hello from Fathom.'
+export FATHOM_REPO_ID=echarlaix/tiny-random-PhiForCausalLM
+export FATHOM_FILENAME=model.safetensors
+export FATHOM_PROMPT='Say hello from a local Fathom API smoke test.'
 export FATHOM_MAX_TOKENS=24
 ```
 
