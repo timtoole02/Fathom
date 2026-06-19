@@ -206,7 +206,7 @@ def run_example(
     *,
     embeddings: bool,
     extra_env: dict[str, str] | None = None,
-    contract: str = "quickstart",
+    contract: str | None = "quickstart",
     stdout_checker: Callable[[str], None] | None = None,
 ) -> list[RecordedRequest]:
     recorder = Recorder()
@@ -240,7 +240,7 @@ def run_example(
         requests = recorder.snapshot()
         if contract == "sdk":
             assert_openai_sdk_contract(requests, embeddings=embeddings, label=" ".join(command))
-        else:
+        elif contract == "quickstart":
             assert_public_contract(requests, embeddings=embeddings, label=" ".join(command))
         return requests
     finally:
@@ -249,7 +249,12 @@ def run_example(
         thread.join(timeout=5)
 
 
-def run_openai_sdk_example_with_stub(*, embeddings: bool) -> list[RecordedRequest]:
+def run_openai_sdk_example_with_stub(
+    *,
+    embeddings: bool,
+    extra_env: dict[str, str] | None = None,
+    contract: str | None = "sdk",
+) -> list[RecordedRequest]:
     """Run the OpenAI SDK example through a tiny local openai module stub."""
 
     stub_source = r'''
@@ -308,12 +313,15 @@ def _post_json(url, body):
         package = Path(tmpdir) / "openai"
         package.mkdir()
         (package / "__init__.py").write_text(textwrap.dedent(stub_source).lstrip(), encoding="utf-8")
+        env = {"PYTHONPATH": prepend_pythonpath(tmpdir, os.environ.get("PYTHONPATH"))}
+        if extra_env:
+            env.update(extra_env)
         return run_example(
             ["python3", "examples/api/openai-sdk.py"],
             embeddings=embeddings,
-            extra_env={"PYTHONPATH": prepend_pythonpath(tmpdir, os.environ.get("PYTHONPATH"))},
-            contract="sdk",
-            stdout_checker=lambda stdout: assert_openai_sdk_stdout(stdout, embeddings=embeddings),
+            extra_env=env,
+            contract=contract,
+            stdout_checker=(lambda stdout: assert_openai_sdk_stdout(stdout, embeddings=embeddings)) if contract == "sdk" else None,
         )
 
 
@@ -421,6 +429,93 @@ def assert_openai_sdk_contract(requests: list[RecordedRequest], *, embeddings: b
     else:
         assert_true(not install_requests, f"{label}: SDK embedding install must be opt-in only")
         assert_true(not embedding_requests, f"{label}: SDK embeddings request must be opt-in only")
+
+
+def assert_quickstart_override_contract(requests: list[RecordedRequest], label: str) -> None:
+    install_requests = [r for r in requests if r.method == "POST" and r.path == "/api/models/catalog/install"]
+    assert_true(len(install_requests) == 2, f"{label}: override run should install chat and embedding fixtures")
+    assert_true(
+        install_requests[0].body == {"repo_id": "override/chat-repo", "filename": "override-chat.safetensors"},
+        f"{label}: chat install overrides did not reach request body: {install_requests[0].body}",
+    )
+    assert_true(
+        install_requests[1].body == {"repo_id": "override/embed-repo", "filename": "override-embed.safetensors"},
+        f"{label}: embedding install overrides did not reach request body: {install_requests[1].body}",
+    )
+
+    chat_requests = [r for r in requests if r.method == "POST" and r.path == "/v1/chat/completions"]
+    assert_true(len(chat_requests) == 1, f"{label}: override run should send one chat request")
+    chat_body = chat_requests[0].body
+    assert_true(isinstance(chat_body, dict), f"{label}: chat override body must be an object")
+    assert_true(chat_body.get("model") == "override-chat-model", f"{label}: FATHOM_MODEL_ID override drifted")
+    assert_true(chat_body.get("max_tokens") == 7, f"{label}: FATHOM_MAX_TOKENS override drifted")
+    messages = chat_body.get("messages")
+    assert_true(isinstance(messages, list) and messages, f"{label}: chat override messages missing")
+    assert_true(
+        isinstance(messages[0], dict) and messages[0].get("content") == "override prompt",
+        f"{label}: FATHOM_PROMPT override drifted",
+    )
+
+    embedding_requests = [r for r in requests if r.method == "POST" and r.path == "/v1/embeddings"]
+    assert_true(len(embedding_requests) == 1, f"{label}: override run should send one embeddings request")
+    embedding_body = embedding_requests[0].body
+    assert_true(isinstance(embedding_body, dict), f"{label}: embeddings override body must be an object")
+    assert_true(embedding_body.get("model") == "override-embedding-model", f"{label}: FATHOM_EMBEDDING_MODEL_ID override drifted")
+    assert_true(embedding_body.get("input") == "override embedding input", f"{label}: FATHOM_EMBEDDING_INPUT override drifted")
+    assert_true(embedding_body.get("encoding_format") == "float", f"{label}: embeddings override must stay float")
+
+
+def assert_openai_sdk_override_contract(requests: list[RecordedRequest], label: str) -> None:
+    chat_requests = [r for r in requests if r.method == "POST" and r.path == "/v1/chat/completions"]
+    assert_true(len(chat_requests) == 1, f"{label}: SDK override run should send one chat request")
+    chat_body = chat_requests[0].body
+    assert_true(isinstance(chat_body, dict), f"{label}: SDK chat override body must be an object")
+    assert_true(chat_body.get("model") == "override-chat-model", f"{label}: SDK FATHOM_MODEL_ID override drifted")
+    assert_true(chat_body.get("max_tokens") == 7, f"{label}: SDK FATHOM_MAX_TOKENS override drifted")
+    messages = chat_body.get("messages")
+    assert_true(isinstance(messages, list) and messages, f"{label}: SDK chat override messages missing")
+    assert_true(
+        isinstance(messages[0], dict) and messages[0].get("content") == "override prompt",
+        f"{label}: SDK FATHOM_PROMPT override drifted",
+    )
+
+    install_requests = [r for r in requests if r.method == "POST" and r.path == "/api/models/catalog/install"]
+    assert_true(len(install_requests) == 1, f"{label}: SDK override run should install one embedding fixture")
+    assert_true(
+        install_requests[0].body == {"repo_id": "override/embed-repo", "filename": "override-embed.safetensors"},
+        f"{label}: SDK embedding install overrides did not reach request body: {install_requests[0].body}",
+    )
+
+    embedding_requests = [r for r in requests if r.method == "POST" and r.path == "/v1/embeddings"]
+    assert_true(len(embedding_requests) == 1, f"{label}: SDK override run should send one embeddings request")
+    embedding_body = embedding_requests[0].body
+    assert_true(isinstance(embedding_body, dict), f"{label}: SDK embeddings override body must be an object")
+    assert_true(embedding_body.get("model") == "override-embedding-model", f"{label}: SDK FATHOM_EMBEDDING_MODEL_ID override drifted")
+    assert_true(embedding_body.get("input") == "override embedding input", f"{label}: SDK FATHOM_EMBEDDING_INPUT override drifted")
+    assert_true(embedding_body.get("encoding_format") == "float", f"{label}: SDK embeddings override must stay float")
+
+
+def assert_api_client_environment_overrides() -> None:
+    override_env = {
+        "FATHOM_MODEL_ID": "override-chat-model",
+        "FATHOM_REPO_ID": "override/chat-repo",
+        "FATHOM_FILENAME": "override-chat.safetensors",
+        "FATHOM_PROMPT": "override prompt",
+        "FATHOM_MAX_TOKENS": "7",
+        "FATHOM_EMBEDDING_MODEL_ID": "override-embedding-model",
+        "FATHOM_EMBEDDING_REPO_ID": "override/embed-repo",
+        "FATHOM_EMBEDDING_FILENAME": "override-embed.safetensors",
+        "FATHOM_EMBEDDING_INPUT": "override embedding input",
+    }
+    for command, label in (
+        (["bash", "examples/api/curl-quickstart.sh"], "curl-quickstart.sh"),
+        (["python3", "examples/api/python-no-deps.py"], "python-no-deps.py"),
+    ):
+        requests = run_example(command, embeddings=True, extra_env=override_env, contract=None)
+        assert_quickstart_override_contract(requests, label)
+
+    sdk_requests = run_openai_sdk_example_with_stub(embeddings=True, extra_env=override_env, contract=None)
+    assert_openai_sdk_override_contract(sdk_requests, "openai-sdk.py")
 
 
 def assert_openai_sdk_stdout(stdout: str, *, embeddings: bool) -> None:
@@ -1167,6 +1262,29 @@ import urllib.request
     else:
         raise AssertionError("dependency-light self-test did not reject a third-party Python import")
 
+    bad_override_requests = [
+        RecordedRequest("POST", "/api/models/catalog/install", {}, {"repo_id": "override/chat-repo", "filename": "override-chat.safetensors"}),
+        RecordedRequest("POST", "/api/models/catalog/install", {}, {"repo_id": "override/embed-repo", "filename": "override-embed.safetensors"}),
+        RecordedRequest(
+            "POST",
+            "/v1/chat/completions",
+            {},
+            {"model": CHAT_MODEL_ID, "messages": [{"role": "user", "content": "override prompt"}], "max_tokens": 7},
+        ),
+        RecordedRequest(
+            "POST",
+            "/v1/embeddings",
+            {},
+            {"model": "override-embedding-model", "input": "override embedding input", "encoding_format": "float"},
+        ),
+    ]
+    try:
+        assert_quickstart_override_contract(bad_override_requests, "synthetic override drift")
+    except AssertionError as exc:
+        assert_true("FATHOM_MODEL_ID override drifted" in str(exc), f"override self-test failed for the wrong reason: {exc}")
+    else:
+        raise AssertionError("override self-test did not reject a lost FATHOM_MODEL_ID override")
+
     safe_cli_stdout = """
 == Fathom health ==
 {"ok": true, "engine": "fathom", "generation_ready": true}
@@ -1225,6 +1343,7 @@ def main() -> int:
         stdout_checker=lambda stdout: assert_cli_example_stdout(stdout, embeddings=True, label="python-no-deps.py"),
     )
     run_openai_sdk_example_with_stub(embeddings=True)
+    assert_api_client_environment_overrides()
     print("API client examples regression passed")
     return 0
 

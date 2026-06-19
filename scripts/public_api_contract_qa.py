@@ -314,6 +314,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard API Client Example Defaults|"
     r"Guard API client dependency boundaries|"
+    r"Guard API Client Environment Overrides|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
     r"Guard API example regression self-test|"
@@ -1555,6 +1556,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "fake loopback `FATHOM_*` overrides so documented environment overrides keep reaching install, chat, and embedding request bodies",
+        "launch checklist API client environment override QA scope",
+    )
+    assert_contains(
+        launch_text,
         "keeps the cURL quickstart dependency-light and the no-deps Python example on a standard-library import allow-list",
         "launch checklist API client dependency QA scope",
     )
@@ -2561,6 +2567,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "keeps `docs/api/client-examples.md` aligned with the example script defaults",
         "launch evidence API client default QA scope",
+    )
+    assert_contains(
+        evidence_text,
+        "fake loopback `FATHOM_*` overrides so documented environment overrides keep reaching install, chat, and embedding request bodies",
+        "launch evidence API client environment override QA scope",
     )
     assert_contains(
         evidence_text,
