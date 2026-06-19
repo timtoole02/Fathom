@@ -19,6 +19,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from ci_static_policy import DEFAULT_CI_GATE_COMMANDS, assert_default_ci_gate_inventory
+
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "docs" / "api" / "public-contract.json"
 V1_CONTRACT = ROOT / "docs" / "api" / "v1-contract.md"
@@ -91,8 +93,10 @@ PR_TEMPLATE_REQUIRED_CHECKBOXES = (
     "`/v1` behavior changes are reflected in `docs/api/v1-contract.md` when relevant.",
     "User-facing copy distinguishes runnable, planned, blocked, metadata-only, and unavailable states truthfully.",
     "`git diff --check`",
+    "`npm --prefix frontend ci`",
     "Python syntax gate from `docs/public-launch-checklist.md` was run: `python3 -m py_compile ...`",
     "Shell syntax gate from `docs/public-launch-checklist.md` was run: `bash -n ...`",
+    "`bash scripts/public_api_contract_smoke.sh`",
     "`python3 scripts/public_api_contract_qa.py`",
     "`python3 scripts/public_api_contract_qa.py --self-test`",
     "`python3 scripts/ci_static_policy.py`",
@@ -311,6 +315,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard CI runner image policy|"
     r"Guard CI concurrency cancellation|"
     r"Guard CI privileged PR triggers|"
+    r"Guard Default CI Gate Inventory Parity|"
     r"Guard offline Python syntax coverage|Guard API example loopback defaults|"
     r"Guard API Client Example Defaults|"
     r"Guard API client dependency boundaries|"
@@ -1540,12 +1545,7 @@ def assert_boundary_docs() -> None:
     assert_contains(readme_text, "scripts/public_api_contract_smoke.sh", "README public contract smoke")
     launch_text = read(LAUNCH_CHECKLIST)
     checklist_required_gates = [
-        "git diff --check",
-        "scripts/api_client_examples_regression.py",
-        "scripts/api_client_examples_regression.py --self-test",
-        "scripts/ci_static_policy.py --self-test",
-        "scripts/public_api_contract_qa.py --self-test",
-        "scripts/public_risk_scan.sh --self-test",
+        *DEFAULT_CI_GATE_COMMANDS,
     ]
     for gate in checklist_required_gates:
         assert_contains(launch_text, gate, "launch checklist no-download gates")
@@ -5862,6 +5862,7 @@ def assert_optional_acceptance_docs() -> None:
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
+    assert_default_ci_gate_inventory()
     assert_frontend_launch_gates(ci_text, "CI frontend launch gate")
     assert_contains(ci_text, "python3 -m py_compile", "CI Python syntax step")
     assert_python_syntax_paths(
@@ -6097,8 +6098,10 @@ def assert_pull_request_template() -> None:
         "README, CONTRIBUTING, SECURITY, API docs, UI copy, and tests",
         "runnable, planned, blocked, metadata-only, and unavailable states",
         "git diff --check",
+        "npm --prefix frontend ci",
         "python3 -m py_compile",
         "bash -n",
+        "bash scripts/public_api_contract_smoke.sh",
         "python3 scripts/api_client_examples_regression.py",
         "python3 scripts/api_client_examples_regression.py --self-test",
         "python3 scripts/public_api_contract_qa.py",

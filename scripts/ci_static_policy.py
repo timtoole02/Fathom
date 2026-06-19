@@ -15,10 +15,34 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CI = ROOT / ".github" / "workflows" / "ci.yml"
+PR_TEMPLATE = ROOT / ".github" / "pull_request_template.md"
+LAUNCH_CHECKLIST = ROOT / "docs" / "public-launch-checklist.md"
 OPTIONAL_ACCEPTANCE_SMOKE_SCRIPTS = (
     "scripts/minilm_embeddings_optional_api_acceptance_smoke.sh",
     "scripts/smollm2_optional_api_acceptance_smoke.sh",
     "scripts/qwen25_optional_api_acceptance_smoke.sh",
+)
+DEFAULT_CI_GATE_COMMANDS = (
+    "git diff --check",
+    "cargo fmt --all --check",
+    "cargo test -q",
+    "bash scripts/public_api_contract_smoke.sh",
+    "npm --prefix frontend ci",
+    "npm --prefix frontend run build",
+    "npm --prefix frontend run qa:copy",
+    "python3 scripts/api_client_examples_regression.py",
+    "python3 scripts/api_client_examples_regression.py --self-test",
+    "python3 scripts/public_api_contract_qa.py",
+    "python3 scripts/public_api_contract_qa.py --self-test",
+    "python3 scripts/public_contract_smoke_artifact_qa.py",
+    "python3 scripts/backend_acceptance_artifact_qa.py",
+    "python3 scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
+    "python3 scripts/smollm2_optional_api_acceptance_artifact_qa.py",
+    "python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+    "python3 scripts/ci_static_policy.py",
+    "python3 scripts/ci_static_policy.py --self-test",
+    "bash scripts/public_risk_scan.sh --self-test",
+    "bash scripts/public_risk_scan.sh",
 )
 REQUIRED_ARTIFACT_QA_COMMANDS = (
     "python3 scripts/public_contract_smoke_artifact_qa.py",
@@ -49,6 +73,12 @@ SENSITIVE_ENV_PATTERN = re.compile(
 )
 MAX_JOB_TIMEOUT_MINUTES = 30
 REQUIRED_RUNS_ON = "ubuntu-latest"
+
+
+def assert_command_inventory(text: str, label: str, commands: tuple[str, ...] = DEFAULT_CI_GATE_COMMANDS) -> None:
+    missing = [command for command in commands if command not in text]
+    if missing:
+        raise AssertionError(f"{label} is missing default CI gate inventory entries:\n- " + "\n- ".join(missing))
 
 
 def top_level_concurrency_block(text: str) -> list[str] | None:
@@ -172,6 +202,11 @@ def job_runner_failures(text: str) -> list[str]:
 
 def evaluate_ci_text(text: str) -> list[str]:
     failures: list[str] = []
+
+    try:
+        assert_command_inventory(text, "default CI")
+    except AssertionError as exc:
+        failures.extend(str(exc).splitlines()[1:])
 
     failures.extend(job_timeout_failures(text))
     failures.extend(job_runner_failures(text))
@@ -336,6 +371,12 @@ def assert_policy_passes(text: str) -> None:
         raise AssertionError("CI static policy failed:\n- " + "\n- ".join(failures))
 
 
+def assert_default_ci_gate_inventory() -> None:
+    assert_command_inventory(CI.read_text(encoding="utf-8"), "default CI")
+    assert_command_inventory(PR_TEMPLATE.read_text(encoding="utf-8"), "pull request template Gates run")
+    assert_command_inventory(LAUNCH_CHECKLIST.read_text(encoding="utf-8"), "public launch checklist no-download gates")
+
+
 def run_self_test() -> None:
     valid = """
 name: CI
@@ -352,6 +393,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      run: cargo fmt --all --check
       run: cargo test -q
       run: bash scripts/public_api_contract_smoke.sh
   static-safety:
@@ -363,6 +405,13 @@ jobs:
           bash -n scripts/backend_acceptance_smoke.sh
       - run: python3 scripts/ci_static_policy.py --self-test
       - run: git diff --check
+      - run: npm --prefix frontend ci
+      - run: npm --prefix frontend run build
+      - run: npm --prefix frontend run qa:copy
+      - run: python3 scripts/api_client_examples_regression.py
+      - run: python3 scripts/api_client_examples_regression.py --self-test
+      - run: python3 scripts/public_api_contract_qa.py
+      - run: python3 scripts/public_api_contract_qa.py --self-test
       - run: python3 scripts/public_contract_smoke_artifact_qa.py
       - run: python3 scripts/backend_acceptance_artifact_qa.py
       - run: |
@@ -371,6 +420,7 @@ jobs:
           python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py
       - run: bash scripts/public_risk_scan.sh --self-test
       - run: bash scripts/public_risk_scan.sh
+      - run: python3 scripts/ci_static_policy.py
       - run: echo done
 """
     assert_policy_passes(valid)
@@ -434,6 +484,7 @@ jobs:
         "missing optional artifact QA": valid.replace(
             "          python3 scripts/qwen25_optional_api_acceptance_artifact_qa.py\n", ""
         ),
+        "missing inventory command": valid.replace("      - run: npm --prefix frontend ci\n", ""),
     }
     for label, text in cases.items():
         if not evaluate_ci_text(text):
@@ -451,6 +502,7 @@ def main() -> None:
         return
 
     assert_policy_passes(CI.read_text(encoding="utf-8"))
+    assert_default_ci_gate_inventory()
     print("CI static policy passed")
 
 
