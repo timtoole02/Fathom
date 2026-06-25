@@ -156,6 +156,26 @@ def assert_markdown_identity_matches_summary(summary: dict[str, Any], markdown: 
         raise AssertionError("summary.md missing repo_id/revision row matching summary.json")
 
 
+def assert_markdown_path_labels_match_summary(summary: dict[str, Any], markdown: str) -> None:
+    for key, label in (
+        ("artifact_dir", "Artifact directory"),
+        ("state_dir", "State directory"),
+        ("model_dir", "Model directory"),
+    ):
+        value = summary.get(key)
+        if not isinstance(value, str) or not value:
+            raise AssertionError(f"summary.{key} must be non-empty text")
+        if f"- {label}: `{value}`" not in markdown:
+            raise AssertionError(f"summary.md missing {key} label matching summary.json")
+
+    log_dir = summary.get("log_dir")
+    if not isinstance(log_dir, str) or not log_dir:
+        raise AssertionError("summary.log_dir must be non-empty text")
+    server_log = f"{log_dir.rstrip('/')}/server.log"
+    if f"- Server log: `{server_log}`" not in markdown:
+        raise AssertionError("summary.md missing log_dir server-log label matching summary.json")
+
+
 def assert_loopback_base_url(value: Any) -> None:
     if not isinstance(value, str) or not re.fullmatch(r"http://127\.0\.0\.1:[0-9]{2,5}", value):
         raise AssertionError("summary.base_url must be an http://127.0.0.1:<port> loopback URL")
@@ -267,6 +287,7 @@ def validate_summary(directory: Path) -> None:
         raise AssertionError("summary.md must clearly mark pass and caveats")
     assert_required_caveats(md, "summary.md")
     assert_markdown_identity_matches_summary(summary, md)
+    assert_markdown_path_labels_match_summary(summary, md)
     assert_markdown_timestamps_match_summary(summary, md)
     assert_markdown_checks_match_summary(summary.get("checks"), md)
 
@@ -535,6 +556,21 @@ def main() -> None:
                     raise
             else:
                 raise AssertionError("bad summary.md upstream identity self-check did not fail")
+            bad_md_path_label = Path(tmp) / "bad-markdown-path-label"
+            write_sample(bad_md_path_label)
+            (bad_md_path_label / "summary.md").write_text(
+                (bad_md_path_label / "summary.md")
+                .read_text(encoding="utf-8")
+                .replace("- Server log: `logs/server.log`\n", "- Server log: `stale-logs/server.log`\n"),
+                encoding="utf-8",
+            )
+            try:
+                validate_summary(bad_md_path_label)
+            except AssertionError as exc:
+                if "summary.md missing log_dir server-log label" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("bad summary.md path-label self-check did not fail")
         print("SmolLM2 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:

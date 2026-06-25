@@ -391,6 +391,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard optional artifact summary timestamps|"
     r"Guard optional artifact timestamp markdown rows|"
     r"Guard optional artifact model identity markdown rows|"
+    r"Guard optional artifact summary path labels|"
     r"Guard optional artifact summary markdown index|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
@@ -5037,6 +5038,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "optional acceptance artifact QA keeps share-safe artifact/state/model/log labels aligned between `summary.json` and `summary.md`",
+        "launch evidence optional artifact QA path-label scope",
+    )
+    assert_contains(
+        evidence_text,
         "Backend acceptance artifact QA keeps `summary.base_url` loopback-only and aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact base URL boundary scope",
     )
@@ -6129,6 +6135,31 @@ def assert_optional_acceptance_model_identity_wiring() -> None:
         )
 
 
+def assert_optional_acceptance_path_label_wiring() -> None:
+    for _, _, smoke_script, artifact_qa_script, _, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
+        smoke_text = read(ROOT / smoke_script)
+        artifact_qa_text = read(ROOT / artifact_qa_script)
+        for label in ("Artifact directory", "State directory", "Model directory", "Server log"):
+            assert_contains(smoke_text, label, f"{smoke_script} summary.md {label} row")
+        for key in ("artifact_dir", "state_dir", "model_dir", "log_dir"):
+            assert_contains(smoke_text, key, f"{smoke_script} summary {key} field")
+        assert_contains(
+            artifact_qa_text,
+            "assert_markdown_path_labels_match_summary",
+            f"{artifact_qa_script} markdown path-label guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "summary.md missing log_dir server-log label matching summary.json",
+            f"{artifact_qa_script} markdown server-log path-label guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "bad summary.md path-label self-check did not fail",
+            f"{artifact_qa_script} markdown path-label negative self-test",
+        )
+
+
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
@@ -6429,6 +6460,7 @@ def main() -> int:
     assert_optional_acceptance_docs()
     assert_optional_acceptance_timestamp_wiring()
     assert_optional_acceptance_model_identity_wiring()
+    assert_optional_acceptance_path_label_wiring()
     assert_ci_wiring(manifest)
     assert_api_contract_issue_template(manifest)
     assert_model_runtime_issue_template()
