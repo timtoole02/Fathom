@@ -1648,6 +1648,21 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "include commit, generated UTC timestamp, manifest path/name/status, endpoint checks, boundary checks, and scope caveats only",
+        "launch checklist public contract smoke artifact field scope",
+    )
+    assert_contains(
+        launch_text,
+        "intentionally omit local temp paths, server log tails, request secrets, and model/provider payloads",
+        "launch checklist public contract smoke artifact share-safety scope",
+    )
+    assert_contains(
+        launch_text,
+        "Validate them offline before sharing with `python3 scripts/public_contract_smoke_artifact_qa.py public-contract-artifacts`",
+        "launch checklist public contract smoke artifact QA command",
+    )
+    assert_contains(
+        launch_text,
         "keeps `summary.model_id`, `summary.repo_id`, and `summary.revision` aligned between `summary.json` and `summary.md`",
         "launch checklist optional artifact model identity scope",
     )
