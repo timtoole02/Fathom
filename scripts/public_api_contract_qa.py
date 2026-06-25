@@ -5247,8 +5247,18 @@ def assert_boundary_docs() -> None:
     contributing_text = read(CONTRIBUTING)
     assert_contains(quickstart_text, "manifest-driven", "backend quickstart public contract smoke")
     assert_contains(quickstart_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "backend quickstart public contract artifact env")
+    assert_contains(
+        quickstart_text,
+        "python3 scripts/public_contract_smoke_artifact_qa.py <artifact-dir>",
+        "backend quickstart public contract artifact validation command",
+    )
     assert_contains(contributing_text, "public-contract.json", "contributing manifest-driven public contract smoke")
     assert_contains(contributing_text, "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR", "contributing public contract artifact env")
+    assert_contains(
+        contributing_text,
+        "python3 scripts/public_contract_smoke_artifact_qa.py <artifact-dir>",
+        "contributing public contract artifact validation command",
+    )
 
 
 def markdown_table_first_cells(markdown: str) -> list[str]:
