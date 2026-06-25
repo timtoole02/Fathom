@@ -173,6 +173,8 @@ def validate_summary_dir(directory: Path) -> None:
     base_url_port = assert_loopback_base_url(base_url)
     if "port" in summary and summary["port"] != base_url_port:
         raise AssertionError("summary.port must match summary.base_url port")
+    if f"- Port: `{base_url_port}`" not in summary_md_text:
+        raise AssertionError("summary.md must include the summary.json port")
     if f"- Base URL: `{base_url}`" not in summary_md_text:
         raise AssertionError("summary.md must include the summary.json Base URL")
     for key in ("started_at", "finished_at"):
@@ -365,6 +367,7 @@ def write_sample(directory: Path, *, passed: bool) -> None:
         f"- Result: `{result}`\n"
         "- Repo commit: `sample`\n"
         "- Base URL: `http://127.0.0.1:18180`\n"
+        "- Port: `18180`\n"
         "- Started: `2026-04-27T00:00:00Z`\n"
         "- Finished: `2026-04-27T00:00:01Z`\n"
         "- Artifact directory: `.`\n"
@@ -509,6 +512,21 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("mismatched port self-check did not fail")
+
+        markdown_port_mismatch = root / "markdown-port-mismatch"
+        write_sample(markdown_port_mismatch, passed=True)
+        summary_md = markdown_port_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace("- Port: `18180`", "- Port: `18181`"),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_port_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json port" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown port mismatch self-check did not fail")
 
         malformed_timestamp = root / "malformed-timestamp"
         write_sample(malformed_timestamp, passed=True)
