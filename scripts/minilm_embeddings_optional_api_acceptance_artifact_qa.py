@@ -100,6 +100,15 @@ def assert_markdown_identity_matches_summary(summary:dict[str,Any],md:str)->None
         raise AssertionError('summary.repo_commit must be non-empty text')
     if f"- Repo commit: `{commit}`" not in md:
         raise AssertionError('summary.md missing repo_commit row matching summary.json')
+    model_id=summary.get('model_id')
+    repo_id=summary.get('repo_id')
+    revision=summary.get('revision')
+    if not all(isinstance(value,str) and value for value in (model_id,repo_id,revision)):
+        raise AssertionError('summary model identity fields must be non-empty text')
+    if f"- Model: `{model_id}`" not in md:
+        raise AssertionError('summary.md missing model_id row matching summary.json')
+    if f"- Upstream: `{repo_id}` at `{revision}`" not in md:
+        raise AssertionError('summary.md missing repo_id/revision row matching summary.json')
 
 def assert_loopback_base_url(value:Any)->None:
     if not isinstance(value,str) or not re.fullmatch(r'http://127\.0\.0\.1:[0-9]{2,5}',value):
@@ -186,7 +195,7 @@ def write_sample(d:Path)->None:
     checks=[{'name':n,'artifact':a,'description':n,'expected_http_status':200,'http_status':200,'status':'passed'} for n,a in [('health','01-v1-health.json'),('install_minilm','02-install-minilm.json'),('embedding_models_include_minilm','03-api-embedding-models.json'),('v1_models_exclude_minilm','04-v1-models-exclude-minilm.json'),('v1_embeddings_float','05-v1-embeddings-float.json'),('base64_refusal','06-v1-embeddings-base64-refusal.json'),('chat_embedding_refusal','07-chat-embedding-model-refusal.json')]]
     summary={'schema':'fathom.minilm_embeddings_optional_api_acceptance.summary.v1','passed':True,'repo_commit':'sample','started_at':'2026-04-29T00:00:00Z','finished_at':'2026-04-29T00:00:01Z','base_url':'http://127.0.0.1:18187','artifact_dir':'.','model_dir':'models/','state_dir':'state/','log_dir':'logs/','model_id':MODEL_ID,'repo_id':REPO_ID,'revision':REVISION,'checks':checks,'caveats':['Optional local embedding evidence only; not default CI.','Does not prove embedding quality, retrieval quality, latency, throughput, production readiness, legal suitability, arbitrary Hugging Face execution, ONNX chat, streaming, external proxying, or full OpenAI API parity.','Does not claim GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference.']}
     (d/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
-    (d/'summary.md').write_text('# MiniLM embeddings optional API acceptance artifacts\n\n- Result: `passed`\n- Repo commit: `sample`\n- Started: `2026-04-29T00:00:00Z`\n- Finished: `2026-04-29T00:00:01Z`\n- Scope: optional local embedding API evidence only; not default CI.\n- Artifact directory: `.`\n- State directory: `state/`\n- Model directory: `models/`\n- Server log: `logs/server.log`\n\n## Checks\n\n'+'\n'.join(f"- `{c['name']}`: `{c['status']}` ({c['artifact']})" for c in checks)+'\n\n## What this does not prove\n\n- No embedding quality, retrieval quality, latency, throughput, production readiness, legal suitability, arbitrary Hugging Face execution, ONNX chat/general execution, streaming, external proxying, or full OpenAI API parity claim.\n- No public/runtime GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference claim.\n')
+    (d/'summary.md').write_text('# MiniLM embeddings optional API acceptance artifacts\n\n- Result: `passed`\n- Repo commit: `sample`\n- Started: `2026-04-29T00:00:00Z`\n- Finished: `2026-04-29T00:00:01Z`\n- Model: `sentence-transformers-all-minilm-l6-v2-model-safetensors`\n- Upstream: `sentence-transformers/all-MiniLM-L6-v2` at `c9745ed1d9f207416be6d2e6f8de32d1f16199bf`\n- Scope: optional local embedding API evidence only; not default CI.\n- Artifact directory: `.`\n- State directory: `state/`\n- Model directory: `models/`\n- Server log: `logs/server.log`\n\n## Checks\n\n'+'\n'.join(f"- `{c['name']}`: `{c['status']}` ({c['artifact']})" for c in checks)+'\n\n## What this does not prove\n\n- No embedding quality, retrieval quality, latency, throughput, production readiness, legal suitability, arbitrary Hugging Face execution, ONNX chat/general execution, streaming, external proxying, or full OpenAI API parity claim.\n- No public/runtime GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference claim.\n')
 
 def main():
     import sys
@@ -267,6 +276,22 @@ def main():
                 if 'summary.md missing repo_commit row' not in str(exc): raise
             else:
                 raise AssertionError('bad summary.md repo_commit self-check did not fail')
+            bad_md_model=Path(tmp)/'bad-markdown-model'; write_sample(bad_md_model)
+            (bad_md_model/'summary.md').write_text((bad_md_model/'summary.md').read_text().replace('- Model: `sentence-transformers-all-minilm-l6-v2-model-safetensors`\n','- Model: `stale-model`\n'))
+            try:
+                validate_summary(bad_md_model)
+            except AssertionError as exc:
+                if 'summary.md missing model_id row' not in str(exc): raise
+            else:
+                raise AssertionError('bad summary.md model identity self-check did not fail')
+            bad_md_upstream=Path(tmp)/'bad-markdown-upstream'; write_sample(bad_md_upstream)
+            (bad_md_upstream/'summary.md').write_text((bad_md_upstream/'summary.md').read_text().replace('- Upstream: `sentence-transformers/all-MiniLM-L6-v2` at `c9745ed1d9f207416be6d2e6f8de32d1f16199bf`\n','- Upstream: `stale/repo` at `stale-revision`\n'))
+            try:
+                validate_summary(bad_md_upstream)
+            except AssertionError as exc:
+                if 'summary.md missing repo_id/revision row' not in str(exc): raise
+            else:
+                raise AssertionError('bad summary.md upstream identity self-check did not fail')
         print('MiniLM embeddings optional API acceptance artifact QA self-test passed'); return
     for d in dirs: validate_summary(d)
     print('MiniLM embeddings optional API acceptance artifact QA passed')

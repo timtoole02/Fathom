@@ -147,6 +147,15 @@ def assert_markdown_identity_matches_summary(summary: dict[str, Any], markdown: 
         raise AssertionError("summary.repo_commit must be non-empty text")
     if f"- Repo commit: `{commit}`" not in markdown:
         raise AssertionError("summary.md missing repo_commit row matching summary.json")
+    model_id = summary.get("model_id")
+    repo_id = summary.get("repo_id")
+    revision = summary.get("revision")
+    if not all(isinstance(value, str) and value for value in (model_id, repo_id, revision)):
+        raise AssertionError("summary model identity fields must be non-empty text")
+    if f"- Model: `{model_id}`" not in markdown:
+        raise AssertionError("summary.md missing model_id row matching summary.json")
+    if f"- Upstream: `{repo_id}` at `{revision}`" not in markdown:
+        raise AssertionError("summary.md missing repo_id/revision row matching summary.json")
 
 
 def assert_loopback_base_url(value: Any) -> None:
@@ -372,6 +381,8 @@ def write_sample(directory: Path) -> None:
         "- Repo commit: `sample`\n"
         "- Started: `2026-04-29T00:00:00Z`\n"
         "- Finished: `2026-04-29T00:00:01Z`\n"
+        "- Model: `qwen-qwen2-5-0-5b-instruct-model-safetensors`\n"
+        "- Upstream: `Qwen/Qwen2.5-0.5B-Instruct` at `7ae557604adf67be50417f59c2c2f167def9a775`\n"
         "- Scope: Optional local larger-demo API evidence only; not default CI.\n"
         "- Artifact directory: `.`\n"
         "- State directory: `state/`\n"
@@ -490,6 +501,42 @@ def main() -> None:
                     raise
             else:
                 raise AssertionError("bad summary.md repo_commit self-check did not fail")
+            bad_md_model = Path(tmp) / "bad-markdown-model"
+            write_sample(bad_md_model)
+            (bad_md_model / "summary.md").write_text(
+                (bad_md_model / "summary.md")
+                .read_text(encoding="utf-8")
+                .replace(
+                    "- Model: `qwen-qwen2-5-0-5b-instruct-model-safetensors`\n",
+                    "- Model: `stale-model`\n",
+                ),
+                encoding="utf-8",
+            )
+            try:
+                validate_summary(bad_md_model)
+            except AssertionError as exc:
+                if "summary.md missing model_id row" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("bad summary.md model identity self-check did not fail")
+            bad_md_upstream = Path(tmp) / "bad-markdown-upstream"
+            write_sample(bad_md_upstream)
+            (bad_md_upstream / "summary.md").write_text(
+                (bad_md_upstream / "summary.md")
+                .read_text(encoding="utf-8")
+                .replace(
+                    "- Upstream: `Qwen/Qwen2.5-0.5B-Instruct` at `7ae557604adf67be50417f59c2c2f167def9a775`\n",
+                    "- Upstream: `stale/repo` at `stale-revision`\n",
+                ),
+                encoding="utf-8",
+            )
+            try:
+                validate_summary(bad_md_upstream)
+            except AssertionError as exc:
+                if "summary.md missing repo_id/revision row" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("bad summary.md upstream identity self-check did not fail")
         print("Qwen2.5 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:

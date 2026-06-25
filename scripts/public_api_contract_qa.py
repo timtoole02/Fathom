@@ -390,6 +390,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard optional artifact summary loopback URLs|"
     r"Guard optional artifact summary timestamps|"
     r"Guard optional artifact timestamp markdown rows|"
+    r"Guard optional artifact model identity markdown rows|"
     r"Guard optional artifact summary markdown index|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
@@ -5031,6 +5032,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "optional acceptance artifact QA keeps `summary.model_id`, `summary.repo_id`, and `summary.revision` aligned between `summary.json` and `summary.md`",
+        "launch evidence optional artifact QA model identity scope",
+    )
+    assert_contains(
+        evidence_text,
         "Backend acceptance artifact QA keeps `summary.base_url` loopback-only and aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact base URL boundary scope",
     )
@@ -6092,6 +6098,37 @@ def assert_optional_acceptance_timestamp_wiring() -> None:
         )
 
 
+def assert_optional_acceptance_model_identity_wiring() -> None:
+    for _, _, smoke_script, artifact_qa_script, _, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
+        smoke_text = read(ROOT / smoke_script)
+        artifact_qa_text = read(ROOT / artifact_qa_script)
+        assert_contains(smoke_text, "Model:", f"{smoke_script} summary.md model identity row")
+        assert_contains(smoke_text, "Upstream:", f"{smoke_script} summary.md upstream identity row")
+        assert_contains(smoke_text, "MODEL_ID", f"{smoke_script} summary.md model identity source")
+        assert_contains(smoke_text, "REPO_ID", f"{smoke_script} summary.md repo identity source")
+        assert_contains(smoke_text, "REVISION", f"{smoke_script} summary.md revision identity source")
+        assert_contains(
+            artifact_qa_text,
+            "summary.md missing model_id row matching summary.json",
+            f"{artifact_qa_script} markdown model identity guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "summary.md missing repo_id/revision row matching summary.json",
+            f"{artifact_qa_script} markdown upstream identity guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "bad summary.md model identity self-check did not fail",
+            f"{artifact_qa_script} markdown model identity negative self-test",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "bad summary.md upstream identity self-check did not fail",
+            f"{artifact_qa_script} markdown upstream identity negative self-test",
+        )
+
+
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
@@ -6391,6 +6428,7 @@ def main() -> int:
     assert_smoke_manifest_wiring()
     assert_optional_acceptance_docs()
     assert_optional_acceptance_timestamp_wiring()
+    assert_optional_acceptance_model_identity_wiring()
     assert_ci_wiring(manifest)
     assert_api_contract_issue_template(manifest)
     assert_model_runtime_issue_template()
