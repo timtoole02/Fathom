@@ -155,6 +155,33 @@ def assert_summary_path_labels(summary: dict[str, Any], markdown: str) -> None:
         raise AssertionError("summary.md must include the summary.json log_dir server-log label")
 
 
+def assert_failure_markdown_matches_summary(summary: dict[str, Any], markdown: str) -> None:
+    failure_stage = summary.get("failure_stage")
+    if isinstance(failure_stage, str) and failure_stage:
+        if f"- Failure stage: `{failure_stage}`" not in markdown:
+            raise AssertionError("summary.md must include the summary.json failure_stage")
+
+    failed_check = summary.get("failed_check")
+    if isinstance(failed_check, str) and failed_check:
+        if f"- Failed/last check: `{failed_check}`" not in markdown:
+            raise AssertionError("summary.md must include the summary.json failed_check")
+
+    last_artifact = summary.get("last_artifact")
+    if isinstance(last_artifact, str) and last_artifact:
+        if f"- Last artifact: `{last_artifact}`" not in markdown:
+            raise AssertionError("summary.md must include the summary.json last_artifact")
+
+    failure_message = summary.get("failure_message")
+    if isinstance(failure_message, str) and failure_message:
+        if f"- Message: {failure_message}" not in markdown:
+            raise AssertionError("summary.md must include the summary.json failure_message")
+
+    snapshot_artifact = summary.get("model_dir_snapshot_artifact")
+    if isinstance(snapshot_artifact, str) and snapshot_artifact:
+        if f"- Model directory snapshot: `{snapshot_artifact}`" not in markdown:
+            raise AssertionError("summary.md must include the summary.json model_dir_snapshot_artifact")
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary_path = directory / "summary.json"
     summary = load_json(summary_path)
@@ -254,6 +281,7 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError("failed summary.md must clearly mark Result: failed")
         if "must not be treated as a passed acceptance smoke" not in summary_md_text:
             raise AssertionError("failed summary.md must warn that diagnostics are not a pass")
+        assert_failure_markdown_matches_summary(summary, summary_md_text)
     else:
         raise AssertionError("summary.passed must be true or false")
 
@@ -321,6 +349,7 @@ def write_sample(directory: Path, *, passed: bool) -> None:
         summary.update(
             {
                 "failure_stage": "forced failure after capabilities",
+                "failed_check": "capabilities",
                 "failure_type": "AssertionError",
                 "failure_message": "forced acceptance smoke failure after capabilities",
                 "last_artifact": "03-api-capabilities.json",
@@ -357,6 +386,7 @@ def write_sample(directory: Path, *, passed: bool) -> None:
         extra = (
             "\n## Failure diagnostics\n\n"
             "- Failure stage: `forced failure after capabilities`\n"
+            "- Failed/last check: `capabilities`\n"
             "- Last artifact: `03-api-capabilities.json`\n"
             "- Message: forced acceptance smoke failure after capabilities\n"
             "- Model directory snapshot: `failure-model-dir-snapshot.json`\n\n"
@@ -662,6 +692,60 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("Markdown local-paths label mismatch self-check did not fail")
+
+        markdown_failure_stage_mismatch = root / "markdown-failure-stage-mismatch"
+        write_sample(markdown_failure_stage_mismatch, passed=False)
+        summary_md = markdown_failure_stage_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- Failure stage: `forced failure after capabilities`",
+                "- Failure stage: `stale failure stage`",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_failure_stage_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json failure_stage" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown failure-stage mismatch self-check did not fail")
+
+        markdown_failed_check_mismatch = root / "markdown-failed-check-mismatch"
+        write_sample(markdown_failed_check_mismatch, passed=False)
+        summary_md = markdown_failed_check_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- Failed/last check: `capabilities`",
+                "- Failed/last check: `stale-check`",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_failed_check_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json failed_check" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown failed-check mismatch self-check did not fail")
+
+        markdown_failure_message_mismatch = root / "markdown-failure-message-mismatch"
+        write_sample(markdown_failure_message_mismatch, passed=False)
+        summary_md = markdown_failure_message_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- Message: forced acceptance smoke failure after capabilities",
+                "- Message: stale failure message",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_failure_message_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json failure_message" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown failure-message mismatch self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)
