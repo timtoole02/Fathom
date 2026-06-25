@@ -386,6 +386,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard backend acceptance artifact summary path labels|"
     r"Guard backend acceptance artifact summary port row|"
     r"Guard backend acceptance artifact failure diagnostics|"
+    r"Guard backend acceptance artifact caveats|"
     r"Guard optional artifact summary loopback URLs|"
     r"Guard optional artifact summary timestamps|"
     r"Guard optional artifact summary markdown index|"
@@ -2611,6 +2612,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "keep backend acceptance boundary caveats present in `summary.md`",
+        "launch checklist backend acceptance artifact caveat scope",
+    )
+    assert_contains(
+        launch_text,
         "Keep `summary.local.json` private unless you have reviewed it",
         "launch checklist backend acceptance local-path artifact privacy warning",
     )
@@ -2704,6 +2710,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "keeps failed-run diagnostics aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact failure diagnostics scope",
+    )
+    assert_contains(
+        evidence_text,
+        "keeps backend acceptance boundary caveats present in `summary.md`",
+        "launch evidence backend acceptance artifact caveat scope",
     )
     assert_contains(
         evidence_text,
@@ -5051,6 +5062,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Backend acceptance artifact QA keeps failed-run diagnostics aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact failure diagnostics boundary scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Backend acceptance artifact QA keeps backend acceptance boundary caveats present in `summary.md`",
+        "launch evidence backend acceptance artifact caveat boundary scope",
     )
     assert_contains(
         evidence_text,

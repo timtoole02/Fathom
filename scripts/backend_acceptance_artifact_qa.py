@@ -52,6 +52,14 @@ REQUEST_PAYLOAD_PATTERNS = [
     re.compile(r"placeholder-key", re.IGNORECASE),
     re.compile(r"api\.example\.test", re.IGNORECASE),
 ]
+SUMMARY_CAVEAT_MARKERS = (
+    "No arbitrary SafeTensors support claim; only the pinned fixtures above are exercised.",
+    "No GGUF runtime, tokenizer execution, or generation claim; GGUF is metadata-only/refusal evidence.",
+    "No ONNX chat or general ONNX support claim.",
+    "No external-provider proxying claim; connected external API entries are metadata placeholders only, with activation/chat refusal evidence and no provider call.",
+    "Catalog license checks prove metadata visibility, acknowledgement gating, and installed manifest audit persistence, not legal review, legal advice, or compatibility for any use case.",
+    "No performance claim or benchmark evidence.",
+)
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -182,6 +190,12 @@ def assert_failure_markdown_matches_summary(summary: dict[str, Any], markdown: s
             raise AssertionError("summary.md must include the summary.json model_dir_snapshot_artifact")
 
 
+def assert_summary_caveats(markdown: str) -> None:
+    for marker in SUMMARY_CAVEAT_MARKERS:
+        if marker not in markdown:
+            raise AssertionError(f"summary.md missing backend acceptance caveat: {marker}")
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary_path = directory / "summary.json"
     summary = load_json(summary_path)
@@ -212,6 +226,7 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError(f"summary.md must include the summary.json {key} timestamp")
     assert_summary_identity_metadata(summary, summary_md_text)
     assert_summary_path_labels(summary, summary_md_text)
+    assert_summary_caveats(summary_md_text)
 
     if summary.get("local_paths_file") != "summary.local.json":
         raise AssertionError("summary.json must point local_paths_file at summary.local.json")
@@ -419,8 +434,12 @@ def write_sample(directory: Path, *, passed: bool) -> None:
         "| `external_placeholder_activation_refusal` | `05d-external-placeholder-activation-refusal.json` | 501 | `passed` | Activation is refused with external_proxy_not_implemented. |\n"
         "| `external_placeholder_v1_chat_refusal` | `05e-v1-chat-external-placeholder-refusal.json` | 501 | `passed` | Chat completion is refused with structured JSON and no fake choices. |\n"
         "\n## What this smoke does not prove\n\n"
-        "- Connected external API entries are metadata placeholders only; this smoke does not prove provider calls, external replies, or proxy support.\n"
-        "- Catalog license checks prove metadata visibility and gating, not legal review, legal advice, or compatibility for any use case.\n",
+        "- No arbitrary SafeTensors support claim; only the pinned fixtures above are exercised.\n"
+        "- No GGUF runtime, tokenizer execution, or generation claim; GGUF is metadata-only/refusal evidence.\n"
+        "- No ONNX chat or general ONNX support claim.\n"
+        "- No external-provider proxying claim; connected external API entries are metadata placeholders only, with activation/chat refusal evidence and no provider call.\n"
+        "- Catalog license checks prove metadata visibility, acknowledgement gating, and installed manifest audit persistence, not legal review, legal advice, or compatibility for any use case.\n"
+        "- No performance claim or benchmark evidence.\n",
         encoding="utf-8",
     )
 
@@ -746,6 +765,24 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("Markdown failure-message mismatch self-check did not fail")
+
+        missing_summary_caveat = root / "missing-summary-caveat"
+        write_sample(missing_summary_caveat, passed=True)
+        summary_md = missing_summary_caveat / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- No performance claim or benchmark evidence.\n",
+                "",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(missing_summary_caveat)
+        except AssertionError as exc:
+            if "summary.md missing backend acceptance caveat" not in str(exc):
+                raise
+        else:
+            raise AssertionError("missing summary caveat self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)
