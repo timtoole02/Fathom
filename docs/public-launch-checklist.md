@@ -65,7 +65,7 @@ The offline API client example regression also keeps `docs/api/client-examples.m
 
 The CI static policy and public API contract QA gates also keep this checklist, the pull request template's gate inventory, and `.github/workflows/ci.yml` aligned on the default no-download gate commands.
 
-The static QA keeps the optional MiniLM, SmolLM2, and Qwen2.5 acceptance docs aligned with each opt-in harness's root/model/state/log/artifact/port/wait/timeout environment overrides and default values. The optional acceptance artifact QA also keeps shareable `summary.md` check rows aligned with `summary.json`, keeps `summary.base_url` loopback-only, and keeps `summary.started_at`/`summary.finished_at` as RFC3339 UTC timestamps so public handoff Markdown cannot omit or rename a generated check, imply non-local API exposure, or carry ambiguous time metadata.
+The static QA keeps the optional MiniLM, SmolLM2, and Qwen2.5 acceptance docs aligned with each opt-in harness's root/model/state/log/artifact/port/wait/timeout environment overrides and default values. The optional acceptance artifact QA also keeps shareable `summary.md` check rows aligned with `summary.json`; keeps `summary.base_url` loopback-only; keeps `summary.started_at`/`summary.finished_at` as RFC3339 UTC timestamps; keeps `summary.model_id`, `summary.repo_id`, and `summary.revision` aligned between `summary.json` and `summary.md`; keeps share-safe artifact/state/model/log labels aligned between `summary.json` and `summary.md`; and keeps required boundary caveats present in `summary.json` and `summary.md` so public handoff Markdown cannot omit or rename a generated check, imply non-local API exposure, carry ambiguous time metadata, drift from the verified upstream model identity, point readers at stale artifact paths, or drop public claim boundaries.
 
 For the real backend no-download contract check, run:
 
@@ -331,7 +331,7 @@ The test report artifact guard also blocks CTRF generated test report outputs su
 
 - The documented no-download public `/v1` contract routes and refusal envelopes work against the real backend process.
 - Default CI stays offline with respect to model downloads, networked acceptance smoke, and non-default ONNX feature tests.
-- Offline artifact QA covers optional public-contract smoke summaries, backend acceptance smoke success/failure summaries with share-safety checks, and MiniLM, SmolLM2, and Qwen2.5 optional API acceptance artifact schemas plus Markdown/JSON check-index consistency; the optional backend acceptance smoke itself remains networked and only produces current pinned-fixture evidence when downloads succeed.
+- Offline artifact QA covers optional public-contract smoke summaries, backend acceptance smoke success/failure summaries with share-safety checks, and MiniLM, SmolLM2, and Qwen2.5 optional API acceptance artifact schemas plus Markdown/JSON check-index, timestamp, model-identity, path-label, loopback, and caveat consistency; the optional backend acceptance smoke itself remains networked and only produces current pinned-fixture evidence when downloads succeed.
 - The current launch evidence snapshot is recorded in [`public-launch-evidence.md`](public-launch-evidence.md).
 
 ## What this launch does not prove
