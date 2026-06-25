@@ -389,6 +389,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard backend acceptance artifact caveats|"
     r"Guard optional artifact summary loopback URLs|"
     r"Guard optional artifact summary timestamps|"
+    r"Guard optional artifact timestamp markdown rows|"
     r"Guard optional artifact summary markdown index|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
@@ -6071,6 +6072,26 @@ def assert_optional_acceptance_docs() -> None:
             assert_contains(text, phrase, label)
 
 
+def assert_optional_acceptance_timestamp_wiring() -> None:
+    for _, _, smoke_script, artifact_qa_script, _, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
+        smoke_text = read(ROOT / smoke_script)
+        artifact_qa_text = read(ROOT / artifact_qa_script)
+        assert_contains(smoke_text, "Started:", f"{smoke_script} summary.md started timestamp row")
+        assert_contains(smoke_text, "summary['started_at']", f"{smoke_script} summary.md started timestamp source")
+        assert_contains(smoke_text, "Finished:", f"{smoke_script} summary.md finished timestamp row")
+        assert_contains(smoke_text, "summary['finished_at']", f"{smoke_script} summary.md finished timestamp source")
+        assert_contains(
+            artifact_qa_text,
+            "assert_markdown_timestamps_match_summary",
+            f"{artifact_qa_script} markdown timestamp guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "bad summary.md timestamp self-check did not fail",
+            f"{artifact_qa_script} markdown timestamp negative self-test",
+        )
+
+
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
@@ -6369,6 +6390,7 @@ def main() -> int:
     assert_no_positive_overclaims()
     assert_smoke_manifest_wiring()
     assert_optional_acceptance_docs()
+    assert_optional_acceptance_timestamp_wiring()
     assert_ci_wiring(manifest)
     assert_api_contract_issue_template(manifest)
     assert_model_runtime_issue_template()
