@@ -284,6 +284,14 @@ OPTIONAL_ACCEPTANCE_DOCS = (
             "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_ARTIFACT_DIR",
             "FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_LOG_DIR",
         ),
+        (
+            "Default port: `18187`",
+            "Default wait: `240` seconds",
+            "Default request timeout: `900` seconds",
+            "Default root: `${TMPDIR:-/tmp}/fathom-minilm-embeddings-api-$$`",
+            "Default artifacts directory: `$TMP_ROOT/artifacts`",
+            "By default, successful runs delete the temporary root unless `FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_KEEP_ARTIFACTS=1`",
+        ),
     ),
     (
         SMOLLM2_OPTIONAL_ACCEPTANCE,
@@ -302,6 +310,14 @@ OPTIONAL_ACCEPTANCE_DOCS = (
             "FATHOM_SMOLLM2_ACCEPTANCE_ARTIFACT_DIR",
             "FATHOM_SMOLLM2_ACCEPTANCE_LOG_DIR",
         ),
+        (
+            "Default port: `18186`",
+            "Default wait: `240` seconds",
+            "Default request timeout: `900` seconds",
+            "Default root: `${TMPDIR:-/tmp}/fathom-smollm2-api-$$`",
+            "Default artifacts directory: `$TMP_ROOT/artifacts`",
+            "By default, successful runs delete the temporary root unless `FATHOM_SMOLLM2_ACCEPTANCE_KEEP_ARTIFACTS=1`",
+        ),
     ),
     (
         QWEN25_OPTIONAL_ACCEPTANCE,
@@ -319,6 +335,14 @@ OPTIONAL_ACCEPTANCE_DOCS = (
             "FATHOM_QWEN25_ACCEPTANCE_STATE_DIR",
             "FATHOM_QWEN25_ACCEPTANCE_ARTIFACT_DIR",
             "FATHOM_QWEN25_ACCEPTANCE_LOG_DIR",
+        ),
+        (
+            "Default port: `18185`",
+            "Default wait: `240` seconds",
+            "Default request timeout: `900` seconds",
+            "Default root: `${TMPDIR:-/tmp}/fathom-qwen25-api-$$`",
+            "Default artifacts directory: `$TMP_ROOT/artifacts`",
+            "By default, successful runs delete the temporary root unless `FATHOM_QWEN25_ACCEPTANCE_KEEP_ARTIFACTS=1`",
         ),
     ),
 )
@@ -354,6 +378,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard API client dependency boundaries|"
     r"Guard API Client Environment Overrides|"
     r"Guard optional acceptance env docs|"
+    r"Guard optional acceptance default docs|"
     r"Guard optional artifact summary markdown index|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
@@ -5891,7 +5916,7 @@ def assert_optional_acceptance_docs() -> None:
         "streaming",
         "full OpenAI API parity",
     ]
-    for path, opt_in_env, smoke_script, artifact_qa_script, evidence_scope, env_vars in OPTIONAL_ACCEPTANCE_DOCS:
+    for path, opt_in_env, smoke_script, artifact_qa_script, evidence_scope, env_vars, default_phrases in OPTIONAL_ACCEPTANCE_DOCS:
         text = read(path)
         label = str(path.relative_to(ROOT))
         for phrase in required_boundaries:
@@ -5902,6 +5927,8 @@ def assert_optional_acceptance_docs() -> None:
         assert_contains(text, evidence_scope, label)
         for env_var in env_vars:
             assert_contains(text, env_var, label)
+        for phrase in default_phrases:
+            assert_contains(text, phrase, label)
 
 
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:

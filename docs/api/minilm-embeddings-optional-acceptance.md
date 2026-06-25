@@ -47,6 +47,15 @@ The harness uses isolated directories by default and supports overrides:
 
 Set `FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_KEEP_ARTIFACTS=1` when you want to review or preserve generated evidence.
 
+Default values:
+
+- Default port: `18187`
+- Default wait: `240` seconds
+- Default request timeout: `900` seconds
+- Default root: `${TMPDIR:-/tmp}/fathom-minilm-embeddings-api-$$`
+- Default artifacts directory: `$TMP_ROOT/artifacts`
+- By default, successful runs delete the temporary root unless `FATHOM_MINILM_EMBEDDINGS_ACCEPTANCE_KEEP_ARTIFACTS=1`
+
 ## Share-safe artifact review
 
 Before copying generated artifacts into checked-in docs or public issue comments:

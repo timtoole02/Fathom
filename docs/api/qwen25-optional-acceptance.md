@@ -48,6 +48,15 @@ The opt-in harness accepts these variables when you need an isolated path, a dif
 
 Set `FATHOM_QWEN25_ACCEPTANCE_KEEP_ARTIFACTS=1` when you want to review or preserve generated evidence.
 
+Default values:
+
+- Default port: `18185`
+- Default wait: `240` seconds
+- Default request timeout: `900` seconds
+- Default root: `${TMPDIR:-/tmp}/fathom-qwen25-api-$$`
+- Default artifacts directory: `$TMP_ROOT/artifacts`
+- By default, successful runs delete the temporary root unless `FATHOM_QWEN25_ACCEPTANCE_KEEP_ARTIFACTS=1`
+
 ## Isolated run skeleton
 
 Use isolated state/model directories so the acceptance pass cannot mutate your normal Fathom install:
