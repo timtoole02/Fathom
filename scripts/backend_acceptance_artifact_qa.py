@@ -100,6 +100,20 @@ def assert_utc_timestamp(value: Any, label: str) -> None:
         raise AssertionError(f"{label} must be an RFC3339 UTC timestamp ending in Z")
 
 
+def assert_markdown_checks_match_summary(checks: list[Any], markdown: str) -> None:
+    for check in checks:
+        if not isinstance(check, dict):
+            continue
+        name = check.get("name")
+        artifact = check.get("artifact")
+        http_status = check.get("http_status")
+        status = check.get("status")
+        if all(value is not None for value in (name, artifact, http_status, status)):
+            row_prefix = f"| `{name}` | `{artifact}` | {http_status} | `{status}` |"
+            if row_prefix not in markdown:
+                raise AssertionError(f"summary.md missing check row matching summary.json: {name}")
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary_path = directory / "summary.json"
     summary = load_json(summary_path)
@@ -137,6 +151,7 @@ def validate_summary_dir(directory: Path) -> None:
     checks = summary.get("checks")
     if not isinstance(checks, list) or not checks:
         raise AssertionError("summary.checks must be a non-empty list")
+    assert_markdown_checks_match_summary(checks, summary_md_text)
     seen_check_names: set[str] = set()
     seen_check_artifacts: set[str] = set()
     for check in checks:
@@ -479,6 +494,24 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("Markdown timestamp mismatch self-check did not fail")
+
+        markdown_missing_check = root / "markdown-missing-check"
+        write_sample(markdown_missing_check, passed=True)
+        summary_md = markdown_missing_check / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "| `external_placeholder_v1_chat_refusal` | `05e-v1-chat-external-placeholder-refusal.json` | 501 | `passed` | Chat completion is refused with structured JSON and no fake choices. |\n",
+                "",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_missing_check)
+        except AssertionError as exc:
+            if "summary.md missing check row matching summary.json" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown check row self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)

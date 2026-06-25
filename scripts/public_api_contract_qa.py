@@ -381,6 +381,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard optional acceptance default docs|"
     r"Guard backend acceptance artifact summary loopback URLs|"
     r"Guard backend acceptance artifact summary timestamps|"
+    r"Guard backend acceptance artifact summary markdown index|"
     r"Guard optional artifact summary loopback URLs|"
     r"Guard optional artifact summary timestamps|"
     r"Guard optional artifact summary markdown index|"
@@ -2581,6 +2582,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "keep `summary.md` artifact-index rows aligned with `summary.json` checks",
+        "launch checklist backend acceptance artifact markdown index scope",
+    )
+    assert_contains(
+        launch_text,
         "Keep `summary.local.json` private unless you have reviewed it",
         "launch checklist backend acceptance local-path artifact privacy warning",
     )
@@ -2649,6 +2655,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "keeps `summary.started_at` and `summary.finished_at` as RFC3339 UTC timestamps aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact timestamp scope",
+    )
+    assert_contains(
+        evidence_text,
+        "keeps `summary.md` artifact-index rows aligned with `summary.json` checks",
+        "launch evidence backend acceptance artifact markdown index scope",
     )
     assert_contains(
         evidence_text,
@@ -4971,6 +4982,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Backend acceptance artifact QA keeps `summary.started_at` and `summary.finished_at` as RFC3339 UTC timestamps aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact timestamp boundary scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Backend acceptance artifact QA keeps `summary.md` artifact-index rows aligned with `summary.json` checks",
+        "launch evidence backend acceptance artifact markdown index boundary scope",
     )
     assert_contains(
         evidence_text,
