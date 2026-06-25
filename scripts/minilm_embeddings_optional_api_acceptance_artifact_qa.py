@@ -95,6 +95,10 @@ def assert_loopback_base_url(value:Any)->None:
     if not 1 <= port <= 65535:
         raise AssertionError('summary.base_url port must be in range 1-65535')
 
+def assert_utc_timestamp(value:Any,label:str)->None:
+    if not isinstance(value,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z',value):
+        raise AssertionError(f'{label} must be an RFC3339 UTC timestamp ending in Z')
+
 def validate_install(install:dict[str,Any])->None:
     if install.get('id')!=MODEL_ID or install.get('task')!='text_embedding': raise AssertionError('install identity/task mismatch')
     manifest=install.get('download_manifest') or {}
@@ -127,6 +131,8 @@ def validate_summary(directory:Path)->None:
     summary=load_json(directory/'summary.json')
     if summary.get('schema')!='fathom.minilm_embeddings_optional_api_acceptance.summary.v1' or summary.get('passed') is not True: raise AssertionError('summary mismatch')
     assert_loopback_base_url(summary.get('base_url'))
+    assert_utc_timestamp(summary.get('started_at'),'summary.started_at')
+    assert_utc_timestamp(summary.get('finished_at'),'summary.finished_at')
     for k in ('artifact_dir','model_dir','state_dir','log_dir'):
         v=summary.get(k)
         if not isinstance(v,str) or v.startswith('/'): raise AssertionError(f'summary.{k} not share-safe')
@@ -220,6 +226,16 @@ def main():
                 if 'summary.base_url' not in str(exc): raise
             else:
                 raise AssertionError('external summary.base_url self-check did not fail')
+            bad_timestamp=Path(tmp)/'bad-timestamp'; write_sample(bad_timestamp)
+            summary=load_json(bad_timestamp/'summary.json')
+            summary['finished_at']='2026-04-29 00:00:01'
+            (bad_timestamp/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+            try:
+                validate_summary(bad_timestamp)
+            except AssertionError as exc:
+                if 'summary.finished_at' not in str(exc): raise
+            else:
+                raise AssertionError('bad summary timestamp self-check did not fail')
         print('MiniLM embeddings optional API acceptance artifact QA self-test passed'); return
     for d in dirs: validate_summary(d)
     print('MiniLM embeddings optional API acceptance artifact QA passed')

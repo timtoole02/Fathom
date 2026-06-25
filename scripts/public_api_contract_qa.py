@@ -380,6 +380,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard optional acceptance env docs|"
     r"Guard optional acceptance default docs|"
     r"Guard optional artifact summary loopback URLs|"
+    r"Guard optional artifact summary timestamps|"
     r"Guard optional artifact summary markdown index|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
@@ -4933,6 +4934,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "optional acceptance artifact QA keeps `summary.base_url` loopback-only",
         "launch evidence optional artifact QA loopback base URL scope",
+    )
+    assert_contains(
+        evidence_text,
+        "optional acceptance artifact QA keeps `summary.started_at` and `summary.finished_at` as RFC3339 UTC timestamps",
+        "launch evidence optional artifact QA timestamp scope",
     )
     assert_contains(
         evidence_text,

@@ -140,6 +140,11 @@ def assert_loopback_base_url(value: Any) -> None:
         raise AssertionError("summary.base_url port must be in range 1-65535")
 
 
+def assert_utc_timestamp(value: Any, label: str) -> None:
+    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", value):
+        raise AssertionError(f"{label} must be an RFC3339 UTC timestamp ending in Z")
+
+
 def error_code(payload: dict[str, Any]) -> str | None:
     error = payload.get("error")
     return error.get("code") if isinstance(error, dict) else None
@@ -223,6 +228,8 @@ def validate_summary(directory: Path) -> None:
     if summary.get("passed") is not True:
         raise AssertionError("summary.passed must be true")
     assert_loopback_base_url(summary.get("base_url"))
+    assert_utc_timestamp(summary.get("started_at"), "summary.started_at")
+    assert_utc_timestamp(summary.get("finished_at"), "summary.finished_at")
     for key in ("artifact_dir", "model_dir", "state_dir", "log_dir"):
         value = summary.get(key)
         if not isinstance(value, str) or value.startswith("/"):
@@ -419,6 +426,18 @@ def main() -> None:
                     raise
             else:
                 raise AssertionError("external summary.base_url self-check did not fail")
+            bad_timestamp = Path(tmp) / "bad-timestamp"
+            write_sample(bad_timestamp)
+            summary = load_json(bad_timestamp / "summary.json")
+            summary["finished_at"] = "2026-04-29 00:00:01"
+            (bad_timestamp / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            try:
+                validate_summary(bad_timestamp)
+            except AssertionError as exc:
+                if "summary.finished_at" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("bad summary timestamp self-check did not fail")
         print("SmolLM2 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:
