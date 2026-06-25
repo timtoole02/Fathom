@@ -133,6 +133,28 @@ def assert_summary_identity_metadata(summary: dict[str, Any], markdown: str) -> 
             raise AssertionError(f"summary.md must include fixture model id from summary.json: {label}")
 
 
+def assert_summary_path_labels(summary: dict[str, Any], markdown: str) -> None:
+    labels = {
+        "artifact_dir": "Artifact directory",
+        "state_dir": "State directory",
+        "model_dir": "Model directory",
+        "local_paths_file": "Local-only paths",
+    }
+    for key, markdown_label in labels.items():
+        value = summary.get(key)
+        if not isinstance(value, str) or not value:
+            raise AssertionError(f"summary.{key} must be non-empty text")
+        if f"- {markdown_label}: `{value}`" not in markdown:
+            raise AssertionError(f"summary.md must include the summary.json {key} label")
+
+    log_dir = summary.get("log_dir")
+    if not isinstance(log_dir, str) or not log_dir:
+        raise AssertionError("summary.log_dir must be non-empty text")
+    server_log = f"{log_dir.rstrip('/')}/server.log"
+    if f"- Server log: `{server_log}`" not in markdown:
+        raise AssertionError("summary.md must include the summary.json log_dir server-log label")
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary_path = directory / "summary.json"
     summary = load_json(summary_path)
@@ -160,6 +182,7 @@ def validate_summary_dir(directory: Path) -> None:
         if f"- {markdown_label}: `{value}`" not in summary_md_text:
             raise AssertionError(f"summary.md must include the summary.json {key} timestamp")
     assert_summary_identity_metadata(summary, summary_md_text)
+    assert_summary_path_labels(summary, summary_md_text)
 
     if summary.get("local_paths_file") != "summary.local.json":
         raise AssertionError("summary.json must point local_paths_file at summary.local.json")
@@ -585,6 +608,42 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("missing fixture model ids self-check did not fail")
+
+        markdown_path_label_mismatch = root / "markdown-path-label-mismatch"
+        write_sample(markdown_path_label_mismatch, passed=True)
+        summary_md = markdown_path_label_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- Server log: `logs/server.log`",
+                "- Server log: `stale-logs/server.log`",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_path_label_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json log_dir server-log label" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown path-label mismatch self-check did not fail")
+
+        markdown_local_paths_label_mismatch = root / "markdown-local-paths-label-mismatch"
+        write_sample(markdown_local_paths_label_mismatch, passed=True)
+        summary_md = markdown_local_paths_label_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- Local-only paths: `summary.local.json`",
+                "- Local-only paths: `stale.local.json`",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_local_paths_label_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json local_paths_file label" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown local-paths label mismatch self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)

@@ -383,6 +383,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard backend acceptance artifact summary timestamps|"
     r"Guard backend acceptance artifact summary markdown index|"
     r"Guard backend acceptance artifact summary identity metadata|"
+    r"Guard backend acceptance artifact summary path labels|"
     r"Guard optional artifact summary loopback URLs|"
     r"Guard optional artifact summary timestamps|"
     r"Guard optional artifact summary markdown index|"
@@ -2593,6 +2594,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         launch_text,
+        "keep share-safe artifact/state/model/log/local-path labels aligned between `summary.json` and `summary.md`",
+        "launch checklist backend acceptance artifact path-label scope",
+    )
+    assert_contains(
+        launch_text,
         "Keep `summary.local.json` private unless you have reviewed it",
         "launch checklist backend acceptance local-path artifact privacy warning",
     )
@@ -2671,6 +2677,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "keeps `repo_commit` and `fixture_model_ids` aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact identity metadata scope",
+    )
+    assert_contains(
+        evidence_text,
+        "keeps share-safe artifact/state/model/log/local-path labels aligned between `summary.json` and `summary.md`",
+        "launch evidence backend acceptance artifact path-label scope",
     )
     assert_contains(
         evidence_text,
@@ -5003,6 +5014,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "Backend acceptance artifact QA keeps `repo_commit` and `fixture_model_ids` aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact identity metadata boundary scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Backend acceptance artifact QA keeps share-safe artifact/state/model/log/local-path labels aligned between `summary.json` and `summary.md`",
+        "launch evidence backend acceptance artifact path-label boundary scope",
     )
     assert_contains(
         evidence_text,
