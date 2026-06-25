@@ -6133,6 +6133,35 @@ def assert_optional_acceptance_loopback_wiring() -> None:
         )
 
 
+def assert_optional_acceptance_markdown_index_wiring() -> None:
+    for _, _, smoke_script, artifact_qa_script, _, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
+        smoke_text = read(ROOT / smoke_script)
+        artifact_qa_text = read(ROOT / artifact_qa_script)
+        assert_contains(smoke_text, "## Checks", f"{smoke_script} summary.md checks section")
+        assert_contains(smoke_text, "status", f"{smoke_script} summary.md check status source")
+        assert_contains(smoke_text, "artifact", f"{smoke_script} summary.md check artifact source")
+        assert_contains(
+            artifact_qa_text,
+            "assert_markdown_checks_match_summary",
+            f"{artifact_qa_script} markdown check-row guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "summary.md missing check row matching summary.json",
+            f"{artifact_qa_script} markdown check-row error",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "missing summary.md check row self-check did not fail",
+            f"{artifact_qa_script} markdown check-row negative self-test",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "summary.checks artifact index mismatch",
+            f"{artifact_qa_script} summary checks artifact index guard",
+        )
+
+
 def assert_optional_acceptance_model_identity_wiring() -> None:
     for _, _, smoke_script, artifact_qa_script, _, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
         smoke_text = read(ROOT / smoke_script)
@@ -6524,6 +6553,7 @@ def main() -> int:
     assert_smoke_manifest_wiring()
     assert_optional_acceptance_docs()
     assert_optional_acceptance_loopback_wiring()
+    assert_optional_acceptance_markdown_index_wiring()
     assert_optional_acceptance_timestamp_wiring()
     assert_optional_acceptance_model_identity_wiring()
     assert_optional_acceptance_path_label_wiring()
