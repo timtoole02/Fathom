@@ -114,6 +114,25 @@ def assert_markdown_checks_match_summary(checks: list[Any], markdown: str) -> No
                 raise AssertionError(f"summary.md missing check row matching summary.json: {name}")
 
 
+def assert_summary_identity_metadata(summary: dict[str, Any], markdown: str) -> None:
+    repo_commit = summary.get("repo_commit")
+    if not isinstance(repo_commit, str) or not repo_commit:
+        raise AssertionError("summary.repo_commit must be non-empty text")
+    if f"- Repo commit: `{repo_commit}`" not in markdown:
+        raise AssertionError("summary.md must include the summary.json repo_commit")
+
+    fixture_model_ids = summary.get("fixture_model_ids")
+    if not isinstance(fixture_model_ids, dict) or not fixture_model_ids:
+        raise AssertionError("summary.fixture_model_ids must be a non-empty object")
+    for label, model_id in fixture_model_ids.items():
+        if not isinstance(label, str) or not label:
+            raise AssertionError("summary.fixture_model_ids labels must be non-empty text")
+        if not isinstance(model_id, str) or not model_id:
+            raise AssertionError(f"summary.fixture_model_ids.{label} must be non-empty text")
+        if f"- {label}: `{model_id}`" not in markdown:
+            raise AssertionError(f"summary.md must include fixture model id from summary.json: {label}")
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary_path = directory / "summary.json"
     summary = load_json(summary_path)
@@ -140,6 +159,7 @@ def validate_summary_dir(directory: Path) -> None:
         markdown_label = "Started" if key == "started_at" else "Finished"
         if f"- {markdown_label}: `{value}`" not in summary_md_text:
             raise AssertionError(f"summary.md must include the summary.json {key} timestamp")
+    assert_summary_identity_metadata(summary, summary_md_text)
 
     if summary.get("local_paths_file") != "summary.local.json":
         raise AssertionError("summary.json must point local_paths_file at summary.local.json")
@@ -320,6 +340,7 @@ def write_sample(directory: Path, *, passed: bool) -> None:
     (directory / "summary.md").write_text(
         f"# Fathom backend acceptance artifacts{' — failed run' if not passed else ''}\n\n"
         f"- Result: `{result}`\n"
+        "- Repo commit: `sample`\n"
         "- Base URL: `http://127.0.0.1:18180`\n"
         "- Started: `2026-04-27T00:00:00Z`\n"
         "- Finished: `2026-04-27T00:00:01Z`\n"
@@ -329,6 +350,10 @@ def write_sample(directory: Path, *, passed: bool) -> None:
         "- Server log: `logs/server.log`\n"
         "- Local-only paths: `summary.local.json`\n"
         f"{extra}\n"
+        "## Fixture model ids\n\n"
+        "- chat: `sample-chat`\n"
+        "- external_placeholder: `acceptance-external-placeholder`\n"
+        "\n"
         "## Artifact index\n\n"
         "| Check | Artifact | HTTP | Status | What it verifies |\n"
         "| --- | --- | ---: | --- | --- |\n"
@@ -512,6 +537,54 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("Markdown check row self-check did not fail")
+
+        markdown_repo_commit_mismatch = root / "markdown-repo-commit-mismatch"
+        write_sample(markdown_repo_commit_mismatch, passed=True)
+        summary_md = markdown_repo_commit_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace("- Repo commit: `sample`", "- Repo commit: `stale`"),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_repo_commit_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json repo_commit" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown repo commit mismatch self-check did not fail")
+
+        markdown_fixture_model_mismatch = root / "markdown-fixture-model-mismatch"
+        write_sample(markdown_fixture_model_mismatch, passed=True)
+        summary_md = markdown_fixture_model_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- external_placeholder: `acceptance-external-placeholder`",
+                "- external_placeholder: `stale-placeholder`",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_fixture_model_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include fixture model id from summary.json" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown fixture model id mismatch self-check did not fail")
+
+        missing_fixture_model_ids = root / "missing-fixture-model-ids"
+        write_sample(missing_fixture_model_ids, passed=True)
+        summary = load_json(missing_fixture_model_ids / "summary.json")
+        summary.pop("fixture_model_ids")
+        (missing_fixture_model_ids / "summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        try:
+            validate_summary_dir(missing_fixture_model_ids)
+        except AssertionError as exc:
+            if "summary.fixture_model_ids must be a non-empty object" not in str(exc):
+                raise
+        else:
+            raise AssertionError("missing fixture model ids self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)
