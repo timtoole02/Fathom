@@ -117,6 +117,21 @@ def assert_checks_cover_required_artifacts(checks: Any) -> None:
             raise AssertionError(f"summary check failed: {check}")
 
 
+def assert_markdown_checks_match_summary(checks: Any, markdown: str) -> None:
+    if not isinstance(checks, list):
+        return
+    for check in checks:
+        if not isinstance(check, dict):
+            continue
+        name = check.get("name")
+        status = check.get("status")
+        artifact = check.get("artifact")
+        if all(isinstance(value, str) and value for value in (name, status, artifact)):
+            row = f"- `{name}`: `{status}` ({artifact})"
+            if row not in markdown:
+                raise AssertionError(f"summary.md missing check row matching summary.json: {name}")
+
+
 def error_code(payload: dict[str, Any]) -> str | None:
     error = payload.get("error")
     return error.get("code") if isinstance(error, dict) else None
@@ -211,6 +226,7 @@ def validate_summary(directory: Path) -> None:
     if "Result: `passed`" not in md or "What this does not prove" not in md:
         raise AssertionError("summary.md must clearly mark pass and caveats")
     assert_required_caveats(md, "summary.md")
+    assert_markdown_checks_match_summary(summary.get("checks"), md)
 
     assert_checks_cover_required_artifacts(summary.get("checks"))
 
@@ -323,6 +339,9 @@ def write_sample(directory: Path) -> None:
         "- State directory: `state/`\n"
         "- Model directory: `models/`\n"
         "- Server log: `logs/server.log`\n\n"
+        "## Checks\n\n"
+        + "\n".join(f"- `{check['name']}`: `{check['status']}` ({check['artifact']})" for check in checks)
+        + "\n\n"
         "## What this does not prove\n\n"
         "No generation quality, latency, throughput, production readiness, legal suitability, broad SmolLM2/Llama-style compatibility, arbitrary Hugging Face execution, streaming, external proxying, or full OpenAI API parity claim.\n"
         "No public/runtime GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference claim.\n",
@@ -365,6 +384,20 @@ def main() -> None:
                     raise
             else:
                 raise AssertionError("missing check artifact self-check did not fail")
+            bad_md_index = Path(tmp) / "missing-markdown-check-index"
+            write_sample(bad_md_index)
+            md = (bad_md_index / "summary.md").read_text(encoding="utf-8")
+            (bad_md_index / "summary.md").write_text(
+                md.replace("- `stream_refusal`: `passed` (06-chat-stream-refusal.json)\n", ""),
+                encoding="utf-8",
+            )
+            try:
+                validate_summary(bad_md_index)
+            except AssertionError as exc:
+                if "summary.md missing check row matching summary.json" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("missing summary.md check row self-check did not fail")
         print("SmolLM2 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:

@@ -354,6 +354,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard API client dependency boundaries|"
     r"Guard API Client Environment Overrides|"
     r"Guard optional acceptance env docs|"
+    r"Guard optional artifact summary markdown index|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
     r"Guard API example regression self-test|"
@@ -1139,8 +1140,11 @@ def latest_public_contract_qa_hardening_commit() -> tuple[str, str]:
                 "scripts/api_client_examples_regression.py",
                 "scripts/backend_acceptance_artifact_qa.py",
                 "scripts/ci_static_policy.py",
+                "scripts/minilm_embeddings_optional_api_acceptance_artifact_qa.py",
                 "scripts/public_api_contract_qa.py",
                 "scripts/public_contract_smoke_artifact_qa.py",
+                "scripts/qwen25_optional_api_acceptance_artifact_qa.py",
+                "scripts/smollm2_optional_api_acceptance_artifact_qa.py",
                 "crates/fathom-server/src/main.rs",
             ],
             cwd=ROOT,
@@ -4894,6 +4898,11 @@ def assert_boundary_docs() -> None:
         "launch checklist symlink risk-scan scope",
     )
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
+    assert_contains(
+        evidence_text,
+        "optional acceptance artifact QA also keeps shareable `summary.md` check rows aligned with `summary.json`",
+        "launch evidence optional artifact QA markdown index scope",
+    )
     assert_contains(
         evidence_text,
         "Backend acceptance artifact QA and optional MiniLM, SmolLM2, and Qwen2.5 API acceptance artifact QA self-tests run offline",

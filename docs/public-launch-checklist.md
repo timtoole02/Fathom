@@ -65,7 +65,7 @@ The offline API client example regression also keeps `docs/api/client-examples.m
 
 The CI static policy and public API contract QA gates also keep this checklist, the pull request template's gate inventory, and `.github/workflows/ci.yml` aligned on the default no-download gate commands.
 
-The static QA keeps the optional MiniLM, SmolLM2, and Qwen2.5 acceptance docs aligned with each opt-in harness's root/model/state/log/artifact/port/wait/timeout environment overrides.
+The static QA keeps the optional MiniLM, SmolLM2, and Qwen2.5 acceptance docs aligned with each opt-in harness's root/model/state/log/artifact/port/wait/timeout environment overrides. The optional acceptance artifact QA also keeps shareable `summary.md` check rows aligned with `summary.json` so public handoff Markdown cannot omit or rename a generated check.
 
 For the real backend no-download contract check, run:
 
@@ -331,7 +331,7 @@ The test report artifact guard also blocks CTRF generated test report outputs su
 
 - The documented no-download public `/v1` contract routes and refusal envelopes work against the real backend process.
 - Default CI stays offline with respect to model downloads, networked acceptance smoke, and non-default ONNX feature tests.
-- Offline artifact QA covers optional public-contract smoke summaries, backend acceptance smoke success/failure summaries with share-safety checks, and MiniLM, SmolLM2, and Qwen2.5 optional API acceptance artifact schemas; the optional backend acceptance smoke itself remains networked and only produces current pinned-fixture evidence when downloads succeed.
+- Offline artifact QA covers optional public-contract smoke summaries, backend acceptance smoke success/failure summaries with share-safety checks, and MiniLM, SmolLM2, and Qwen2.5 optional API acceptance artifact schemas plus Markdown/JSON check-index consistency; the optional backend acceptance smoke itself remains networked and only produces current pinned-fixture evidence when downloads succeed.
 - The current launch evidence snapshot is recorded in [`public-launch-evidence.md`](public-launch-evidence.md).
 
 ## What this launch does not prove
