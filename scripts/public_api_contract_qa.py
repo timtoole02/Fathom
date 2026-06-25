@@ -1620,6 +1620,16 @@ def assert_boundary_docs() -> None:
     assert_contains(client_text, "expected boundaries", "adopter checklist")
     assert_contains(readme_text, "public launch API contract", "README API section")
     assert_contains(readme_text, "scripts/public_api_contract_smoke.sh", "README public contract smoke")
+    assert_contains(
+        readme_text,
+        "FATHOM_PUBLIC_CONTRACT_ARTIFACT_DIR",
+        "README public contract artifact env",
+    )
+    assert_contains(
+        readme_text,
+        "python3 scripts/public_contract_smoke_artifact_qa.py <artifact-dir>",
+        "README public contract artifact validation command",
+    )
     launch_text = read(LAUNCH_CHECKLIST)
     checklist_required_gates = [
         *DEFAULT_CI_GATE_COMMANDS,
