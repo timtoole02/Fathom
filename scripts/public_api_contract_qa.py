@@ -379,6 +379,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard API Client Environment Overrides|"
     r"Guard optional acceptance env docs|"
     r"Guard optional acceptance default docs|"
+    r"Guard backend acceptance artifact summary loopback URLs|"
     r"Guard optional artifact summary loopback URLs|"
     r"Guard optional artifact summary timestamps|"
     r"Guard optional artifact summary markdown index|"
@@ -2569,6 +2570,11 @@ def assert_boundary_docs() -> None:
     assert_contains(launch_text, "backend acceptance artifact summaries reject local paths, secret markers, and request/payload text", "launch checklist backend acceptance artifact share-safety scope")
     assert_contains(
         launch_text,
+        "keep `summary.base_url` loopback-only and aligned between `summary.json` and `summary.md`",
+        "launch checklist backend acceptance artifact base URL scope",
+    )
+    assert_contains(
+        launch_text,
         "Keep `summary.local.json` private unless you have reviewed it",
         "launch checklist backend acceptance local-path artifact privacy warning",
     )
@@ -2627,6 +2633,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "backend acceptance artifact summary share-safety guard rejects local paths, secret markers, and request/payload text",
         "launch evidence backend acceptance artifact share-safety scope",
+    )
+    assert_contains(
+        evidence_text,
+        "keeps `summary.base_url` loopback-only and aligned between `summary.json` and `summary.md`",
+        "launch evidence backend acceptance artifact base URL scope",
     )
     assert_contains(
         evidence_text,
@@ -4939,6 +4950,11 @@ def assert_boundary_docs() -> None:
         evidence_text,
         "optional acceptance artifact QA keeps `summary.started_at` and `summary.finished_at` as RFC3339 UTC timestamps",
         "launch evidence optional artifact QA timestamp scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Backend acceptance artifact QA keeps `summary.base_url` loopback-only and aligned between `summary.json` and `summary.md`",
+        "launch evidence backend acceptance artifact base URL boundary scope",
     )
     assert_contains(
         evidence_text,

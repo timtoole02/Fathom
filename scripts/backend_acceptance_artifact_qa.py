@@ -83,6 +83,18 @@ def assert_public_summary_share_safe(path: Path) -> None:
         raise AssertionError(f"{path.name} contains external-provider proxy overclaim wording")
 
 
+def assert_loopback_base_url(value: Any) -> int:
+    if not isinstance(value, str):
+        raise AssertionError(f"summary.base_url must be text, got {value!r}")
+    match = re.fullmatch(r"http://127\.0\.0\.1:(\d{1,5})", value)
+    if not match:
+        raise AssertionError("summary.base_url must be an http://127.0.0.1:<port> loopback URL")
+    port = int(match.group(1))
+    if not 1 <= port <= 65535:
+        raise AssertionError(f"summary.base_url port must be in range 1-65535, got {port}")
+    return port
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary_path = directory / "summary.json"
     summary = load_json(summary_path)
@@ -95,6 +107,14 @@ def validate_summary_dir(directory: Path) -> None:
 
     assert_public_summary_share_safe(summary_path)
     assert_public_summary_share_safe(summary_md)
+    summary_md_text = summary_md.read_text(encoding="utf-8")
+
+    base_url = summary.get("base_url")
+    base_url_port = assert_loopback_base_url(base_url)
+    if "port" in summary and summary["port"] != base_url_port:
+        raise AssertionError("summary.port must match summary.base_url port")
+    if f"- Base URL: `{base_url}`" not in summary_md_text:
+        raise AssertionError("summary.md must include the summary.json Base URL")
 
     if summary.get("local_paths_file") != "summary.local.json":
         raise AssertionError("summary.json must point local_paths_file at summary.local.json")
@@ -150,7 +170,7 @@ def validate_summary_dir(directory: Path) -> None:
         present = [key for key in forbidden if key in summary]
         if present:
             raise AssertionError(f"passed summary must not include failure fields: {present}")
-        if "Result: `passed`" not in summary_md.read_text(encoding="utf-8"):
+        if "Result: `passed`" not in summary_md_text:
             raise AssertionError("passed summary.md must clearly mark Result: passed")
     elif passed is False:
         for key in ("failure_stage", "failure_message", "failure_type"):
@@ -159,10 +179,9 @@ def validate_summary_dir(directory: Path) -> None:
         if summary.get("model_dir_snapshot_artifact"):
             if not (directory / summary["model_dir_snapshot_artifact"]).exists():
                 raise AssertionError("failed summary references missing model_dir_snapshot_artifact")
-        md = summary_md.read_text(encoding="utf-8")
-        if "Result: `failed`" not in md:
+        if "Result: `failed`" not in summary_md_text:
             raise AssertionError("failed summary.md must clearly mark Result: failed")
-        if "must not be treated as a passed acceptance smoke" not in md:
+        if "must not be treated as a passed acceptance smoke" not in summary_md_text:
             raise AssertionError("failed summary.md must warn that diagnostics are not a pass")
     else:
         raise AssertionError("summary.passed must be true or false")
@@ -275,6 +294,7 @@ def write_sample(directory: Path, *, passed: bool) -> None:
     (directory / "summary.md").write_text(
         f"# Fathom backend acceptance artifacts{' — failed run' if not passed else ''}\n\n"
         f"- Result: `{result}`\n"
+        "- Base URL: `http://127.0.0.1:18180`\n"
         "- Artifact directory: `.`\n"
         "- State directory: `state/`\n"
         "- Model directory: `models/`\n"
@@ -365,6 +385,54 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("summary.md request/payload self-check did not fail")
+
+        external_base_url = root / "external-base-url"
+        write_sample(external_base_url, passed=True)
+        summary = load_json(external_base_url / "summary.json")
+        summary["base_url"] = "https://example.invalid"
+        (external_base_url / "summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        try:
+            validate_summary_dir(external_base_url)
+        except AssertionError as exc:
+            if "summary.base_url must be an http://127.0.0.1:<port> loopback URL" not in str(exc):
+                raise
+        else:
+            raise AssertionError("external base URL self-check did not fail")
+
+        markdown_base_url_mismatch = root / "markdown-base-url-mismatch"
+        write_sample(markdown_base_url_mismatch, passed=True)
+        summary_md = markdown_base_url_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- Base URL: `http://127.0.0.1:18180`",
+                "- Base URL: `http://127.0.0.1:18181`",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_base_url_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json Base URL" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown base URL mismatch self-check did not fail")
+
+        mismatched_port = root / "mismatched-port"
+        write_sample(mismatched_port, passed=True)
+        summary = load_json(mismatched_port / "summary.json")
+        summary["port"] = 18181
+        (mismatched_port / "summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        try:
+            validate_summary_dir(mismatched_port)
+        except AssertionError as exc:
+            if "summary.port must match summary.base_url port" not in str(exc):
+                raise
+        else:
+            raise AssertionError("mismatched port self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)
