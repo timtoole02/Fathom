@@ -6063,6 +6063,36 @@ def assert_smoke_manifest_wiring() -> None:
     assert_contains(smoke_text, "partial diagnostic evidence", "public contract smoke failed artifact caveat")
 
 
+def assert_public_contract_smoke_artifact_wiring() -> None:
+    smoke_text = read(SMOKE)
+    artifact_qa_text = read(ROOT / "scripts/public_contract_smoke_artifact_qa.py")
+    assert_contains(smoke_text, '"generated_at"', "public contract smoke generated_at summary field")
+    assert_contains(smoke_text, "datetime.now(timezone.utc)", "public contract smoke generated_at UTC source")
+    assert_contains(smoke_text, "Generated at:", "public contract smoke generated-at markdown row")
+    assert_contains(smoke_text, "public-contract-smoke-summary.json", "public contract smoke summary JSON artifact")
+    assert_contains(smoke_text, "public-contract-smoke-summary.md", "public contract smoke summary Markdown artifact")
+    assert_contains(
+        artifact_qa_text,
+        "summary.generated_at must be an RFC3339 UTC timestamp ending in Z",
+        "public contract smoke artifact QA generated_at timestamp guard",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "generated-at line must match summary.generated_at",
+        "public contract smoke artifact QA generated_at markdown guard",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "markdown/generated_at consistency self-check did not fail",
+        "public contract smoke artifact QA generated_at markdown negative self-test",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "assert_markdown_rows_match_summary",
+        "public contract smoke artifact QA markdown row guard",
+    )
+
+
 def assert_optional_acceptance_docs() -> None:
     required_boundaries = [
         "Do not add this flow to default CI",
@@ -6551,6 +6581,7 @@ def main() -> int:
     assert_cargo_publish_safety()
     assert_no_positive_overclaims()
     assert_smoke_manifest_wiring()
+    assert_public_contract_smoke_artifact_wiring()
     assert_optional_acceptance_docs()
     assert_optional_acceptance_loopback_wiring()
     assert_optional_acceptance_markdown_index_wiring()
