@@ -1646,6 +1646,26 @@ def assert_boundary_docs() -> None:
         "parses the REST Client `.http` JSON bodies",
         "launch checklist REST Client body-boundary QA scope",
     )
+    assert_contains(
+        launch_text,
+        "keeps `summary.model_id`, `summary.repo_id`, and `summary.revision` aligned between `summary.json` and `summary.md`",
+        "launch checklist optional artifact model identity scope",
+    )
+    assert_contains(
+        launch_text,
+        "keeps share-safe artifact/state/model/log labels aligned between `summary.json` and `summary.md`",
+        "launch checklist optional artifact path-label scope",
+    )
+    assert_contains(
+        launch_text,
+        "keeps required boundary caveats present in `summary.json` and `summary.md`",
+        "launch checklist optional artifact caveat scope",
+    )
+    assert_contains(
+        launch_text,
+        "Markdown/JSON check-index, timestamp, model-identity, path-label, loopback, and caveat consistency",
+        "launch checklist optional artifact complete proof scope",
+    )
     assert_launch_checklist_python_syntax_gate()
     assert_launch_checklist_client_example_syntax_gates()
     assert_launch_checklist_artifact_qa_run_gates()
