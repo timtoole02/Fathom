@@ -6110,6 +6110,29 @@ def assert_optional_acceptance_timestamp_wiring() -> None:
         )
 
 
+def assert_optional_acceptance_loopback_wiring() -> None:
+    for _, _, smoke_script, artifact_qa_script, _, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
+        smoke_text = read(ROOT / smoke_script)
+        artifact_qa_text = read(ROOT / artifact_qa_script)
+        assert_contains(smoke_text, "base_url", f"{smoke_script} summary base_url field")
+        assert_contains(smoke_text, "127.0.0.1", f"{smoke_script} loopback default host")
+        assert_contains(
+            artifact_qa_text,
+            "assert_loopback_base_url",
+            f"{artifact_qa_script} summary base_url loopback guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "summary.base_url must be an http://127.0.0.1:<port> loopback URL",
+            f"{artifact_qa_script} summary base_url loopback error",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "external summary.base_url self-check did not fail",
+            f"{artifact_qa_script} external base_url negative self-test",
+        )
+
+
 def assert_optional_acceptance_model_identity_wiring() -> None:
     for _, _, smoke_script, artifact_qa_script, _, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
         smoke_text = read(ROOT / smoke_script)
@@ -6500,6 +6523,7 @@ def main() -> int:
     assert_no_positive_overclaims()
     assert_smoke_manifest_wiring()
     assert_optional_acceptance_docs()
+    assert_optional_acceptance_loopback_wiring()
     assert_optional_acceptance_timestamp_wiring()
     assert_optional_acceptance_model_identity_wiring()
     assert_optional_acceptance_path_label_wiring()
