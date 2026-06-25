@@ -2712,6 +2712,16 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "offline public-contract and backend acceptance artifact QA", "launch evidence backend acceptance artifact QA scope")
     assert_contains(
         evidence_text,
+        "Public-contract smoke summary artifacts include commit, generated UTC timestamp, manifest path/name/status, endpoint checks, boundary checks, and scope caveats only",
+        "launch evidence public contract smoke artifact field scope",
+    )
+    assert_contains(
+        evidence_text,
+        "Public-contract smoke summary artifacts intentionally omit local temp paths, server log tails, request secrets, and model/provider payloads",
+        "launch evidence public contract smoke artifact share-safety scope",
+    )
+    assert_contains(
+        evidence_text,
         "backend acceptance artifact summary share-safety guard rejects local paths, secret markers, and request/payload text",
         "launch evidence backend acceptance artifact share-safety scope",
     )
