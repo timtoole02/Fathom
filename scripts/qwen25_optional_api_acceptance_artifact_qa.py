@@ -141,6 +141,14 @@ def assert_markdown_timestamps_match_summary(summary: dict[str, Any], markdown: 
             raise AssertionError(f"summary.md missing {key} row matching summary.json")
 
 
+def assert_markdown_identity_matches_summary(summary: dict[str, Any], markdown: str) -> None:
+    commit = summary.get("repo_commit")
+    if not isinstance(commit, str) or not commit:
+        raise AssertionError("summary.repo_commit must be non-empty text")
+    if f"- Repo commit: `{commit}`" not in markdown:
+        raise AssertionError("summary.md missing repo_commit row matching summary.json")
+
+
 def assert_loopback_base_url(value: Any) -> None:
     if not isinstance(value, str) or not re.fullmatch(r"http://127\.0\.0\.1:[0-9]{2,5}", value):
         raise AssertionError("summary.base_url must be an http://127.0.0.1:<port> loopback URL")
@@ -251,6 +259,7 @@ def validate_summary(directory: Path) -> None:
     if "Result: `passed`" not in md or "What this does not prove" not in md:
         raise AssertionError("summary.md must clearly mark pass and caveats")
     assert_required_caveats(md, "summary.md")
+    assert_markdown_identity_matches_summary(summary, md)
     assert_markdown_timestamps_match_summary(summary, md)
     assert_markdown_checks_match_summary(summary.get("checks"), md)
 
@@ -360,6 +369,7 @@ def write_sample(directory: Path) -> None:
     (directory / "summary.md").write_text(
         "# Qwen2.5 optional API acceptance artifacts\n\n"
         "- Result: `passed`\n"
+        "- Repo commit: `sample`\n"
         "- Started: `2026-04-29T00:00:00Z`\n"
         "- Finished: `2026-04-29T00:00:01Z`\n"
         "- Scope: Optional local larger-demo API evidence only; not default CI.\n"
@@ -465,6 +475,21 @@ def main() -> None:
                     raise
             else:
                 raise AssertionError("bad summary.md timestamp self-check did not fail")
+            bad_md_commit = Path(tmp) / "bad-markdown-commit"
+            write_sample(bad_md_commit)
+            (bad_md_commit / "summary.md").write_text(
+                (bad_md_commit / "summary.md")
+                .read_text(encoding="utf-8")
+                .replace("- Repo commit: `sample`\n", "- Repo commit: `stale`\n"),
+                encoding="utf-8",
+            )
+            try:
+                validate_summary(bad_md_commit)
+            except AssertionError as exc:
+                if "summary.md missing repo_commit row" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("bad summary.md repo_commit self-check did not fail")
         print("Qwen2.5 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:
