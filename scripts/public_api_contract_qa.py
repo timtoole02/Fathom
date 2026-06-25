@@ -5039,6 +5039,11 @@ def assert_boundary_docs() -> None:
     assert_contains(evidence_text, "offline MiniLM/SmolLM2/Qwen2.5 optional API acceptance artifact QA self-tests", "launch evidence optional artifact QA self-test scope")
     assert_contains(
         evidence_text,
+        "Markdown/JSON check-index, timestamp, model-identity, path-label, loopback, and caveat consistency",
+        "launch evidence optional artifact QA complete proof scope",
+    )
+    assert_contains(
+        evidence_text,
         "optional acceptance artifact QA also keeps shareable `summary.md` check rows aligned with `summary.json`",
         "launch evidence optional artifact QA markdown index scope",
     )
