@@ -88,6 +88,12 @@ def assert_markdown_checks_match_summary(checks:Any,md:str)->None:
             if row not in md:
                 raise AssertionError(f'summary.md missing check row matching summary.json: {name}')
 
+def assert_markdown_timestamps_match_summary(summary:dict[str,Any],md:str)->None:
+    for key,label in (('started_at','Started'),('finished_at','Finished')):
+        value=summary.get(key)
+        if isinstance(value,str) and value and f"- {label}: `{value}`" not in md:
+            raise AssertionError(f'summary.md missing {key} row matching summary.json')
+
 def assert_loopback_base_url(value:Any)->None:
     if not isinstance(value,str) or not re.fullmatch(r'http://127\.0\.0\.1:[0-9]{2,5}',value):
         raise AssertionError('summary.base_url must be an http://127.0.0.1:<port> loopback URL')
@@ -144,6 +150,7 @@ def validate_summary(directory:Path)->None:
     if 'Result: `passed`' not in md or 'What this does not prove' not in md:
         raise AssertionError('summary.md must clearly mark pass and caveats')
     assert_required_caveats(md,'summary.md')
+    assert_markdown_timestamps_match_summary(summary,md)
     assert_markdown_checks_match_summary(summary.get('checks'),md)
     validate_install(load_json(directory/'02-install-minilm.json'))
     emb_models=load_json(directory/'03-api-embedding-models.json')
@@ -171,7 +178,7 @@ def write_sample(d:Path)->None:
     checks=[{'name':n,'artifact':a,'description':n,'expected_http_status':200,'http_status':200,'status':'passed'} for n,a in [('health','01-v1-health.json'),('install_minilm','02-install-minilm.json'),('embedding_models_include_minilm','03-api-embedding-models.json'),('v1_models_exclude_minilm','04-v1-models-exclude-minilm.json'),('v1_embeddings_float','05-v1-embeddings-float.json'),('base64_refusal','06-v1-embeddings-base64-refusal.json'),('chat_embedding_refusal','07-chat-embedding-model-refusal.json')]]
     summary={'schema':'fathom.minilm_embeddings_optional_api_acceptance.summary.v1','passed':True,'repo_commit':'sample','started_at':'2026-04-29T00:00:00Z','finished_at':'2026-04-29T00:00:01Z','base_url':'http://127.0.0.1:18187','artifact_dir':'.','model_dir':'models/','state_dir':'state/','log_dir':'logs/','model_id':MODEL_ID,'repo_id':REPO_ID,'revision':REVISION,'checks':checks,'caveats':['Optional local embedding evidence only; not default CI.','Does not prove embedding quality, retrieval quality, latency, throughput, production readiness, legal suitability, arbitrary Hugging Face execution, ONNX chat, streaming, external proxying, or full OpenAI API parity.','Does not claim GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference.']}
     (d/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
-    (d/'summary.md').write_text('# MiniLM embeddings optional API acceptance artifacts\n\n- Result: `passed`\n- Scope: optional local embedding API evidence only; not default CI.\n- Artifact directory: `.`\n- State directory: `state/`\n- Model directory: `models/`\n- Server log: `logs/server.log`\n\n## Checks\n\n'+'\n'.join(f"- `{c['name']}`: `{c['status']}` ({c['artifact']})" for c in checks)+'\n\n## What this does not prove\n\n- No embedding quality, retrieval quality, latency, throughput, production readiness, legal suitability, arbitrary Hugging Face execution, ONNX chat/general execution, streaming, external proxying, or full OpenAI API parity claim.\n- No public/runtime GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference claim.\n')
+    (d/'summary.md').write_text('# MiniLM embeddings optional API acceptance artifacts\n\n- Result: `passed`\n- Started: `2026-04-29T00:00:00Z`\n- Finished: `2026-04-29T00:00:01Z`\n- Scope: optional local embedding API evidence only; not default CI.\n- Artifact directory: `.`\n- State directory: `state/`\n- Model directory: `models/`\n- Server log: `logs/server.log`\n\n## Checks\n\n'+'\n'.join(f"- `{c['name']}`: `{c['status']}` ({c['artifact']})" for c in checks)+'\n\n## What this does not prove\n\n- No embedding quality, retrieval quality, latency, throughput, production readiness, legal suitability, arbitrary Hugging Face execution, ONNX chat/general execution, streaming, external proxying, or full OpenAI API parity claim.\n- No public/runtime GGUF tokenizer execution, GGUF runtime, weight loading, generation, dequantization, or inference claim.\n')
 
 def main():
     import sys
@@ -236,6 +243,14 @@ def main():
                 if 'summary.finished_at' not in str(exc): raise
             else:
                 raise AssertionError('bad summary timestamp self-check did not fail')
+            bad_md_timestamp=Path(tmp)/'bad-markdown-timestamp'; write_sample(bad_md_timestamp)
+            (bad_md_timestamp/'summary.md').write_text((bad_md_timestamp/'summary.md').read_text().replace('- Finished: `2026-04-29T00:00:01Z`\n','- Finished: `2026-04-29T00:00:02Z`\n'))
+            try:
+                validate_summary(bad_md_timestamp)
+            except AssertionError as exc:
+                if 'summary.md missing finished_at row' not in str(exc): raise
+            else:
+                raise AssertionError('bad summary.md timestamp self-check did not fail')
         print('MiniLM embeddings optional API acceptance artifact QA self-test passed'); return
     for d in dirs: validate_summary(d)
     print('MiniLM embeddings optional API acceptance artifact QA passed')

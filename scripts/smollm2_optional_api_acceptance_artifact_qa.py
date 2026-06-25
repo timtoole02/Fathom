@@ -132,6 +132,13 @@ def assert_markdown_checks_match_summary(checks: Any, markdown: str) -> None:
                 raise AssertionError(f"summary.md missing check row matching summary.json: {name}")
 
 
+def assert_markdown_timestamps_match_summary(summary: dict[str, Any], markdown: str) -> None:
+    for key, label in (("started_at", "Started"), ("finished_at", "Finished")):
+        value = summary.get(key)
+        if isinstance(value, str) and value and f"- {label}: `{value}`" not in markdown:
+            raise AssertionError(f"summary.md missing {key} row matching summary.json")
+
+
 def assert_loopback_base_url(value: Any) -> None:
     if not isinstance(value, str) or not re.fullmatch(r"http://127\.0\.0\.1:[0-9]{2,5}", value):
         raise AssertionError("summary.base_url must be an http://127.0.0.1:<port> loopback URL")
@@ -242,6 +249,7 @@ def validate_summary(directory: Path) -> None:
     if "Result: `passed`" not in md or "What this does not prove" not in md:
         raise AssertionError("summary.md must clearly mark pass and caveats")
     assert_required_caveats(md, "summary.md")
+    assert_markdown_timestamps_match_summary(summary, md)
     assert_markdown_checks_match_summary(summary.get("checks"), md)
 
     assert_checks_cover_required_artifacts(summary.get("checks"))
@@ -350,6 +358,8 @@ def write_sample(directory: Path) -> None:
     (directory / "summary.md").write_text(
         "# SmolLM2 optional API acceptance artifacts\n\n"
         "- Result: `passed`\n"
+        "- Started: `2026-04-29T00:00:00Z`\n"
+        "- Finished: `2026-04-29T00:00:01Z`\n"
         "- Scope: Optional local larger-demo API evidence only; not default CI.\n"
         "- Artifact directory: `.`\n"
         "- State directory: `state/`\n"
@@ -438,6 +448,21 @@ def main() -> None:
                     raise
             else:
                 raise AssertionError("bad summary timestamp self-check did not fail")
+            bad_md_timestamp = Path(tmp) / "bad-markdown-timestamp"
+            write_sample(bad_md_timestamp)
+            (bad_md_timestamp / "summary.md").write_text(
+                (bad_md_timestamp / "summary.md")
+                .read_text(encoding="utf-8")
+                .replace("- Finished: `2026-04-29T00:00:01Z`\n", "- Finished: `2026-04-29T00:00:02Z`\n"),
+                encoding="utf-8",
+            )
+            try:
+                validate_summary(bad_md_timestamp)
+            except AssertionError as exc:
+                if "summary.md missing finished_at row" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("bad summary.md timestamp self-check did not fail")
         print("SmolLM2 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:

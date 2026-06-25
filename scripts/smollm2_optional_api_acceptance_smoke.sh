@@ -207,6 +207,8 @@ summary = {
     "# SmolLM2 optional API acceptance artifacts\n\n"
     f"- Result: `{'passed' if summary['passed'] else 'failed'}`\n"
     f"- Repo commit: `{repo_commit}`\n"
+    f"- Started: `{summary['started_at']}`\n"
+    f"- Finished: `{summary['finished_at']}`\n"
     f"- Model: `{MODEL_ID}`\n"
     f"- Upstream: `{REPO_ID}` at `{REVISION}`\n"
     "- Scope: optional local larger-demo API evidence only; not default CI.\n"
