@@ -65,7 +65,7 @@ The offline API client example regression also keeps `docs/api/client-examples.m
 
 The CI static policy and public API contract QA gates also keep this checklist, the pull request template's gate inventory, and `.github/workflows/ci.yml` aligned on the default no-download gate commands.
 
-The static QA keeps the optional MiniLM, SmolLM2, and Qwen2.5 acceptance docs aligned with each opt-in harness's root/model/state/log/artifact/port/wait/timeout environment overrides and default values. The optional acceptance artifact QA also keeps shareable `summary.md` check rows aligned with `summary.json` so public handoff Markdown cannot omit or rename a generated check.
+The static QA keeps the optional MiniLM, SmolLM2, and Qwen2.5 acceptance docs aligned with each opt-in harness's root/model/state/log/artifact/port/wait/timeout environment overrides and default values. The optional acceptance artifact QA also keeps shareable `summary.md` check rows aligned with `summary.json` and keeps `summary.base_url` loopback-only so public handoff Markdown cannot omit or rename a generated check or imply non-local API exposure.
 
 For the real backend no-download contract check, run:
 

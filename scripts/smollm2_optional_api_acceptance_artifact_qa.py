@@ -132,6 +132,14 @@ def assert_markdown_checks_match_summary(checks: Any, markdown: str) -> None:
                 raise AssertionError(f"summary.md missing check row matching summary.json: {name}")
 
 
+def assert_loopback_base_url(value: Any) -> None:
+    if not isinstance(value, str) or not re.fullmatch(r"http://127\.0\.0\.1:[0-9]{2,5}", value):
+        raise AssertionError("summary.base_url must be an http://127.0.0.1:<port> loopback URL")
+    port = int(value.rsplit(":", 1)[1])
+    if not 1 <= port <= 65535:
+        raise AssertionError("summary.base_url port must be in range 1-65535")
+
+
 def error_code(payload: dict[str, Any]) -> str | None:
     error = payload.get("error")
     return error.get("code") if isinstance(error, dict) else None
@@ -214,6 +222,7 @@ def validate_summary(directory: Path) -> None:
         raise AssertionError("summary schema mismatch")
     if summary.get("passed") is not True:
         raise AssertionError("summary.passed must be true")
+    assert_loopback_base_url(summary.get("base_url"))
     for key in ("artifact_dir", "model_dir", "state_dir", "log_dir"):
         value = summary.get(key)
         if not isinstance(value, str) or value.startswith("/"):
@@ -398,6 +407,18 @@ def main() -> None:
                     raise
             else:
                 raise AssertionError("missing summary.md check row self-check did not fail")
+            bad_base = Path(tmp) / "bad-base-url"
+            write_sample(bad_base)
+            summary = load_json(bad_base / "summary.json")
+            summary["base_url"] = "https://example.invalid"
+            (bad_base / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            try:
+                validate_summary(bad_base)
+            except AssertionError as exc:
+                if "summary.base_url" not in str(exc):
+                    raise
+            else:
+                raise AssertionError("external summary.base_url self-check did not fail")
         print("SmolLM2 optional API acceptance artifact QA self-test passed")
         return
     for directory in dirs:
