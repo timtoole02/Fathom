@@ -155,6 +155,7 @@ def write_summary(passed):
             f"# Public contract smoke summary: {status}",
             "",
             f"- Commit: `{summary['commit']}`",
+            f"- Generated at: `{summary['generated_at']}`",
             f"- Manifest: `{summary['manifest']['path']}` / `{summary['manifest']['name']}` (`{summary['manifest']['status']}`)",
             f"- Scope: {summary['proof_scope']}",
             *failure_note,

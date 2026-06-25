@@ -192,6 +192,9 @@ def assert_markdown(summary: dict[str, Any], markdown_path: Path) -> str:
     commit = summary.get("commit")
     if isinstance(commit, str) and commit and f"Commit: `{commit}`" not in md:
         raise AssertionError(f"{markdown_path.name} commit line must match summary.commit")
+    generated_at = summary.get("generated_at")
+    if isinstance(generated_at, str) and generated_at and f"Generated at: `{generated_at}`" not in md:
+        raise AssertionError(f"{markdown_path.name} generated-at line must match summary.generated_at")
     manifest = summary.get("manifest")
     if isinstance(manifest, dict):
         manifest_name = manifest.get("name")
@@ -513,6 +516,7 @@ def write_sample(directory: Path, summary: dict[str, Any]) -> None:
             f"# Public contract smoke summary: {status}",
             "",
             f"- Commit: `{summary['commit']}`",
+            f"- Generated at: `{summary['generated_at']}`",
             f"- Manifest: `docs/api/public-contract.json` / `{summary['manifest']['name']}` (`{summary['manifest']['status']}`)",
             f"- Scope: {summary['proof_scope']}",
             *failure_note,
@@ -707,6 +711,22 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("generated_at timestamp self-check did not fail")
+
+        bad_markdown_generated_at = root / "bad-markdown-generated-at"
+        write_sample(bad_markdown_generated_at, passed_sample())
+        (bad_markdown_generated_at / SUMMARY_MD).write_text(
+            (bad_markdown_generated_at / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace("Generated at: `2026-04-27T00:00:00Z`", "Generated at: `2026-04-27T00:00:01Z`"),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(bad_markdown_generated_at)
+        except AssertionError as exc:
+            if "generated-at line" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown/generated_at consistency self-check did not fail")
 
         stale_manifest = root / "stale-manifest"
         mutated = passed_sample()
