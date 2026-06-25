@@ -392,6 +392,7 @@ PUBLIC_CONTRACT_QA_HARDENING_SUBJECT_PATTERN = (
     r"Guard optional artifact timestamp markdown rows|"
     r"Guard optional artifact model identity markdown rows|"
     r"Guard optional artifact summary path labels|"
+    r"Guard optional artifact summary caveats|"
     r"Guard optional artifact summary markdown index|"
     r"Guard API example stdout share safety|"
     r"Guard REST Client example headers|Guard REST Client JSON body boundaries|"
@@ -5043,6 +5044,11 @@ def assert_boundary_docs() -> None:
     )
     assert_contains(
         evidence_text,
+        "optional acceptance artifact QA keeps required boundary caveats present in `summary.json` and `summary.md`",
+        "launch evidence optional artifact QA caveat scope",
+    )
+    assert_contains(
+        evidence_text,
         "Backend acceptance artifact QA keeps `summary.base_url` loopback-only and aligned between `summary.json` and `summary.md`",
         "launch evidence backend acceptance artifact base URL boundary scope",
     )
@@ -6160,6 +6166,42 @@ def assert_optional_acceptance_path_label_wiring() -> None:
         )
 
 
+def assert_optional_acceptance_caveat_wiring() -> None:
+    for _, _, smoke_script, artifact_qa_script, _, _, _ in OPTIONAL_ACCEPTANCE_DOCS:
+        smoke_text = read(ROOT / smoke_script)
+        artifact_qa_text = read(ROOT / artifact_qa_script)
+        assert_contains(smoke_text, "What this does not prove", f"{smoke_script} summary.md caveat section")
+        for phrase in (
+            "production readiness",
+            "legal suitability",
+            "external proxying",
+            "full OpenAI API parity",
+            "dequantization",
+        ):
+            assert_contains(smoke_text, phrase, f"{smoke_script} summary.md required caveat phrase")
+            assert_contains(artifact_qa_text, phrase, f"{artifact_qa_script} required caveat phrase")
+        assert_contains(
+            artifact_qa_text,
+            "REQUIRED_CAVEAT_PHRASES",
+            f"{artifact_qa_script} required caveat inventory",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "assert_required_caveats(caveats",
+            f"{artifact_qa_script} summary.json caveat guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "assert_required_caveats(md,",
+            f"{artifact_qa_script} summary.md caveat guard",
+        )
+        assert_contains(
+            artifact_qa_text,
+            "missing caveat self-check did not fail",
+            f"{artifact_qa_script} missing caveat negative self-test",
+        )
+
+
 def assert_ci_wiring(manifest: dict[str, Any]) -> None:
     ci_text = read(CI)
     expected = manifest["ci_policy"]["offline_static_gate"]
@@ -6461,6 +6503,7 @@ def main() -> int:
     assert_optional_acceptance_timestamp_wiring()
     assert_optional_acceptance_model_identity_wiring()
     assert_optional_acceptance_path_label_wiring()
+    assert_optional_acceptance_caveat_wiring()
     assert_ci_wiring(manifest)
     assert_api_contract_issue_template(manifest)
     assert_model_runtime_issue_template()
