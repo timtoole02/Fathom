@@ -95,6 +95,11 @@ def assert_loopback_base_url(value: Any) -> int:
     return port
 
 
+def assert_utc_timestamp(value: Any, label: str) -> None:
+    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", value):
+        raise AssertionError(f"{label} must be an RFC3339 UTC timestamp ending in Z")
+
+
 def validate_summary_dir(directory: Path) -> None:
     summary_path = directory / "summary.json"
     summary = load_json(summary_path)
@@ -115,6 +120,12 @@ def validate_summary_dir(directory: Path) -> None:
         raise AssertionError("summary.port must match summary.base_url port")
     if f"- Base URL: `{base_url}`" not in summary_md_text:
         raise AssertionError("summary.md must include the summary.json Base URL")
+    for key in ("started_at", "finished_at"):
+        value = summary.get(key)
+        assert_utc_timestamp(value, f"summary.{key}")
+        markdown_label = "Started" if key == "started_at" else "Finished"
+        if f"- {markdown_label}: `{value}`" not in summary_md_text:
+            raise AssertionError(f"summary.md must include the summary.json {key} timestamp")
 
     if summary.get("local_paths_file") != "summary.local.json":
         raise AssertionError("summary.json must point local_paths_file at summary.local.json")
@@ -295,6 +306,8 @@ def write_sample(directory: Path, *, passed: bool) -> None:
         f"# Fathom backend acceptance artifacts{' — failed run' if not passed else ''}\n\n"
         f"- Result: `{result}`\n"
         "- Base URL: `http://127.0.0.1:18180`\n"
+        "- Started: `2026-04-27T00:00:00Z`\n"
+        "- Finished: `2026-04-27T00:00:01Z`\n"
         "- Artifact directory: `.`\n"
         "- State directory: `state/`\n"
         "- Model directory: `models/`\n"
@@ -433,6 +446,39 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("mismatched port self-check did not fail")
+
+        malformed_timestamp = root / "malformed-timestamp"
+        write_sample(malformed_timestamp, passed=True)
+        summary = load_json(malformed_timestamp / "summary.json")
+        summary["finished_at"] = "2026-04-27 00:00:01"
+        (malformed_timestamp / "summary.json").write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        try:
+            validate_summary_dir(malformed_timestamp)
+        except AssertionError as exc:
+            if "summary.finished_at must be an RFC3339 UTC timestamp ending in Z" not in str(exc):
+                raise
+        else:
+            raise AssertionError("malformed timestamp self-check did not fail")
+
+        markdown_timestamp_mismatch = root / "markdown-timestamp-mismatch"
+        write_sample(markdown_timestamp_mismatch, passed=True)
+        summary_md = markdown_timestamp_mismatch / "summary.md"
+        summary_md.write_text(
+            summary_md.read_text(encoding="utf-8").replace(
+                "- Finished: `2026-04-27T00:00:01Z`",
+                "- Finished: `2026-04-27T00:00:02Z`",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(markdown_timestamp_mismatch)
+        except AssertionError as exc:
+            if "summary.md must include the summary.json finished_at timestamp" not in str(exc):
+                raise
+        else:
+            raise AssertionError("Markdown timestamp mismatch self-check did not fail")
 
         missing_external_check = root / "missing-external-placeholder-check"
         write_sample(missing_external_check, passed=True)
