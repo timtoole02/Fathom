@@ -6158,8 +6158,18 @@ def assert_public_contract_smoke_artifact_wiring() -> None:
     )
     assert_contains(
         artifact_qa_text,
+        "manifest line must match summary.manifest.status",
+        "public contract smoke artifact QA manifest status markdown guard",
+    )
+    assert_contains(
+        artifact_qa_text,
         "manifest path drift self-check did not fail",
         "public contract smoke artifact QA manifest path negative self-test",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "markdown/manifest status consistency self-check did not fail",
+        "public contract smoke artifact QA manifest status markdown negative self-test",
     )
     assert_contains(
         artifact_qa_text,

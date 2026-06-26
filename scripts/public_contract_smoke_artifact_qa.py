@@ -746,6 +746,22 @@ def run_self_check() -> None:
         else:
             raise AssertionError("markdown/generated_at consistency self-check did not fail")
 
+        bad_markdown_manifest_status = root / "bad-markdown-manifest-status"
+        write_sample(bad_markdown_manifest_status, passed_sample())
+        (bad_markdown_manifest_status / SUMMARY_MD).write_text(
+            (bad_markdown_manifest_status / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace("(`launch-supported-narrow-local-api`)", "(`stale-status`)"),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(bad_markdown_manifest_status)
+        except AssertionError as exc:
+            if "manifest line must match summary.manifest.status" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown/manifest status consistency self-check did not fail")
+
         stale_manifest = root / "stale-manifest"
         mutated = passed_sample()
         mutated["manifest"]["status"] = "stale-status"
