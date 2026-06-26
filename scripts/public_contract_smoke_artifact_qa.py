@@ -251,6 +251,9 @@ def assert_markdown_rows_match_summary(summary: dict[str, Any], md: str, markdow
             if expected not in md:
                 raise AssertionError(f"{label} missing boundary row matching summary JSON: {boundary}")
             boundary_line = next((line for line in md.splitlines() if line.startswith(expected)), "")
+            check = item.get("check")
+            if isinstance(check, str) and check and f"({check}" not in boundary_line:
+                raise AssertionError(f"{label} missing boundary check id matching summary JSON: {boundary}")
             request_hint = item.get("request_hint")
             if isinstance(request_hint, str) and request_hint and f"hint `{request_hint}`" not in boundary_line:
                 raise AssertionError(f"{label} missing boundary request hint matching summary JSON: {boundary}")
@@ -715,6 +718,25 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("markdown endpoint check-id consistency self-check did not fail")
+
+        bad_markdown_boundary_check = root / "bad-markdown-boundary-check"
+        write_sample(bad_markdown_boundary_check, passed_sample())
+        (bad_markdown_boundary_check / SUMMARY_MD).write_text(
+            (bad_markdown_boundary_check / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace(
+                "- streaming chat completions: pass (synthetic-refusal-check; `501 not_implemented`; hint `stream: true`)\n",
+                "- streaming chat completions: pass (stale-check; `501 not_implemented`; hint `stream: true`)\n",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(bad_markdown_boundary_check)
+        except AssertionError as exc:
+            if "boundary check id" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown boundary check-id consistency self-check did not fail")
 
         missing_markdown_status_code = root / "missing-markdown-status-code"
         write_sample(missing_markdown_status_code, passed_sample())
