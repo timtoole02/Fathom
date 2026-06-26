@@ -197,8 +197,11 @@ def assert_markdown(summary: dict[str, Any], markdown_path: Path) -> str:
         raise AssertionError(f"{markdown_path.name} generated-at line must match summary.generated_at")
     manifest = summary.get("manifest")
     if isinstance(manifest, dict):
+        manifest_path = manifest.get("path")
         manifest_name = manifest.get("name")
         manifest_status = manifest.get("status")
+        if isinstance(manifest_path, str) and manifest_path and f"`{manifest_path}`" not in md:
+            raise AssertionError(f"{markdown_path.name} manifest line must match summary.manifest.path")
         if isinstance(manifest_name, str) and manifest_name and manifest_name not in md:
             raise AssertionError(f"{markdown_path.name} manifest line must match summary.manifest.name")
         if isinstance(manifest_status, str) and manifest_status and manifest_status not in md:
@@ -739,6 +742,18 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("manifest metadata drift self-check did not fail")
+
+        stale_manifest_path = root / "stale-manifest-path"
+        mutated = passed_sample()
+        mutated["manifest"]["path"] = "docs/api/stale-public-contract.json"
+        write_sample(stale_manifest_path, mutated)
+        try:
+            validate_summary_dir(stale_manifest_path)
+        except AssertionError as exc:
+            if "summary.manifest.path" not in str(exc):
+                raise
+        else:
+            raise AssertionError("manifest path drift self-check did not fail")
 
         bad_deferred = root / "bad-deferred"
         mutated = passed_sample()
