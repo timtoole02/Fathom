@@ -6158,6 +6158,11 @@ def assert_public_contract_smoke_artifact_wiring() -> None:
     )
     assert_contains(
         artifact_qa_text,
+        "manifest line must match summary.manifest.name",
+        "public contract smoke artifact QA manifest name markdown guard",
+    )
+    assert_contains(
+        artifact_qa_text,
         "manifest line must match summary.manifest.status",
         "public contract smoke artifact QA manifest status markdown guard",
     )
@@ -6170,6 +6175,11 @@ def assert_public_contract_smoke_artifact_wiring() -> None:
         artifact_qa_text,
         "markdown/manifest status consistency self-check did not fail",
         "public contract smoke artifact QA manifest status markdown negative self-test",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "markdown/manifest name consistency self-check did not fail",
+        "public contract smoke artifact QA manifest name markdown negative self-test",
     )
     assert_contains(
         artifact_qa_text,

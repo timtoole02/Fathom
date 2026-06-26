@@ -762,6 +762,22 @@ def run_self_check() -> None:
         else:
             raise AssertionError("markdown/manifest status consistency self-check did not fail")
 
+        bad_markdown_manifest_name = root / "bad-markdown-manifest-name"
+        write_sample(bad_markdown_manifest_name, passed_sample())
+        (bad_markdown_manifest_name / SUMMARY_MD).write_text(
+            (bad_markdown_manifest_name / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace("Fathom public launch API contract", "Stale public launch API contract"),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(bad_markdown_manifest_name)
+        except AssertionError as exc:
+            if "manifest line must match summary.manifest.name" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown/manifest name consistency self-check did not fail")
+
         stale_manifest = root / "stale-manifest"
         mutated = passed_sample()
         mutated["manifest"]["status"] = "stale-status"
