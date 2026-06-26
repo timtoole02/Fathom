@@ -767,6 +767,25 @@ def run_self_check() -> None:
         else:
             raise AssertionError("markdown boundary check-id consistency self-check did not fail")
 
+        bad_markdown_boundary_request_hint = root / "bad-markdown-boundary-request-hint"
+        write_sample(bad_markdown_boundary_request_hint, passed_sample())
+        (bad_markdown_boundary_request_hint / SUMMARY_MD).write_text(
+            (bad_markdown_boundary_request_hint / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace(
+                "- streaming chat completions: pass (synthetic-refusal-check; `501 not_implemented`; hint `stream: true`)\n",
+                "- streaming chat completions: pass (synthetic-refusal-check; `501 not_implemented`; hint `stream: false`)\n",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(bad_markdown_boundary_request_hint)
+        except AssertionError as exc:
+            if "boundary request hint" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown boundary request-hint consistency self-check did not fail")
+
         missing_markdown_status_code = root / "missing-markdown-status-code"
         write_sample(missing_markdown_status_code, passed_sample())
         (missing_markdown_status_code / SUMMARY_MD).write_text(

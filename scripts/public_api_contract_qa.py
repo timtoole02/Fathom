@@ -6233,8 +6233,18 @@ def assert_public_contract_smoke_artifact_wiring() -> None:
     )
     assert_contains(
         artifact_qa_text,
+        "boundary request hint matching summary JSON",
+        "public contract smoke artifact QA boundary request-hint markdown guard",
+    )
+    assert_contains(
+        artifact_qa_text,
         "markdown boundary check-id consistency self-check did not fail",
         "public contract smoke artifact QA boundary check-id markdown negative self-test",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "markdown boundary request-hint consistency self-check did not fail",
+        "public contract smoke artifact QA boundary request-hint markdown negative self-test",
     )
     assert_contains(
         artifact_qa_text,
