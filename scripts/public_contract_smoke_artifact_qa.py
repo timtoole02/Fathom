@@ -743,6 +743,18 @@ def run_self_check() -> None:
         else:
             raise AssertionError("manifest metadata drift self-check did not fail")
 
+        stale_manifest_name = root / "stale-manifest-name"
+        mutated = passed_sample()
+        mutated["manifest"]["name"] = "stale contract name"
+        write_sample(stale_manifest_name, mutated)
+        try:
+            validate_summary_dir(stale_manifest_name)
+        except AssertionError as exc:
+            if "summary.manifest.name" not in str(exc):
+                raise
+        else:
+            raise AssertionError("manifest name drift self-check did not fail")
+
         stale_manifest_path = root / "stale-manifest-path"
         mutated = passed_sample()
         mutated["manifest"]["path"] = "docs/api/stale-public-contract.json"
