@@ -387,6 +387,8 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError(f"boundary status must be an integer when present: {item!r}")
         if "code" in item and (not isinstance(item["code"], str) or not item["code"]):
             raise AssertionError(f"boundary code must be a non-empty string when present: {item!r}")
+        if "request_hint" in item and (not isinstance(item["request_hint"], str) or not item["request_hint"]):
+            raise AssertionError(f"boundary request_hint must be a non-empty string when present: {item!r}")
         boundary_by_name[boundary] = item
 
     seen_deferred_boundaries: set[str] = set()
@@ -1019,6 +1021,18 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("boundary code schema self-check did not fail")
+
+        bad_boundary_request_hint = root / "bad-boundary-request-hint"
+        mutated = passed_sample()
+        mutated["boundary_checks"][0]["request_hint"] = ""
+        write_sample(bad_boundary_request_hint, mutated)
+        try:
+            validate_summary_dir(bad_boundary_request_hint)
+        except AssertionError as exc:
+            if "boundary request_hint must be a non-empty string" not in str(exc):
+                raise
+        else:
+            raise AssertionError("boundary request_hint schema self-check did not fail")
 
         duplicate_deferred = root / "duplicate-deferred"
         mutated = passed_sample()
