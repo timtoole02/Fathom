@@ -383,6 +383,10 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError(f"recorded boundary checks must be completed passes: {item!r}")
         if not isinstance(item.get("check"), str) or not item["check"]:
             raise AssertionError(f"boundary check must name a check id: {item!r}")
+        if "status" in item and not isinstance(item["status"], int):
+            raise AssertionError(f"boundary status must be an integer when present: {item!r}")
+        if "code" in item and (not isinstance(item["code"], str) or not item["code"]):
+            raise AssertionError(f"boundary code must be a non-empty string when present: {item!r}")
         boundary_by_name[boundary] = item
 
     seen_deferred_boundaries: set[str] = set()
@@ -991,6 +995,30 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("boundary check-id schema self-check did not fail")
+
+        bad_boundary_status = root / "bad-boundary-status"
+        mutated = passed_sample()
+        mutated["boundary_checks"][0]["status"] = "501"
+        write_sample(bad_boundary_status, mutated)
+        try:
+            validate_summary_dir(bad_boundary_status)
+        except AssertionError as exc:
+            if "boundary status must be an integer" not in str(exc):
+                raise
+        else:
+            raise AssertionError("boundary status schema self-check did not fail")
+
+        bad_boundary_code = root / "bad-boundary-code"
+        mutated = passed_sample()
+        mutated["boundary_checks"][0]["code"] = ""
+        write_sample(bad_boundary_code, mutated)
+        try:
+            validate_summary_dir(bad_boundary_code)
+        except AssertionError as exc:
+            if "boundary code must be a non-empty string" not in str(exc):
+                raise
+        else:
+            raise AssertionError("boundary code schema self-check did not fail")
 
         duplicate_deferred = root / "duplicate-deferred"
         mutated = passed_sample()

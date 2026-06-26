@@ -6241,6 +6241,26 @@ def assert_public_contract_smoke_artifact_wiring() -> None:
         "boundary check-id schema self-check did not fail",
         "public contract smoke artifact QA boundary check-id schema negative self-test",
     )
+    assert_contains(
+        artifact_qa_text,
+        "boundary status must be an integer when present",
+        "public contract smoke artifact QA boundary status schema guard",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "boundary status schema self-check did not fail",
+        "public contract smoke artifact QA boundary status schema negative self-test",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "boundary code must be a non-empty string when present",
+        "public contract smoke artifact QA boundary code schema guard",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "boundary code schema self-check did not fail",
+        "public contract smoke artifact QA boundary code schema negative self-test",
+    )
 
 
 def assert_optional_acceptance_docs() -> None:
