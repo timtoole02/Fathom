@@ -980,6 +980,18 @@ def run_self_check() -> None:
         else:
             raise AssertionError("duplicate boundary self-check did not fail")
 
+        bad_boundary_check_id = root / "bad-boundary-check-id"
+        mutated = passed_sample()
+        mutated["boundary_checks"][0]["check"] = ""
+        write_sample(bad_boundary_check_id, mutated)
+        try:
+            validate_summary_dir(bad_boundary_check_id)
+        except AssertionError as exc:
+            if "boundary check must name a check id" not in str(exc):
+                raise
+        else:
+            raise AssertionError("boundary check-id schema self-check did not fail")
+
         duplicate_deferred = root / "duplicate-deferred"
         mutated = passed_sample()
         if len(mutated["deferred_manifest_boundaries"]) < 1:
