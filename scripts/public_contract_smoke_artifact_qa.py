@@ -366,6 +366,9 @@ def validate_summary_dir(directory: Path) -> None:
             raise AssertionError(f"recorded endpoint checks must be completed passes: {item!r}")
         if not isinstance(item["checks"], list) or not item["checks"]:
             raise AssertionError(f"endpoint check must name at least one check id: {item!r}")
+        for check in item["checks"]:
+            if not isinstance(check, str) or not check:
+                raise AssertionError(f"endpoint check ids must be non-empty strings: {item!r}")
 
     boundary_by_name: dict[str, dict[str, Any]] = {}
     for item in boundary_checks:
@@ -952,6 +955,18 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("unexpected endpoint self-check did not fail")
+
+        bad_endpoint_check_id = root / "bad-endpoint-check-id"
+        mutated = passed_sample()
+        mutated["endpoint_checks"][0]["checks"] = [""]
+        write_sample(bad_endpoint_check_id, mutated)
+        try:
+            validate_summary_dir(bad_endpoint_check_id)
+        except AssertionError as exc:
+            if "endpoint check ids" not in str(exc):
+                raise
+        else:
+            raise AssertionError("endpoint check-id schema self-check did not fail")
 
         duplicate_boundary = root / "duplicate-boundary"
         mutated = passed_sample()
