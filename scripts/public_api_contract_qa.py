@@ -6208,6 +6208,11 @@ def assert_public_contract_smoke_artifact_wiring() -> None:
     )
     assert_contains(
         artifact_qa_text,
+        "markdown deferred boundary row consistency self-check did not fail",
+        "public contract smoke artifact QA deferred boundary markdown negative self-test",
+    )
+    assert_contains(
+        artifact_qa_text,
         "markdown endpoint check-id consistency self-check did not fail",
         "public contract smoke artifact QA endpoint check-id markdown negative self-test",
     )

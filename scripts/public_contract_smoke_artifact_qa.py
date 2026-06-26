@@ -708,6 +708,26 @@ def run_self_check() -> None:
         else:
             raise AssertionError("markdown endpoint row consistency self-check did not fail")
 
+        missing_markdown_deferred = root / "missing-markdown-deferred"
+        write_sample(missing_markdown_deferred, passed_sample())
+        first_deferred = passed_sample()["deferred_manifest_boundaries"][0]
+        (missing_markdown_deferred / SUMMARY_MD).write_text(
+            (missing_markdown_deferred / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace(
+                f"- {first_deferred['boundary']}: {first_deferred['reason']}\n",
+                "",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(missing_markdown_deferred)
+        except AssertionError as exc:
+            if "missing deferred boundary row" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown deferred boundary row consistency self-check did not fail")
+
         bad_markdown_endpoint_checks = root / "bad-markdown-endpoint-checks"
         write_sample(bad_markdown_endpoint_checks, passed_sample())
         first_endpoint = passed_sample()["endpoint_checks"][0]
