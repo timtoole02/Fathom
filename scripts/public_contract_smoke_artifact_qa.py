@@ -235,6 +235,12 @@ def assert_markdown_rows_match_summary(summary: dict[str, Any], md: str, markdow
             expected = f"- {method} {path}: pass"
             if expected not in md:
                 raise AssertionError(f"{label} missing endpoint row matching summary JSON: {method} {path}")
+            endpoint_line = next((line for line in md.splitlines() if line.startswith(expected)), "")
+            checks = item.get("checks")
+            if isinstance(checks, list) and checks:
+                expected_checks = f"({', '.join(str(check) for check in checks)})"
+                if expected_checks not in endpoint_line:
+                    raise AssertionError(f"{label} missing endpoint check ids matching summary JSON: {method} {path}")
 
     for item in boundary_checks:
         if not isinstance(item, dict):
@@ -689,6 +695,26 @@ def run_self_check() -> None:
                 raise
         else:
             raise AssertionError("markdown endpoint row consistency self-check did not fail")
+
+        bad_markdown_endpoint_checks = root / "bad-markdown-endpoint-checks"
+        write_sample(bad_markdown_endpoint_checks, passed_sample())
+        first_endpoint = passed_sample()["endpoint_checks"][0]
+        (bad_markdown_endpoint_checks / SUMMARY_MD).write_text(
+            (bad_markdown_endpoint_checks / SUMMARY_MD)
+            .read_text(encoding="utf-8")
+            .replace(
+                f"- {first_endpoint['method']} {first_endpoint['path']}: pass (synthetic-check)\n",
+                f"- {first_endpoint['method']} {first_endpoint['path']}: pass (stale-check)\n",
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_summary_dir(bad_markdown_endpoint_checks)
+        except AssertionError as exc:
+            if "endpoint check ids" not in str(exc):
+                raise
+        else:
+            raise AssertionError("markdown endpoint check-id consistency self-check did not fail")
 
         missing_markdown_status_code = root / "missing-markdown-status-code"
         write_sample(missing_markdown_status_code, passed_sample())

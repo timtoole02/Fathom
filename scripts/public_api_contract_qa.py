@@ -6201,6 +6201,16 @@ def assert_public_contract_smoke_artifact_wiring() -> None:
         "assert_markdown_rows_match_summary",
         "public contract smoke artifact QA markdown row guard",
     )
+    assert_contains(
+        artifact_qa_text,
+        "endpoint check ids matching summary JSON",
+        "public contract smoke artifact QA endpoint check-id markdown guard",
+    )
+    assert_contains(
+        artifact_qa_text,
+        "markdown endpoint check-id consistency self-check did not fail",
+        "public contract smoke artifact QA endpoint check-id markdown negative self-test",
+    )
 
 
 def assert_optional_acceptance_docs() -> None:
