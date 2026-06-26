@@ -6168,6 +6168,11 @@ def assert_public_contract_smoke_artifact_wiring() -> None:
     )
     assert_contains(
         artifact_qa_text,
+        "proof-scope caveat self-check did not fail",
+        "public contract smoke artifact QA proof-scope caveat negative self-test",
+    )
+    assert_contains(
+        artifact_qa_text,
         "markdown/generated_at consistency self-check did not fail",
         "public contract smoke artifact QA generated_at markdown negative self-test",
     )

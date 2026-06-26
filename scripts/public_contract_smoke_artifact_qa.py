@@ -636,6 +636,21 @@ def run_self_check() -> None:
         else:
             raise AssertionError("markdown/proof-scope consistency self-check did not fail")
 
+        bad_proof_scope = root / "bad-proof-scope"
+        mutated = passed_sample()
+        mutated["proof_scope"] = (
+            "No-download real-backend routing/refusal smoke only. "
+            "Does not prove model downloads."
+        )
+        write_sample(bad_proof_scope, mutated)
+        try:
+            validate_summary_dir(bad_proof_scope)
+        except AssertionError as exc:
+            if "missing scope caveat phrases" not in str(exc):
+                raise
+        else:
+            raise AssertionError("proof-scope caveat self-check did not fail")
+
         missing_markdown_boundary = root / "missing-markdown-boundary"
         write_sample(missing_markdown_boundary, passed_sample())
         (missing_markdown_boundary / SUMMARY_MD).write_text(
